@@ -1,0 +1,69 @@
+{\rtf1\ansi\ansicpg1252\cocoartf1561\cocoasubrtf600
+{\fonttbl\f0\fswiss\fcharset0 Helvetica;}
+{\colortbl;\red255\green255\blue255;}
+{\*\expandedcolortbl;;}
+\margl1440\margr1440\vieww16340\viewh19660\viewkind0
+\pard\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\pardirnatural\partightenfactor0
+
+\f0\b\fs28 \cf0 \ul \ulc0 ToDo as of 2019/07/24\
+
+\fs26 \ulnone \
+
+\fs28 Generic Query/Download Module\
+\pard\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\pardirnatural\partightenfactor0
+
+\b0 \cf0  - Generalize examples/example01_combined_query.py\
+ - Needs to work for any time from launch of STEREO (~Dec 2006) to now. SDO data is available after ~Jun 2010.\
+ - Will probably want dedicated objects for a time interval and our query results.\
+ - Possible Subroutines:\
+	- Query: \
+		input: a time interval of arbitrary size. \
+		output: optimal group of 1, 2, or 3 images (depends on whats available)\
+ 	- Download:\
+		input: successful query results\
+		output: images saved to disk\
+	- Add To Database\
+		input: downloaded raw images (will be prepped at this step?)\
+		output: raw/prepped file locations and relevant metadata added to database.\
+	- Prep:\
+		input: raw images\
+		outuput: prepped images (lvl 1.5, PSF deconvolved).\
+		*this needs work by CD, will try to do most things in sunpy directly.\
+           \
+\pard\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\pardirnatural\partightenfactor0
+
+\b \cf0 Database For Raw Spacecraft Data\
+\pard\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\pardirnatural\partightenfactor0
+
+\b0 \cf0  - use SQAlchemy to define/interact with SQLite database for raw data.\
+ - see barebones example (examples/example02_dbtest_declarative.py)\
+ - Requirements:\
+	- schema for an EUV image that has metadata we need.\
+	- should have reference to raw and prepped data.\
+	- ability to add, remove, and reprocess an image entry.\
+	- (optional) additional schema for time-intervals and links that associate\
+	   an EUV image with the interval that was used to find it (not sure about this\'85).\
+ - Possible  Subroutines:\
+	- add_euv_image (see above)\
+	- pop_euv_image:\
+	- query_time:\
+		input: time interval + optional filters (e.g. spacecraft, wavelength, etc).\
+		output: images that fit this time interval\
+\
+\pard\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\pardirnatural\partightenfactor0
+
+\b \cf0 Calibration for Detection
+\b0 \
+ - python equivalents of limb brightening analysis and inter instrument calibration\
+ - distill basic functionality on a per image basis, separate this from analysis over many images.\
+ - will flesh this out later\
+\
+
+\b Mapping and Detection
+\b0 \
+ - python equivalents of mapping a disk image to a carrington grid.\
+ - python wrapper that calls fortran tool EZSeg.\
+\
+\
+ \
+}

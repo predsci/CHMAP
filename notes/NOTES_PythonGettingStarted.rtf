@@ -1,0 +1,70 @@
+{\rtf1\ansi\ansicpg1252\cocoartf1561\cocoasubrtf600
+{\fonttbl\f0\fswiss\fcharset0 Helvetica;}
+{\colortbl;\red255\green255\blue255;}
+{\*\expandedcolortbl;;}
+\margl1440\margr1440\vieww16340\viewh19660\viewkind0
+\pard\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\pardirnatural\partightenfactor0
+
+\f0\b\fs36 \cf0 Language
+\b0 : Python 3 (I\'92ve tested with 3.7, 3.8 is probably OK too)\
+\
+
+\b Environment
+\b0 : anaconda (conda): https://www.anaconda.com/distribution/\
+ - Simplest way I\'92ve found to install/manage python distributions\
+\
+
+\b Editor
+\b0 : PyCharm Community Edition: https://www.jetbrains.com/pycharm\
+ - Nice IDE\
+ - Easy to manage custom conda environments)\
+\
+
+\b \ul Main Python Packages for this Project
+\b0 \ulnone \
+\
+
+\b SunPy
+\b0 : https://sunpy.org/\
+ - Used for querying data\
+ - Used for building/manipulating time objects/series\
+ - Will be used for majority of solar specific analysis\
+\
+\pard\pardeftab720\sl280\partightenfactor0
+
+\b \cf0 SQLAlchemy
+\b0 : https://www.sqlalchemy.org/\
+ - Seems like a good high level way to interact with SQL type databases.\
+ - Inputs/outputs abstracted from SQL. Feeds into SunPy well.\
+ - If you think there are other solutions that is great.\
+\
+
+\b \ul Other Python Packages:\
+
+\b0 \ulnone \
+drms: https://pypi.org/project/drms/\
+ - Used to query/download SDO data.\
+\
+pyhdf: https://pypi.org/project/pyhdf/\
+ - The hdf4 package we use for psitools\
+\
+h5py: https://www.h5py.org/\
+ - the hdf5 package we use for psitools\
+\
+\
+
+\b \ul PSI Software
+\b0 \ulnone :\
+\
+Main SVN is here: https://www.predsci.com/websvn/?\
+\
+tools: fortran tools for manipulating solar models/data.\
+\
+ext_deps: external libs for installing the tools.\
+\
+solarview: simple too for visualizing our hdf4/h5 data format.\
+\
+example checkout command (ext_deps):\
+svn checkout --username cdowns svn+ssh://cdowns@shadow.predsci.com/opt/repositories/ext_deps/trunk ext_deps\
+\
+}

@@ -1,0 +1,39 @@
+#-------------------------------------------------------------------------------------
+#
+# - most of this development was done using the anaconda python distribution and 
+#   conda to manage package installation.
+# - I got the idea from the sunpy installation guide.
+#
+# - Here I try to keep a recod of the commands I used so that I can make installing 
+#   this environment on other computers as straightforward as possible
+#
+# - NOTE: It may be easier to install these interactively through 
+#   the project interpreter menu of PycharmCE.
+#   - This may help set up a custom environment specific to this project.
+#
+# - here is documentation on conda environments.
+#   https://conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html
+#-------------------------------------------------------------------------------------
+
+# first get the anaconda distribution (https://www.anaconda.com/distribution/)
+
+# Sunpy setup with conda
+conda config --add channels conda-forge
+conda install sunpy
+
+# hdf4 package (pyhdf)
+conda search pyhdf
+conda install pyhdf
+
+# hdf5 package (h5py)
+conda search h5py
+conda install h5py
+
+# SDO JSOC drms package
+conda search drms
+conda install drms
+
+# SQLAlchemy (for manipulating SQL databases)
+conda search sqalchemy
+conda install sqalchemy
+
