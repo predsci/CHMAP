@@ -12,6 +12,7 @@ import pandas as pd
 from collections import OrderedDict
 import astropy.io.fits
 import numpy as np
+import sunpy.coordinates.sun
 
 
 def download_url(url, fpath, overwrite=False, verbose=True):
@@ -141,3 +142,42 @@ def uncompress_compressed_fits_image(infile, outfile, int=False):
     hdu = astropy.io.fits.PrimaryHDU(data, hdr)
     hdulist.close()
     hdu.writeto(outfile, output_verify='silentfix', overwrite=True, checksum=True)
+
+
+def carrington_rotation_number_relative(time, lon):
+    """
+    A function that returns the decimal carrington rotation number for a spacecraft position
+    that may not be at the same place at earth. In this case you know the carrington longitude
+    of the spacecraft, and want to convert that to a decimal carrington number that is within
+    +0.5 and -0.5 of the decimal rotation for the earth-based longitude.
+
+    :param time: an astropy Time object indicating the time the position is known.
+    :param lon: the carrington longitude of the spacecraft position.
+    :return: the decimal_carrington number.
+    """
+    # get the decimal carrington number for Earth at this time
+    cr_earth = sunpy.coordinates.sun.carrington_rotation_number(time)
+
+    # convert that to the earth longitude (this should match sunpy.coordinates.sun.L0(time))
+    cr0 = np.floor(cr_earth)
+    lon_earth = np.mod((1 - (cr_earth - cr0)*360), 360)
+
+    # compute the angular difference and the modulus
+    diff = lon_earth - lon
+    mod = np.mod(diff, 360.)
+
+    # compute the fractional rotation offset, which depends on where the periodic boundary is.
+    offset = 0.0
+    if lon_earth < 180 and mod < 180 and diff < 0:
+        offset = +1.0
+    if lon_earth >= 180 and mod >= 180 and diff >= 0:
+        offset = -1.0
+    cr_now = cr0 + np.mod(1.0 - lon/360., 360.) + offset
+
+    debug = False
+    if debug:
+        print('{: 7.3f} {: 7.3f} {: 7.3f} {: 7.3f} {: 7.3f} {: 7.3f}'.format(lon, diff, mod, cr_now, cr_earth,
+                                                                             cr_now - cr_earth))
+        print(cr_earth, cr0, lon_earth, sunpy.coordinates.sun.L0(time).value, lon, cr_now)
+
+    return cr_now
