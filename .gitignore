@@ -1,0 +1,11 @@
+/examples/test2_dbtest.py
+/test_data/*
+*/__pycache__/*
+
+/.idea/modules.xml
+/.idea/workspace.xml
+/.idea/CHD.iml
+/.idea/misc.xml
+
+settings/app.py
+setup.conf

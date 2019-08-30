@@ -13,6 +13,9 @@ from sunpy.time import TimeRange
 from helpers import drms_helpers, vso_helpers
 from settings.app import App
 
+import pandas as pd
+
+
 # Get the data dir from the installed app settings.
 data_dir = App.RAW_DATA_HOME
 
@@ -56,6 +59,7 @@ jd0 = time0.jd
 print(time0)
 
 # build a numpy array to hold all of the times and time_deltas
+# first create a list of dataframes
 results = [fs.jd.values, fa.jd.values, fb.jd.values]
 sizes = []
 for result in results:
