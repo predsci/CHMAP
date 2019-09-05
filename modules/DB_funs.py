@@ -9,6 +9,7 @@ import urllib.parse
 import pandas as pd
 import datetime
 
+
 import sunpy.map
 
 from sqlalchemy import create_engine
@@ -129,3 +130,74 @@ def add_image2session(data_dir, subdir, fname, db_session):
               ", timestamp: " + file_meta['date_string']))
 
     return db_session
+
+
+def remove_euv_image(db_session, raw_series):
+    """
+    Simultaneously delete image from filesystem and remove metadata row
+    from EUV_Images table.
+    raw_series - expects a pandas series that results from one row of
+    the EUV_Images DB table.
+    Ex.
+    test_pd = query_euv_images(db_session=db_session, time_min=query_time_min,
+                                time_max=query_time_max)
+    remove_euv_image(raw_series=test_pd.iloc[0])
+
+    ToDo:
+        - Vectorize functionality.  If 'raw_series' is a pandas DataFrame
+            delete all rows and their corresponding files.
+    """
+
+    raw_id = raw_series['id']
+    raw_fname = raw_series['fname_raw']
+    hdf_fname = raw_series['fname_hdf']
+
+    # check if file exists in filesystem
+    if os.path.exists(raw_fname):
+        os.remove(raw_fname)
+        print("Deleted file: " + raw_fname)
+        exit_status = 0
+    else:
+        print("\nWarning: Image file not found at location: " + raw_fname +
+              ". This may be the symptom of a larger problem.")
+        exit_status = 1
+
+    # first check if there is an hdf file listed
+    if hdf_fname!='':
+        # check if file exists in filesystem
+        if os.path.exists(hdf_fname):
+            os.remove(raw_fname)
+            print("Deleted file: " + raw_fname)
+        else:
+            print("\nWarning: Processed HDF file not found at location: " + raw_fname +
+                  ". This may be the symptom of a larger problem.")
+            exit_status = exit_status + 2
+
+    # delete row where id = raw_id.  Use .item() to recover an INT from numpy.int64
+    out_flag = db_session.query(EUV_Images).filter(EUV_Images.id==raw_id.item()).delete()
+    if out_flag==0:
+        exit_status = exit_status + 4
+    elif out_flag==1:
+        db_session.commit()
+        print("Row deleted from DB for id=" + str(raw_id))
+
+    return exit_status, db_session
+
+
+def update_image_val(db_session, raw_series, col_name, new_val):
+    """
+    Change value for EUV_Images in row referenced from raw_series and column referenced in col_name
+    raw_series - pandas series for the row to be updated
+    :return: the SQLAlchemy database session
+    """
+
+    if col_name in ("id", "obs_time", "instrument", "wavelength"):
+        print("This is a restricted column and will not be updated by this function. Values can be changed " +
+              "directly using SQLAlchemy functions. Alternatively one could use remove_euv_image() followed " +
+              "by euvi.download_image_fixed_format(), add_image2session(), and db_session.commit()")
+    else:
+        raw_id = raw_series['id']
+        db_session.query(EUV_Images).filter(EUV_Images.id==raw_id.item()).update({col_name : new_val})
+        db_session.commit()
+
+    return(db_session)

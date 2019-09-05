@@ -1,10 +1,10 @@
 """
-Short example to illustrate multi-spacecraft image query, selection, and download.
+Example to illustrate image-database writing, querying, updating, and deleting.
 
-Here a time interval is built, segmented and used to get data.
+The first portion of this code follows example01.  Then we download and log
+to the database 9 images.  This establishes enough entries to demonstrate
+database querying, updating, and deleting.
 
-Right now the example only works for 3 spacecraft data being available. It should
-be a short fix to make it work for arbitrary numbers/pairs.
 """
 
 import numpy as np
@@ -18,7 +18,7 @@ from helpers import drms_helpers, vso_helpers
 from settings.app import App
 from modules.misc_funs import cluster_meth_1
 from modules.DB_classes import *
-from modules.DB_funs import init_DB_conn, query_euv_images, add_image2session, update_image_val
+from modules.DB_funs import init_DB_conn, query_euv_images, add_image2session, update_image_val, remove_euv_image
 
 import pandas as pd
 
@@ -61,6 +61,8 @@ fa = euvi.query_time_interval(time_range, wave_euvi, craft='STEREO_A')
 fb = euvi.query_time_interval(time_range, wave_euvi, craft='STEREO_B')
 
 f_list = [fs, fa, fb]
+# check for empty instrument results
+f_list = [elem for elem in f_list if len(elem)>0]
 
 # Get the decimal time of the center of the time_range (Julian Date)
 deltat = TimeDelta(0.0, format='sec')
@@ -72,6 +74,8 @@ print(time0)
 # build a numpy array to hold all of the times and time_deltas
 # first create a list of dataframes
 results = [fs.jd.values, fa.jd.values, fb.jd.values]
+# check for empty instrument results
+results = [elem for elem in results if len(elem)>0]
 sizes = []
 for result in results:
     sizes.append(len(result))
@@ -87,18 +91,17 @@ use_db = "sqlite"
 sqlite_filename = "dbtest.db"
 db_session = init_DB_conn(db_name=use_db, chd_base=Base, sqlite_fn=sqlite_filename)
 
-# setup a list of imins to test multiple cluster download and enter into DB
-test = [imins, ([155], [6], [6]), ([455], [18], [18])]
+# setup a longer list of imins to test multiple cluster download and enter into DB
+    # three instruments
+# test = [imins, ([155], [6], [6]), ([455], [18], [18])]
+    # one instrument
+test = [imins, ([155],), ([455], )]
 
 # print the selection, download if desired.
 download = True
 overwrite = False
 verbose = True
-# for imin in range(0, len(imins[0])):
-#     i = imins[0][imin]
-#     j = imins[1][imin]
-#     k = imins[2][imin]
-#     print(i, j, k, fs.iloc[i].time, fa.iloc[j].time, fb.iloc[k].time, time_delta[i, j, k])
+# download and enter into database
 for imin in test:
     for ii in range(0, len(imin)):
         instrument = f_list[ii]['instrument'][0]
@@ -121,39 +124,25 @@ for imin in test:
                 print("Instrument ", instrument, " does not yet have a download function.  SKIPPING DOWNLOAD ")
                 continue
 
-        db_session = add_image2session(data_dir=data_dir, subdir=subdir, fname=fname, db_session=db_session)
+            # use the downloaded image to extract metadata and write a row to the database (session)
+            db_session = add_image2session(data_dir=data_dir, subdir=subdir, fname=fname, db_session=db_session)
 
 
 # commit the changes to the DB, this also assigns auto-incrementing primekeys 'id'
 db_session.commit()
 
-# example query exported directly to pandas dataframe.  This seems a little weird, using a function from pandas
-# as a wrapper for sqlalchemy DB communication routines.
-test_df = pd.read_sql(db_session.query(EUV_Images).filter(EUV_Images.instrument=='EUVI-B').statement,
-                      db_session.bind)
-# example query that returns only the date_obs and fname_raw columns for Stereo B entries
-test_df2 = db_session.query(EUV_Images.date_obs, EUV_Images.fname_raw).filter(EUV_Images.instrument=='EUVI-B').all()
-
-# example query that returns only the date_obs and fname_raw columns for Stereo B entries
-test_df3 = db_session.query(EUV_Images.date_obs, EUV_Images.fname_raw).filter(and_(EUV_Images.instrument=='EUVI-B',
-                                                                                   EUV_Images.jd>2456761.3)).all()
-
-# get an 'Explain' analysis of previous query by executing raw SQL directly
-test_out = db_session.execute("EXPLAIN QUERY PLAN SELECT date_obs, fname_raw FROM euv_images WHERE instrument='EUVI-B' AND jd>2456761.3;")
-for row in test_out:
-    print(row)
-
-# test query_EUV_images function
+# query_EUV_images function:
+# requires time_min and time_max (datetime).  do we need to code 'jd' time option?
 query_time_min = datetime.datetime(2014, 4, 13, 19, 35, 0)
 query_time_max = datetime.datetime(2014, 4, 13, 19, 37, 0)
-print("Query DB for downloaded images with timestamps between " + str(query_time_min), " and ", str(query_time_max))
+print("Query DB for downloaded images with timestamps between " + str(query_time_min) + " and " + str(query_time_max))
 test_pd = query_euv_images(db_session=db_session, time_min=query_time_min, time_max=query_time_max)
 # returns info on 3 images
 print(test_pd)
 
 # query specific instrument
 query_time_min = datetime.datetime(2014, 4, 13, 10, 0, 0)
-instrument = ("EUVI-A", )
+instrument = ("AIA", )
 test_pd = query_euv_images(db_session=db_session, time_min=query_time_min, time_max=query_time_max, instrument=instrument)
 
 # query specific wavelength
@@ -161,17 +150,26 @@ wavelength = (195, )
 test_pd = query_euv_images(db_session=db_session, time_min=query_time_min, time_max=query_time_max, wavelength=wavelength)
 
 
+# update_image_val function:
+# currently requires a pandas-series object (like return of query_euv_images) to index
+# into the DB. This semi-insures that there is not confusion about which row of the
+# DB is to be updated.
+
 # generate hdf file using some function like:
-# db_session, hd_fname = process_image2hdf(db_session, test_pd.iloc[0])
+# hd_fname = process_image2hdf(test_pd.iloc[0])
 hd_fname = "/Users/turtle/GitReps/CHD/test_data/hdf5/2014/04/13/sta_euvi_20140413T183530_195.hdf5"
 # update database with file location
 db_session = update_image_val(db_session=db_session, raw_series=test_pd.iloc[0], col_name="fname_hdf", new_val=hd_fname)
 
-# also flag this image as 1 - verified good (made-up example)
+# also flag this image as 1 - 'verified good' (made-up example)
 image_flag = 1
 # update database with file location
 db_session = update_image_val(db_session=db_session, raw_series=test_pd.iloc[0], col_name="flag", new_val=image_flag)
 
+
+# remove_euv_image function:
+# removes the files and then the corresponding DB row
+exit_status, db_session = remove_euv_image(db_session=db_session, raw_series=test_pd.iloc[0])
 
 
 db_session.close()

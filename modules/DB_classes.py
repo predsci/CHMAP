@@ -31,7 +31,7 @@ class EUV_Images(Base):
     cr_lon = Column(Float)
     cr_lat = Column(Float)
     cr_rot = Column(Float)
-    flag = Column(Integer)
+    flag = Column(Integer, default=0)
     time_of_download = Column(DateTime)
     __table_args__ = (Index('test_index', "date_obs", "instrument", "wavelength", unique=True),
                       UniqueConstraint("fname_raw"))
