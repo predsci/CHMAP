@@ -18,7 +18,7 @@ from helpers import drms_helpers, vso_helpers
 from settings.app import App
 from modules.misc_funs import cluster_meth_1
 from modules.DB_classes import *
-from modules.DB_funs import init_DB_conn, query_euv_images, add_image2session, update_image_val, remove_euv_image
+from modules.DB_funs import init_db_conn, query_euv_images, add_image2session, update_image_val, remove_euv_image
 
 import pandas as pd
 
@@ -89,7 +89,8 @@ imins = cluster_meth_1(results=results, jd0=jd0)
 # setup database connection
 use_db = "sqlite"
 sqlite_filename = "dbtest.db"
-db_session = init_DB_conn(db_name=use_db, chd_base=Base, sqlite_fn=sqlite_filename)
+sqlite_path = App.DATABASE_HOME + sqlite_filename
+db_session = init_db_conn(db_name=use_db, chd_base=Base, sqlite_path=sqlite_path)
 
 # setup a longer list of imins to test multiple cluster download and enter into DB
     # three instruments

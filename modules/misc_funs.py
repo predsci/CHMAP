@@ -5,10 +5,13 @@ to create the combined output image.
 """
 
 import numpy as np
+import astropy.units as u
+from sunpy.time import TimeRange
+
 from itertools import combinations
 
 from helpers.misc_helpers import carrington_rotation_number_relative
-
+from helpers import drms_helpers, vso_helpers
 
 
 def cluster_meth_1(results, jd0):
@@ -123,3 +126,45 @@ def get_metadata(map):
     return metadata
 
 
+# a function to look for all available images in a time-window
+def list_available_images(time_start, time_end, euvi_interval_cadence=2*u.hour, aia_search_cadence=12*u.second,
+                          wave_aia=193, wave_euvi=195):
+    """
+    This function takes in a time range and returns all available images for all available
+    instruments.  Time ranges entered as 'astropy.time.core.Time' objects.
+    Optional inputs control the search cadence for EUVI 'euvi_interval_cadence', AIA
+    search cadence 'aia_search_cadence', EUVI wavelength 'wave_euvi', and AIA wavelength
+    'wave_aia'.
+    :return: A list of instruments, one entry per available instrument.  Each list entry
+    is a pandas dataframe describing the available images.
+    """
+
+    # query parameters
+    # interval_cadence = 2*u.hour
+    # aia_search_cadence = 12*u.second
+    # wave_aia = 193
+    # wave_euvi = 195
+
+    # generate the list of time intervals
+    full_range = TimeRange(time_start, time_end)
+    time_ranges = full_range.window(euvi_interval_cadence, euvi_interval_cadence)
+
+    # initialize the jsoc drms helper for aia.lev1_euv_12
+    s12 = drms_helpers.S12(verbose=True)
+
+    # initialize the helper class for EUVI
+    euvi = vso_helpers.EUVI(verbose=True)
+
+    # pick a time_range to experiment with
+    time_range = time_ranges[0]
+
+    # query the jsoc for SDO/AIA
+    fs = s12.query_time_interval(time_range, wave_aia, aia_search_cadence)
+
+    # query the VSO for STA/EUVI and STB/EUVI
+    fa = euvi.query_time_interval(time_range, wave_euvi, craft='STEREO_A')
+    fb = euvi.query_time_interval(time_range, wave_euvi, craft='STEREO_B')
+
+    f_list = [fs, fa, fb]
+
+    return f_list

@@ -20,7 +20,7 @@ from modules.DB_classes import *
 from modules.misc_funs import get_metadata
 
 
-def init_DB_conn(db_name, chd_base, sqlite_fn=""):
+def init_db_conn(db_name, chd_base, sqlite_path=""):
     """
     Connect to the database specified by db_name.
     Then establish the SQLAlchemy declarative base
@@ -40,8 +40,8 @@ def init_DB_conn(db_name, chd_base, sqlite_fn=""):
         url_psswd = urllib.parse.quote_plus(db_psswd)
         connect_string = 'mysql://'+db_user+':'+url_psswd+'@shadow.predsci.com:3306/CHD'
     elif db_name=='sqlite':
-        dbfile = os.path.join(App.DATABASE_HOME, sqlite_fn)
-        connect_string = 'sqlite:///' + dbfile
+        print("Attempting to connect to SQLite DB file " + sqlite_path)
+        connect_string = 'sqlite:///' + sqlite_path
     else:
         sys.exit("At this time, 'db_name' must be either 'sqlite' or 'mysql-shadow'.")
 
@@ -197,7 +197,7 @@ def update_image_val(db_session, raw_series, col_name, new_val):
               "by euvi.download_image_fixed_format(), add_image2session(), and db_session.commit()")
     else:
         raw_id = raw_series['id']
-        db_session.query(EUV_Images).filter(EUV_Images.id==raw_id.item()).update({col_name : new_val})
+        db_session.query(EUV_Images).filter(EUV_Images.id==raw_id).update({col_name : new_val})
         db_session.commit()
 
     return(db_session)
