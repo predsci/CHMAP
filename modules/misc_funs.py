@@ -14,13 +14,18 @@ from helpers.misc_helpers import carrington_rotation_number_relative
 from helpers import drms_helpers, vso_helpers
 
 
-def cluster_meth_1(results, jd0):
+def cluster_meth_1(f_list, jd0):
     """
     Input a list of instruments data 'results' and the central
     time 'jd0'.  Find the cluster of instrument images that is
     the best combination of tightly grouped and close to jd0.
     :return: the indices of the selected images
     """
+
+    # extract 'results' list from f_list
+    results = [None]*len(f_list)
+    for ii in range(len(f_list)):
+        results[ii] = f_list[ii].jd.values
 
     sizes = []
     for result in results:
@@ -147,7 +152,7 @@ def list_available_images(time_start, time_end, euvi_interval_cadence=2*u.hour, 
 
     # generate the list of time intervals
     full_range = TimeRange(time_start, time_end)
-    time_ranges = full_range.window(euvi_interval_cadence, euvi_interval_cadence)
+    # time_ranges = full_range.window(euvi_interval_cadence, euvi_interval_cadence)
 
     # initialize the jsoc drms helper for aia.lev1_euv_12
     s12 = drms_helpers.S12(verbose=True)
@@ -156,8 +161,13 @@ def list_available_images(time_start, time_end, euvi_interval_cadence=2*u.hour, 
     euvi = vso_helpers.EUVI(verbose=True)
 
     # pick a time_range to experiment with
-    time_range = time_ranges[0]
+    # time_range = time_ranges[0]
+    time_range = full_range
 
+    # ---- Query each instrument individually -------------
+    # If a new instrument comes on-line, add its query routine here. Then add
+    # its result to f_list. Order does not matter so long as the new routine's
+    # output f* is in the same pandas dataframe format at fs, fa, and fb.
     # query the jsoc for SDO/AIA
     fs = s12.query_time_interval(time_range, wave_aia, aia_search_cadence)
 
@@ -165,6 +175,9 @@ def list_available_images(time_start, time_end, euvi_interval_cadence=2*u.hour, 
     fa = euvi.query_time_interval(time_range, wave_euvi, craft='STEREO_A')
     fb = euvi.query_time_interval(time_range, wave_euvi, craft='STEREO_B')
 
+    # combine dataframes into a simple list
     f_list = [fs, fa, fb]
+    # check for empty instrument results (and remove)
+    f_list = [elem for elem in f_list if len(elem) > 0]
 
     return f_list
