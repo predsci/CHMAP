@@ -68,7 +68,7 @@ def construct_path_and_fname(base_dir, dtime, prefix, postfix, extension, mkdir=
     SS = '{:0>2}'.format(str(dtime.second))
 
     # build the subdirectory path
-    sub_dir = os.path.join(YYYY, MM, DD)
+    sub_dir = os.path.join(base_dir, YYYY, MM, DD)
 
     # make the directory if needed
     if mkdir:
