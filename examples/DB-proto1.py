@@ -16,9 +16,9 @@ from sunpy.time import TimeRange
 
 from helpers import drms_helpers, vso_helpers
 from settings.app import App
-from modules.misc_funs import cluster_meth_1
+from modules.misc_funs import cluster_meth_1, list_available_images
 from modules.DB_classes import *
-from modules.DB_funs import init_DB_conn, query_euv_images, add_image2session, update_image_val
+from modules.DB_funs import init_db_conn, query_euv_images, add_image2session, update_image_val
 
 import pandas as pd
 
@@ -34,33 +34,36 @@ data_dir = App.RAW_DATA_HOME
 time_start = Time('2014-04-13T18:04:00.000', scale='utc')
 time_end = Time('2014-04-13T20:04:00.000', scale='utc')
 
-# query parameters
-interval_cadence = 2*u.hour
-aia_search_cadence = 12*u.second
-wave_aia = 193
-wave_euvi = 195
-
-# generate the list of time intervals
-full_range = TimeRange(time_start, time_end)
-time_ranges = full_range.window(interval_cadence, interval_cadence)
-
+# # query parameters
+# interval_cadence = 2*u.hour
+# aia_search_cadence = 12*u.second
+# wave_aia = 193
+# wave_euvi = 195
+#
+time_range = TimeRange(time_start, time_end)
+# # generate the list of time intervals
+# full_range = TimeRange(time_start, time_end)
+# time_ranges = full_range.window(interval_cadence, interval_cadence)
+#
 # initialize the jsoc drms helper for aia.lev1_euv_12
 s12 = drms_helpers.S12(verbose=True)
 
 # initialize the helper class for EUVI
 euvi = vso_helpers.EUVI(verbose=True)
+#
+# # pick a time_range to experiement with
+# time_range = time_ranges[0]
+#
+# # query the jsoc for SDO/AIA
+# fs = s12.query_time_interval(time_range, wave_aia, aia_search_cadence)
+#
+# # query the VSO for STA/EUVI and STB/EUVI
+# fa = euvi.query_time_interval(time_range, wave_euvi, craft='STEREO_A')
+# fb = euvi.query_time_interval(time_range, wave_euvi, craft='STEREO_B')
+#
+# f_list = [fs, fa, fb]
 
-# pick a time_range to experiement with
-time_range = time_ranges[0]
-
-# query the jsoc for SDO/AIA
-fs = s12.query_time_interval(time_range, wave_aia, aia_search_cadence)
-
-# query the VSO for STA/EUVI and STB/EUVI
-fa = euvi.query_time_interval(time_range, wave_euvi, craft='STEREO_A')
-fb = euvi.query_time_interval(time_range, wave_euvi, craft='STEREO_B')
-
-f_list = [fs, fa, fb]
+f_list = list_available_images(time_start=time_start, time_end=time_end)
 
 # Get the decimal time of the center of the time_range (Julian Date)
 deltat = TimeDelta(0.0, format='sec')
@@ -71,21 +74,21 @@ print(time0)
 
 # build a numpy array to hold all of the times and time_deltas
 # first create a list of dataframes
-results = [fs.jd.values, fa.jd.values, fb.jd.values]
-sizes = []
-for result in results:
-    sizes.append(len(result))
-time_delta = np.ndarray(tuple(sizes), dtype='float64')
+# results = [fs.jd.values, fa.jd.values, fb.jd.values]
+# sizes = []
+# for result in results:
+#     sizes.append(len(result))
+# time_delta = np.ndarray(tuple(sizes), dtype='float64')
 
 # Now loop over all the image pairs to select the "perfect" group of images.
-imins = cluster_meth_1(results=results, jd0=jd0)
+imins = cluster_meth_1(f_list=f_list, jd0=jd0)
 # consider also returning a clustering-algorithm name to store in DB?
 # maybe saving the constituent images of a map is enough?
 
 # setup database connection
 use_db = "sqlite"
 sqlite_filename = "dbtest.db"
-db_session = init_DB_conn(db_name=use_db, chd_base=Base, sqlite_fn=sqlite_filename)
+db_session = init_db_conn(db_name=use_db, chd_base=Base, sqlite_path=sqlite_filename)
 
 # setup a list of imins to test multiple cluster download and enter into DB
 test = [imins, ([155], [6], [6]), ([455], [18], [18])]

@@ -5,30 +5,31 @@ the location of data_dir to the reference_data/raw subdirectory.
 This code relies on an SQLite DB to be present in the repo subdirectory 'reference_data/.
 Also the corresponding fits files should be present in reference_data/raw/.
 This code then demonstrate database querying and updating.
-An example deletion is given, but will full functionality cannot be demonstrated without.
+An example deletion is given, but will change the state of reference_data/ and thus is commented.  Feel
+free to try it, just don't commit the change to the repo.
 
 """
 
+import os
 import datetime
 # import pandas as pd
 
-# from settings.app import App
+from settings.app import App
 from modules.DB_classes import *
 from modules.DB_funs import init_db_conn, query_euv_images, update_image_val, remove_euv_image
 
-# Get the data dir from the installed app settings.
-# data_dir = App.RAW_DATA_HOME
+# Assume that we are using the 'reference_data' setup supplied with repo
 # manually set the data dir
-data_dir = '/Users/turtle/GitReps/CHD/reference_data/raw'
+raw_data_dir = os.path.join(App.APP_HOME, "reference_data/raw")
+hdf_data_dir = os.path.join(App.APP_HOME, "reference_data/processed")
 # manually set the database location
-database_dir = '/Users/turtle/GitReps/CHD/reference_data'
+database_dir = os.path.join(App.APP_HOME, 'reference_data')
 
 # setup database connection
 use_db = "sqlite"
 sqlite_filename = "dbtest.db"
-sqlite_path = database_dir + "/" + sqlite_filename
+sqlite_path = os.path.join(database_dir, sqlite_filename)
 db_session = init_db_conn(db_name=use_db, chd_base=Base, sqlite_path=sqlite_path)
-
 
 # query_EUV_images function:
 # requires time_min and time_max (datetime).  do we need to code 'jd' time option?
@@ -71,18 +72,9 @@ print(test_pd)
 
 # generate hdf file using some function like:
 # hd_fname = process_image2hdf(test_pd.iloc[0])
-hd_fname = "/Users/turtle/GitReps/CHD/test_data/hdf5/2014/04/13/sta_euvi_20140413T183530_195.hdf5"
+hd_fname = "2014/04/13/sta_euvi_20140413T183530_195.hdf5"
 # update database with file location
 db_session = update_image_val(db_session=db_session, raw_series=test_pd.iloc[0], col_name="fname_hdf", new_val=hd_fname)
-
-# all_euv = pd.read_sql(db_session.query(EUV_Images).statement, db_session.bind)
-# for index, image in all_euv.iterrows():
-#     image_id = image['id']
-#     image_path = image['fname_raw']
-#     image_path = image_path.replace('test_data', 'reference_data')
-#     print(index, image_path)
-#     db_session = update_image_val(db_session=db_session, raw_series=image, col_name="fname_raw",
-#                                   new_val=image_path)
 
 
 # also flag this image as 1 - 'verified good' (made-up example)
@@ -94,7 +86,8 @@ db_session = update_image_val(db_session=db_session, raw_series=test_pd.iloc[0],
 # remove_euv_image function:
 # removes the files and then the corresponding DB row
 # this works, but has been commented because it will only work once
-# exit_status, db_session = remove_euv_image(db_session=db_session, raw_series=test_pd.iloc[0])
+exit_status, db_session = remove_euv_image(db_session=db_session, raw_series=test_pd.iloc[0], raw_dir=raw_data_dir,
+                                           hdf_dir=hdf_data_dir)
 
 
 db_session.close()
