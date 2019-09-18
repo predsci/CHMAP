@@ -68,7 +68,7 @@ def construct_path_and_fname(base_dir, dtime, prefix, postfix, extension, mkdir=
     SS = '{:0>2}'.format(str(dtime.second))
 
     # build the subdirectory path
-    sub_dir = os.path.join(base_dir, YYYY, MM, DD)
+    sub_dir = os.path.join(YYYY, MM, DD)
 
     # make the directory if needed
     if mkdir:
@@ -140,6 +140,33 @@ def uncompress_compressed_fits_image(infile, outfile, int=False):
 
     # write out the file
     hdu = astropy.io.fits.PrimaryHDU(data, hdr)
+    hdulist.close()
+    hdu.writeto(outfile, output_verify='silentfix', overwrite=True, checksum=True)
+
+
+def write_sunpy_map_as_fits(outfile, map, dtype=np.uint16):
+    """
+    Helper function to take a sunpy map object and save the data as a fits file.
+
+    - This function circumvents sunpy.io in order to gain flexibility in the output
+      data type and how the fits library is called.
+
+    - We use it mainly to create a file that looks like raw STEREO EUVI
+      images in unsigned int format
+    """
+    # get the numpy array of image data, convert it to the desired dtype.
+    data = dtype(map.data)
+
+    # get the fits header (an astropy Header object)
+    header = map.fits_header
+
+    # start a new fits file object
+    hdu = astropy.io.fits.PrimaryHDU(data, header=header)
+
+    # build the hdu list
+    hdulist = astropy.io.fits.HDUList([hdu])
+
+    # write the file
     hdulist.close()
     hdu.writeto(outfile, output_verify='silentfix', overwrite=True, checksum=True)
 

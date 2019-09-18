@@ -5,30 +5,33 @@ the location of data_dir to the reference_data/raw subdirectory.
 This code relies on an SQLite DB to be present in the repo subdirectory 'reference_data/.
 Also the corresponding fits files should be present in reference_data/raw/.
 This code then demonstrate database querying and updating.
-An example deletion is given, but will full functionality cannot be demonstrated without.
+An example deletion is given, but full functionality cannot be demonstrated without deleting it.
 
 """
 
 import datetime
 # import pandas as pd
+import os
 
-# from settings.app import App
+from settings.app import App
 from modules.DB_classes import *
 from modules.DB_funs import init_db_conn, query_euv_images, update_image_val, remove_euv_image
 
 # Get the data dir from the installed app settings.
-# data_dir = App.RAW_DATA_HOME
+data_dir = os.path.join(App.APP_HOME, 'reference_data', 'raw')
+# Get the database locations from the installed app settings.
+database_dir = os.path.join(App.APP_HOME, 'reference_data')
+
 # manually set the data dir
-data_dir = '/Users/turtle/GitReps/CHD/reference_data/raw'
+# data_dir = '/Users/turtle/GitReps/CHD/reference_data/raw'
 # manually set the database location
-database_dir = '/Users/turtle/GitReps/CHD/reference_data'
+# database_dir = '/Users/turtle/GitReps/CHD/reference_data'
 
 # setup database connection
 use_db = "sqlite"
 sqlite_filename = "dbtest.db"
 sqlite_path = database_dir + "/" + sqlite_filename
 db_session = init_db_conn(db_name=use_db, chd_base=Base, sqlite_path=sqlite_path)
-
 
 # query_EUV_images function:
 # requires time_min and time_max (datetime).  do we need to code 'jd' time option?
@@ -42,7 +45,7 @@ print(test_pd)
 # query specific instrument
 print("\nQuery the reference database for all entries with instrument='AIA'.")
 query_time_min = datetime.datetime(2014, 4, 13, 10, 0, 0)
-instrument = ("AIA", )
+instrument = ("AIA",)
 test_pd = query_euv_images(db_session=db_session, time_min=query_time_min, time_max=query_time_max,
                            instrument=instrument)
 print(test_pd)
@@ -56,13 +59,12 @@ test_pd = query_euv_images(db_session=db_session, time_min=query_time_min, time_
 print(test_pd)
 
 # query specific wavelength and instrument
-wavelength = (195, )
-instrument = ("EUVI-B", )
+wavelength = (195,)
+instrument = ("EUVI-B",)
 print("\nQuery for instrument='EUVI-B' and wavelength=195 .")
 test_pd = query_euv_images(db_session=db_session, time_min=query_time_min, time_max=query_time_max,
                            wavelength=wavelength, instrument=instrument)
 print(test_pd)
-
 
 # update_image_val function:
 # currently requires a pandas-series object (like return of query_euv_images) to index
@@ -90,7 +92,6 @@ image_flag = 1
 # update database with file location
 db_session = update_image_val(db_session=db_session, raw_series=test_pd.iloc[0], col_name="flag", new_val=image_flag)
 
-
 # remove_euv_image function:
 # removes the files and then the corresponding DB row
 # this works, but has been commented because it will only work once
@@ -98,4 +99,3 @@ db_session = update_image_val(db_session=db_session, raw_series=test_pd.iloc[0],
 
 
 db_session.close()
-

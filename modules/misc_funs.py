@@ -5,13 +5,70 @@ to create the combined output image.
 """
 
 import numpy as np
+import pandas as pd
+import json
+from itertools import combinations
+
 import astropy.units as u
 from sunpy.time import TimeRange
-
-from itertools import combinations
+import sunpy.util.metadata
 
 from helpers.misc_helpers import carrington_rotation_number_relative
 from helpers import drms_helpers, vso_helpers
+
+
+def get_image_set(df, time0):
+    """
+    Find the best set of images near a given time.
+
+    Inputs:
+     df: a pandas DataFrame returned from an image query.
+       - The dataframe can be built by provider or database queries
+     time: an astropy Time object. This is the time used in the search.
+
+    Output: a pandas dataframe with one "best match" image for each spacecraft.
+    """
+    # convert the big dataframe to a list of dataframes with unique image types
+    df_list = df_to_df_list(df)
+
+    # now get the indexes of the best matching images in the set
+    locs = cluster_meth_1(df_list, time0.jd)
+
+    # build a list of the matching records (series)
+    ds_list = []
+    i = 0
+    for subdf in df_list:
+        ds_list.append(subdf.iloc[locs[i][0]])
+        i = i + 1
+
+    # turn that list into a new dataframe
+    if len(ds_list) > 0:
+        df_matched = pd.concat(ds_list, axis=1).T
+    else:
+        df_matched = df
+
+    return df_matched
+
+
+def df_to_df_list(df):
+    """
+    Helper function to sort through a pandas dataframe and return a list of dataframes
+    where each item is a dataframe with a unique spacecraft/instrument/wavelength combination
+    """
+    # first build a string series that combines the unique columns
+    #  - this is different whether the dataframe is from a provider query or a database query
+    #  - check by looking for tags that exist in one but not the other.
+    if 'wavelength' in df:
+        combo = df['instrument'] + '_' + df['wavelength'].astype(str)
+    elif 'filter' in df:
+        combo = df['spacecraft'] + '_' + df['instrument'] + '_' + df['filter'].astype(str)
+
+    # iterate over unique combos, add that subset to the list
+    df_list = []
+    for unique_combo in pd.unique(combo):
+        df_list.append(df.iloc[np.where(combo == unique_combo)])
+
+    return df_list
 
 
 def cluster_meth_1(f_list, jd0):
@@ -181,3 +238,18 @@ def list_available_images(time_start, time_end, euvi_interval_cadence=2*u.hour, 
     f_list = [elem for elem in f_list if len(elem) > 0]
 
     return f_list
+
+
+def write_meta_as_json(file, metadata):
+    """
+    Write a sunpy metadata object (dict used in map classes) to a json file
+    """
+    json.dump(metadata, open(file, 'w'))
+
+
+def read_meta_from_json(file):
+    """
+    Read sunpy metadata from a json and return it as a sunpy metadata object.
+    """
+    dict = json.load(open(file, 'r'))
+    return sunpy.util.metadata.MetaDict(dict)

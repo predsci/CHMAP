@@ -1,0 +1,134 @@
+"""
+Helper module for working with PSF deconvolution algorithms.
+
+- The main purpose is to deconvolve raw EUV images as part of the
+  image reduction pipeline (raw -> h5)
+
+- Currently this module interfaces with the SGP deconvolution
+  method used by Caplan et al. 2016
+  - Here we assume a binary SGP CUDA code is installed on a remote machine
+    and the interface works by reading/writing files in the special
+    unformatted binary format and sending it to/from the remote machine.
+  - NOTE: SGP data formats are UNFORMATTED --> architecture dependent
+    - most machines (intel linux/mac) seem to work but this is NOT GUARANTEED
+
+- ToDo: integrate an open source GPU deconvolution package so we can abandon SGP
+"""
+
+import numpy as np
+import os
+
+from settings.app import App
+
+sgp_dtype = np.float64
+
+sgp_min_val = np.float64(1e-16)
+
+sgp_remote_script = os.path.join(App.APP_HOME, 'shell_scripts', 'run_deconv_gpu.sh')
+
+
+def write_sgp_datfile(filename, image):
+    """
+    Write a binary datafile in format expected by the SGP deconvolution code.
+    - this is architecture dependent and will probably not work as intended
+      on non intel/x86 systems.
+
+    filename: the name of the SGP data file to write
+    image: a 2D numpy array of a square image
+    """
+
+    # get information about the array, check dimensionality
+    naxis1 = image.shape[0]
+    naxis2 = image.shape[1]
+    ndim = image.ndim
+    if ndim != 2:
+        raise Exception('image dimensions need to be 2. image.ndim was: {}'.format(ndim))
+
+    # open the file for writing as a binary format
+    file = open(filename, "wb")
+
+    # write the header (must be long integers)
+    np.int32(1).tofile(file)
+    np.int32(-64).tofile(file)
+    np.int32(ndim).tofile(file)
+    np.int32(naxis1).tofile(file)
+    np.int32(naxis2).tofile(file)
+
+    # write the image data in double precision
+    np.float64(image).tofile(file)
+
+    # close the file
+    file.close()
+
+
+def read_sgp_datfile(filename):
+    """
+    Read a binary datafile in the SGP specific format
+    - this is architecture dependent and will probably not work as intended
+      on non intel/x86 systems.
+    - the image is returned as a 2D numpy array.
+    """
+    # open the file as a binary format
+    file = open(filename, "rb")
+
+    # read in the header according to SGP format (returned as arrays with one element)
+    ver = np.fromfile(file, dtype=np.int32, count=1)
+    magic = np.fromfile(file, dtype=np.int32, count=1)
+    ndim = np.fromfile(file, dtype=np.int32, count=1)
+    naxis1 = np.fromfile(file, dtype=np.int32, count=1)
+    naxis2 = np.fromfile(file, dtype=np.int32, count=1)
+
+    # read in the image as a long 1D array
+    im1d = np.fromfile(file, dtype=np.float64)
+
+    # reshape the image as a 2D image
+    image = np.reshape(im1d, (naxis1[0], naxis2[0]))
+
+    # close the file
+    file.close()
+
+    return image
+
+
+def deconv_sgp(image, psf_name):
+    """
+    """
+    debug = False
+
+    # define the temporary file names
+    fname_in = App.TMP_HOME + '/Image_orig.dat'
+    fname_out = App.TMP_HOME + '/Image_new.dat'
+
+    if debug:
+        print(fname_in)
+        print(fname_out)
+
+    # ensure that the image has no zero values
+    image_thresh = image.copy()
+    image_thresh[image <= sgp_min_val] = sgp_min_val
+
+    # write the image as a temporary SGP data file
+    write_sgp_datfile(fname_in, image_thresh)
+
+    # call the remote deconvolution algorithm
+    command = sgp_remote_script + ' ' + psf_name
+    if debug:
+        print('Calling Deconvolution: ' + command)
+
+    status = App.run_shell_command(command, App.TMP_HOME, debug=debug)
+
+    if debug:
+        print(status)
+
+    # read the deconvolved image
+    image_deconv = read_sgp_datfile(fname_out)
+
+    # clean up the temporary files
+    for file in [fname_in, fname_out]:
+
+        if os.path.isfile(file):
+            os.remove(file)
+        else:
+            raise Exception('Temporary SGP file not found, something is probably wrong: {}'.format(file))
+
+    return image_deconv
