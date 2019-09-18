@@ -216,7 +216,7 @@ class Session:
         else:
             print("  IDL Process already dead, return code: ", self.proc.poll())
 
-    def secchi_prep(self, infile, outfile):
+    def secchi_prep(self, infile, outfile, quiet=False):
         """
         Run the SSW IDL commands necessary for prepping a STEREO EUVI image from lvl 0.5 to 1.0
 
@@ -227,17 +227,17 @@ class Session:
           --> it may be better down the road to call arrays of images (10-100+) vs one at a time.
         """
         # set the IDL variables
-        self.run('InFile="' + infile + '"')
-        self.run('OutFile="' + outfile + '"')
+        self.run('InFile="' + infile + '"', quiet=quiet)
+        self.run('OutFile="' + outfile + '"', quiet=quiet)
 
         # prep the EUVI image file
-        self.run('secchi_prep, InFile, Hdr, Im')
+        self.run('secchi_prep, InFile, Hdr, Im', quiet=quiet)
 
         # write out the uncompressed result.
-        self.run('mwritefits, OutFile=OutFile, Hdr, Im')
+        self.run('mwritefits, OutFile=OutFile, Hdr, Im', quiet=quiet)
 
         # use these commands if just testing reading/writing.
-        #self.run('mreadfits, InFile, Hdr, Im')
-        #self.run('writefits, OutFile, Im, Hdr')
-        #self.run('mwritefits, OutFile=OutFile, Hdr, Im')
-        #self.run('write_hdf_2d, OutFile, findgen(2048), findgen(2048), Im, iErr')
+        # self.run('mreadfits, InFile, Hdr, Im')
+        # self.run('writefits, OutFile, Im, Hdr')
+        # self.run('mwritefits, OutFile=OutFile, Hdr, Im')
+        # self.run('write_hdf_2d, OutFile, findgen(2048), findgen(2048), Im, iErr')
