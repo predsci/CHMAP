@@ -1,0 +1,33 @@
+The routines in this folder read/query the database and make and html
+document that summarizes the data and schema.  Maybe the most useful 
+item is the diagram of tables with primary keys, indices, and column 
+relationships visualized.
+
+Software requirements:
+    Java 5 or higher
+    graphviz (I installed graphviz-devel: port install graphviz-devel)
+
+The basic process is this:
+1. Make changes to database schema.
+      - as defined in DB_classes.py using SQLAlchemy
+2. Generate an instance of the new format.
+      - Probably easiest to delete test_data/dbtest.db and then run
+        example001_DB-workflow.py to create a sample SQLite DB.
+3. Run schemaspy to generate the new documentation.
+      - For SQLite:
+        $ cd sqlite
+        $ java -jar ../schemaspy-6.1.0.jar
+        This will use the files sqlite/schemaspy.properties and 
+        sqlite/sqlite.properties files to set properties.  Alter 
+        schemaspy.properties to change the DB or output paths.
+
+      - For MySQL:
+        Haven't set this up yet.
+
+4. View results
+      - In the output/ directory, open index.html. The subdirectories of 
+        output/ also contain some nice PNG images of table relationships.
+
+
+NOTE: This directory probably should not be included for distribution, due
+to the java codes being distributed by third parties.

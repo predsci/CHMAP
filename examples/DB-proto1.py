@@ -127,7 +127,7 @@ for imin in test:
         db_session = add_image2session(data_dir=data_dir, subdir=subdir, fname=fname, db_session=db_session)
 
 
-# commit the changes to the DB, this also assigns auto-incrementing primekeys 'id'
+# commit the changes to the DB, this also assigns auto-incrementing primekeys 'image_id'
 db_session.commit()
 
 # example query exported directly to pandas dataframe.  This seems a little weird, using a function from pandas

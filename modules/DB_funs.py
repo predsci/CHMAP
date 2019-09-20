@@ -18,6 +18,7 @@ from sqlalchemy.orm import sessionmaker
 from settings.app import App
 from modules.DB_classes import *
 from modules.misc_funs import get_metadata
+from helpers import misc_helpers
 
 
 def init_db_conn(db_name, chd_base, sqlite_path=""):
@@ -116,7 +117,7 @@ def add_image2session(data_dir, subdir, fname, db_session):
     file_meta = get_metadata(fits_map)
 
     # check if row already exists in DB
-    existing_row_id = db_session.query(EUV_Images.id, EUV_Images.fname_raw).filter(
+    existing_row_id = db_session.query(EUV_Images.image_id, EUV_Images.fname_raw).filter(
         EUV_Images.instrument == file_meta['instrument'],
         EUV_Images.date_obs == file_meta['datetime'],
         EUV_Images.wavelength == file_meta['wavelength']).all()
@@ -137,7 +138,7 @@ def add_image2session(data_dir, subdir, fname, db_session):
     else:
         # Add new entry to DB
         # Construct now DB table row
-        image_add = EUV_Images(date_obs=file_meta['datetime'], jd=file_meta['jd'], instrument=file_meta['instrument'],
+        image_add = EUV_Images(date_obs=file_meta['datetime'], instrument=file_meta['instrument'],
                                wavelength=file_meta['wavelength'], fname_raw=DB_path,
                                fname_hdf="", distance=file_meta['distance'], cr_lon=file_meta['cr_lon'],
                                cr_lat=file_meta['cr_lat'], cr_rot=file_meta['cr_rot'],
@@ -194,7 +195,7 @@ def remove_euv_image(db_session, raw_series, raw_dir, hdf_dir):
             exit_status = exit_status + 2
 
     # delete row where id = raw_id.  Use .item() to recover an INT from numpy.int64
-    out_flag = db_session.query(EUV_Images).filter(EUV_Images.id==raw_id.item()).delete()
+    out_flag = db_session.query(EUV_Images).filter(EUV_Images.image_id == raw_id.item()).delete()
     if out_flag==0:
         exit_status = exit_status + 4
     elif out_flag==1:
@@ -211,13 +212,13 @@ def update_image_val(db_session, raw_series, col_name, new_val):
     :return: the SQLAlchemy database session
     """
 
-    if col_name in ("id", "obs_time", "instrument", "wavelength"):
+    if col_name in ("image_id", "obs_time", "instrument", "wavelength"):
         print("This is a restricted column and will not be updated by this function. Values can be changed " +
               "directly using SQLAlchemy functions. Alternatively one could use remove_euv_image() followed " +
               "by euvi.download_image_fixed_format(), add_image2session(), and db_session.commit()")
     else:
-        raw_id = raw_series['id']
-        db_session.query(EUV_Images).filter(EUV_Images.id==raw_id).update({col_name : new_val})
+        raw_id = raw_series['image_id']
+        db_session.query(EUV_Images).filter(EUV_Images.image_id == raw_id).update({col_name : new_val})
         db_session.commit()
 
     return(db_session)
@@ -244,7 +245,6 @@ def build_euvimages_from_fits(db_session, raw_data_dir, hdf_data_dir):
                 db_session = add_image2session(data_dir=raw_data_dir, subdir=relative_path, fname=filename,
                                                db_session=db_session)
 
-
     # commit changes to the DB
     db_session.commit()
 
@@ -253,14 +253,22 @@ def build_euvimages_from_fits(db_session, raw_data_dir, hdf_data_dir):
     result = pd.read_sql(db_session.query(EUV_Images).statement, db_session.bind)
     # iterate over each row
     for index, row in result.iterrows():
+        # Extract metadata from fits file
+        fits_path = os.path.join(raw_data_dir, row.fname_raw)
+        fits_map = sunpy.map.Map(fits_path)
+        chd_meta = get_metadata(fits_map)
+        prefix, postfix, extension = misc_helpers.construct_hdf5_pre_and_post(chd_meta)
+        sub_dir, fname = misc_helpers.construct_path_and_fname(
+            hdf_data_dir, fits_map.date.datetime, prefix, postfix, extension,
+            mkdir=False)
+        hdf_rel_path = sub_dir.replace(hdf_data_dir + os.path.sep, '')
+
+        hdf_full_path = os.path.join(hdf_data_dir, hdf_rel_path, fname)
         # check for matching hdf5 file
-        hdf_full_path = os.path.join(hdf_data_dir, row.fname_raw)
-        hdf_full_path = hdf_full_path.replace(".fits", ".hdf5")
         if os.path.exists(hdf_full_path):
-            hdf_rel_path = hdf_full_path.replace(hdf_data_dir + "/", "")
             # assume the file is good (??) and record in DB
             db_session = update_image_val(db_session=db_session, raw_series=row,
-                                          col_name="fname_hdf", new_val=hdf_rel_path)
+                                          col_name="fname_hdf", new_val=os.path.join(hdf_rel_path, fname))
 
     return(db_session)
 
@@ -294,13 +302,13 @@ def update_euv_map(db_session, map_series, col_name, new_val):
     :return: the SQLAlchemy database session
     """
 
-    if col_name in ("id", "obs_time", "instrument", "wavelength"):
+    if col_name in ("map_id", "obs_time", "instrument", "wavelength"):
         print("This is a restricted column and will not be updated by this function. Values can be changed " +
               "directly using SQLAlchemy functions. Alternatively one could use remove_euv_image() followed " +
               "by euvi.download_image_fixed_format(), add_image2session(), and db_session.commit()")
     else:
-        raw_id = map_series['id']
-        db_session.query(EUV_Images).filter(EUV_Images.id==raw_id).update({col_name : new_val})
+        raw_id = map_series['map_id']
+        db_session.query(EUV_Images).filter(EUV_Images.image_id == raw_id).update({col_name : new_val})
         db_session.commit()
 
     return(db_session)

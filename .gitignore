@@ -9,3 +9,8 @@
 
 settings/app.py
 setup.conf
+
+# ignore the output folders in schema_viz
+schema_viz/mysql/output/*
+schema_viz/sqlite/output/*
+

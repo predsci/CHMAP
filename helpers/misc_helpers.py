@@ -86,6 +86,19 @@ def construct_path_and_fname(base_dir, dtime, prefix, postfix, extension, mkdir=
     return sub_dir, fname
 
 
+def construct_hdf5_pre_and_post(chd_meta):
+    """
+    Standardize/Centralize hdf5 image filename production
+    :param chd_meta: image meta dictionary. Output of misc_funs.py - get_metadata()
+    :return: prefix, postfix, and extension strings
+    """
+    prefix = chd_meta['instrument'].lower().replace('-', '') + '_lvl2'
+    postfix = str(chd_meta['wavelength'])
+    extension = 'h5'
+
+    return prefix, postfix, extension
+
+
 def custom_dataframe(times, jds, urls, spacecraft, instrument, filter):
     """
     General function designed to take information from any query and turn it into a sliceable

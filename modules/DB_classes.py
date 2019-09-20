@@ -20,9 +20,8 @@ class EUV_Images(Base):
      - It is an essential element of the database.
     """
     __tablename__ = 'euv_images'
-    id = Column(Integer, primary_key=True)
+    image_id = Column(Integer, primary_key=True)
     date_obs = Column(DateTime)
-    jd = Column(Float)
     instrument = Column(String(10))
     wavelength = Column(Integer)
     fname_raw = Column(String(150))
@@ -60,10 +59,10 @@ class Image_Combos(Base):
     __tablename__='image_combos'
     combo_id = Column(Integer, primary_key=True)
     n_images = Column(Integer)
-    date_obs = Column(DateTime)
+    date_mean = Column(DateTime)
     date_max = Column(DateTime)
     date_min = Column(DateTime)
-    jd = Column(Float)
+    __table_args__ = (Index('mean_time', "date_mean"), )
 
 
 class Map_Image_Assoc(Base):

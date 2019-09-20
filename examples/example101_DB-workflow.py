@@ -23,12 +23,12 @@ from modules.DB_funs import init_db_conn, query_euv_images, add_image2session, u
 
 
 # to create the reference DB and files, set Create_Ref=True
-Create_Ref = True
+Create_Ref = False
 
 # Get the data dir from the installed app settings.
 if Create_Ref:
-    raw_data_dir = os.path.join(App.APP_HOME, "reference_data/raw")
-    hdf_data_dir = os.path.join(App.APP_HOME, "reference_data/processed")
+    raw_data_dir = os.path.join(App.APP_HOME, "reference_data", "raw")
+    hdf_data_dir = os.path.join(App.APP_HOME, "reference_data", "processed")
 else:
     raw_data_dir = App.RAW_DATA_HOME
     hdf_data_dir = App.PROCESSED_DATA_HOME
@@ -118,7 +118,7 @@ for imin in test:
 
 
 print("\nDownloads complete with all images added to DB session.  \nNow commit session changes to DB.")
-# commit the changes to the DB, this also assigns auto-incrementing primekeys 'id'
+# commit the changes to the DB, this also assigns auto-incrementing primekeys 'image_id'
 db_session.commit()
 
 # query_EUV_images function:

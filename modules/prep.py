@@ -64,9 +64,10 @@ def prep_euv_image(fitsfile, processed_home_dir, deconvolve=True, write=True, id
 
     # compute the h5 path information
     dtime = map_raw.date.datetime
-    prefix = los.info['instrument'].lower().replace('-', '') + '_lvl2'
-    postfix = str(los.info['wavelength'])
-    extension = 'h5'
+    # prefix = los.info['instrument'].lower().replace('-', '') + '_lvl2'
+    # postfix = str(los.info['wavelength'])
+    # extension = 'h5'
+    prefix, postfix, extension = misc_helpers.construct_hdf5_pre_and_post(los.info)
     sub_dir, fname = misc_helpers.construct_path_and_fname(
         processed_home_dir, dtime, prefix, postfix, extension,
         mkdir=write)
