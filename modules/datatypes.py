@@ -7,9 +7,10 @@ from helpers import psihdf
 
 import sunpy.map
 import sunpy.util.metadata
-import helpers.psihdf as psihdf
 
+import helpers.psihdf as psihdf
 import modules.DB_classes as db
+from modules.coord_manip import interp_los_image_to_map
 
 
 class LosImage:
@@ -74,6 +75,51 @@ class LosImage:
         psihdf.wrh5_meta(filename, self.x, self.y, np.array([]),
                          self.data, chd_meta=self.info, sunpy_meta=sunpy_meta)
 
+    def interp_to_map(self, R0=1.0, map_x=None, map_y=None, no_data_val=-9999., image_num=None):
+
+        print("\nConverting " + self.info['instrument'] + "-" + str(self.info['wavelength']) + " image from " +
+              self.info['date_string'] + " to a map.")
+
+        if map_x is None and map_y is None:
+            # Generate map grid based on number of image pixels vertically within R0
+            # map parameters (assumed)
+            y_range = [-1, 1]
+            x_range = [0, 2*np.pi]
+
+            # observer parameters (from image)
+            cr_lat = self.info['cr_lat']
+            cr_lon = self.info['cr_lon']
+
+            # determine number of pixels in map y-grid
+            map_nycoord = sum(abs(self.y) < R0)
+            del_y = (y_range[1] - y_range[0])/(map_nycoord - 1)
+            # how to define pixels? square in sin-lat v phi or lat v phi?
+            # del_x = del_y*np.pi/2
+            del_x = del_y
+            map_nxcoord = (np.floor((x_range[1] - x_range[0])/del_x) + 1).astype(int)
+
+            # generate map x,y grids. y grid centered on equator, x referenced from lon=0
+            map_y = np.linspace(y_range[0], y_range[1], map_nycoord.astype(int), dtype='<f4')
+            map_x = np.linspace(x_range[0], x_range[1], map_nxcoord.astype(int), dtype='<f4')
+
+        # Do interpolation
+        interp_result = interp_los_image_to_map(self, R0, map_x, map_y, no_data_val=no_data_val)
+
+        # Partially populate a map object with grid and data info
+        map_out = PsiMap()
+        map_out.data = interp_result.data
+        map_out.x = interp_result.x
+        map_out.y = interp_result.y
+        map_out.mu = interp_result.mu_mat
+        map_out.no_data_val = no_data_val
+        map_out.origin_image = np.full(interp_result.data.shape, no_data_val, dtype=int)
+        # if image number is entered, record in appropriate pixels
+        if image_num is not None:
+            map_out.origin_image[map_out.data > no_data_val] = image_num
+
+        return map_out
+
+
 
 def read_los_image(h5_file):
     """
@@ -95,7 +141,7 @@ def read_los_image(h5_file):
     return los
 
 
-class Map:
+class PsiMap:
     """
     Object that contains map information.  The Map object is structured like the database for convenience.
         - One of its primary uses is for passing info to and from database.
@@ -126,8 +172,13 @@ class Map:
             defs_columns.append(column.key)
         df_cols = set().union(image_columns, map_columns)
         self.var_info = pd.DataFrame(data=None, columns=df_cols)
-        # This is a placeholder for the hdf map object.
-        self.map = None
+        # These are placeholders for map grids and data
+        self.data = None
+        self.x    = None
+        self.y    = None
+        self.mu   = None
+        self.no_data_val = None
+        self.origin_image = None
 
     def append_map_info(self, map_df):
         """
@@ -161,3 +212,18 @@ def init_df_from_declarative_base(base_object):
 
     return out_df
 
+
+class InterpResult:
+    """
+    Class to hold the standard output from interpolating an image to
+        a map.  Allows for the optional attribute mu.
+
+    """
+
+    def __init__(self, data, x, y, mu_mat=None):
+
+        # create the data tags
+        self.data = data
+        self.x = x
+        self.y = y
+        self.mu_mat = mu_mat

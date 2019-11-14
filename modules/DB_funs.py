@@ -628,7 +628,7 @@ def query_euv_maps(db_session, mean_time_range=None, extrema_time_range=None, n_
     method_info = pd.read_sql(db_session.query(Meth_Defs).statement, db_session.bind)
 
     # Then divide results up into a list of Map objects
-    map_list = [datatypes.Map()]*len(map_info)
+    map_list = [datatypes.PsiMap()]*len(map_info)
     for index, map_series in map_info.iterrows():
         # map_info
         map_list[index].append_map_info(map_series)
@@ -658,7 +658,7 @@ def create_map_input_object(fname, image_df, var_vals, method_name, time_of_comp
     :return: The partially filled Map object needed to create a new map record in the DB
     """
 
-    new_map = datatypes.Map()
+    new_map = datatypes.PsiMap()
 
     # construct method_info df
     method_info = pd.DataFrame(data=[[method_name, ]], columns=["meth_name", ])

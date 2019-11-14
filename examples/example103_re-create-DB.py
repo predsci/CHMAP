@@ -23,7 +23,7 @@ sqlite_filename = "db_create-test.db"
 
 # To recreate the SQLite database file in reference_data/, use these:
 # database_dir = os.path.join(App.APP_HOME, "reference_data")
-# sqlite_filename = "dbtest.db"
+sqlite_filename = "dbtest.db"
 
 # setup database connection
 use_db = "sqlite"
