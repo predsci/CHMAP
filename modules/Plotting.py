@@ -22,11 +22,16 @@ def PlotImage(los_image, nfig=None, mask_rad=1.5, title=None):
     im_cmap = plt.get_cmap('sohoeit195')
 
     # mask-off pixels outside of mask_rad
-    mesh_x, mesh_y = np.meshgrid(los_image.x, los_image.y)
-    mesh_rad = np.sqrt(mesh_x**2 + mesh_y**2)
+    # mesh_x, mesh_y = np.meshgrid(los_image.x, los_image.y)
+    # mesh_rad = np.sqrt(mesh_x**2 + mesh_y**2)
+    # plot_arr = los_image.data
+    # plot_arr[mesh_rad > mask_rad] = 0.001
+
+    # remove extremely small values from data so that log color scale treats them as black
+    # rather than white
     plot_arr = los_image.data
-    plot_arr[mesh_rad > mask_rad] = 0.001
-    # plot_arr[0, 0] = np.nan
+    plot_arr[plot_arr < .001] = .001
+
 
     # plot the initial image
     if nfig is None:

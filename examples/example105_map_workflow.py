@@ -38,8 +38,8 @@ use_db = "sqlite"
 db_session = init_db_conn(db_name=use_db, chd_base=DB_classes.Base, sqlite_path=sqlite_path)
 
 # re-build euv_images table
-print("\nGenerating images database from existing fits files. \n")
-db_session = build_euvimages_from_fits(db_session=db_session, raw_data_dir=raw_data_dir, hdf_data_dir=hdf_data_dir)
+# print("\nGenerating images database from existing fits files. \n")
+# db_session = build_euvimages_from_fits(db_session=db_session, raw_data_dir=raw_data_dir, hdf_data_dir=hdf_data_dir)
 
 
 # --- 2. create minimal 'Map' object from method, var_vals, image associations, and map filename -------------
@@ -83,10 +83,12 @@ mean_time_range = [datetime.datetime(2000, 1, 1, 1, 1, 1), datetime.datetime(202
 # For example search for all maps over a large time range.  For demonstration, all query options are listed
 # query_par=None.  In practice, they default to None and do not need to be entered in the function call.  Ranges
 # are expected as a list with length 2; others expect lists and use the IN() operator.
-map_list = query_euv_maps(db_session, mean_time_range=mean_time_range, extrema_time_range=None, n_images=None,
-                          image_ids=None, methods=None, var_val_range=None, wavelength=None)
-print("Querying for all maps in a large time range: \n" + str(mean_time_range) + ", \nReturns a list of maps of length "
-      + str(len(map_list)) + ".\n")
+map_info, image_info, var_info, method_info = query_euv_maps(db_session, mean_time_range=mean_time_range,
+                                                             extrema_time_range=None, n_images=None,
+                                                             image_ids=None, methods=None, var_val_range=None,
+                                                             wavelength=None)
+# print("Querying for all maps in a large time range: \n" + str(mean_time_range) + ", \nReturns a list of maps of length "
+#       + str(len(map_list)) + ".\n")
 
 # --- 6. demonstrate map record deletion ------------------
 map_dir = os.path.join(App.APP_HOME, 'reference_data', 'map')

@@ -6,6 +6,7 @@ Functions to manipulate and combine maps
 import numpy as np
 
 import modules.datatypes as psi_d_types
+from settings.info import DTypes
 
 def combine_maps(map_list, mu_cutoff=0.0, del_mu=None):
     """
@@ -42,9 +43,9 @@ def combine_maps(map_list, mu_cutoff=0.0, del_mu=None):
 
         # first construct arrays of mu's and data
         mat_size = map_list[0].mu.shape
-        mu_array = np.ndarray(shape=mat_size + (nmaps,))
-        data_array = np.ndarray(shape=mat_size + (nmaps,))
-        image_array = np.ndarray(shape=mat_size + (nmaps,))
+        mu_array = np.ndarray(shape=mat_size + (nmaps,), dtype=DTypes.MAP_MU)
+        data_array = np.ndarray(shape=mat_size + (nmaps,), dtype=DTypes.MAP_DATA)
+        image_array = np.ndarray(shape=mat_size + (nmaps,), dtype=DTypes.MAP_ORIGIN_IMAGE)
         for ii in range(nmaps):
             mu_array[:, :, ii] = map_list[ii].mu
             data_array[:, :, ii] = map_list[ii].data
@@ -90,13 +91,8 @@ def combine_maps(map_list, mu_cutoff=0.0, del_mu=None):
         keep_imag = image_array[row_index, col_index, map_index]
 
         # Generate new map object
-        map_out = psi_d_types.PsiMap()
-        map_out.origin_image = keep_imag
-        map_out.data = keep_data
-        map_out.mu = keep_mu
-        map_out.x = map_list[0].x
-        map_out.y = map_list[0].y
-        map_out.no_data_val = map_list[0].no_data_val
+        map_out = psi_d_types.PsiMap(keep_data, map_list[0].x, map_list[0].y, mu=keep_mu,
+                                     origin_image=keep_imag, no_data_val=map_list[0].no_data_val)
         # need to also record merge parameters
         # map_out.mthod_par = {'mu_cutoff': mu_cutoff, 'del_mu': del_mu}
 

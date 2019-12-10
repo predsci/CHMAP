@@ -627,29 +627,33 @@ def query_euv_maps(db_session, mean_time_range=None, extrema_time_range=None, n_
     # also get method info
     method_info = pd.read_sql(db_session.query(Meth_Defs).statement, db_session.bind)
 
+    # This doesn't make sense.  We want a dataframe detailing each map record
     # Then divide results up into a list of Map objects
-    map_list = [datatypes.PsiMap()]*len(map_info)
-    for index, map_series in map_info.iterrows():
-        # map_info
-        map_list[index].append_map_info(map_series)
-        # image_info
-        combo_id = map_series.combo_id
-        image_ids = image_assoc.image_id[image_assoc.combo_id==combo_id]
-        images_slice = image_info.loc[image_info.image_id.isin(image_ids)]
-        map_list[index].append_image_info(images_slice)
-        # var_info
-        var_slice = var_info.loc[var_info.map_id==map_series.map_id]
-        map_list[index].append_var_info(var_slice)
-        # method info
-        map_list[index].append_method_info(method_info.loc[method_info.meth_id==map_series.meth_id])
+    # map_list = [datatypes.PsiMap()]*len(map_info)
+    # for index, map_series in map_info.iterrows():
+    #     # map_info
+    #     map_list[index].append_map_info(map_series)
+    #     # image_info
+    #     combo_id = map_series.combo_id
+    #     image_ids = image_assoc.image_id[image_assoc.combo_id==combo_id]
+    #     images_slice = image_info.loc[image_info.image_id.isin(image_ids)]
+    #     map_list[index].append_image_info(images_slice)
+    #     # var_info
+    #     var_slice = var_info.loc[var_info.map_id==map_series.map_id]
+    #     map_list[index].append_var_info(var_slice)
+    #     # method info
+    #     map_list[index].append_method_info(method_info.loc[method_info.meth_id==map_series.meth_id])
+    #
+    # return map_list
 
-    return map_list
+    return map_info, image_info, var_info, method_info
 
 
-def create_map_input_object(fname, image_df, var_vals, method_name, time_of_compute=None):
+def create_map_input_object(new_map, fname, image_df, var_vals, method_name, time_of_compute=None):
     """
     This function generates a Map object and populates it with necessary info for creating a
     new map record in the DB.
+    :param new_map: PsiMap object that has not been added to DB yet
     :param fname: relative file path, including filename
     :param time_of_compute: Datetime when the map was made
     :param image_df: DataFrame with columns 'image_id' describing the constituent images
@@ -657,8 +661,6 @@ def create_map_input_object(fname, image_df, var_vals, method_name, time_of_comp
     :param method_name: Name of method used.  Must match meth_defs.meth_name column in DB
     :return: The partially filled Map object needed to create a new map record in the DB
     """
-
-    new_map = datatypes.PsiMap()
 
     # construct method_info df
     method_info = pd.DataFrame(data=[[method_name, ]], columns=["meth_name", ])

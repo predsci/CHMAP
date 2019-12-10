@@ -27,6 +27,7 @@ import modules.datatypes as psi_d_types
 from modules.map_manip import combine_maps
 # import modules.coord_manip as coord
 import modules.Plotting as EasyPlot
+from helpers.misc_helpers import construct_map_path_and_fname
 
 # --- 1. Select Images -----------------------------------------------------
 # In this example we use the 'reference_data' fits files supplied with repo
@@ -71,6 +72,9 @@ for ii in range(len(los_list)):
     # los_list[ii] = limb_correct(los_list[ii])
     pass
 
+# Generate a list of methods/parameters to keep track for DB?
+#   - Keep track of Limb-correction/Inter-inst/CHD/merge methods
+#   separately?  Current DB is setup for one method per Map.
 
 # --- 3. Inter-instrument Transformation --------------------------------------
 
@@ -109,6 +113,14 @@ for ii in range(len(los_list)):
     map_list[ii] = los_list[ii].interp_to_map(R0=R0, map_x=map_x, map_y=map_y, image_num=selected_images.image_id[ii])
     # Alternatively, we could have resolution determined from image
     # map_list[ii] = los_list[ii].interp_to_map(R0=R0)
+    # record image info
+    map_list[ii].append_image_info(selected_images.iloc[ii])
+    # generate a path and filename for saving
+    map_id = 15
+    map_time = map_list[ii].image_info.
+    sub_dir, fname = construct_map_path_and_fname(App.MAP_FILE_HOME, map_time., map_id, 'single', 'h5', mkdir=True)
+
+    # simple plot
     EasyPlot.PlotMap(map_list[ii], nfig=10+ii, title="Map " + str(ii))
 
 # --- 6. Combine Maps ---------------------------------------------------------

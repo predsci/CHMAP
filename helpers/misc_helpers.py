@@ -221,3 +221,18 @@ def carrington_rotation_number_relative(time, lon):
         print(cr_earth, cr0, lon_earth, sunpy.coordinates.sun.L0(time).value, lon, cr_now)
 
     return cr_now
+
+
+def construct_map_path_and_fname(base_dir, dtime, map_id, map_type, extension, mkdir=True):
+    """
+    Wrapper to adapt construct_path_and_fname() for map files.
+    - it returns the subdirectory path and filename
+    """
+
+    prefix = map_type
+    postfix = 'MID' + map_id
+    map_base_dir = os.path.join(base_dir, map_type)
+    sub_dir, fname = construct_path_and_fname(map_base_dir, dtime, prefix, postfix, extension, mkdir=mkdir)
+
+    return sub_dir, fname
+

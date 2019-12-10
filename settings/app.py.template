@@ -25,6 +25,9 @@ class App:
     # Path to the root directory for the processed data.
     PROCESSED_DATA_HOME = __PROCESSED_DATA_HOME__
 
+    # Path the the root directory of map files.
+    MAP_FILE_HOME = __MAP_FILE_HOME__
+
     # Path to the folder where the databases are stored.
     DATABASE_HOME = __DATABASE_HOME__
 

@@ -31,32 +31,38 @@ def map_grid_to_image(map_x, map_y, R0=1.0, obsv_lon=0.0, obsv_lat=0.0):
     map3D_z = R0*np.cos(map_theta)
 
     # rotate phi (about map z-axis. observer phi goes to -y)
-    del_phi = -obsv_lon*np.pi/180 - np.pi/2
-    int3D_x = np.cos(del_phi)*map3D_x - np.sin(del_phi)*map3D_y
-    int3D_y = np.cos(del_phi)*map3D_y + np.sin(del_phi)*map3D_x
-    int3D_z = map3D_z
+    # del_phi = -obsv_lon*np.pi/180 - np.pi/2
+    # int3D_x = np.cos(del_phi)*map3D_x - np.sin(del_phi)*map3D_y
+    # int3D_y = np.cos(del_phi)*map3D_y + np.sin(del_phi)*map3D_x
+    # int3D_z = map3D_z
 
     # rotate theta (about x-axis. observer theta goes to +z)
-    del_theta = obsv_lat*np.pi/180 - np.pi/2
-    image_x = int3D_x
-    image_y = np.cos(del_theta)*int3D_y - np.sin(del_theta)*int3D_z
-    image_z = np.cos(del_theta)*int3D_z + np.sin(del_theta)*int3D_y
+    # del_theta = obsv_lat*np.pi/180 - np.pi/2
+    # image_x = int3D_x
+    # image_y = np.cos(del_theta)*int3D_y - np.sin(del_theta)*int3D_z
+    # image_z = np.cos(del_theta)*int3D_z + np.sin(del_theta)*int3D_y
     # rotate theta (about intermediate y-axis) exterior minus sign is due to right-hand-rule rotation direction.
     # del_theta = -cr_lat*np.pi/180 + np.pi/2
     # image_x = np.cos(del_theta)*int3D_x + np.sin(del_theta)*int3D_z
     # image_y = int3D_y
     # image_z = -np.sin(del_theta)*int3D_x + np.cos(del_theta)*int3D_z
 
+    # generate rotation matrix
+    rot_mat = map_to_image_rot_mat(obsv_lon, obsv_lat)
+    # construct coordinate array
+    coord_array = np.array([map3D_x, map3D_y, map3D_z])
+    # apply rotation matrix to coordinates
+    image3D_coord = np.matmul(rot_mat, coord_array)
 
-    image_phi = np.arctan2(image_y, image_x)
-    image_theta = np.arccos(image_z/R0)
+    image_phi = np.arctan2(image3D_coord[1, :], image3D_coord[0, :])
+    image_theta = np.arccos(image3D_coord[2, :]/R0)
 
-    return image_x, image_y, image_z, image_theta, image_phi
+    return image3D_coord[0, :], image3D_coord[1, :], image3D_coord[2, :], image_theta, image_phi
 
 
-def image_grid_to_CR(image_x, image_y, R0=1.0, obsv_lat=0, obsv_lon=0, get_mu=False):
+def image_grid_to_CR(image_x, image_y, R0=1.0, obsv_lat=0, obsv_lon=0, get_mu=False, outside_map_val=-9999.):
     """
-    Given an image grid in solar radii units and the observer angles, transform to map coords.
+    Given vector coordinate pairs in solar radii units and the observer angles, transform to map coords.
     :param image_x: vector of x coordinates
     :param image_y: vector of y coordinates
     :param R0: Assumed radius in solar radii.
@@ -65,37 +71,50 @@ def image_grid_to_CR(image_x, image_y, R0=1.0, obsv_lat=0, obsv_lon=0, get_mu=Fa
     :return:
     """
 
-    # for images, we assume that the z-axis is perpendicular to the image in the direction of the observer and
-    # located at the center of the image.
+    # for images, we assume that the z-axis is perpendicular to the image plane, in the direction
+    # of the observer, and located at the center of the image.
+
+    # mask points outside of R0
+    use_index = image_x**2 + image_y**2 <= R0**2
+    use_x = image_x[use_index]
+    use_y = image_y[use_index]
+
     # Find z coord (we can assume it is in the positive direction)
-    image_z = np.sqrt(R0**2 - image_x**2 - image_y**2)
+    use_z = np.sqrt(R0**2 - use_x**2 - use_y**2)
 
     # Calc image_theta, image_phi, and image_mu
     if get_mu:
+        image_mu = np.full(image_x.shape, outside_map_val)
         # image_phi = np.arctan2(image_y, image_x)
-        image_theta = np.arccos(image_z/R0)
-        image_mu = np.cos(image_theta)
+        use_theta = np.arccos(use_z/R0)
+        image_mu[use_index] = np.cos(use_theta)
 
-    # Rotate image lat (about image y-axis) to spherical lat/theta in carrington frame
-    del_theta = -obsv_lat*np.pi/180 + np.pi/2
-    int3D_x = image_x
-    int3D_y = np.cos(del_theta)*image_y - np.sin(del_theta)*image_z
-    int3D_z = np.cos(del_theta)*image_z + np.sin(del_theta)*image_y
-
-    # Rotate image phi (about image y-axis) to carrington phi
-    del_phi = -obsv_lon*np.pi/180 - np.pi/2
-    map3D_x = np.cos(del_phi)*int3D_x - np.sin(del_phi)*int3D_y
-    map3D_y = np.cos(del_phi)*int3D_y + np.sin(del_phi)*int3D_x
-    map3D_z = int3D_z
+    # generate map-to-image rotation matrix
+    rot_mat = map_to_image_rot_mat(obsv_lon, obsv_lat)
+    # invert/transpose for image-to-map rotation matrix
+    rev_rot = rot_mat.transpose()
+    # construct coordinate array
+    coord_array = np.array([use_x, use_y, use_z])
+    # apply rotation matrix to coordinates
+    map3D_coord = np.matmul(rev_rot, coord_array)
 
     # Convert map cartesian to map theta and phi
-    cr_theta = np.arccos(map3D_z/R0)
-    cr_phi   = np.arctan2(map3D_y, map3D_x)
+    cr_theta = np.arccos(map3D_coord[2, :]/R0)
+    cr_phi   = np.arctan2(map3D_coord[1, :], map3D_coord[0, :])
+    # Change phi range from [-pi,pi] to [0,2pi]
+    neg_phi = cr_phi < 0
+    cr_phi[neg_phi] = cr_phi[neg_phi] + 2*np.pi
+
+    cr_theta_all = np.full(image_x.shape, outside_map_val)
+    cr_phi_all   = np.full(image_x.shape, outside_map_val)
+
+    cr_theta_all[use_index] = cr_theta
+    cr_phi_all[use_index]   = cr_phi
 
     if get_mu:
-        return cr_theta, cr_phi, image_mu
+        return cr_theta_all, cr_phi_all, image_mu
     else:
-        return cr_theta, cr_phi
+        return cr_theta_all, cr_phi_all, None
 
 
 
@@ -154,4 +173,24 @@ def interp_los_image_to_map(image_in, R0, map_x, map_y, no_data_val=-9999.):
     return out_obj
 
 
+def map_to_image_rot_mat(obsv_lon, obsv_lat):
+
+    # del_phi = -obsv_lon*np.pi/180 - np.pi/2
+    # int3D_x = np.cos(del_phi)*map3D_x - np.sin(del_phi)*map3D_y
+    # int3D_y = np.cos(del_phi)*map3D_y + np.sin(del_phi)*map3D_x
+    # int3D_z = map3D_z
+
+    # rotate phi (about map z-axis. observer phi goes to -y)
+    del_phi = -obsv_lon*np.pi/180 - np.pi/2
+    rot1 = np.array([[np.cos(del_phi), -np.sin(del_phi), 0.],
+                    [np.sin(del_phi), np.cos(del_phi), 0.], [0., 0., 1.], ])
+
+    # rotate theta (about x-axis. observer theta goes to +z)
+    del_theta = obsv_lat*np.pi/180 - np.pi/2
+    rot2 = np.array([[1., 0., 0.], [0., np.cos(del_theta), -np.sin(del_theta)],
+                    [0., np.sin(del_theta), np.cos(del_theta)]])
+
+    tot_rot = np.matmul(rot2, rot1)
+
+    return tot_rot
 

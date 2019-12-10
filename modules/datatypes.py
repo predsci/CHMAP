@@ -4,14 +4,16 @@ Module to hold the custom image and map types specific to the CHD project.
 import numpy as np
 import pandas as pd
 from helpers import psihdf
+import sys
+import datetime
 
 import sunpy.map
 import sunpy.util.metadata
 
 import helpers.psihdf as psihdf
 import modules.DB_classes as db
-from modules.coord_manip import interp_los_image_to_map
-
+from modules.coord_manip import interp_los_image_to_map, image_grid_to_CR
+from settings.info import DTypes
 
 class LosImage:
     """
@@ -33,9 +35,9 @@ class LosImage:
     def __init__(self, data, x, y, chd_meta, sunpy_meta=None):
 
         # create the data tags
-        self.data = data
-        self.x = x
-        self.y = y
+        self.data = data.astype(DTypes.LOS_DATA)
+        self.x = x.astype(DTypes.LOS_AXES)
+        self.y = y.astype(DTypes.LOS_AXES)
 
         # add the info dictionary
         self.info = chd_meta
@@ -44,16 +46,38 @@ class LosImage:
         if sunpy_meta != None:
             self.add_map(sunpy_meta)
 
-    def get_coordinates(self):
+        # add placeholders for carrington coords and mu
+        self.lat = None
+        self.lon = None
+        self.mu  = None
+        self.no_data_val = None
+
+
+    def get_coordinates(self, R0=1.0, outside_map_val=-9999.):
         """
         Calculate relevant mapping information for each pixel.
         This adds 2D arrays to the class:
         - lat: carrington latitude
         - lon: carrington longitude
         - mu: cosine of the center to limb angle
-        ToDo: Fill this in with actual methods.
         """
-        pass
+
+        x_mat, y_mat = np.meshgrid(self.x, self.y)
+        x_vec = x_mat.flatten(order="C")
+        y_vec = y_mat.flatten(order="C")
+
+        cr_theta_all, cr_phi_all, image_mu = image_grid_to_CR(x_vec, y_vec, R0=R0, obsv_lat=self.info['cr_lat'],
+                                obsv_lon=self.info['cr_lon'], get_mu=True, outside_map_val=outside_map_val)
+
+        cr_theta = cr_theta_all.reshape(self.data.shape, order="C")
+        cr_phi = cr_phi_all.reshape(self.data.shape, order="C")
+        image_mu = image_mu.reshape(self.data.shape, order="C")
+
+        self.lat = cr_theta - np.pi/2.
+        self.lon = cr_phi
+        self.mu  = image_mu
+        self.no_data_val = outside_map_val
+
 
     def add_map(self, sunpy_meta):
         """
@@ -99,26 +123,61 @@ class LosImage:
             map_nxcoord = (np.floor((x_range[1] - x_range[0])/del_x) + 1).astype(int)
 
             # generate map x,y grids. y grid centered on equator, x referenced from lon=0
-            map_y = np.linspace(y_range[0], y_range[1], map_nycoord.astype(int), dtype='<f4')
-            map_x = np.linspace(x_range[0], x_range[1], map_nxcoord.astype(int), dtype='<f4')
+            map_y = np.linspace(y_range[0], y_range[1], map_nycoord, dtype=DTypes.MAP_AXES)
+            map_x = np.linspace(x_range[0], x_range[1], map_nxcoord, dtype=DTypes.MAP_AXES)
 
         # Do interpolation
         interp_result = interp_los_image_to_map(self, R0, map_x, map_y, no_data_val=no_data_val)
 
-        # Partially populate a map object with grid and data info
-        map_out = PsiMap()
-        map_out.data = interp_result.data
-        map_out.x = interp_result.x
-        map_out.y = interp_result.y
-        map_out.mu = interp_result.mu_mat
-        map_out.no_data_val = no_data_val
-        map_out.origin_image = np.full(interp_result.data.shape, no_data_val, dtype=int)
+        origin_image = np.full(interp_result.data.shape, 0, dtype=DTypes.MAP_ORIGIN_IMAGE)
         # if image number is entered, record in appropriate pixels
         if image_num is not None:
-            map_out.origin_image[map_out.data > no_data_val] = image_num
+            origin_image[interp_result.data > no_data_val] = image_num
+
+        # Partially populate a map object with grid and data info
+        map_out = PsiMap(interp_result.data, interp_result.x, interp_result.y,
+                         mu=interp_result.mu_mat, origin_image=origin_image, no_data_val=no_data_val)
+
+        # construct map_info df to record basic map info
+        map_info_df = pd.DataFrame(data=[[1, datetime.datetime.now()], ],
+                                   columns=["n_images", "time_of_compute"])
+        map_out.append_map_info(map_info_df)
 
         return map_out
 
+    def mu_hist(self, intensity_bin_edges, mu_bin_edges, lat_band=[-np.pi/64., np.pi/64.], log10=True):
+        """
+        Given an LOS image, bin an equatorial band of mu-bins by intensity.  This will generally
+        be in preparation to fit Limb Brightening Correction Curves (LBCC).
+        Before applying mu_hist to an image los_image.mu_hist(), first get coordinates for the image
+        los_image.get_coordinates()
+        :param intensity_bin_edges: Float numpy-vector of pixel-intensity bin edges in ascending order.
+        :param mu_bin_edges: Float numpy vector within the range [0,1] of mu bin edges in ascending order.
+        :param lat_band: A list/tuple of length 2 with minimum/maximum band of Carrington latitude to be considered.
+        :param log10: True/False apply log_10 to image intensities before binning
+        :return: A numpy-array with shape (# mu_bins x # intensity bins)
+        """
+
+        # check if LOS object has mu and cr_theta yet
+        if self.mu is None or self.lat is None:
+            sys.exit("Before running los_image.mu_hist(), first get coordinates los_image.get_coordinates().")
+
+        # first reduce to points greater than mu-min and in lat-band
+        lat_band_index = np.logical_and(self.lat <= max(lat_band), self.lat >= min(lat_band))
+        mu_min = min(mu_bin_edges)
+        mu_max = max(mu_bin_edges)
+        mu_index = np.logical_and(self.mu >= mu_min, self.mu <= mu_max)
+        use_index = np.logical_and(mu_index, lat_band_index)
+
+        use_mu = self.mu[use_index]
+        use_data = self.data[use_index]
+        if log10:
+            use_data[use_data < 0.] = 0.
+            use_data = np.log10(use_data)
+        # generate intensity histogram
+        hist_out, temp_x, temp_y = np.histogram2d(use_mu, use_data, bins=[mu_bin_edges, intensity_bin_edges])
+
+        return hist_out
 
 
 def read_los_image(h5_file):
@@ -145,12 +204,30 @@ class PsiMap:
     """
     Object that contains map information.  The Map object is structured like the database for convenience.
         - One of its primary uses is for passing info to and from database.
+
+    Map Object is created in three ways:
+        1. interpolating from an image LosImage.interp_to_map()
+        2. merging other maps map_manip.combine_maps()
+        3. reading a map hdf file ---needs to be created---
     """
 
-    def __init__(self):
+    def __init__(self, data, x, y, mu=None, origin_image=None, no_data_val=-9999.0):
         """
-        Initialize empty dataframes based on Table schema
+        Class to hold the standard information for a PSI map image
+    for the CHD package.
+
+        - Here the map is minimally described by:
+            data: a 2D numpy array of values.
+            x: a 1D array of the solar x positions of each pixel [Carrington lon].
+            y: a 1D array of the solar y positions of each pixel [Sine lat].
+
+        - mu and origin_image are optional and should be numpy arrays with
+            identical dimensions as 'data'.
+
+        Initialization also uses database definitions to generate empty dataframes
+        for metadata: method_info, image_info, map_info, and var_info
         """
+        # --- Initialize empty dataframes based on Table schema ---
         # create the data tags (all pandas dataframes?)
         self.method_info = init_df_from_declarative_base(db.Meth_Defs)
         self.image_info = init_df_from_declarative_base(db.EUV_Images)
@@ -172,13 +249,23 @@ class PsiMap:
             defs_columns.append(column.key)
         df_cols = set().union(image_columns, map_columns)
         self.var_info = pd.DataFrame(data=None, columns=df_cols)
-        # These are placeholders for map grids and data
-        self.data = None
-        self.x    = None
-        self.y    = None
-        self.mu   = None
-        self.no_data_val = None
-        self.origin_image = None
+
+        # Type cast data arrays
+        self.data = data.astype(DTypes.MAP_DATA)
+        self.x    = x.astype(DTypes.MAP_AXES)
+        self.y    = y.astype(DTypes.MAP_AXES)
+        if mu is not None:
+            self.mu = mu.astype(DTypes.MAP_MU)
+        else:
+            # create placeholder
+            self.mu   = None
+        self.no_data_val = no_data_val
+        if origin_image is not None:
+            self.origin_image = origin_image.astype(DTypes.MAP_ORIGIN_IMAGE)
+        else:
+            # create placeholder
+            self.origin_image = None
+
 
     def append_map_info(self, map_df):
         """
@@ -194,6 +281,17 @@ class PsiMap:
 
     def append_image_info(self, image_df):
         self.image_info = self.image_info.append(image_df, sort=False)
+
+    def write_to_file(self, filename):
+        """
+        Write the map object to hdf5 format
+        """
+        # check to see if the map exists from instantiation
+        if hasattr(self, 'map'):
+            sunpy_meta = self.map.meta
+
+        psihdf.wrh5_meta(filename, self.x, self.y, np.array([]),
+                         self.data, chd_meta=self.info, sunpy_meta=sunpy_meta)
 
 
 def init_df_from_declarative_base(base_object):
