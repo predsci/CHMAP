@@ -234,8 +234,8 @@ def list_available_images(time_start, time_end, euvi_interval_cadence=2*u.hour, 
 
     # combine dataframes into a simple list
     f_list = [fs, fa, fb]
-    # check for empty instrument results (and remove)
-    f_list = [elem for elem in f_list if len(elem) > 0]
+    # # check for empty instrument results (and remove)
+    # f_list = [elem for elem in f_list if len(elem) > 0]
 
     return f_list
 

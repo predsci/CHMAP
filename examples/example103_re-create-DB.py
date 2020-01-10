@@ -9,15 +9,16 @@ This example uses the fits files included in reference_data/
 import os
 
 from settings.app import App
-from modules.DB_classes import *
-from modules.DB_funs import init_db_conn, build_euvimages_from_fits, query_euv_images
+from modules.DB_classes_v2 import *
+from modules.DB_funs_v2 import init_db_conn, build_euvimages_from_fits, query_euv_images
 
 # In this example we use the 'reference_data' fits files supplied with repo
 # manually set the data-file dirs
 raw_data_dir = os.path.join(App.APP_HOME, "reference_data", "raw")
 hdf_data_dir = os.path.join(App.APP_HOME, "reference_data", "processed")
 # manually set the database location
-database_dir = App.DATABASE_HOME
+# database_dir = App.DATABASE_HOME
+database_dir = os.path.join(App.APP_HOME, "reference_data")
 # give the sqlite file a unique name
 sqlite_filename = "db_create-test.db"
 

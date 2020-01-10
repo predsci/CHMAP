@@ -18,7 +18,8 @@ from sunpy.time import TimeRange
 from helpers import drms_helpers, vso_helpers
 from settings.app import App
 from modules.misc_funs import cluster_meth_1, list_available_images
-from modules.DB_classes import *
+# from modules.DB_classes import *
+from modules.DB_classes_v2 import *
 from modules.DB_funs import init_db_conn, query_euv_images, add_image2session, update_image_val, remove_euv_image
 
 
@@ -164,7 +165,7 @@ if not Create_Ref:
     # removes the files and then the corresponding DB row
     print("\nRemoving one row from DB.")
     exit_status, db_session = remove_euv_image(db_session=db_session, raw_series=test_pd.iloc[0], raw_dir=raw_data_dir,
-                                           hdf_dir=hdf_data_dir)
+                                               hdf_dir=hdf_data_dir)
     # re-read entire DB
     test_pd = query_euv_images(db_session=db_session, time_min=query_time_min, time_max=query_time_max)
     print(test_pd)

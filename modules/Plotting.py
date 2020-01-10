@@ -5,7 +5,6 @@ Functions to plot EUV images and maps
 
 import matplotlib.pyplot as plt
 import matplotlib as mpl
-import matplotlib
 # import sunpy
 import numpy as np
 from astropy.visualization import AsymmetricPercentileInterval

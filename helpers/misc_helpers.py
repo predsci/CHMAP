@@ -21,17 +21,21 @@ def download_url(url, fpath, overwrite=False, verbose=True):
     example to strip out the exact functionality that I needed.
     - This is NOT very general --> don't parse the url for a path/file, just require that
       the call specifies one.
-    - If successful, this returns True
-    - If unssuccesful, this returns False
+    - If file downloaded, this returns 0
+    - If download error, this returns 1
+    - If file already exists (no overwrite), this returns 2
+    - If file already exists (overwrite), this returns 3
     """
 
+    exit_flag = 0
     # check if the file exists first
     if os.path.isfile(fpath):
         if not overwrite:
             print("    " + fpath + " exists! SKIPPING!")
-            return False
+            return 2
         else:
             print("    " + fpath + " exists! OVERWRITING!")
+            exit_flag = 3
 
     # use a temporary filename during download
     fpath_tmp = fpath + '.part'
@@ -43,12 +47,12 @@ def download_url(url, fpath, overwrite=False, verbose=True):
         urlretrieve(url, fpath_tmp)
     except (HTTPError, URLError):
         print('  -> Error: Could not download file')
-        return False
+        return 1
     else:
         os.rename(fpath_tmp, fpath)
         if verbose:
             print('  Done!')
-        return True
+        return exit_flag
 
 
 def construct_path_and_fname(base_dir, dtime, prefix, postfix, extension, mkdir=True):
@@ -230,9 +234,19 @@ def construct_map_path_and_fname(base_dir, dtime, map_id, map_type, extension, m
     """
 
     prefix = map_type
-    postfix = 'MID' + map_id
-    map_base_dir = os.path.join(base_dir, map_type)
-    sub_dir, fname = construct_path_and_fname(map_base_dir, dtime, prefix, postfix, extension, mkdir=mkdir)
+    postfix = 'MID' + str(map_id)
+    maptype_base_dir = os.path.join(base_dir, map_type)
+    # make the directory if needed
+    if mkdir:
+        # first check if the main directory exists
+        if not os.path.isdir(base_dir):
+            raise Exception('Base path does not exist! ' + base_dir)
+            return None, None
+        # check if the subdirectory exists
+        if not os.path.isdir(maptype_base_dir):
+            os.makedirs(maptype_base_dir)
+
+    sub_dir, fname = construct_path_and_fname(maptype_base_dir, dtime, prefix, postfix, extension, mkdir=mkdir)
 
     return sub_dir, fname
 

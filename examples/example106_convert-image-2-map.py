@@ -6,15 +6,12 @@ import os
 import datetime
 import matplotlib.pyplot as plt
 import numpy as np
-import scipy.interpolate as sp_interp
-import time
 import sunpy
 
 from settings.app import App
-import modules.DB_classes as db_class
-from modules.DB_funs import init_db_conn, query_euv_images
-import modules.datatypes as psi_d_types
-import modules.coord_manip as coord
+import modules.DB_classes_v2 as db_class
+from modules.DB_funs_v2 import init_db_conn, query_euv_images
+import modules.datatypes_v2 as psi_d_types
 import modules.Plotting as EasyPlot
 
 # In this example we use the 'reference_data' fits files supplied with repo

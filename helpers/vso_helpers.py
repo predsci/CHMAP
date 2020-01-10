@@ -10,6 +10,8 @@ import astropy.units
 import astropy.time
 import numpy as np
 import os
+from http.client import HTTPException
+
 from helpers import misc_helpers
 
 
@@ -39,11 +41,19 @@ class EUVI:
         - As far as I can tell, the vso query is not easily sliced and it is hard to get specific fields out of it
         --> do a brute force loop over every record and make np arrays to hold the fields I care about
         """
+        try:
+            # query the vso
+            query = self.client.search(vso.attrs.Time(time_range), vso.attrs.Detector(self.detector),
+                                       vso.attrs.Wavelength(wavelength*astropy.units.angstrom),
+                                       vso.attrs.Source(craft))
+        except HTTPException:
+            print("There was a problem contacting the VSO server to query image times. Trying again...\n")
+            try:
+                key_frame, seg_frame = self.client.query(query_string, key=key_str, seg=segment_str)
+            except HTTPException:
+                print("Still cannot contact VSO server. Returning 'query error'.")
+                return "query error"
 
-        # query the vso
-        query = self.client.search(vso.attrs.Time(time_range), vso.attrs.Detector(self.detector),
-                                   vso.attrs.Wavelength(wavelength*astropy.units.angstrom),
-                                   vso.attrs.Source(craft))
 
         # arrays to hold the output
         nmatch = len(query)
@@ -105,10 +115,18 @@ class EUVI:
         fpath = dir + os.sep + fname
 
         # download the file
-        new_file = misc_helpers.download_url(url, fpath, overwrite=overwrite, verbose=verbose)
+        exit_flag = misc_helpers.download_url(url, fpath, overwrite=overwrite, verbose=verbose)
+
+        if exit_flag == 1:
+            # There was an error with download. Try again
+            print(" Re-trying download....")
+            exit_flag = misc_helpers.download_url(url, fpath, verbose=verbose, overwrite=overwrite)
+            if exit_flag == 1:
+                # Download failed. Return None
+                return None, None, exit_flag
 
         # update the header info if desired
-        if new_file and compress:
+        if compress and exit_flag in [0, 3]:
             if verbose:
                 print('  Compressing FITS data.')
             misc_helpers.compress_uncompressed_fits_image(fpath, fpath)
@@ -116,7 +134,7 @@ class EUVI:
         # now separate the the sub directory from the base path (i want relative path for the DB)
         sub_dir = os.path.sep.join(dir.split(base_dir)[1].split(os.path.sep)[1:])
 
-        return sub_dir, fname
+        return sub_dir, fname, exit_flag
 
 
 def vso_time_to_astropy_time(vso_time_string):

@@ -18,7 +18,11 @@ import drms
 import math
 import os
 import numpy as np
+import pandas as pd
+from http.client import HTTPException
+
 from helpers import misc_helpers
+
 
 # ----------------------------------------------------------------------
 # global definitions
@@ -198,7 +202,21 @@ class S12:
         # build the query
         query_string = '%s[%s][%s]%s{%s}'%(self.series, time_str, wave_str, filter_str, segment_str)
 
-        key_frame, seg_frame = self.client.query(query_string, key=key_str, seg=segment_str)
+        # query JSOC for image times
+        try:
+            key_frame, seg_frame = self.client.query(query_string, key=key_str, seg=segment_str)
+        except HTTPException:
+            print("There was a problem contacting the JSOC server to query image times. Trying again...\n")
+            try:
+                key_frame, seg_frame = self.client.query(query_string, key=key_str, seg=segment_str)
+            except HTTPException:
+                print("Still cannot contact JSOC server. Returning 'query error'.")
+                return "query error"
+
+        if len(seg_frame) == 0:
+            # No results were found for this time range. generate empty Dataframe to return
+            data_frame = pd.DataFrame(columns=('spacecraft', 'instrument', 'filter', 'time', 'jd', 'url'))
+            return data_frame
 
         # parse the results a bit
         time_strings, jds = parse_query_times(key_frame)
@@ -217,6 +235,7 @@ class S12:
         the single image results from the query)
         - you can obtain these by doing data_framge = key=keys.iloc[row_index]
         The sub_path and filename are determined from the image information
+        exit_flag: 0-Successful download; 1-download error; 2-file already exists
         """
         if len(data_series.shape) != 1:
             raise RuntimeError('data_series has more than one row!')
@@ -233,7 +252,15 @@ class S12:
         fpath = dir + os.sep + fname
 
         # download the file
-        new_file = misc_helpers.download_url(url, fpath, verbose=verbose, overwrite=overwrite)
+        exit_flag = misc_helpers.download_url(url, fpath, verbose=verbose, overwrite=overwrite)
+
+        if exit_flag == 1:
+            # There was an error with download. Try again
+            print(" Re-trying download....")
+            exit_flag = misc_helpers.download_url(url, fpath, verbose=verbose, overwrite=overwrite)
+            if exit_flag == 1:
+                # Download failed. Return None
+                return None, None, exit_flag
 
         # update the header info if desired
         if update:
@@ -244,7 +271,7 @@ class S12:
         # now separate the the sub directory from the base path (i want relative path for the DB)
         sub_dir = os.path.sep.join(dir.split(base_dir)[1].split(os.path.sep)[1:])
 
-        return sub_dir, fname
+        return sub_dir, fname, exit_flag
 
     """
 

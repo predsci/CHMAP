@@ -12,11 +12,13 @@ This example demonstrates the process of adding a map to the database.
 import datetime
 import pandas as pd
 import os
+import numpy as np
 
 from settings.app import App
 from modules import DB_classes
 from modules.DB_funs import create_map_input_object, init_db_conn, create_method, add_map_dbase_record,\
     query_euv_maps, build_euvimages_from_fits, delete_map_dbase_record
+from modules.datatypes import PsiMap
 
 
 # --- 1. Create a test SQLite database ----------------
@@ -55,8 +57,13 @@ image_df = pd.DataFrame(data=[1, 2, 3], columns=["image_id", ])
 var_vals = pd.DataFrame(data=[['x1', 1], ['x2', 10.1]], columns=["var_name", "var_val"])
 
 # --- generate a Map object ----------
-map_input = create_map_input_object(fname=fname, image_df=image_df, var_vals=var_vals, method_name=meth_name,
-                                    time_of_compute=time_of_compute)
+# example grid
+x = np.array(range(10))
+y = x
+data = np.full((10, 10), 1.)
+new_map = PsiMap(data=data, x=x, y=y, mu=None, origin_image=None, no_data_val=-9999.0)
+map_input = create_map_input_object(new_map=new_map, fname=fname, image_df=image_df, var_vals=var_vals,
+                                    method_name=meth_name, time_of_compute=time_of_compute)
 
 
 # --- 3. if new_method: add method definition to DB -----

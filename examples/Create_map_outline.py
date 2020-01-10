@@ -13,7 +13,7 @@ Working sketch of how we will combine some images into a map:
 
 import os
 import datetime
-# import pandas as pd
+import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
 # import scipy.interpolate as sp_interp
@@ -21,13 +21,14 @@ import numpy as np
 # import sunpy
 
 from settings.app import App
-import modules.DB_classes as db_class
-from modules.DB_funs import init_db_conn, query_euv_images
-import modules.datatypes as psi_d_types
+import modules.DB_classes_v2 as db_class
+from modules.DB_funs_v2 import init_db_conn, query_euv_images, add_map_dbase_record
+import modules.datatypes_v2 as psi_d_types
 from modules.map_manip import combine_maps
 # import modules.coord_manip as coord
 import modules.Plotting as EasyPlot
 from helpers.misc_helpers import construct_map_path_and_fname
+import helpers.psihdf as psihdf
 
 # --- 1. Select Images -----------------------------------------------------
 # In this example we use the 'reference_data' fits files supplied with repo
@@ -54,6 +55,20 @@ print(query_pd.instrument)
 # use these three images (one from each instrument)
 selected_images = query_pd
 
+# generate a dataframe to record methods
+    # maybe this needs to be made a function?
+# methods_template is a combination of Meth_Defs and Var_Defs columns
+meth_columns = []
+for column in db_class.Meth_Defs.__table__.columns:
+    meth_columns.append(column.key)
+defs_columns = []
+for column in db_class.Var_Defs.__table__.columns:
+    defs_columns.append(column.key)
+df_cols = set().union(meth_columns, defs_columns, ("var_val", ))
+methods_template = pd.DataFrame(data=None, columns=df_cols)
+# generate a list of methods dataframes
+methods_list = [methods_template] * selected_images.__len__()
+
 # read hdf file(s) to a list of LOS objects
 los_list = [None]*selected_images.__len__()
 image_plot_list = [None] * selected_images.__len__()
@@ -70,11 +85,15 @@ for index, row in selected_images.iterrows():
 for ii in range(len(los_list)):
     # call function to de-limb los_list[ii]
     # los_list[ii] = limb_correct(los_list[ii])
+    # generate a record of the method and variable values used for LBC
+    new_method = {'meth_name': ("lbcc_v1", "lbcc_v1"), 'meth_description': ["Limb Brightening Correction from "
+                                                                            "linear-log space model. Version 1"] * 2,
+                  'var_name': ("Beta", "y"), 'var_description': ("LBCC scale factor", "LBCC offset"), 'var_val':
+                      (1.1, -0.4)}
+    # add to the methods dataframe for this image (map-to-be)
+    methods_list[ii] = methods_list[ii].append(pd.DataFrame(data=new_method), sort=False)
     pass
 
-# Generate a list of methods/parameters to keep track for DB?
-#   - Keep track of Limb-correction/Inter-inst/CHD/merge methods
-#   separately?  Current DB is setup for one method per Map.
 
 # --- 3. Inter-instrument Transformation --------------------------------------
 
@@ -92,6 +111,9 @@ for ii in range(len(los_list)):
     pass
 
 # --- 5. Convert to Map -------------------------------------------------------
+# set save directory
+map_data_dir = App.MAP_FILE_HOME
+
 # map parameter definitions.
 R0 = 1.01
 y_range = [-1, 1]
@@ -115,19 +137,37 @@ for ii in range(len(los_list)):
     # map_list[ii] = los_list[ii].interp_to_map(R0=R0)
     # record image info
     map_list[ii].append_image_info(selected_images.iloc[ii])
-    # generate a path and filename for saving
-    map_id = 15
-    map_time = map_list[ii].image_info.
-    sub_dir, fname = construct_map_path_and_fname(App.MAP_FILE_HOME, map_time., map_id, 'single', 'h5', mkdir=True)
+
+    # generate a record of the method and variable values used for interpolation
+    new_method = {'meth_name': ("Im2Map_Lin_Interp_1", ), 'meth_description':
+        ["Use SciPy.RegularGridInterpolator() to linearly interpolate from an Image to a Map"] * 1,
+                  'var_name': ("R0", ), 'var_description': ("Solar radii", ), 'var_val': (R0, )}
+    # add to the methods dataframe for this map
+    methods_list[ii] = methods_list[ii].append(pd.DataFrame(data=new_method), sort=False)
+
+    # incorporate the methods dataframe into the map object
+    map_list[ii].append_method_info(methods_list[ii])
 
     # simple plot
     EasyPlot.PlotMap(map_list[ii], nfig=10+ii, title="Map " + str(ii))
 
+    # as a demonstration, save these maps to file and then push to the database
+    map_list[ii].write_to_file(map_data_dir, map_type='single', filename=None, db_session=db_session)
+
 # --- 6. Combine Maps ---------------------------------------------------------
-combined_map = combine_maps(map_list, del_mu=0.2)
+del_mu = 0.2
+combined_map = combine_maps(map_list, del_mu=del_mu)
+
+# generate a record of the method and variable values used for interpolation
+new_method = {'meth_name': ("Min-Int-Merge_1", ), 'meth_description':
+              ["Minimum intensity merge version 1"] * 1,
+              'var_name': ("del_mu", ), 'var_description': ("max acceptable mu range", ), 'var_val': (del_mu, )}
+combined_map = combined_map.append_method_info(pd.DataFrame(data=new_method), sort=False)
 
 EasyPlot.PlotMap(combined_map, nfig=20, title="Minimum Intensity Merge Map")
 plt.show()
+
+combined_map.write_to_file(map_data_dir, map_type='synoptic', filename=None, db_session=db_session)
 
 # --- 7. Save to DB -----------------------------------------------------------
 # # add image info to map object

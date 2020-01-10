@@ -8,6 +8,7 @@
 /.idea/misc.xml
 
 settings/app.py
+settings/app_*.py
 setup.conf
 
 # ignore the output folders in schema_viz

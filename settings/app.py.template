@@ -28,8 +28,9 @@ class App:
     # Path the the root directory of map files.
     MAP_FILE_HOME = __MAP_FILE_HOME__
 
-    # Path to the folder where the databases are stored.
+    # Path to the folder where the database is stored and database filename
     DATABASE_HOME = __DATABASE_HOME__
+    DATABASE_FNAME = __DATABASE_FILENAME__
 
     # Path to a directory for temporary files.
     TMP_HOME = __TMP_HOME__
