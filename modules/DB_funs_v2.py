@@ -219,7 +219,7 @@ def update_image_val(db_session, raw_series, col_name, new_val):
               "directly using SQLAlchemy functions. Alternatively one could use remove_euv_image() followed " +
               "by euvi.download_image_fixed_format(), add_image2session(), and db_session.commit()")
     else:
-        raw_id = raw_series['image_id']
+        raw_id = int(raw_series['image_id'])
         db_session.query(EUV_Images).filter(EUV_Images.image_id == raw_id).update({col_name : new_val})
         db_session.commit()
 
