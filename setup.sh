@@ -46,8 +46,12 @@ function process_configuration_file {
       raw_data_home="${field_value}"
     elif [[ "${field_name}" = "PROCESSED_DATA_HOME" ]]; then
       processed_data_home="${field_value}"
+    elif [[ "${field_name}" = "MAP_FILE_HOME" ]]; then
+      map_file_home="${field_value}"
     elif [[ "${field_name}" = "DATABASE_HOME" ]]; then
       database_home="${field_value}"
+    elif [[ "${field_name}" = "DATABASE_FILENAME" ]]; then
+      database_filename="${field_value}"
     elif [[ "${field_name}" = "TMP_HOME" ]]; then
       tmp_home="${field_value}"
     fi
@@ -59,7 +63,9 @@ function process_configuration_file {
         -z "${ps_tools_home}" ||\
         -z "${raw_data_home}" ||\
         -z "${processed_data_home}" ||\
+        -z "${map_file_home}" ||\
         -z "${database_home}" ||\
+        -z "${database_filename}" ||\
         -z "${tmp_home}" ]]; then
     return ${STATUS_ERROR}
   fi
@@ -79,7 +85,9 @@ function setup_application_directory {
       -e "s|__APP_HOME__|'${app_home}'|"\
       -e "s|__RAW_DATA_HOME__|'${raw_data_home}'|"\
       -e "s|__PROCESSED_DATA_HOME__|'${processed_data_home}'|"\
+      -e "s|__MAP_FILE_HOME__|'${map_file_home}'|"\
       -e "s|__DATABASE_HOME__|'${database_home}'|"\
+      -e "s|__DATABASE_FILENAME__|'${database_filename}'|"\
       -e "s|__TMP_HOME__|'${tmp_home}'|"\
       settings/app.py.template > settings/app.py
   [[ $? -ne ${STATUS_OK} ]] && return ${STATUS_ERROR}
