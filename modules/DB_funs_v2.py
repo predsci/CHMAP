@@ -978,4 +978,31 @@ def get_method_combo_id(db_session, meth_ids, create=False):
     return db_session, meth_combo_id
 
 
+def read_sql2pandas(sql_query):
+
+    # execute query
+    query_list = sql_query.all()
+    result_type = type(query_list[0]).__name__
+    # extract column names and datatypes
+    if result_type == "result":
+        column_names = query_list[0].keys()
+        column_dtypes = []
+        for element in query_list[0]:
+            column_dtypes.append(type(element).__name__)
+    else:
+        column_names = []
+        column_dtypes = []
+        for table_column in query_list[0].__table__.columns:
+            column_names.append(table_column.key)
+        for element in query_list[0]:
+            column_dtypes.append(type(element).__name__)
+
+    # initialize pandas dataframe
+    type_dict = dict(zip(column_names, column_dtypes))
+    pd_out = pd.DataFrame(np.full((len(query_list), len(query_list[0])), 0), columns=column_names)
+    pd_out.astype(type_dict)
+
+    # loop through query results and index into dataframe
+
+    return
 
