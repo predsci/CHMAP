@@ -9,6 +9,8 @@ import urllib.parse
 import pandas as pd
 import datetime
 import numpy as np
+import astropy.time as astro_time
+import collections                  # for checking if an input is iterable
 
 import sunpy.map
 
@@ -979,7 +981,13 @@ def get_method_combo_id(db_session, meth_ids, create=False):
 
 
 def read_sql2pandas(sql_query):
-
+    """
+    trial function to compare speeds with pd.read_sql()
+    This function would maintain basic python datatypes (SQLAlchemy compatible). pd.read_sql() uses
+    numpy numeric-types and a pandas datetime-type which are not SQLAlchemy compatible.
+    :param sql_query:
+    :return:
+    """
     # execute query
     query_list = sql_query.all()
     result_type = type(query_list[0]).__name__
@@ -1005,4 +1013,48 @@ def read_sql2pandas(sql_query):
     # loop through query results and index into dataframe
 
     return
+
+def safe_datetime(unknown_datetime):
+    """
+    SQLAlchemy inputs and queries to the database require Timestamps in a datetime.datetime() format.
+    Input a scalar or list/tuple/pd.Series of unknown TimeStamp-type.
+    Convert the scalar/vector to a scalar/list of type datetime.datetime()
+    :param unknown_datetime: a scalar or list/tuple/pd.Series of DateTimes with unknown type.
+    :return: a scalar or list of type datetime.datetime()
+    """
+
+    not_list = False
+    # if input is not iterable, try to make it a tuple
+    if not isinstance(unknown_datetime, collections.Iterable):
+        # assume that the input is a scalar and convert to tuple
+        unknown_datetime = (unknown_datetime, )
+        not_list = True
+
+    # initialize output datetime.datetime() list
+    datetime_out = [datetime.datetime(1, 1, 1, 0, 0, 0)]*len(unknown_datetime)
+
+    for index, unknown_element in enumerate(unknown_datetime):
+        # check for common package datetime classes and convert to datetime.datetime()
+        if type(unknown_element) == datetime.datetime:
+            element_out = unknown_element
+        elif type(unknown_element) == pd._libs.tslibs.timestamps.Timestamp:
+            element_out = unknown_element.to_pydatetime()
+        elif type(unknown_element) == astro_time.core.Time:
+            element_out = unknown_element.to_datetime()
+
+        # check if successful
+        if type(element_out) != datetime.datetime:
+            sys.exit("Timestamp object could not be converted to datetime.datetime format.  The "
+                     "datetime.datetime class is required for SQLAlchemy interaction with the "
+                     "database.")
+
+        datetime_out[index] = element_out
+
+    if not_list:
+        # convert back to single value
+        datetime_out = datetime_out[0]
+
+    return datetime_out
+
+
 

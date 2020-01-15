@@ -8,7 +8,12 @@ from sqlalchemy import Column, DateTime, String, Integer, Float, ForeignKey, Ind
     UniqueConstraint, ForeignKeyConstraint
 from sqlalchemy.orm import relationship
 from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy_utils import force_auto_coercion
 
+# Build auto-coercion into sqlalchemy mapping structure
+# SQLAlchemy requires basic python data types for inputs and queries to the database. This
+# 'listener' will check for and coerce data to acceptable types.
+force_auto_coercion()
 
 # declare 'Base' for sqlalchemy classes
 Base = declarative_base()
