@@ -17,6 +17,7 @@ Helper module for working with PSF deconvolution algorithms.
 
 import numpy as np
 import os
+import time
 
 from settings.app import App
 
@@ -110,15 +111,22 @@ def deconv_sgp(image, psf_name):
     # write the image as a temporary SGP data file
     write_sgp_datfile(fname_in, image_thresh)
 
-    # call the remote deconvolution algorithm
+    # build the call for the remote deconvolution algorithm
     command = sgp_remote_script + ' ' + psf_name
     if debug:
         print('Calling Deconvolution: ' + command)
 
-    status = App.run_shell_command(command, App.TMP_HOME, debug=debug)
+    # call the shell command, wait and try again a certain number of times.
+    status = call_deconv_command(command, debug=debug)
 
+    # check the return code
+    if status != 0:
+        raise RuntimeError(f'Deconv command: {command} returned exit code: {status}')
     if debug:
         print(status)
+
+    # give the filesystem a moment to recover just in case
+    time.sleep(0.2)
 
     # read the deconvolved image
     image_deconv = read_sgp_datfile(fname_out)
@@ -132,3 +140,28 @@ def deconv_sgp(image, psf_name):
             raise Exception('Temporary SGP file not found, something is probably wrong: {}'.format(file))
 
     return image_deconv
+
+
+def call_deconv_command(command, num_calls=0, debug=False):
+    """
+    Function that calls the deconvolution shell command.
+    - It will recursively retry the deconvolution command if it fails initially,
+      waiting a certain period and then calling it again.
+    - If the maximum number of fails is hit, raise an exception.
+    """
+    wait_time = 30
+    max_calls = 10
+
+    num_calls = num_calls + 1
+    if num_calls <= max_calls:
+        try:
+            status = App.run_shell_command(command, App.TMP_HOME, debug=debug)
+        except:
+            print(f'ERROR: Deconvolution Command {command}, failed on attempt number {num_calls}')
+            print(f' waiting {wait_time} seconds and trying again.')
+            time.sleep(wait_time)
+            status = call_deconv_command(command, num_calls=num_calls, debug=debug)
+    else:
+        raise Exception('Hit the maximum number of retries for deconvolution, something is wrong?')
+
+    return status

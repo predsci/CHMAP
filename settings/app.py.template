@@ -122,4 +122,17 @@ class App:
         except subprocess.TimeoutExpired:
             process.kill()
 
+        # check the return code here, if non-zero, print the output and raise an exception.
+        if process.returncode != 0:
+            print('')
+            print(f'ERROR: run_shell_command returned a non-zero exit code! {process.returncode}')
+            print(f'  Shell command: {command}')
+            print('  STDOUT: ')
+            for line in stdout.strip().decode().splitlines():
+                print('    ' + line)
+            print('  STDERR: ')
+            for line in stderr.strip().decode().splitlines():
+                print('    ' + line)
+            raise RuntimeError(f'Shell command: {command} returned exit code: {process.returncode}')
+
         return process.returncode

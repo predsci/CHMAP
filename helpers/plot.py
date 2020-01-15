@@ -115,6 +115,102 @@ def plot_image_rs(map_in, xrange=[-1.4, 1.4], yrange=[-1.4, 1.4], log_min=0.5, l
         plt.show()
 
 
+def plot_image_rs_full(map_in, xrange=[-1.4, 1.4], yrange=[-1.4, 1.4], log_min=0.5, log_max=3.5,
+                       cmap_name=None, outfile=None, dpi=100, save_interactive=False):
+    """
+    Quick method to plot a map by specifying the x and y range in SOLAR coordinates.
+    - Unlike plot_image_rs, here the image fills the entire frame, with no outside annotations
+      like axes labels or colorbars
+
+    - xrange and yrange are two elements lists or tuples that specify the solar coords in Rs
+      - e.g. xrange=[-1.3, -1.3], yrange=[-1.3, 1.3]
+
+    - if a output file is specified, it will switch to a non-interactive backend and save the file
+      without showing the plot (unless save_interactive=True).
+
+    - cmap_name (optional) is a string that specifies a sunpy or matplotlib colormap
+
+    ToDo:
+      - put white annotations in the corners that describe the image (time, inst, clon, b0)
+      - overplot some solar grid lines (e.g. the lat=0 line and/or various clons)
+    """
+    # I don't want to modify the input map at all --> copy the map object just in case
+    map = copy.deepcopy(map_in)
+
+    # info from the map
+    rs_obs = map.rsun_obs
+
+    # get the coordinate positions of the x and y ranges
+    x0 = xrange[0]*rs_obs.value*u.arcsec
+    x1 = xrange[1]*rs_obs.value*u.arcsec
+    y0 = yrange[0]*rs_obs.value*u.arcsec
+    y1 = yrange[1]*rs_obs.value*u.arcsec
+    bot_left = SkyCoord(x0, y0, frame=map.coordinate_frame)
+    top_right = SkyCoord(x1, y1, frame=map.coordinate_frame)
+
+    # experiment with different styles of plotting the x and y window
+    # using "limits" lets you plot outside of the image window, which can be important
+    # for aligning images.
+    plot_method = 'limits'
+
+    if plot_method == 'submap':
+        map = map.submap(bot_left, top_right)
+
+    # setup the optional colormap
+    if cmap_name is not None:
+        cmap = plt.get_cmap(cmap_name)
+        map.plot_settings['cmap'] = cmap
+
+    # Set the map plot min/max
+    pmin = 10.0**(log_min)
+    pmax = 10.0**(log_max)
+    map.plot_settings['norm'] = colors.LogNorm(pmin, pmax)
+
+    # Change the colormap so undefined values don't show up white
+    map.plot_settings['cmap'].set_bad(color='black')
+
+    # if saving a file, don't use the interactive backend
+    if outfile is not None and not save_interactive:
+        matplotlib.use(mpl_backend_non_interactive)
+
+    # setup the figure
+    fig = plt.figure(figsize=(9, 9))
+
+    # Manually specify the axis (vs. getting through map.plot) this way you have more control
+    axis = WCSAxes(fig, [0.0, 0.0, 1.0, 1.0], wcs=map.wcs)
+    fig.add_axes(axis)  # note that the axes have to be explicitly added to the figure
+
+    # plot the image
+    map.plot(axes=axis)
+
+    # example for adjusting the tick spacing (see astropy examples for WCSAxes)
+    custom_ticks = True
+    if custom_ticks:
+        spacing = map.rsun_obs
+        axis.coords[0].set_ticks(spacing=spacing)
+        axis.coords[1].set_ticks(spacing=spacing)
+
+    # if plot is NOT a submap, compute the pixel positions and change the matplotlib limits
+    if plot_method == 'limits':
+        pp_bot_left = map.world_to_pixel(bot_left)
+        pp_top_right = map.world_to_pixel(top_right)
+        axis.set_xlim(left=pp_bot_left.x.value, right=pp_top_right.x.value)
+        axis.set_ylim(bottom=pp_bot_left.y.value, top=pp_top_right.y.value)
+
+    # save the plot (optional)
+    if outfile is not None:
+        print("Saving image plot to: " + outfile)
+        fig.savefig(outfile, dpi=dpi)
+        # revert to the default MPL backend
+        if not save_interactive:
+            plt.close()
+            matplotlib.use(mpl_backend_default)
+        else:
+            plt.show()
+    else:
+        plt.show()
+
+
 def plot_alignment(map_in, log_min=0.5, log_max=3.5, cmap_name=None, outfile=None,
                    dpi=100, save_interactive=False):
     """
