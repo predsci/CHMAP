@@ -1,10 +1,10 @@
-# quick commands for checking out the psi software repositories
-# - doing it using svn checkout will make it a live repository (i.e. updatable/commitable)
+# Commands for checking out the psi software repositories
+# By using svn checkout, the packages are a live repository (i.e. updatable/commitable)
 
 # Check out the external dependencies repository
-svn checkout --username cdowns svn+ssh://cdowns@shadow.predsci.com/opt/repositories/ext_deps/trunk ext_deps
+svn co https://www.predsci.com/svn_ext_deps/trunk/ psi_ext_deps
 
 # Check out the psi tools repository
-svn checkout --username cdowns svn+ssh://cdowns@shadow.predsci.com/opt/repositories/tools/trunk psitools
+svn co https://www.predsci.com/svn_tools/trunk/ psi_tools
 
-
+# Follow included instructions to install.
