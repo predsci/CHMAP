@@ -8,12 +8,7 @@ from sqlalchemy import Column, DateTime, String, Integer, Float, ForeignKey, Ind
     UniqueConstraint, ForeignKeyConstraint
 from sqlalchemy.orm import relationship
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy_utils import force_auto_coercion
 
-# Build auto-coercion into sqlalchemy mapping structure
-# SQLAlchemy requires basic python data types for inputs and queries to the database. This
-# 'listener' will check for and coerce data to acceptable types.
-force_auto_coercion()
 
 # declare 'Base' for sqlalchemy classes
 Base = declarative_base()
@@ -46,7 +41,8 @@ class EUV_Maps(Base):
     """
     Table for EUV map files.
      - This will be how we organize the maps that we have created from images
-     - Each row is a single map.
+     - Each row is a single map.  A map is a unique combination of its constituent
+     images 'combo_id' and its merging method 'meth_id'.
      NOTE: One limitation of the current schema is this: two maps with the same combo
      and method, but with different parameter values are not uniquely defined in this
      table by the columns 'combo_id' and 'meth_id'.
@@ -54,15 +50,15 @@ class EUV_Maps(Base):
     __tablename__ = 'euv_maps'
     map_id = Column(Integer, primary_key=True)
     combo_id = Column(Integer, ForeignKey('image_combos.combo_id'))
-    meth_combo_id = Column(Integer, ForeignKey('method_combos.meth_combo_id'))
+    meth_id = Column(Integer, ForeignKey('meth_defs.meth_id'))
     fname = Column(String(150))
     time_of_compute = Column(DateTime)
-    # __table_args__ = (UniqueConstraint("fname"), )
-    __table_args__ = (Index('map_file_names', "fname", unique=True), Index('maps_idx1', "combo_id", "meth_combo_id"))
+    __table_args__ = (UniqueConstraint("fname"), )
+    # __table_args__ = (UniqueConstraint("fname"), Index('combo_id', "meth_id", unique=True))
 
     combos = relationship("Image_Combos")
     var_vals = relationship("Var_Vals")
-    method_combo = relationship("Method_Combos")
+    method_info = relationship("Meth_Defs")
 
 
 class Image_Combos(Base):
@@ -99,16 +95,14 @@ class Var_Vals(Base):
     """
     __tablename__='var_vals'
     map_id = Column(Integer, ForeignKey('euv_maps.map_id'), primary_key=True)
-    combo_id = Column(Integer, ForeignKey('image_combos.combo_id'), primary_key=True)
-    meth_id = Column(Integer, ForeignKey('meth_defs.meth_id'))
-    var_id = Column(Integer, ForeignKey('var_defs.var_id'), primary_key=True)
+    meth_id = Column(Integer)
+    var_id = Column(Integer, primary_key=True)
     var_val = Column(Float)
-    __table_args__ = (Index('var_val_index', "map_id", "combo_id", "var_id", "meth_id", unique=True),
+    __table_args__ = (ForeignKeyConstraint(['meth_id', 'var_id'], ['meth_var_assoc.meth_id', 'meth_var_assoc.var_id']),
+                      Index('var_val_index', "map_id", "var_id", "meth_id", unique=True),
                       Index('var_val_index2', "meth_id", "var_id"), Index('var_val_index3', "var_id"))
 
-    var_info = relationship("Var_Defs")
-    meth_info = relationship("Meth_Defs")
-    combo_info = relationship("Image_Combos")
+    var_assoc = relationship("Meth_Var_Assoc")
 
 
 class Meth_Defs(Base):
@@ -116,7 +110,7 @@ class Meth_Defs(Base):
     Definitions for image-combining methods
     """
     __tablename__ = 'meth_defs'
-    meth_id = Column(Integer, primary_key=True, autoincrement=True)
+    meth_id = Column(Integer, primary_key=True)
     meth_name = Column(String(25))
     meth_description = Column(String(1000))
     __table_args__=(Index('meth_name', "meth_name", unique=True), )
@@ -127,40 +121,19 @@ class Var_Defs(Base):
     Definitions for method variables
     """
     __tablename__ = 'var_defs'
-    var_id = Column(Integer, primary_key=True, autoincrement=True)
-    meth_id = Column(Integer, ForeignKey('meth_defs.meth_id'))
+    var_id = Column(Integer, primary_key=True)
     var_name = Column(String(25))
     var_description = Column(String(1000))
 
 
-# class Meth_Var_Assoc(Base):
-#     """
-#     Table defines which variables can be associated with which methods
-#     """
-#     __tablename__ = 'meth_var_assoc'
-#     meth_id = Column(Integer, ForeignKey('meth_defs.meth_id'), primary_key=True)
-#     var_id = Column(Integer, ForeignKey('var_defs.var_id'), primary_key=True)
-#
-#     var_info = relationship("Var_Defs")
-
-
-class Method_Combos(Base):
+class Meth_Var_Assoc(Base):
     """
-    A list of different method combinations used to make maps
+    Table defines which variables can be associated with which methods
     """
-    __tablename__ = 'method_combos'
-    meth_combo_id = Column(Integer, primary_key=True)
-    n_methods = Column(Integer)
-    __table_args__ = (Index('meth_n_combos', "n_methods", "meth_combo_id"), )
-
-
-class Method_Combo_Assoc(Base):
-    """
-    The method_ids associated with each method_combo
-    """
-    __tablename__ = 'method_combo_assoc'
-    meth_combo_id = Column(Integer, ForeignKey('method_combos.meth_combo_id'), primary_key=True)
+    __tablename__ = 'meth_var_assoc'
     meth_id = Column(Integer, ForeignKey('meth_defs.meth_id'), primary_key=True)
+    var_id = Column(Integer, ForeignKey('var_defs.var_id'), primary_key=True)
 
-    method_info = relationship("Meth_Defs")
+    var_info = relationship("Var_Defs")
+
 

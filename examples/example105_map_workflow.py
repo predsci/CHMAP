@@ -16,8 +16,8 @@ import numpy as np
 
 from settings.app import App
 from modules import DB_classes
-from modules.DB_funs import create_map_input_object, init_db_conn, create_method, add_map_dbase_record,\
-    query_euv_maps, build_euvimages_from_fits, delete_map_dbase_record
+from modules.deprecated.DB_funs import create_map_input_object, init_db_conn, create_method, add_map_dbase_record,\
+    query_euv_maps, delete_map_dbase_record
 from modules.datatypes import PsiMap
 
 

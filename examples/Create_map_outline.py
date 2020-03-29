@@ -21,9 +21,9 @@ import numpy as np
 # import sunpy
 
 from settings.app import App
-import modules.DB_classes_v2 as db_class
-from modules.DB_funs_v2 import init_db_conn, query_euv_images, add_map_dbase_record
-import modules.datatypes_v2 as psi_d_types
+import modules.DB_classes as db_class
+from modules.DB_funs import init_db_conn, query_euv_images, add_map_dbase_record
+import modules.datatypes as psi_d_types
 from modules.map_manip import combine_maps
 # import modules.coord_manip as coord
 import modules.Plotting as EasyPlot

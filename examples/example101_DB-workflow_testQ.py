@@ -18,8 +18,8 @@ from sunpy.time import TimeRange
 from helpers import drms_helpers, vso_helpers
 from settings.app_JT_Q import App
 from modules.misc_funs import cluster_meth_1, list_available_images
-from modules.DB_classes_v2 import *
-from modules.DB_funs import init_db_conn, query_euv_images, add_image2session, update_image_val, remove_euv_image
+from modules.DB_classes import *
+from modules.DB_funs import init_db_conn, query_euv_images, add_image2session
 
 
 # Specify directories on mounted Q home

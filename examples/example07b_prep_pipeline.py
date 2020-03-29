@@ -12,7 +12,7 @@ import datetime
 from astropy.time import Time
 
 from settings.app import App
-from modules.DB_classes import *
+from modules.DB_classes import Base
 from modules.DB_funs import init_db_conn, query_euv_images
 from modules.misc_funs import get_image_set
 from helpers import idl_helper

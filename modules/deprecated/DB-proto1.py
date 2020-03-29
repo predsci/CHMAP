@@ -7,18 +7,16 @@ Right now the example only works for 3 spacecraft data being available. It shoul
 be a short fix to make it work for arbitrary numbers/pairs.
 """
 
-import numpy as np
 import datetime
 
 from astropy.time import Time, TimeDelta
-import astropy.units as u
 from sunpy.time import TimeRange
 
 from helpers import drms_helpers, vso_helpers
 from settings.app import App
 from modules.misc_funs import cluster_meth_1, list_available_images
 from modules.DB_classes import *
-from modules.DB_funs import init_db_conn, query_euv_images, add_image2session, update_image_val
+from modules.deprecated.DB_funs import init_db_conn, query_euv_images, add_image2session, update_image_val
 
 import pandas as pd
 

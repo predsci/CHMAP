@@ -11,13 +11,13 @@ from astropy.time import Time
 import astropy.units as u
 
 from settings.app_JT_Q import App
-import modules.DB_classes_v2 as DBClass
-from modules.DB_funs_v2 import init_db_conn
+import modules.DB_classes as DBClass
+from modules.DB_funs import init_db_conn
 from modules.image_download import synchronic_euv_download
 
 # Specify a vector of synchronic times
-period_start = Time('2011-01-01T00:00:00.000', scale='utc')
-period_end = Time('2012-01-01T00:00:00.000', scale='utc')
+period_start = Time('2012-04-01T00:00:00.000', scale='utc')
+period_end = Time('2013-01-01T00:00:00.000', scale='utc')
 # define image search interval cadence and width
 interval_cadence = 2*u.hour
 del_interval = 30*u.minute
@@ -28,7 +28,7 @@ synch_times = pd.DataFrame({'target_time': target_times, 'min_time': target_time
                             'max_time': target_times + del_interval})
 
 # specify path and filename for download_results file
-pickle_file = "/Users/turtle/GitReps/CHD/test_data/download_results_2011.pkl"
+pickle_file = "/Users/turtle/GitReps/CHD/test_data/download_results_2012.pkl"
 
 # Establish connection to database
 use_db = "sqlite"
@@ -40,6 +40,10 @@ download_result = synchronic_euv_download(synch_times, App.RAW_DATA_HOME, db_ses
                                           verbose=True)
 
 download_result.to_pickle(pickle_file)
+
+# print a summary of results
+print("Summary of download resutls:")
+print(download_result.result_desc.value_counts())
 
 db_session.close()
 

@@ -9,7 +9,7 @@ import astropy.units as u
 
 from helpers import drms_helpers, vso_helpers
 from modules.misc_funs import cluster_meth_1, list_available_images
-from modules.DB_funs_v2 import add_image2session
+from modules.DB_funs import add_image2session
 
 
 def synchronic_euv_download(synch_times, raw_data_dir, db_session, download=True, overwrite=False, verbose=True):

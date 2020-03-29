@@ -9,8 +9,8 @@ import pandas as pd
 import datetime
 
 from settings.app import App
-import modules.DB_classes_v2 as DBClass
-from modules.DB_funs_v2 import init_db_conn, update_image_val
+import modules.DB_classes as DBClass
+from modules.DB_funs import init_db_conn, update_image_val
 
 from helpers import idl_helper
 from modules import prep

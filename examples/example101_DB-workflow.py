@@ -18,8 +18,7 @@ from sunpy.time import TimeRange
 from helpers import drms_helpers, vso_helpers
 from settings.app import App
 from modules.misc_funs import cluster_meth_1, list_available_images
-# from modules.DB_classes import *
-from modules.DB_classes_v2 import *
+from modules.DB_classes import Base
 from modules.DB_funs import init_db_conn, query_euv_images, add_image2session, update_image_val, remove_euv_image
 
 
@@ -100,15 +99,15 @@ for imin in test:
         if download:
             if instrument=="AIA":
                 print("Downloading AIA: ", f_list[ii].iloc[image_num].time)
-                subdir, fname = s12.download_image_fixed_format(f_list[ii].iloc[image_num], raw_data_dir, update=True,
+                subdir, fname, exit_flag = s12.download_image_fixed_format(f_list[ii].iloc[image_num], raw_data_dir, update=True,
                                                                 overwrite=overwrite, verbose=verbose)
             elif instrument=="EUVI" and spacecraft=="STEREO_A":
                 print("Downloading EUVI A: ", f_list[ii].iloc[image_num].time)
-                subdir, fname = euvi.download_image_fixed_format(f_list[ii].iloc[image_num], raw_data_dir, compress=True,
+                subdir, fname, exit_flag = euvi.download_image_fixed_format(f_list[ii].iloc[image_num], raw_data_dir, compress=True,
                                                                  overwrite=overwrite, verbose=verbose)
             elif instrument=="EUVI" and spacecraft=="STEREO_B":
                 print("Downloading EUVI B: ", f_list[ii].iloc[image_num].time)
-                subdir, fname = euvi.download_image_fixed_format(f_list[ii].iloc[image_num], raw_data_dir, compress=True,
+                subdir, fname, exit_flag = euvi.download_image_fixed_format(f_list[ii].iloc[image_num], raw_data_dir, compress=True,
                                                                  overwrite=overwrite, verbose=verbose)
             else:
                 print("Instrument ", instrument, " does not yet have a download function.  SKIPPING DOWNLOAD ")

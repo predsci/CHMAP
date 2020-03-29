@@ -8,9 +8,7 @@ import sys
 import urllib.parse
 import pandas as pd
 import datetime
-import numpy as np
-import astropy.time as astro_time
-import collections                  # for checking if an input is iterable
+
 
 import sunpy.map
 
@@ -18,11 +16,10 @@ from sqlalchemy import create_engine, func, or_
 from sqlalchemy.orm import sessionmaker
 
 from settings.app import App
-from modules.DB_classes_v2 import *
+from modules.DB_classes import *
 from modules.misc_funs import get_metadata
 from helpers import misc_helpers
-from modules import datatypes
-import helpers.psihdf as psihdf
+# from modules import datatypes
 
 
 def init_db_conn(db_name, chd_base, sqlite_path=""):
@@ -221,7 +218,7 @@ def update_image_val(db_session, raw_series, col_name, new_val):
               "directly using SQLAlchemy functions. Alternatively one could use remove_euv_image() followed " +
               "by euvi.download_image_fixed_format(), add_image2session(), and db_session.commit()")
     else:
-        raw_id = int(raw_series['image_id'])
+        raw_id = raw_series['image_id']
         db_session.query(EUV_Images).filter(EUV_Images.image_id == raw_id).update({col_name : new_val})
         db_session.commit()
 
@@ -277,7 +274,7 @@ def build_euvimages_from_fits(db_session, raw_data_dir, hdf_data_dir):
     return db_session
 
 
-def add_euv_map_old(db_session, combo_id, meth_id, fname, var_dict=None, time_of_compute=None):
+def add_euv_map(db_session, combo_id, meth_id, fname, var_dict=None, time_of_compute=None):
     """
     Simultaneously add record to EUV_Maps and Var_Vals.  Currently does not require
     var_dict or time_of_compute.
@@ -314,10 +311,10 @@ def add_euv_map_old(db_session, combo_id, meth_id, fname, var_dict=None, time_of
         if n_vars is not None:
             var_info = pd.read_sql(db_session.query(Var_Defs).filter(Var_Defs.var_name.in_(var_dict.keys())).statement,
                                    db_session.bind)
-            # Write variable values to Var_Vals
+
             for index, var_row in var_info.iterrows():
                 var_val = var_dict[var_row.var_name]
-                add_var_val = Var_Vals(map_id=map_id, combo_id=combo_id, meth_id=meth_id, var_id=var_row.var_id, var_val=var_val)
+                add_var_val = Var_Vals(map_id=map_id, meth_id=meth_id, var_id=var_row.var_id, var_val=var_val)
                 db_session.add(add_var_val)
 
         # now commit EUV_Map update and Var_Vals update simultaneously
@@ -326,122 +323,31 @@ def add_euv_map_old(db_session, combo_id, meth_id, fname, var_dict=None, time_of
     return db_session, exit_status, map_id
 
 
-def add_euv_map(db_session, psi_map, base_path=None, map_type=None):
-    """
-    Simultaneously add record to EUV_Maps and Var_Vals. Write object to file.
-    :param db_session:
-    :param psi_map: PsiMap object for which all methods, variables, method_combo, and
-    image_combo have been created in the database.  All variable information should
-    be in psi_map.method_info
-    :param base_path:
-    :param map_type:
-    :return: The updated session,
-             exit_status: 1 - filename or map already exists. Delete existing record before
-             adding a new one. 0 - record successfully added,
-             map_id: the appropriate map_id
-    """
-
-    time_of_compute = psi_map.map_info.loc[0, 'time_of_compute'].to_pydatetime()
-    fname = psi_map.map_info.loc[0, 'fname']
-    combo_id = psi_map.map_info.loc[0, 'combo_id'].__int__()
-    meth_combo_id = psi_map.map_info.loc[0, 'meth_combo_id'].__int__()
-
-    if fname is not None:
-        # check if filename already exists in DB
-        existing_fname = pd.read_sql(db_session.query(EUV_Maps.map_id).filter(EUV_Maps.fname == fname).statement,
-                                     db_session.bind)
-    else:
-        existing_fname = []
-
-    if len(existing_fname) > 0:
-        print("Map object already exists in database with filename: " + fname +
-              ".\n No file written.  No EUV_Map record added to database.")
-        exit_status = 1     # There is already a map record for this file
-        # psi_map.map_info.loc[0, 'map_id'] = existing_fname.loc[0, 'map_id']
-
-    else:
-        # Check that this map does not already exist in the DB
-        # Do this by checking for matching combo_id and meth_combo_id.  If one or more matches are found,
-        # check if the accompanying variable values match.
-        combo_matches_query = db_session.query(EUV_Maps.map_id).filter(EUV_Maps.combo_id == combo_id,
-                                                                       EUV_Maps.meth_combo_id == meth_combo_id)
-        combo_matches = pd.read_sql(combo_matches_query.statement, db_session.bind)
-        if len(combo_matches) > 0:
-            map_matches = combo_matches
-            no_match = False
-            # check variable values
-            for index, row in psi_map.method_info.iterrows():
-                var_query = db_session.query(Var_Vals.map_id).filter(Var_Vals.map_id.in_(map_matches.map_id),
-                                                                     Var_Vals.var_id == row.var_id,
-                                                                     Var_Vals.var_val == row.var_val)
-                map_matches = pd.read_sql(var_query.statement, db_session.bind)
-                if len(map_matches) == 0:
-                    # this map does not exist in the DB
-                    no_match = True
-                    break
-        else:
-            no_match = True
-
-        if no_match:
-            # create EUV_Maps object and add to session
-            map_add = EUV_Maps(combo_id=combo_id, meth_combo_id=meth_combo_id, fname=fname,
-                               time_of_compute=time_of_compute)
-            db_session.add(map_add)
-            # commit to DB and return map_id
-            db_session.flush()
-            map_id = map_add.map_id
-            # add map_id to map object
-            psi_map.map_info.loc[0, 'map_id'] = map_id
-            # if filename is not specified, auto-generate using map_id
-            if fname is None or np.isnan(fname):
-                # generate filename
-                subdir, temp_fname = misc_helpers.construct_map_path_and_fname(base_path, psi_map.map_info.date_mean[0],
-                                                                               map_id, map_type, 'h5', mkdir=True)
-                h5_filename = os.path.join(subdir, temp_fname)
-                rel_file_path = h5_filename.replace(base_path, "")
-                # record file path in map object
-                psi_map.map_info.loc[0, 'fname'] = rel_file_path
-                # alter map record to reflect newly-generated filename
-                map_add.fname = rel_file_path
-            else:
-                h5_filename = os.path.join(base_path, fname)
-
-            # write map object to file
-            psihdf.wrh5_fullmap(h5_filename, psi_map.x, psi_map.y, np.array([]), psi_map.data,
-                                method_info=psi_map.method_info, image_info=psi_map.image_info, map_info=psi_map.map_info,
-                                no_data_val=psi_map.no_data_val, mu=psi_map.mu, origin_image=psi_map.origin_image)
-
-            # Loop over psi_map.method_info rows and insert variable values
-            for index, var_row in psi_map.method_info.iterrows():
-                add_var_val = Var_Vals(map_id=map_id, combo_id=combo_id, meth_id=var_row.meth_id,
-                                       var_id=var_row.var_id, var_val=var_row.var_val)
-                db_session.add(add_var_val)
-
-            # now commit EUV_Map update and Var_Vals update simultaneously
-            db_session.commit()
-            exit_status = 0  # New map record created
-            print("PsiMap object written to: " + h5_filename + "\nDatabase record created with map_id: " + map_id)
-        else:
-            exit_status = 1
-            print("This map already exists in the database with map_id: " + map_matches.map_id +
-                  ".\n No file written. No EUV_Maps record added.")
-
-    return db_session, exit_status, psi_map
+# def add_map_image_assoc(db_session, combo_id, image_ids):
+#
+#     # add rows to MapImageAssoc table (session)
+#     for image_id in image_ids:
+#         assoc_add = Map_Image_Assoc(combo_id=combo_id, image_id=image_id)
+#         # Append to the list of rows to be added
+#         db_session.add(assoc_add)
+#
+#     return db_session
 
 
-
-def update_euv_map(db_session, map_id, col_name, new_val):
+def update_euv_map(db_session, map_series, col_name, new_val):
     """
     Change value for EUV_Maps in row referenced from map_series and column referenced in col_name
     map_series - pandas series for the row to be updated
     :return: the SQLAlchemy database session
     """
 
-    if col_name in ("map_id", "combo_id", "meth_combo_id"):
+    if col_name in ("map_id", "obs_time", "instrument", "wavelength"):
         print("This is a restricted column and will not be updated by this function. Values can be changed " +
-              "directly using SQLAlchemy functions.")
+              "directly using SQLAlchemy functions. Alternatively one could use remove_euv_image() followed " +
+              "by euvi.download_image_fixed_format(), add_image2session(), and db_session.commit()")
     else:
-        db_session.query(EUV_Maps).filter(EUV_Maps.map_id == map_id).update({col_name : new_val})
+        raw_id = map_series['map_id']
+        db_session.query(EUV_Images).filter(EUV_Images.image_id == raw_id).update({col_name : new_val})
         db_session.commit()
 
     return db_session
@@ -477,28 +383,21 @@ def get_combo_id(db_session, image_ids, create=False):
     # match_groups = pd.DataFrame(data={'combo_id': [1, 2], 'i_count': [2, 3]})
     # match_groups = pd.DataFrame(columns = ['combo_id', 'i_count'])
 
+
     if len(match_groups)>0:
         # reduce match_groups to combos that match
         match_groups = match_groups.loc[match_groups.i_count==n_images]
         if len(match_groups)==1:
             # return the existing combo_id
-            combo_id = match_groups.combo_id.values[0].item()
+            combo_id = match_groups.combo_id.values[0]
             no_match_exists = False
-            # get combo date-times
-            combo_info = pd.read_sql(db_session.query(Image_Combos).filter(Image_Combos.combo_id==combo_id
-                                                                           ).statement, db_session.bind)
-            combo_times = {'date_mean': combo_info.date_mean[0].to_pydatetime(),
-                           'date_max': combo_info.date_max[0].to_pydatetime(),
-                           'date_min': combo_info.date_min[0].to_pydatetime()}
         else:
             no_match_exists = True
             combo_id = None
-            combo_times = None
 
     else:
         no_match_exists = True
         combo_id = None
-        combo_times = None
 
     if no_match_exists and create:
         # add record to image_combos
@@ -509,9 +408,6 @@ def get_combo_id(db_session, image_ids, create=False):
         date_max = image_pd.date_obs.max()
         date_min = image_pd.date_obs.min()
         date_mean = image_pd.date_obs.mean()
-        # record in dict object
-        combo_times = {'date_mean': date_mean, 'date_max': date_max, 'date_min': date_min}
-
         # generate record and add to session
         combo_add = Image_Combos(n_images=n_images, date_mean=date_mean, date_max=date_max, date_min=date_min)
         db_session.add(combo_add)
@@ -519,7 +415,7 @@ def get_combo_id(db_session, image_ids, create=False):
         db_session.commit()
         combo_id = combo_add.combo_id
 
-    return db_session, combo_id, combo_times
+    return db_session, combo_id
 
 
 def add_combo_image_assoc(db_session, combo_id, image_id):
@@ -549,7 +445,7 @@ def add_combo_image_assoc(db_session, combo_id, image_id):
     return db_session, exit_flag
 
 
-def get_method_id(db_session, meth_name, meth_desc=None, var_names=None, var_descs=None, create=False):
+def get_method_id(db_session, meth_name, meth_desc=None, create=False):
     """
     Query DB for a method ID.  When create=True, if the method does not already exist,
     meth_desc and meth_vars are used to create the method definition in the DB.
@@ -569,52 +465,32 @@ def get_method_id(db_session, meth_name, meth_desc=None, var_names=None, var_des
         meth_exists = False
         meth_id = None
     else:
-        # method already exists. lookup variable ids
         meth_exists = True
-        meth_id = existing_meth.meth_id[0].item()
-        var_ids = [0]*len(var_names)
-        for ii in range(len(var_names)):
-            var_id_query = pd.read_sql(db_session.query(Var_Defs.var_id).filter(Var_Defs.meth_id==meth_id,
-                                                                                Var_Defs.var_name==var_names[ii]
-                                                                                ).statement, db_session.bind)
-            var_ids[ii] = var_id_query.var_id.to_list()
+        meth_id = existing_meth.meth_id[0]
 
     if create and not meth_exists:
         # create method record
         add_method = Meth_Defs(meth_name=meth_name, meth_description=meth_desc)
         db_session.add(add_method)
         # push change to DB and return meth_id
-        db_session.flush()
-        meth_id = add_method.meth_id
-        # add associated variables to var_defs
-        var_ids = [0] * len(var_names)
-        for ii in range(len(var_names)):
-            add_var = Var_Defs(meth_id=meth_id, var_name=var_names[ii], var_description=var_descs[ii])
-            db_session.add(add_var)
-            db_session.flush()
-            var_ids[ii] = add_var.var_id
-
         db_session.commit()
-    elif not meth_exists:
-        var_ids = None
+        meth_id = add_method.meth_id
 
-    return db_session, meth_id, var_ids
+    return db_session, meth_id
 
 
-def get_var_id(db_session, var_name, meth_id, var_desc, create=False):
+def get_var_id(db_session, var_name, var_desc, create=False):
     """
-    Query for variable id by var_name and meth_id
-    :param db_session: db_session that connects to the database.
-    :param var_name: string variable name.
-    :param meth_id method identification integer.
-    :param var_desc: Only required for create=True.
-    :param create: If var_id does not exist, create it.
+
+    :param db_session:
+    :param var_name:
+    :param var_desc:
+    :param create:
     :return:
     """
 
     # Query DB for existing variable
-    existing_var = pd.read_sql(db_session.query(Var_Defs.var_id).filter(Var_Defs.var_name == var_name,
-                                                                        Var_Defs.meth_id == meth_id).statement,
+    existing_var = pd.read_sql(db_session.query(Var_Defs.var_id).filter(Var_Defs.var_name == var_name).statement,
                                db_session.bind)
 
     if len(existing_var.var_id) == 0:
@@ -626,7 +502,7 @@ def get_var_id(db_session, var_name, meth_id, var_desc, create=False):
 
     if create and not var_exists:
         # create variable record
-        add_var = Var_Defs(meth_id=meth_id, var_name=var_name, var_description=var_desc)
+        add_var = Var_Defs(var_name=var_name, var_description=var_desc)
         db_session.add(add_var)
         # push change to DB and return var_id
         db_session.commit()
@@ -635,26 +511,33 @@ def get_var_id(db_session, var_name, meth_id, var_desc, create=False):
     return db_session, var_id
 
 
+def add_meth_var_assoc(db_session, var_id, meth_id):
+    """
+    Check if meth/var association exists.  If not, add it.
+    :param db_session: SQLAlchemy DB session
+    :param var_id: variable ID
+    :param meth_id: method ID
+    :return: 0 - association already exists; 1 - association added
+    """
+
+    # Query DB for existing association
+    existing_assoc = pd.read_sql(db_session.query(Meth_Var_Assoc).filter(Meth_Var_Assoc.var_id==var_id,
+                                                                        Meth_Var_Assoc.meth_id==meth_id).statement,
+                                 db_session.bind)
+    # If association record does not exist, add it
+    if len(existing_assoc.var_id) == 0:
+        add_assoc = Meth_Var_Assoc(meth_id=meth_id, var_id=var_id)
+        db_session.add(add_assoc)
+        db_session.commit()
+        exit_flag = 1
+    else:
+        exit_flag = 0
+
+    return db_session, exit_flag
+
+
 def query_euv_maps(db_session, mean_time_range=None, extrema_time_range=None, n_images=None, image_ids=None,
                    methods=None, var_val_range=None, wavelength=None):
-    """
-    Query the database for maps that meet the input specifications.  db_session specifies database information.  All
-    other inputs are query specifiers.  If more than one query specifier is 'not None', they are connected to one
-    another using 'and' logic.
-    :param db_session: SQLAlchemy database session.  Used for database connection and structure info.
-    :param mean_time_range: Two element list of datetime values. Returns maps with mean_time in the range.
-    :param extrema_time_range: Two element list of datetime values. Returns maps with min/max ranges that intersect
-    extremea_time_range.
-    :param n_images: An integer value. Returns maps made from n_images number of images.
-    :param image_ids: A list of one or more integers.  Returns maps that include all images in image_ids.
-    :param methods: A list of one or more character strings.  Returns maps that include all methods in 'methods'.
-    :param var_val_range: A dict with variable names as element labels and a two-element list as values.  Ex
-    {'par1': [min_par1, max_par1], 'par2': [min_par2, max_par2]}. Returns maps with parameter values in the
-    specified range.
-    :param wavelength: A list of one or more integer values. Returns maps with at least one image from each wavelength
-    listed in 'wavelength'.
-    :return:
-    """
 
     # combo query
     # n_images, image_ids, mean_time_range, extrema_time_range
@@ -701,14 +584,10 @@ def query_euv_maps(db_session, mean_time_range=None, extrema_time_range=None, n_
 
     # method query
     if methods is not None:
-        # filter method_id by method names in 'methods' input
-        method_ids_query = db_session.query(Meth_Defs.meth_id).filter(Meth_Defs.meth_name.in_(methods))
-        # find method combos containing methods
-        method_combo_query = db_session.query(Method_Combo_Assoc.meth_combo_id).filter(Method_Combo_Assoc.meth_id.in_(
-            method_ids_query
-        )).distinct()
+        # filter method_id by method names in 'methods'
+        method_query = db_session.query(Meth_Defs.meth_id).filter(Meth_Defs.meth_name.in_(methods))
         # update master query
-        euv_map_query = euv_map_query.filter_by(EUV_Maps.meth_combo_id.in_(method_combo_query))
+        euv_map_query = euv_map_query.filter_by(EUV_Maps.meth_id.in_(method_query))
 
     # variable value query
     if var_val_range is not None:
@@ -723,12 +602,12 @@ def query_euv_maps(db_session, mean_time_range=None, extrema_time_range=None, n_
         euv_map_query = euv_map_query.filter_by(EUV_Maps.map_id.in_(var_map_id_query))
 
     # Need three output tables from SQL
-        # 1. map_info: euv_maps joined with image_combos
-        # 2. method_info: var_vals joined with meth_defs and var_defs
-        # 3. image_info: euv_images joined with map_image_assoc
+        # 1. euv_maps joined with image_combos
+        # 2. var_vals joined with meth_defs and var_defs
+        # 3. euv_images joined with map_image_assoc
 
     # return map_info table using a join
-    map_info = pd.read_sql(euv_map_query.join(Image_Combos).statement, db_session.bind)
+    map_info = pd.read_sql(euv_map_query.statement, db_session.bind)
     # remove duplicate combo_id columns
     map_info = map_info.T.groupby(level=0).first().T
 
@@ -741,18 +620,12 @@ def query_euv_maps(db_session, mean_time_range=None, extrema_time_range=None, n_
     # return var_vals joined with var_defs. they are not directly connected tables, so use explicit join syntax
     var_query = db_session.query(Var_Vals, Var_Defs).join(Var_Defs, Var_Vals.var_id==Var_Defs.var_id
                                                 ).filter(Var_Vals.map_id.in_(map_info.map_id))
-    joint_query = var_query.join(Meth_Defs)
-    joint_query = db_session.query(Meth_Defs, Var_Defs, Var_Vals).join(Var_Defs).join(Var_Vals, Var_Defs).filter(
-        Var_Vals.map_id.in_(map_info.map_id)
-    )
-    joint_query = db_session.query(Meth_Defs, Var_Defs, Var_Vals).filter(Meth_Defs.meth_id==Var_Defs.meth_id).filter(
-        Var_Defs.var_id==Var_Vals.var_id).filter(Var_Vals.map_id.in_(map_info.map_id))
-    method_info = pd.read_sql(joint_query.statement, db_session.bind)
+    var_info = pd.read_sql(var_query.statement, db_session.bind)
     # remove duplicate var_id columns
-    method_info = method_info.T.groupby(level=0).first().T
+    var_info = var_info.T.groupby(level=0).first().T
 
     # also get method info
-    # method_info = pd.read_sql(db_session.query(Meth_Defs).statement, db_session.bind)
+    method_info = pd.read_sql(db_session.query(Meth_Defs).statement, db_session.bind)
 
     # This doesn't make sense.  We want a dataframe detailing each map record
     # Then divide results up into a list of Map objects
@@ -773,7 +646,7 @@ def query_euv_maps(db_session, mean_time_range=None, extrema_time_range=None, n_
     #
     # return map_list
 
-    return map_info, image_info, method_info
+    return map_info, image_info, var_info, method_info
 
 
 def create_map_input_object(new_map, fname, image_df, var_vals, method_name, time_of_compute=None):
@@ -811,88 +684,61 @@ def create_map_input_object(new_map, fname, image_df, var_vals, method_name, tim
     return new_map
 
 
-# def create_method(db_session, meth_name, meth_desc, meth_vars, var_descs):
-#     """
-#     Create a new method record in the DB. Also create associated variable definitions in
-#     'var_defs'
-#     :param db_session: SQLAlchemy session
-#     :param meth_name: string scalar
-#     :param meth_desc: string scalar
-#     :param meth_vars: list of strings
-#     :param var_descs: list of strings
-#     :return: db_session, meth_id
-#     """
-#
-#     # First create a method; Or return meth_id if it already exists
-#     db_session, meth_id = get_method_id(db_session=db_session, meth_name=meth_name, meth_desc=meth_desc, create=True)
-#
-#     # Then create needed variables; Or return var_ids if they already exist for another method
-#     var_ids = [None]*len(meth_vars)
-#     for index, var in enumerate(meth_vars, start=0):
-#         db_session, var_ids[index] = get_var_id(db_session=db_session, var_name=var, meth_id=meth_id,
-#                                                 var_desc=var_descs[index], create=True)
-#
-#     return db_session, meth_id
-
-
-def add_map_dbase_record(db_session, psi_map, base_path=None, map_type=None):
+def create_method(db_session, meth_name, meth_desc, meth_vars, var_descs):
     """
-    Add map record to database and write to hdf file.
-    :param db_session:
-    :param psi_map:
-    :param base_path:
-    :param map_type:
-    :return:
+    Create a new method record in the DB
+    :param db_session: SQLAlchemy session
+    :param meth_name: string scalar
+    :param meth_desc: string scalar
+    :param meth_vars: list of strings
+    :param var_descs: list of strings
+    :return: db_session, meth_id
     """
 
-    # generate dataframe of unique methods
-    # methods_df = psi_map.method_info.loc[:, ~psi_map.method_info.columns.isin(("var_val", "var_name",
-    #                                                                            "var_description", "var_id"))]
-    # methods_df = methods_df.drop_duplicates()
-    methods_df = psi_map.method_info.drop_duplicates(subset="meth_name")
+    # First create needed variables; Or return var_ids if they already exist for another method
+    var_ids = [None]*len(meth_vars)
+    for index, var in enumerate(meth_vars, start=0):
+        db_session, var_ids[index] = get_var_id(db_session=db_session, var_name=var, var_desc=var_descs[index],
+                                                create=True)
+    # Then create a method; Or return meth_id if it already exists
+    db_session, meth_id = get_method_id(db_session=db_session, meth_name=meth_name, meth_desc=meth_desc, create=True)
+    # Now make method-variable associations
+    for var_id in var_ids:
+        db_session, exit_flag = add_meth_var_assoc(db_session=db_session, var_id=var_id, meth_id=meth_id)
 
-    # extract/create method_id(s)
-    for index, row in methods_df.iterrows():
-        if row.meth_id is None or np.isnan(row.meth_id):
-            var_index = psi_map.method_info.meth_name == row.meth_name
-            temp_var_names = psi_map.method_info.var_name[var_index].to_list()
-            temp_var_descs = psi_map.method_info.var_description[var_index].to_list()
-            # if method_id is not passed in map object, query method id from existing methods table. Create if new
-            db_session, temp_meth_id, temp_var_ids = get_method_id(db_session, row.meth_name,
-                                                     meth_desc=row.meth_description, var_names=temp_var_names,
-                                                     var_descs=temp_var_descs, create=True)
-            methods_df.loc[index, 'meth_id'] = temp_meth_id
-            if temp_var_ids is not None:
-                psi_map.method_info.loc[var_index, 'var_id'] = temp_var_ids
-            # add method id back to psi_map.method_info
-            for index2, row2 in psi_map.method_info.iterrows():
-                if row2.meth_name == row.meth_name:
-                    psi_map.method_info.loc[index2, 'meth_id'] = temp_meth_id
-        else:
-            # do nothing. method id is already defined
-            pass
+    return db_session, meth_id
 
-    # Get method combo_id. Create if it doesn't already exist
-    meth_ids = methods_df.meth_id.to_list()
-    db_session, meth_combo_id = get_method_combo_id(db_session, meth_ids, create=True)
-    psi_map.map_info.loc[0, "meth_combo_id"] = meth_combo_id
 
-    # Get image combo_id. Create if it doesn't already exist.
+def add_map_dbase_record(db_session, psi_map):
+
+    # extract method_id
+    if psi_map.map_info.meth_id is None:
+        # if method_id is not passed in map object, query method id from existing methods table
+        db_session, meth_id = get_method_id(db_session=db_session, meth_name=psi_map.method_info.meth_name[0],
+                                        create=False)
+    else:
+        meth_id = psi_map.map_info.meth_id[0]
+
+    # Get combo_id. Create if it doesn't already exist.
     image_ids = psi_map.image_info.image_id.to_list()
-    db_session, combo_id, combo_times = get_combo_id(db_session=db_session, image_ids=image_ids, create=True)
-    psi_map.map_info.loc[0, "combo_id"] = combo_id
-    psi_map.map_info.loc[0, "date_mean"] = combo_times['date_mean']
-    psi_map.map_info.loc[0, "date_max"] = combo_times['date_max']
-    psi_map.map_info.loc[0, "date_min"] = combo_times['date_min']
+    db_session, combo_id = get_combo_id(db_session=db_session, image_ids=image_ids, create=True)
     # add combo-image associations
     for image in image_ids:
         db_session, exit_flag = add_combo_image_assoc(db_session=db_session, combo_id=combo_id, image_id=image)
 
-    # Add EUV_map record (and accompanying variable values), and write to file
-    db_session, exit_status, psi_map = add_euv_map(db_session=db_session, psi_map=psi_map, base_path=base_path,
-                                                   map_type=map_type)
+    # Add EUV_map record
+    var_dict = dict(zip(psi_map.var_info.var_name, psi_map.var_info.var_val))
+    # When writing to SQL, SQLAlchemy wants native python datatypes
+    time_of_compute = psi_map.map_info.time_of_compute[0]
+    if type(time_of_compute).__module__=='pandas._libs.tslibs.timestamps':
+        time_of_compute = time_of_compute.to_pydatetime()
+    if type(meth_id).__module__=='numpy':
+        meth_id = meth_id.item()
+    db_session, exit_status, map_id = add_euv_map(db_session=db_session, combo_id=combo_id, meth_id=meth_id,
+                                                  fname=psi_map.map_info.fname[0], var_dict=var_dict,
+                                                  time_of_compute=time_of_compute)
 
-    return db_session, psi_map
+    return db_session, map_id
 
 
 def delete_map_dbase_record(db_session, map_object, data_dir=None):
@@ -936,125 +782,11 @@ def delete_map_dbase_record(db_session, map_object, data_dir=None):
     return exit_status
 
 
-def get_method_combo_id(db_session, meth_ids, create=False):
-
-    # query DB to determine if this combo exists.
-    n_meths = len(meth_ids)
-    # Return the number of matching images in each combo that has n_images and contains at least one of image_ids.
-    match_groups = pd.read_sql(
-        db_session.query(Method_Combo_Assoc.meth_combo_id, func.count(Method_Combo_Assoc.meth_combo_id).label(
-            "m_count")).filter(Method_Combo_Assoc.meth_combo_id.in_(
-            db_session.query(Method_Combos.meth_combo_id).filter(Method_Combos.n_methods == n_meths)
-        ), Method_Combo_Assoc.meth_combo_id.in_(meth_ids)
-        ).group_by(Method_Combo_Assoc.meth_combo_id).statement, db_session.bind)
-
-    if len(match_groups) > 0:
-        # reduce match_groups to combos that match
-        match_groups = match_groups.loc[match_groups.m_count == n_meths]
-        if len(match_groups) == 1:
-            # return the existing meth_combo_id
-            meth_combo_id = match_groups.meth_combo_id.values[0]
-            no_match_exists = False
-        else:
-            no_match_exists = True
-            meth_combo_id = None
-
-    else:
-        no_match_exists = True
-        meth_combo_id = None
-
-    if no_match_exists and create:
-        # add record to method_combos
-        # generate record and add to session
-        combo_add = Method_Combos(n_methods=n_meths)
-        db_session.add(combo_add)
-        db_session.flush()
-        meth_combo_id = combo_add.meth_combo_id
-        for id in meth_ids:
-            # add method_id association to meth_combo. Be sure to convert to base python int
-            assoc_add = Method_Combo_Assoc(meth_combo_id=meth_combo_id, meth_id=id)
-            db_session.add(assoc_add)
-        # Add record to DB
-        db_session.commit()
-
-    return db_session, meth_combo_id
-
-
-def read_sql2pandas(sql_query):
-    """
-    trial function to compare speeds with pd.read_sql()
-    This function would maintain basic python datatypes (SQLAlchemy compatible). pd.read_sql() uses
-    numpy numeric-types and a pandas datetime-type which are not SQLAlchemy compatible.
-    :param sql_query:
-    :return:
-    """
-    # execute query
-    query_list = sql_query.all()
-    result_type = type(query_list[0]).__name__
-    # extract column names and datatypes
-    if result_type == "result":
-        column_names = query_list[0].keys()
-        column_dtypes = []
-        for element in query_list[0]:
-            column_dtypes.append(type(element).__name__)
-    else:
-        column_names = []
-        column_dtypes = []
-        for table_column in query_list[0].__table__.columns:
-            column_names.append(table_column.key)
-        for element in query_list[0]:
-            column_dtypes.append(type(element).__name__)
-
-    # initialize pandas dataframe
-    type_dict = dict(zip(column_names, column_dtypes))
-    pd_out = pd.DataFrame(np.full((len(query_list), len(query_list[0])), 0), columns=column_names)
-    pd_out.astype(type_dict)
-
-    # loop through query results and index into dataframe
-
-    return
-
-def safe_datetime(unknown_datetime):
-    """
-    SQLAlchemy inputs and queries to the database require Timestamps in a datetime.datetime() format.
-    Input a scalar or list/tuple/pd.Series of unknown TimeStamp-type.
-    Convert the scalar/vector to a scalar/list of type datetime.datetime()
-    :param unknown_datetime: a scalar or list/tuple/pd.Series of DateTimes with unknown type.
-    :return: a scalar or list of type datetime.datetime()
+def write_map_object(map_in, filename=None, db_session=None):
     """
 
-    not_list = False
-    # if input is not iterable, try to make it a tuple
-    if not isinstance(unknown_datetime, collections.Iterable):
-        # assume that the input is a scalar and convert to tuple
-        unknown_datetime = (unknown_datetime, )
-        not_list = True
-
-    # initialize output datetime.datetime() list
-    datetime_out = [datetime.datetime(1, 1, 1, 0, 0, 0)]*len(unknown_datetime)
-
-    for index, unknown_element in enumerate(unknown_datetime):
-        # check for common package datetime classes and convert to datetime.datetime()
-        if type(unknown_element) == datetime.datetime:
-            element_out = unknown_element
-        elif type(unknown_element) == pd._libs.tslibs.timestamps.Timestamp:
-            element_out = unknown_element.to_pydatetime()
-        elif type(unknown_element) == astro_time.core.Time:
-            element_out = unknown_element.to_datetime()
-
-        # check if successful
-        if type(element_out) != datetime.datetime:
-            sys.exit("Timestamp object could not be converted to datetime.datetime format.  The "
-                     "datetime.datetime class is required for SQLAlchemy interaction with the "
-                     "database.")
-
-        datetime_out[index] = element_out
-
-    if not_list:
-        # convert back to single value
-        datetime_out = datetime_out[0]
-
-    return datetime_out
-
-
-
+    :param map_in: should be a PsiMap object with full image and method/variable info
+    :param filename: if 'None' will use standardized file naming convention to name the file.
+    :param db_session: if 'None' will not attempt to write an entry to the database.
+    :return: a map object that includes filename and database ids where appropriate.
+    """

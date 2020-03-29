@@ -12,8 +12,8 @@ import matplotlib.pyplot as plt
 import matplotlib as mpl
 
 from settings.app_JT_Q import App
-from modules.DB_classes_v2 import *
-from modules.DB_funs_v2 import init_db_conn, query_euv_images
+from modules.DB_classes import *
+from modules.DB_funs import init_db_conn, query_euv_images
 
 # query parameters
 interval_cadence = datetime.timedelta(hours=2.)

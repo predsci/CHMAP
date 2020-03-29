@@ -48,6 +48,9 @@ def download_url(url, fpath, overwrite=False, verbose=True):
     except (HTTPError, URLError):
         print('  -> Error: Could not download file')
         return 1
+    except ConnectionResetError:
+        print('  -> Error: Connection was reset')
+        return 1
     else:
         os.rename(fpath_tmp, fpath)
         if verbose:

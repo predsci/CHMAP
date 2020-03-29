@@ -6,17 +6,14 @@ import pandas as pd
 from helpers import psihdf
 import sys
 import datetime
-import os
 
 import sunpy.map
 import sunpy.util.metadata
 
 import helpers.psihdf as psihdf
-import modules.DB_classes_v2 as db
-import modules.DB_funs_v2 as db_fun
+import modules.DB_classes as db
 from modules.coord_manip import interp_los_image_to_map, image_grid_to_CR
 from settings.info import DTypes
-from helpers import misc_helpers
 
 class LosImage:
     """
@@ -232,6 +229,7 @@ class PsiMap:
         """
         # --- Initialize empty dataframes based on Table schema ---
         # create the data tags (all pandas dataframes?)
+        self.method_info = init_df_from_declarative_base(db.Meth_Defs)
         self.image_info = init_df_from_declarative_base(db.EUV_Images)
         # map_info will be a combination of Image_Combos and EUV_Maps
         image_columns = []
@@ -242,15 +240,15 @@ class PsiMap:
             map_columns.append(column.key)
         df_cols = set().union(image_columns, map_columns)
         self.map_info = pd.DataFrame(data=None, columns=df_cols)
-        # method_info is a combination of Var_Defs and Meth_Defs
-        meth_columns = []
-        for column in db.Meth_Defs.__table__.columns:
-            meth_columns.append(column.key)
+        # var_info is a combination of Var_Vals and Var_Defs
+        val_columns = []
+        for column in db.Var_Vals.__table__.columns:
+            val_columns.append(column.key)
         defs_columns = []
         for column in db.Var_Defs.__table__.columns:
             defs_columns.append(column.key)
-        df_cols = set().union(meth_columns, defs_columns)
-        self.method_info = pd.DataFrame(data=None, columns=df_cols)
+        df_cols = set().union(val_columns, defs_columns)
+        self.var_info = pd.DataFrame(data=None, columns=df_cols)
 
         # Type cast data arrays
         self.data = data.astype(DTypes.MAP_DATA)
@@ -273,79 +271,27 @@ class PsiMap:
         """
         add a record to the map_info dataframe
         """
-        self.map_info = self.map_info.append(map_df, sort=False, ignore_index=True)
+        self.map_info = self.map_info.append(map_df, sort=False)
 
     def append_method_info(self, method_df):
-        self.method_info = self.method_info.append(method_df, sort=False, ignore_index=True)
+        self.method_info = self.method_info.append(method_df, sort=False)
 
-    # def append_var_info(self, var_info_df):
-    #     self.var_info = self.var_info.append(var_info_df, sort=False, ignore_index=True)
+    def append_var_info(self, var_info_df):
+        self.var_info = self.var_info.append(var_info_df, sort=False)
 
     def append_image_info(self, image_df):
-        self.image_info = self.image_info.append(image_df, sort=False, ignore_index=True)
+        self.image_info = self.image_info.append(image_df, sort=False)
 
-    def write_to_file(self, base_path, map_type=None, filename=None, db_session=None):
+    def write_to_file(self, filename):
         """
         Write the map object to hdf5 format
-        :param map_type: String describing map category (ex 'single', 'synchronic', 'synoptic', etc)
-        :param base_path: String describing the base path to map directory tree.
-        :param filename: If None, code will auto-generate a path (relative to App.MAP_FILE_HOME) and filename.
-        Otherwise, this should be a string describing the relative/local path and filename.
-        :param db_session: If None, save the file. If an SQLAlchemy session is passed, also record
-        a map record in the database.
-        :return: updated PsiMap object
         """
+        # check to see if the map exists from instantiation
+        if hasattr(self, 'map'):
+            sunpy_meta = self.map.meta
 
-        if filename is None and map_type is None:
-            sys.exit("When auto-generating filename and path (filename=None), map_type must be specified.")
-
-        if db_session is None:
-            if filename is None:
-                # # generate filename
-                # subdir, temp_fname = misc_helpers.construct_map_path_and_fname(base_path, self.map_info.date_mean[0],
-                #                                                                map_id, map_type, 'h5', mkdir=True)
-                # rel_path = os.path.join(subdir, temp_fname)
-                sys.exit("Currently no capability to auto-generate unique filenames without using the database. "
-                         "Please fill the 'filename' input when attempting to write_to_file() with no database"
-                         "connection/session 'db_session'.")
-            else:
-                rel_path = filename
-
-            h5_filename = os.path.join(base_path, rel_path)
-            # write map to file
-            psihdf.wrh5_fullmap(h5_filename, self.x, self.y, np.array([]), self.data, method_info=self.method_info,
-                                image_info=self.image_info, map_info=self.map_info,
-                                no_data_val=self.no_data_val, mu=self.mu, origin_image=self.origin_image)
-            print("PsiMap object written to: " + h5_filename)
-
-        else:
-            self.map_info.loc[0, 'fname'] = filename
-            db_session, self = db_fun.add_map_dbase_record(db_session, self, base_path, map_type=map_type)
-
-        return db_session
-
-
-def read_psi_map(h5_file):
-    """
-    Open the file at path h5_file and convert contents to the PsiMap class.
-    :param h5_file: Full file path to a PsiMap hdf5 file.
-    :return: PsiMap object
-    """
-    # read the image and metadata
-    x, y, z, f, method_info, image_info, map_info, var_info, no_data_val, mu, origin_image = psihdf.rdh5_fullmap(
-        h5_file)
-
-    # create the map structure
-    psi_map = PsiMap(f, x, y, mu=mu, origin_image=origin_image, no_data_val=no_data_val)
-    # fill in DB meta data
-    if method_info is not None:
-        psi_map.append_method_info(method_info)
-    if image_info is not None:
-        psi_map.append_image_info(image_info)
-    if map_info is not None:
-        psi_map.append_map_info(map_info)
-
-    return psi_map
+        psihdf.wrh5_meta(filename, self.x, self.y, np.array([]),
+                         self.data, chd_meta=self.info, sunpy_meta=sunpy_meta)
 
 
 def init_df_from_declarative_base(base_object):

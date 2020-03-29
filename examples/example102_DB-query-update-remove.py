@@ -15,7 +15,7 @@ import datetime
 import os
 
 from settings.app import App
-from modules.DB_classes import *
+from modules.DB_classes import Base
 from modules.DB_funs import init_db_conn, query_euv_images, update_image_val, remove_euv_image
 
 
