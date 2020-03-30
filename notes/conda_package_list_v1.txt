@@ -1,9 +1,0 @@
-# This file may be used to create an environment using:
-# $ conda create --name <env> --file <this file>
-h5py
-numpy=1.16.4
-pyhdf
-sunpy=1.0.3
-sqlalchemy
-drms
-mysqlclient

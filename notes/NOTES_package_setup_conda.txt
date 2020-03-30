@@ -25,6 +25,7 @@ Use "conda install" to install the following packages:
 sunpy
 drms
 sqlalchemy
+sqlalchemy-utils
 scipy
 sys
 signal

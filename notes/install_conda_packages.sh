@@ -30,6 +30,7 @@ h5py"
 PYTHON_PKG_TEST_LIST=(sunpy
 drms
 sqlalchemy
+sqlalchemy-utils
 setuptools
 scipy
 sys

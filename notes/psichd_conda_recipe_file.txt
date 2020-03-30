@@ -3,6 +3,7 @@
 sunpy
 drms
 sqlalchemy
+sqlalchemy-utils
 setuptools
 scipy
 sys

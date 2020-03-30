@@ -34,8 +34,11 @@ query_time_min = datetime.datetime(2014, 4, 13, 19, 35, 0)
 query_time_max = datetime.datetime(2014, 4, 13, 19, 37, 0)
 query_pd = query_euv_images(db_session=db_session, time_min=query_time_min, time_max=query_time_max)
 
+# select and image (index 0)
 selected_image = query_pd.iloc[0]
 
+# print the selection info
+print(selected_image)
 
 # read hdf file to LOS object
 hdf_file = os.path.join(hdf_data_dir, selected_image.fname_hdf)
@@ -67,7 +70,7 @@ map_y = np.linspace(y_range[0], y_range[1], map_nycoord.astype(int))
 map_x = np.linspace(x_range[0], x_range[1], map_nxcoord.astype(int))
 
 # test LosImage function interp_to_map()
-test_map = test_los.interp_to_map(R0=R0, map_x=map_x, map_y=map_y, image_num=selected_image.image_id[0])
+test_map = test_los.interp_to_map(R0=R0, map_x=map_x, map_y=map_y, image_num=selected_image.image_id)
 
 # compare test image to test map
 EasyPlot.PlotImage(test_los, nfig=9)

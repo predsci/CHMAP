@@ -4,7 +4,10 @@ This package also requires a custom python environment.
 See notes/NOTES_psi_software.txt and notes/NOTES_PythonGettingStarted.rtf 
 for more information.
 
-To configure, edit setup.conf to reflect your local system environment.
+NOTE: the installer is just a stub for now --> options will change in the future.
+Right now, to configure, copy conf/example_setup.conf to ./setup.conf.
+- edit it reflect your local system environment.
+- If you don't have something installed (i.e. IDL/SSW), leave the default path. 
 Then run ./setup.sh: e.g.
 
 vi setup.conf
