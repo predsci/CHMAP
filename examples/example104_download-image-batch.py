@@ -3,14 +3,15 @@ Specify times for synchronic image download.
 Query available images and download best matches.
 """
 
-
+import sys
+sys.path.append('/Users/tamarervin/work/chd')
 import os
 import numpy as np
 import pandas as pd
 from astropy.time import Time
 import astropy.units as u
 
-from settings.app_JT_Q import App
+from settings.app import App
 import modules.DB_classes as DBClass
 from modules.DB_funs import init_db_conn
 from modules.image_download import synchronic_euv_download
@@ -28,7 +29,7 @@ synch_times = pd.DataFrame({'target_time': target_times, 'min_time': target_time
                             'max_time': target_times + del_interval})
 
 # specify path and filename for download_results file
-pickle_file = "/Users/turtle/GitReps/CHD/test_data/download_results_2012.pkl"
+pickle_file = os.path.join(App.APP_HOME, "test_data")
 
 # Establish connection to database
 use_db = "sqlite"

@@ -10,8 +10,7 @@ import pandas as pd
 import datetime
 import numpy as np
 import astropy.time as astro_time
-import collections                  # for checking if an input is iterable
-
+import collections  # for checking if an input is iterable
 import sunpy.map
 
 from sqlalchemy import create_engine, func, or_
@@ -39,16 +38,23 @@ def init_db_conn(db_name, chd_base, sqlite_path=""):
     """
 
     # first define the engine connection
-    if db_name=='mysql-shadow':
+    if db_name == 'mysql-shadow':
         db_user = "test_beta"
         db_psswd = "ATlz8d40gh^W7Ge6"
         url_psswd = urllib.parse.quote_plus(db_psswd)
-        connect_string = 'mysql://'+db_user+':'+url_psswd+'@shadow.predsci.com:3306/CHD'
-    elif db_name=='sqlite':
+        connect_string = 'mysql://' + db_user + ':' + url_psswd + '@shadow.predsci.com:3306/CHD'
+        print("Attempting to connect to DB file", connect_string)  # print to check
+    elif db_name == 'sqlite':
         print("Attempting to connect to SQLite DB file " + sqlite_path)
         connect_string = 'sqlite:///' + sqlite_path
+    elif db_name == 'chd-db':
+        database_dir = App.DATABASE_HOME
+        sqlite_filename = App.DATABASE_FNAME
+        sqlite_path = os.path.join(database_dir, sqlite_filename)
+        print('Attempting to connect to CHD_DB file ' + sqlite_path)
+        connect_string = 'sqlite:///' + sqlite_path
     else:
-        sys.exit("At this time, 'db_name' must be either 'sqlite' or 'mysql-shadow'.")
+        sys.exit("At this time, 'db_name' must be either 'sqlite', 'chd-db', or 'mysql-shadow'.")
 
     # now establish the engine
     engine = create_engine(connect_string)
@@ -58,7 +64,7 @@ def init_db_conn(db_name, chd_base, sqlite_path=""):
     session = sessionmaker(bind=engine)
     # open session/connection to DB
     db = session()
-
+    print("Connection successful")
     return db
 
 
@@ -78,25 +84,28 @@ def query_euv_images(db_session, time_min=None, time_max=None, instrument=None, 
         sys.exit("Error: time_min and time_max must have matching entries of 'None' or of type Datetime.")
     elif wavelength is None:
         if instrument is None:
-            query_out = pd.read_sql(db_session.query(EUV_Images).filter(EUV_Images.date_obs>=time_min,
-                                                                        EUV_Images.date_obs<=time_max).statement,
+            query_out = pd.read_sql(db_session.query(EUV_Images).filter(EUV_Images.date_obs >= time_min,
+                                                                        EUV_Images.date_obs <= time_max).statement,
                                     db_session.bind)
         else:
             query_out = pd.read_sql(db_session.query(EUV_Images).filter(EUV_Images.date_obs >= time_min,
                                                                         EUV_Images.date_obs <= time_max,
-                                                                        EUV_Images.instrument.in_(instrument)).statement,
+                                                                        EUV_Images.instrument.in_(
+                                                                            instrument)).statement,
                                     db_session.bind)
     else:
         if instrument is None:
-            query_out = pd.read_sql(db_session.query(EUV_Images).filter(EUV_Images.date_obs>=time_min,
-                                                                        EUV_Images.date_obs<=time_max,
-                                                                        EUV_Images.wavelength.in_(wavelength)).statement,
+            query_out = pd.read_sql(db_session.query(EUV_Images).filter(EUV_Images.date_obs >= time_min,
+                                                                        EUV_Images.date_obs <= time_max,
+                                                                        EUV_Images.wavelength.in_(
+                                                                            wavelength)).statement,
                                     db_session.bind)
         else:
             query_out = pd.read_sql(db_session.query(EUV_Images).filter(EUV_Images.date_obs >= time_min,
                                                                         EUV_Images.date_obs <= time_max,
                                                                         EUV_Images.instrument.in_(instrument),
-                                                                        EUV_Images.wavelength.in_(wavelength)).statement,
+                                                                        EUV_Images.wavelength.in_(
+                                                                            wavelength)).statement,
                                     db_session.bind)
 
     return query_out
@@ -128,8 +137,9 @@ def add_image2session(data_dir, subdir, fname, db_session):
     if len(existing_row_id) == 1:
         if DB_path != existing_row_id[0][1]:
             # this is a problem.  We now have two different files for the same image
-            sys.exit(("Current download: " + DB_path + " already exists in the database under a different file name:" +
-                     existing_row_id[0][1]))
+            print(("Current download: " + DB_path + " already exists in the database under a different file name:" +
+                      existing_row_id[0][1]))
+            sys.exit()
         else:
             # file has already been downloaded and entered into DB. do nothing
             print("File is already logged in database.  Nothing added.")
@@ -137,8 +147,8 @@ def add_image2session(data_dir, subdir, fname, db_session):
     elif len(existing_row_id) > 1:
         # This image already exists in the DB in MORE THAN ONE PLACE!
         sys.exit(("Current download: " + DB_path + " already exists in the database MULTIPLE times. " +
-                 "Something is fundamentally wrong. DB unique index should " +
-                 "prevent this from happening."))
+                  "Something is fundamentally wrong. DB unique index should " +
+                  "prevent this from happening."))
     else:
         # Add new entry to DB
         # Construct now DB table row
@@ -150,7 +160,7 @@ def add_image2session(data_dir, subdir, fname, db_session):
         # Append to the list of rows to be added
         db_session.add(image_add)
         print(("Database row added for " + file_meta['instrument'] + ", wavelength: " + str(file_meta['wavelength']) +
-              ", timestamp: " + file_meta['date_string']))
+               ", timestamp: " + file_meta['date_string']))
 
     return db_session
 
@@ -188,7 +198,7 @@ def remove_euv_image(db_session, raw_series, raw_dir, hdf_dir):
         exit_status = 1
 
     # first check if there is an hdf file listed
-    if hdf_fname!='':
+    if hdf_fname != '':
         # check if file exists in filesystem
         if os.path.exists(hdf_full_path):
             os.remove(hdf_full_path)
@@ -200,9 +210,9 @@ def remove_euv_image(db_session, raw_series, raw_dir, hdf_dir):
 
     # delete row where id = raw_id.  Use .item() to recover an INT from numpy.int64
     out_flag = db_session.query(EUV_Images).filter(EUV_Images.image_id == raw_id.item()).delete()
-    if out_flag==0:
+    if out_flag == 0:
         exit_status = exit_status + 4
-    elif out_flag==1:
+    elif out_flag == 1:
         db_session.commit()
         print("Row deleted from DB for image_id=" + str(raw_id))
 
@@ -222,7 +232,7 @@ def update_image_val(db_session, raw_series, col_name, new_val):
               "by euvi.download_image_fixed_format(), add_image2session(), and db_session.commit()")
     else:
         raw_id = int(raw_series['image_id'])
-        db_session.query(EUV_Images).filter(EUV_Images.image_id == raw_id).update({col_name : new_val})
+        db_session.query(EUV_Images).filter(EUV_Images.image_id == raw_id).update({col_name: new_val})
         db_session.commit()
 
     return db_session
@@ -244,7 +254,7 @@ def build_euvimages_from_fits(db_session, raw_data_dir, hdf_data_dir):
             # look for fits files
             if filename.endswith(".fits"):
                 # extract relative path
-                relative_path = root.replace(raw_data_dir+'/', "")
+                relative_path = root.replace(raw_data_dir + '/', "")
                 # extract metadata from file and write a row to the database (session)
                 db_session = add_image2session(data_dir=raw_data_dir, subdir=relative_path, fname=filename,
                                                db_session=db_session)
@@ -293,9 +303,9 @@ def add_euv_map_old(db_session, combo_id, meth_id, fname, var_dict=None, time_of
     """
 
     # check if filename already exists in DB
-    existing_fname = pd.read_sql(db_session.query(EUV_Maps.map_id).filter(EUV_Maps.fname==fname).statement,
+    existing_fname = pd.read_sql(db_session.query(EUV_Maps.map_id).filter(EUV_Maps.fname == fname).statement,
                                  db_session.bind)
-    if len(existing_fname)>0:
+    if len(existing_fname) > 0:
         exit_status = 1
         map_id = None
     else:
@@ -317,7 +327,8 @@ def add_euv_map_old(db_session, combo_id, meth_id, fname, var_dict=None, time_of
             # Write variable values to Var_Vals
             for index, var_row in var_info.iterrows():
                 var_val = var_dict[var_row.var_name]
-                add_var_val = Var_Vals(map_id=map_id, combo_id=combo_id, meth_id=meth_id, var_id=var_row.var_id, var_val=var_val)
+                add_var_val = Var_Vals(map_id=map_id, combo_id=combo_id, meth_id=meth_id, var_id=var_row.var_id,
+                                       var_val=var_val)
                 db_session.add(add_var_val)
 
         # now commit EUV_Map update and Var_Vals update simultaneously
@@ -356,7 +367,7 @@ def add_euv_map(db_session, psi_map, base_path=None, map_type=None):
     if len(existing_fname) > 0:
         print("Map object already exists in database with filename: " + fname +
               ".\n No file written.  No EUV_Map record added to database.")
-        exit_status = 1     # There is already a map record for this file
+        exit_status = 1  # There is already a map record for this file
         # psi_map.map_info.loc[0, 'map_id'] = existing_fname.loc[0, 'map_id']
 
     else:
@@ -408,7 +419,8 @@ def add_euv_map(db_session, psi_map, base_path=None, map_type=None):
 
             # write map object to file
             psihdf.wrh5_fullmap(h5_filename, psi_map.x, psi_map.y, np.array([]), psi_map.data,
-                                method_info=psi_map.method_info, image_info=psi_map.image_info, map_info=psi_map.map_info,
+                                method_info=psi_map.method_info, image_info=psi_map.image_info,
+                                map_info=psi_map.map_info,
                                 no_data_val=psi_map.no_data_val, mu=psi_map.mu, origin_image=psi_map.origin_image)
 
             # Loop over psi_map.method_info rows and insert variable values
@@ -429,7 +441,6 @@ def add_euv_map(db_session, psi_map, base_path=None, map_type=None):
     return db_session, exit_status, psi_map
 
 
-
 def update_euv_map(db_session, map_id, col_name, new_val):
     """
     Change value for EUV_Maps in row referenced from map_series and column referenced in col_name
@@ -441,7 +452,7 @@ def update_euv_map(db_session, map_id, col_name, new_val):
         print("This is a restricted column and will not be updated by this function. Values can be changed " +
               "directly using SQLAlchemy functions.")
     else:
-        db_session.query(EUV_Maps).filter(EUV_Maps.map_id == map_id).update({col_name : new_val})
+        db_session.query(EUV_Maps).filter(EUV_Maps.map_id == map_id).update({col_name: new_val})
         db_session.commit()
 
     return db_session
@@ -468,24 +479,24 @@ def get_combo_id(db_session, image_ids, create=False):
     # This version uses SQLAlchemy to re-create the SQL
     match_groups = pd.read_sql(
         db_session.query(Map_Image_Assoc.combo_id, func.count(Map_Image_Assoc.image_id).label("i_count")).
-        filter(Map_Image_Assoc.combo_id.in_(
-                    db_session.query(Image_Combos.combo_id).filter(Image_Combos.n_images==n_images)
-                                            ), Map_Image_Assoc.image_id.in_(image_ids)
-               ).group_by(Map_Image_Assoc.combo_id).statement, db_session.bind)
+            filter(Map_Image_Assoc.combo_id.in_(
+            db_session.query(Image_Combos.combo_id).filter(Image_Combos.n_images == n_images)
+        ), Map_Image_Assoc.image_id.in_(image_ids)
+        ).group_by(Map_Image_Assoc.combo_id).statement, db_session.bind)
 
     # for testing only
     # match_groups = pd.DataFrame(data={'combo_id': [1, 2], 'i_count': [2, 3]})
     # match_groups = pd.DataFrame(columns = ['combo_id', 'i_count'])
 
-    if len(match_groups)>0:
+    if len(match_groups) > 0:
         # reduce match_groups to combos that match
-        match_groups = match_groups.loc[match_groups.i_count==n_images]
-        if len(match_groups)==1:
+        match_groups = match_groups.loc[match_groups.i_count == n_images]
+        if len(match_groups) == 1:
             # return the existing combo_id
             combo_id = match_groups.combo_id.values[0].item()
             no_match_exists = False
             # get combo date-times
-            combo_info = pd.read_sql(db_session.query(Image_Combos).filter(Image_Combos.combo_id==combo_id
+            combo_info = pd.read_sql(db_session.query(Image_Combos).filter(Image_Combos.combo_id == combo_id
                                                                            ).statement, db_session.bind)
             combo_times = {'date_mean': combo_info.date_mean[0].to_pydatetime(),
                            'date_max': combo_info.date_max[0].to_pydatetime(),
@@ -533,7 +544,7 @@ def add_combo_image_assoc(db_session, combo_id, image_id):
 
     # check if association already exists
     existing_assoc = pd.read_sql(db_session.query(Map_Image_Assoc).filter(Map_Image_Assoc.combo_id == combo_id,
-                                                                         Map_Image_Assoc.image_id == image_id).statement,
+                                                                          Map_Image_Assoc.image_id == image_id).statement,
                                  db_session.bind)
 
     # If association record does not exist, add it
@@ -562,20 +573,20 @@ def get_method_id(db_session, meth_name, meth_desc=None, var_names=None, var_des
     """
 
     # Query DB for existing method
-    existing_meth = pd.read_sql(db_session.query(Meth_Defs.meth_id).filter(Meth_Defs.meth_name==meth_name).statement,
+    existing_meth = pd.read_sql(db_session.query(Meth_Defs.meth_id).filter(Meth_Defs.meth_name == meth_name).statement,
                                 db_session.bind)
 
-    if len(existing_meth.meth_id)==0:
+    if len(existing_meth.meth_id) == 0:
         meth_exists = False
         meth_id = None
     else:
         # method already exists. lookup variable ids
         meth_exists = True
         meth_id = existing_meth.meth_id[0].item()
-        var_ids = [0]*len(var_names)
+        var_ids = [0] * len(var_names)
         for ii in range(len(var_names)):
-            var_id_query = pd.read_sql(db_session.query(Var_Defs.var_id).filter(Var_Defs.meth_id==meth_id,
-                                                                                Var_Defs.var_name==var_names[ii]
+            var_id_query = pd.read_sql(db_session.query(Var_Defs.var_id).filter(Var_Defs.meth_id == meth_id,
+                                                                                Var_Defs.var_name == var_names[ii]
                                                                                 ).statement, db_session.bind)
             var_ids[ii] = var_id_query.var_id.to_list()
 
@@ -716,16 +727,16 @@ def query_euv_maps(db_session, mean_time_range=None, extrema_time_range=None, n_
         var_map_id_query = db_session.query(Var_Vals.map_id)
         # setup a query to find a list of maps in the specified variable ranges
         for var_name in var_val_range:
-            var_id_query = db_session.query(Var_Defs.var_id).filter(Var_Defs.var_name==var_name)
-            var_map_id_query = var_map_id_query.filter_by(Var_Vals.var_id==var_id_query,
+            var_id_query = db_session.query(Var_Defs.var_id).filter(Var_Defs.var_name == var_name)
+            var_map_id_query = var_map_id_query.filter_by(Var_Vals.var_id == var_id_query,
                                                           Var_Vals.var_val.between(var_val_range[var_name]))
         # update master query
         euv_map_query = euv_map_query.filter_by(EUV_Maps.map_id.in_(var_map_id_query))
 
     # Need three output tables from SQL
-        # 1. map_info: euv_maps joined with image_combos
-        # 2. method_info: var_vals joined with meth_defs and var_defs
-        # 3. image_info: euv_images joined with map_image_assoc
+    # 1. map_info: euv_maps joined with image_combos
+    # 2. method_info: var_vals joined with meth_defs and var_defs
+    # 3. image_info: euv_images joined with map_image_assoc
 
     # return map_info table using a join
     map_info = pd.read_sql(euv_map_query.join(Image_Combos).statement, db_session.bind)
@@ -739,14 +750,14 @@ def query_euv_maps(db_session, mean_time_range=None, extrema_time_range=None, n_
                                                                  ).statement, db_session.bind)
 
     # return var_vals joined with var_defs. they are not directly connected tables, so use explicit join syntax
-    var_query = db_session.query(Var_Vals, Var_Defs).join(Var_Defs, Var_Vals.var_id==Var_Defs.var_id
-                                                ).filter(Var_Vals.map_id.in_(map_info.map_id))
+    var_query = db_session.query(Var_Vals, Var_Defs).join(Var_Defs, Var_Vals.var_id == Var_Defs.var_id
+                                                          ).filter(Var_Vals.map_id.in_(map_info.map_id))
     joint_query = var_query.join(Meth_Defs)
     joint_query = db_session.query(Meth_Defs, Var_Defs, Var_Vals).join(Var_Defs).join(Var_Vals, Var_Defs).filter(
         Var_Vals.map_id.in_(map_info.map_id)
     )
-    joint_query = db_session.query(Meth_Defs, Var_Defs, Var_Vals).filter(Meth_Defs.meth_id==Var_Defs.meth_id).filter(
-        Var_Defs.var_id==Var_Vals.var_id).filter(Var_Vals.map_id.in_(map_info.map_id))
+    joint_query = db_session.query(Meth_Defs, Var_Defs, Var_Vals).filter(Meth_Defs.meth_id == Var_Defs.meth_id).filter(
+        Var_Defs.var_id == Var_Vals.var_id).filter(Var_Vals.map_id.in_(map_info.map_id))
     method_info = pd.read_sql(joint_query.statement, db_session.bind)
     # remove duplicate var_id columns
     method_info = method_info.T.groupby(level=0).first().T
@@ -805,7 +816,7 @@ def create_map_input_object(new_map, fname, image_df, var_vals, method_name, tim
 
     # construct map_info df
     map_info_df = pd.DataFrame(data=[[len(image_df), fname, time_of_compute], ],
-                                     columns=["n_images", "fname", "time_of_compute"])
+                               columns=["n_images", "fname", "time_of_compute"])
     new_map.append_map_info(map_info_df)
 
     return new_map
@@ -859,8 +870,9 @@ def add_map_dbase_record(db_session, psi_map, base_path=None, map_type=None):
             temp_var_descs = psi_map.method_info.var_description[var_index].to_list()
             # if method_id is not passed in map object, query method id from existing methods table. Create if new
             db_session, temp_meth_id, temp_var_ids = get_method_id(db_session, row.meth_name,
-                                                     meth_desc=row.meth_description, var_names=temp_var_names,
-                                                     var_descs=temp_var_descs, create=True)
+                                                                   meth_desc=row.meth_description,
+                                                                   var_names=temp_var_names,
+                                                                   var_descs=temp_var_descs, create=True)
             methods_df.loc[index, 'meth_id'] = temp_meth_id
             if temp_var_ids is not None:
                 psi_map.method_info.loc[var_index, 'var_id'] = temp_var_ids
@@ -896,7 +908,6 @@ def add_map_dbase_record(db_session, psi_map, base_path=None, map_type=None):
 
 
 def delete_map_dbase_record(db_session, map_object, data_dir=None):
-
     # determine map_id
     map_id = map_object.map_info.map_id[0]
     # determine filename
@@ -919,14 +930,14 @@ def delete_map_dbase_record(db_session, map_object, data_dir=None):
 
     # delete variable values
     out_flag = db_session.query(Var_Vals).filter(Var_Vals.map_id == map_id).delete()
-    if out_flag==0:
+    if out_flag == 0:
         exit_status = exit_status + 2
     else:
         db_session.commit()
         print(str(out_flag) + " row(s) deleted from 'var_vals' for map_id=" + str(map_id))
     # delete map record
     out_flag = db_session.query(EUV_Maps).filter(EUV_Maps.map_id == map_id).delete()
-    if out_flag==0:
+    if out_flag == 0:
         exit_status = exit_status + 4
     else:
         db_session.commit()
@@ -937,7 +948,6 @@ def delete_map_dbase_record(db_session, map_object, data_dir=None):
 
 
 def get_method_combo_id(db_session, meth_ids, create=False):
-
     # query DB to determine if this combo exists.
     n_meths = len(meth_ids)
     # Return the number of matching images in each combo that has n_images and contains at least one of image_ids.
@@ -1014,6 +1024,7 @@ def read_sql2pandas(sql_query):
 
     return
 
+
 def safe_datetime(unknown_datetime):
     """
     SQLAlchemy inputs and queries to the database require Timestamps in a datetime.datetime() format.
@@ -1027,11 +1038,11 @@ def safe_datetime(unknown_datetime):
     # if input is not iterable, try to make it a tuple
     if not isinstance(unknown_datetime, collections.Iterable):
         # assume that the input is a scalar and convert to tuple
-        unknown_datetime = (unknown_datetime, )
+        unknown_datetime = (unknown_datetime,)
         not_list = True
 
     # initialize output datetime.datetime() list
-    datetime_out = [datetime.datetime(1, 1, 1, 0, 0, 0)]*len(unknown_datetime)
+    datetime_out = [datetime.datetime(1, 1, 1, 0, 0, 0)] * len(unknown_datetime)
 
     for index, unknown_element in enumerate(unknown_datetime):
         # check for common package datetime classes and convert to datetime.datetime()
@@ -1057,4 +1068,44 @@ def safe_datetime(unknown_datetime):
     return datetime_out
 
 
+def pdseries_tohdf(pd_series):
+    """
+    :param pd_series: panda series for image to convert to hdf file
+    :return: hdf5 filename of type string
+    """
+    f_name = pd_series.fname_hdf
+    return f_name
 
+def query_hist(db_session, time_min=None, time_max=None, instrument=None, wavelength=None):
+    if time_min is None and time_max is None:
+        # get entire DB
+        query_out = pd.read_sql(db_session.query(Hist_Struct).statement, db_session.bind)
+    elif not isinstance(time_min, datetime.datetime) or not isinstance(time_max, datetime.datetime):
+        sys.exit("Error: time_min and time_max must have matching entries of 'None' or of type Datetime.")
+    elif wavelength is None:
+        if instrument is None:
+            query_out = pd.read_sql(db_session.query(Hist_Struct).filter(Hist_Struct.date_obs >= time_min,
+                                                                        Hist_Struct.date_obs <= time_max).statement,
+                                    db_session.bind)
+        else:
+            query_out = pd.read_sql(db_session.query(Hist_Struct).filter(Hist_Struct.date_obs >= time_min,
+                                                                        Hist_Struct.date_obs <= time_max,
+                                                                        Hist_Struct.instrument.in_(
+                                                                            instrument)).statement,
+                                    db_session.bind)
+    else:
+        if instrument is None:
+            query_out = pd.read_sql(db_session.query(Hist_Struct).filter(Hist_Struct.date_obs >= time_min,
+                                                                        Hist_Struct.date_obs <= time_max,
+                                                                        Hist_Struct.wavelength.in_(
+                                                                            wavelength)).statement,
+                                    db_session.bind)
+        else:
+            query_out = pd.read_sql(db_session.query(Hist_Struct).filter(Hist_Struct.date_obs >= time_min,
+                                                                        Hist_Struct.date_obs <= time_max,
+                                                                        Hist_Struct.instrument.in_(instrument),
+                                                                        Hist_Struct.wavelength.in_(
+                                                                            wavelength)).statement,
+                                    db_session.bind)
+
+    return query_out

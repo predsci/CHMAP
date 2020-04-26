@@ -8,7 +8,8 @@ This code then demonstrate database querying and updating.
 
 An example deletion is given, but full functionality cannot be demonstrated without deleting it.
 """
-
+import sys
+sys.path.append('/Users/tamarervin/work/chd')
 import os
 import datetime
 # import pandas as pd
@@ -16,8 +17,7 @@ import os
 
 from settings.app import App
 from modules.DB_classes import Base
-from modules.DB_funs import init_db_conn, query_euv_images, update_image_val, remove_euv_image
-
+from modules.DB_funs import init_db_conn, update_image_val, remove_euv_image, query_euv_images, pdseries_tohdf
 
 # Assume that we are using the 'reference_data' setup supplied with repo
 # manually set the data dir
@@ -72,8 +72,9 @@ print(test_pd)
 # DB is to be updated.
 
 # generate hdf file using some function like:
-# hd_fname = process_image2hdf(test_pd.iloc[0])
-hd_fname = "2014/04/13/sta_euvi_20140413T183530_195.hdf5"
+image_to_convert = test_pd.iloc[0]
+hd_fname = pdseries_tohdf(image_to_convert)
+#hd_fname = "2014/04/13/sta_euvi_20140413T183530_195.hdf5"
 # update database with file location
 db_session = update_image_val(db_session=db_session, raw_series=test_pd.iloc[0], col_name="fname_hdf", new_val=hd_fname)
 
@@ -86,8 +87,7 @@ db_session = update_image_val(db_session=db_session, raw_series=test_pd.iloc[0],
 # remove_euv_image function:
 # removes the files and then the corresponding DB row
 # this works, but has been commented because it will only work once
-exit_status, db_session = remove_euv_image(db_session=db_session, raw_series=test_pd.iloc[0], raw_dir=raw_data_dir,
-                                           hdf_dir=hdf_data_dir)
+#exit_status, db_session = remove_euv_image(db_session=db_session, raw_series=test_pd.iloc[0], raw_dir=raw_data_dir, hdf_dir=hdf_data_dir)
 
 
 db_session.close()

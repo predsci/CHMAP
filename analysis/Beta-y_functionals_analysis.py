@@ -1,29 +1,43 @@
 
 
 """
-Track 2011 beta-y functional fits as moving average goes through time
+Track beta-y functional fits as moving average goes through time
 """
 
+import sys
+# location of modules/settings folders for import
+sys.path.append('/Users/tamarervin/work/chd')
 import numpy as np
 import pickle
 import time
 import pandas as pd
 import scipy.optimize as optim
-
+import os
 import matplotlib.pyplot as plt
 from matplotlib import cm
 from matplotlib.lines import Line2D
-
 import modules.lbcc_funs as lbcc
+from settings.app import App
 
-# where should images be written to?
-image_out_path = "/Users/turtle/Dropbox/MyNACD/analysis/lbcc_functionals/"
+# PARAMETERS TO UPDATE
+bin_n = 400
+start_date = "2011-01-04"
+number_of_weeks = 1
+number_of_days = 3
+year = "2011" # used for naming plot file
+time_period = "1week" # used for naming plot file
+title_time_period = "1 Week" # used for plot titles
+plot_week = 0 # index of week you want to plot
+
+# IMAGE PATHS
 # locate histogram files
-data_path = "/Users/turtle/GitReps/CHD/test_data/"
-# data files are on Q at:
-# data_path = "/work/CHD_DB/data_files"
+data_path = os.path.join(App.DATABASE_HOME, "data_files")
+# path to save plots to
+image_out_path = os.path.join(App.APP_HOME, "test_data", "analysis/lbcc_functionals/")
 
-gen_plots = False
+# EVERYTHING BELOW IS GENERIC
+# whether you want to generate plots
+gen_plots = True
 
 instruments = ['AIA', "EUVI-A", "EUVI-B"]
 optim_vals = ["Beta", "y", "SSE", "optim_time", "optim_status"]
@@ -31,13 +45,17 @@ optim_vals1 = ["a1", "a2", "a3", "b1", "b2", "b3", "SSE", "optim_time", "optim_s
 optim_vals2 = ["a1", "a2", "b1", "SSE", "optim_time", "optim_status"]
 optim_vals3 = ["a1", "a2", "b1", "b2", "n", "log_alpha", "SSE", "optim_time", "optim_status"]
 
-int_bin_n = [400, ]
+# bin number - must match bins for data you use
+int_bin_n = [bin_n, ]
 temp_results = np.zeros((17, 1, len(optim_vals)))
 
 # moving_avg_centers = [datetime.datetime(2011, 4, 1, 0, 0, 0, 0) + ii*datetime.timedelta(7, 0, 0, 0) for ii in range(27)]
-moving_avg_centers = np.array([np.datetime64("2011-04-01") + ii*np.timedelta64(1, 'W') for ii in range(27)])
+# returns center date, based off start date and number of weeks
+moving_avg_centers = np.array([np.datetime64(start_date) + ii*np.timedelta64(number_of_weeks, 'W') for ii in range(number_of_weeks)])
+
 # moving_width = datetime.timedelta(180)
-moving_width = np.timedelta64(180, 'D')
+# number of days
+moving_width = np.timedelta64(number_of_days, 'D')
 
 results = np.zeros((len(moving_avg_centers), len(instruments), 17, len(optim_vals)))
 results1 = np.zeros((len(moving_avg_centers), len(instruments), len(optim_vals1)))
@@ -47,24 +65,24 @@ results3 = np.zeros((len(moving_avg_centers), len(instruments), len(optim_vals3)
 for inst_index, instrument in enumerate(instruments):
     print("\nStarting calcs for " + instrument + "\n")
 
-    Inst_400_fname = data_path + "mu-hists-2011_400_" + instrument + ".pkl"
-
+    # change this depending on bin size you use
+    Inst_fname = os.path.join(data_path, "mu-hists-" + year + "_" + str(bin_n) + "_" + instrument + ".pkl")
     # start with the 400 bin file
-    f = open(Inst_400_fname, 'rb')
-    Inst_400 = pickle.load(f)
+    f = open(Inst_fname, 'rb')
+    Inst = pickle.load(f)
     f.close()
 
     # generate 1-yr window histogram
-    full_year_Inst = Inst_400['all_hists']
-    date_obs_npDT64 = Inst_400['date_obs']()
+    full_year_Inst = Inst['all_hists']
+    date_obs_npDT64 = Inst['date_obs']
     date_obs_pdTS = [pd.Timestamp(x) for x in date_obs_npDT64]
     date_obs = [x.to_pydatetime() for x in date_obs_pdTS]
 
-    image_intensity_bin_edges = Inst_400['intensity_bin_edges']
+    image_intensity_bin_edges = Inst['intensity_bin_edges']
     intensity_centers = (image_intensity_bin_edges[:-1] + image_intensity_bin_edges[1:])/2
 
-    mu_bin_edges = Inst_400['mu_bin_edges']
-    mu_bin_centers = (mu_bin_edges[1:] + mu_bin_edges[:-1])/2
+    mu_bin_edges = Inst['mu_bin_edges']
+    mu_bin_centers = (mu_bin_edges[1:] + mu_bin_edges[:-1])/2 #creates array of mu bin centers
 
     for date_index, center_date in enumerate(moving_avg_centers):
         print("Begin date " + str(center_date))
@@ -82,6 +100,7 @@ for inst_index, instrument in enumerate(instruments):
         # but do not divide by zero
         zero_row_index = np.where(row_sums != 0)
         norm_hist[zero_row_index[0]] = summed_hist[zero_row_index[0]]/row_sums[zero_row_index[0]]
+
         # separate the reference bin from the fitted bins
         hist_ref = norm_hist[-1, ]
         hist_mat = norm_hist[:-1, ]
@@ -99,6 +118,7 @@ for inst_index, instrument in enumerate(instruments):
         optim_out3 = optim.minimize(lbcc.get_functional_sse, init_pars,
                                     args=(hist_ref, hist_mat, mu_vec, image_intensity_bin_edges, model),
                                     method=method)
+
         end3 = time.time()
         # print("Optimization time for theoretic functional: " + str(round(end3 - start3, 3)) + " seconds.")
         # resulting_pars3 = pd.DataFrame(data={'beta': mu_bin_centers, 'y': mu_bin_centers})
@@ -109,6 +129,7 @@ for inst_index, instrument in enumerate(instruments):
         results3[date_index, inst_index, 6] = optim_out3.fun
         results3[date_index, inst_index, 7] = round(end3 - start3, 3)
         results3[date_index, inst_index, 8] = optim_out3.status
+
 
         # -- fit the power/log functionals -------------
         model = 2
@@ -178,15 +199,26 @@ for inst_index, instrument in enumerate(instruments):
         for ii in range(mu_bin_centers.__len__() - 1):
             hist_fit = norm_hist[ii, ]
 
+
             # estimate correction coefs that match fit_peak to ref_peak
-            fit_peak_index = np.argmax(hist_fit)
-            fit_peak_val = hist_fit[fit_peak_index]
+            fit_peak_index = np.argmax(hist_fit) #index of max value of hist_fit
+            fit_peak_val = hist_fit[fit_peak_index] #max value of hist_fit
             beta_est = fit_peak_val/ref_peak_val
+
+            #convert everything from type float64 to float
+            fit_peak_val = np.float32(fit_peak_val)
+            ref_peak_val = np.float32(ref_peak_val)
+            beta_est = np.float32(beta_est)
+
             y_est = image_intensity_bin_edges[ref_peak_index] - beta_est*image_intensity_bin_edges[fit_peak_index]
-            init_pars = np.asarray([beta_est, y_est])
+            y_est = np.float32(y_est)
+            init_pars = np.asarray([beta_est, y_est], dtype=np.float32)
+            hist_ref.astype(np.float32)
 
             # optimize correction coefs
             start_time = time.time()
+
+            # doesn't like the data types in the argument - hist_ref, hist_fit, image_intensity... - says float64 not callable (works now apparently)
             optim_result = lbcc.optim_lbcc_linear(hist_ref, hist_fit, image_intensity_bin_edges, init_pars)
             end_time = time.time()
             # record results
@@ -200,10 +232,10 @@ for inst_index, instrument in enumerate(instruments):
         print("Total elapsed time: " + str(round(end_time_tot - start_time_tot, 3)) + " seconds.")
 
 # save results
-np.save("/Users/turtle/Dropbox/MyNACD/analysis/lbcc_functionals/cubic_6month", results1)
-np.save("/Users/turtle/Dropbox/MyNACD/analysis/lbcc_functionals/power-log_6month", results2)
-np.save("/Users/turtle/Dropbox/MyNACD/analysis/lbcc_functionals/theoretic_6month", results3)
-np.save("/Users/turtle/Dropbox/MyNACD/analysis/lbcc_functionals/mu-bins_6month", results)
+np.save(image_out_path + "/cubic_" + time_period, results1)
+np.save(image_out_path + "/power-log_" + time_period, results2)
+np.save(image_out_path + "/theoretic_" + time_period, results3)
+np.save(image_out_path + "/mu-bins_" + time_period, results)
 
 
 # load results
@@ -245,16 +277,17 @@ if gen_plots:
         plt.plot(moving_avg_centers, results2[:, inst_index, sse_index2], c="red", label="power-log")
         plt.plot(moving_avg_centers, results3[:, inst_index, sse_index3], c="green", label="theoretic")
         plt.plot(moving_avg_centers, mu_bins_SSE_tots, c="black", marker='x', linestyle="None", label="mu-bins")
+
         # !!!!!!!!!! Stopped Here !!!!!!!!!!!!!!!!!!!!!!!
         # Add mu-bin fits to all plots/legends
 
-        plt.ylabel("6-Month SSE " + instrument)
+        plt.ylabel(str(time_period) + " SSE " + instrument)
         plt.xlabel("Center Date")
         ax = plt.gca()
         ax.legend(loc='upper right', bbox_to_anchor=(1., 1.), title="Model")
         plt.grid()
 
-        plot_fname = image_out_path + instrument + '_SSE_2011-6month' + '.pdf'
+        plot_fname = image_out_path + instrument + '_SSE_' + year + "-" + time_period + '.pdf'
         plt.savefig(plot_fname)
         plt.close(0+inst_index)
 
@@ -297,7 +330,7 @@ if gen_plots:
         plt.subplots_adjust(right=0.8)
         plt.grid()
 
-        plot_fname = image_out_path + instrument + '_beta_2011-6month' + '.pdf'
+        plot_fname = image_out_path + instrument + '_beta_' + year + "-" +  time_period + '.pdf'
         plt.savefig(plot_fname)
 
         plt.close(10+inst_index)
@@ -328,14 +361,13 @@ if gen_plots:
         plt.subplots_adjust(right=0.8)
         plt.grid()
 
-        plot_fname = image_out_path + instrument + '_y_2011-6month' + '.pdf'
+        plot_fname = image_out_path + instrument + '_y_' + year + "-" + time_period + '.pdf'
         plt.savefig(plot_fname)
 
         plt.close(20 + inst_index)
 
 
         # plot some sample beta and y v mu curves
-        plot_week = 5
 
         plt.figure(30 + inst_index)
 
@@ -356,7 +388,7 @@ if gen_plots:
 
         plt.ylabel(r"$\beta$ " + instrument)
         plt.xlabel(r"$\mu$")
-        plt.title(instrument + " 6-month average " + str(moving_avg_centers[plot_week]))
+        plt.title(instrument + " " + title_time_period + " average " + str(moving_avg_centers[plot_week]))
         ax = plt.gca()
 
         ax.legend(["cubic", "power/log", "theoretic", r"$\mu$-bins"], loc='upper right',
@@ -364,7 +396,7 @@ if gen_plots:
                   title="model")
         plt.grid()
 
-        plot_fname = image_out_path + instrument + '_beta_v_mu_2011-6month' + '.pdf'
+        plot_fname = image_out_path + instrument + '_beta_v_mu_' + year + "-" + time_period + '.pdf'
         plt.savefig(plot_fname)
 
         plt.close(30 + inst_index)
@@ -383,7 +415,7 @@ if gen_plots:
 
         plt.ylabel(r"$y$ " + instrument)
         plt.xlabel(r"$\mu$")
-        plt.title(instrument + " 6-month average " + str(moving_avg_centers[plot_week]))
+        plt.title(instrument + " " + title_time_period + " average " + str(moving_avg_centers[plot_week]))
         ax = plt.gca()
 
         ax.legend(["cubic", "power/log", "theoretic", r"$\mu$-bins"], loc='lower right',
@@ -391,7 +423,7 @@ if gen_plots:
                   title="model")
         plt.grid()
 
-        plot_fname = image_out_path + instrument + '_y_v_mu_2011-6month' + '.pdf'
+        plot_fname = image_out_path + instrument + '_y_v_mu_' + year + "-" + time_period + '.pdf'
         plt.savefig(plot_fname)
 
         plt.close(40 + inst_index)

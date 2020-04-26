@@ -380,4 +380,3 @@ class InterpResult:
         self.y = y
         self.mu_mat = mu_mat
 
-

@@ -4,17 +4,17 @@ will make it easier to differentiate how images were grouped
 to create the combined output image.
 """
 
-import numpy as np
-import pandas as pd
 import json
 from itertools import combinations
 
+import numpy as np
+import pandas as pd
+import sunpy
 import astropy.units as u
-from sunpy.time import TimeRange
 import sunpy.util.metadata
-
-from helpers.misc_helpers import carrington_rotation_number_relative
 from helpers import drms_helpers, vso_helpers
+from helpers.misc_helpers import carrington_rotation_number_relative
+from sunpy.time import TimeRange
 
 
 def get_image_set(df, time0):
@@ -189,7 +189,7 @@ def get_metadata(map):
 
 
 # a function to look for all available images in a time-window
-def list_available_images(time_start, time_end, euvi_interval_cadence=2*u.hour, aia_search_cadence=12*u.second,
+def list_available_images(time_start, time_end, euvi_interval_cadence=2 *u.hour, aia_search_cadence=12 * u.second,
                           wave_aia=193, wave_euvi=195):
     """
     This function takes in a time range and returns all available images for all available

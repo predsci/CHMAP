@@ -60,7 +60,7 @@ def hist_integration(hist, old_bins, new_bins):
             # do nothing, the value was initialized to 0
             continue
         else:
-            overlap_index = np.where(np.logical_and(old_bins[:-1] < r_edge, old_bins[1:] >= l_edge))
+            overlap_index = np.where(np.logical_and(old_bins[-1] < r_edge, old_bins[0] >= l_edge)) #was old_bins[:-1] and old_bins [1:]
             # loop through each new bin that overlaps the evaluation bin
             for bin_num in overlap_index[0]:
                 # determine what portion of the new bin intersects the evaluation bin
@@ -141,9 +141,10 @@ def optim_lbcc_linear(hist_ref, hist_fit, bin_edges, init_pars=np.asarray([1., 0
     :param hist_fit: list of histogram values for histogram to be transformed
     :param bin_edges: intensity bin edges
     :param init_pars: values of [Beta, y] to initialize the Nelder-Mead process
-    :return:
+    :return: minimized
     """
-    # init_pars = np.asarray([1., 0.])
+    #init_pars = np.asarray([1., 0.])
+
     optim_out = optim.minimize(get_hist_sse, init_pars, args=(hist_fit, hist_ref, bin_edges), method="Nelder-Mead")
 
     if optim_out.status != 0:
@@ -154,7 +155,7 @@ def optim_lbcc_linear(hist_ref, hist_fit, bin_edges, init_pars=np.asarray([1., 0
     return optim_out
 
 
-def get_functional_sse(x, hist_ref, hist_mat, mu_vec, int_bin_edges, model=1, trans_method=1):
+def get_functional_sse(x, hist_ref, hist_mat, mu_vec, int_bin_edges, model, trans_method=1):
     """
     This function applies a linear transformation 'beta*bin_edges + y' to hist and
     re-evaluates in the original bins.  Then compare to hist_ref and calc sum of
@@ -176,7 +177,6 @@ def get_functional_sse(x, hist_ref, hist_mat, mu_vec, int_bin_edges, model=1, tr
                                                2 - Approximation by interpolation (Method used in paper)
     :return: scalar sum of squared errors
     """
-
     sum_sse_over_mu = 0.
     # loop through mu values
     for index, mu in enumerate(mu_vec):

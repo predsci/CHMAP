@@ -4,12 +4,10 @@ effectively defines the table structure/schema for SQL as well.
 """
 
 
-from sqlalchemy import Column, DateTime, String, Integer, Float, ForeignKey, Index, PrimaryKeyConstraint, \
-    UniqueConstraint, ForeignKeyConstraint
-from sqlalchemy.orm import relationship
+from sqlalchemy import Column, DateTime, String, Integer, Float, ForeignKey, Index, UniqueConstraint
 from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import relationship
 from sqlalchemy_utils import force_auto_coercion
-from sqlalchemy import event, DDL
 
 # Build auto-coercion into sqlalchemy mapping structure
 # SQLAlchemy requires basic python data types for inputs and queries to the database. This
@@ -177,3 +175,13 @@ class Method_Combo_Assoc(Base):
 
     method_info = relationship("Meth_Defs")
 
+class Hist_Struct(Base):
+    """
+    Class to hold histogram data type
+    """
+    __tablename__ = 'hist_struct'
+    hist_id = Column(Integer, primary_key=True)
+    image_id = Column(Integer, ForeignKey('euv_images.image_id'))
+    date_obs = Column(DateTime, ForeignKey('euv_images.date_obs'))
+    mu_bin_edges = Column(Float)
+    intensity_bin_edges = Column(Float)

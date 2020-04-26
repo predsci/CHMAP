@@ -45,7 +45,6 @@ sqlite_path = os.path.join(database_dir, sqlite_filename)
 
 db_session = init_db_conn(db_name=use_db, chd_base=db_class.Base, sqlite_path=sqlite_path)
 
-
 # query some images
 query_time_min = datetime.datetime(2014, 4, 13, 19, 35, 0)
 query_time_max = datetime.datetime(2014, 4, 13, 19, 37, 0)
