@@ -4,7 +4,7 @@ effectively defines the table structure/schema for SQL as well.
 """
 
 
-from sqlalchemy import Column, DateTime, String, Integer, Float, ForeignKey, Index, UniqueConstraint
+from sqlalchemy import Column, DateTime, String, Integer, Float, LargeBinary, ForeignKey, Index, UniqueConstraint
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 from sqlalchemy_utils import force_auto_coercion
@@ -175,7 +175,7 @@ class Method_Combo_Assoc(Base):
 
     method_info = relationship("Meth_Defs")
 
-class Hist_Struct(Base):
+class LBCC_Hist(Base):
     """
     Class to hold histogram data type
     """
@@ -183,5 +183,9 @@ class Hist_Struct(Base):
     hist_id = Column(Integer, primary_key=True)
     image_id = Column(Integer, ForeignKey('euv_images.image_id'))
     date_obs = Column(DateTime, ForeignKey('euv_images.date_obs'))
-    mu_bin_edges = Column(Float)
-    intensity_bin_edges = Column(Float)
+    instrument = Column(String(10), ForeignKey('euv_images.instrument'))
+    wavelength = Column(Integer, ForeignKey('euv_images.wavelength'))
+    lat_band = Column(LargeBinary)
+    mu_bin_edges = Column(LargeBinary)
+    intensity_bin_edges = Column(LargeBinary)
+    mu_hist = Column(LargeBinary)

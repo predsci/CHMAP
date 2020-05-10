@@ -138,7 +138,7 @@ def add_image2session(data_dir, subdir, fname, db_session):
         if DB_path != existing_row_id[0][1]:
             # this is a problem.  We now have two different files for the same image
             print(("Current download: " + DB_path + " already exists in the database under a different file name:" +
-                      existing_row_id[0][1]))
+                   existing_row_id[0][1]))
             sys.exit()
         else:
             # file has already been downloaded and entered into DB. do nothing
@@ -1076,36 +1076,150 @@ def pdseries_tohdf(pd_series):
     f_name = pd_series.fname_hdf
     return f_name
 
+
 def query_hist(db_session, time_min=None, time_max=None, instrument=None, wavelength=None):
     if time_min is None and time_max is None:
         # get entire DB
-        query_out = pd.read_sql(db_session.query(Hist_Struct).statement, db_session.bind)
+        query_out = pd.read_sql(db_session.query(LBCC_Hist).statement, db_session.bind)
     elif not isinstance(time_min, datetime.datetime) or not isinstance(time_max, datetime.datetime):
         sys.exit("Error: time_min and time_max must have matching entries of 'None' or of type Datetime.")
     elif wavelength is None:
         if instrument is None:
-            query_out = pd.read_sql(db_session.query(Hist_Struct).filter(Hist_Struct.date_obs >= time_min,
-                                                                        Hist_Struct.date_obs <= time_max).statement,
+            query_out = pd.read_sql(db_session.query(LBCC_Hist).filter(LBCC_Hist.date_obs >= time_min,
+                                                                         LBCC_Hist.date_obs <= time_max).statement,
                                     db_session.bind)
         else:
-            query_out = pd.read_sql(db_session.query(Hist_Struct).filter(Hist_Struct.date_obs >= time_min,
-                                                                        Hist_Struct.date_obs <= time_max,
-                                                                        Hist_Struct.instrument.in_(
-                                                                            instrument)).statement,
+            query_out = pd.read_sql(db_session.query(LBCC_Hist).filter(LBCC_Hist.date_obs >= time_min,
+                                                                         LBCC_Hist.date_obs <= time_max,
+                                                                         LBCC_Hist.instrument.in_(
+                                                                             instrument)).statement,
                                     db_session.bind)
     else:
         if instrument is None:
-            query_out = pd.read_sql(db_session.query(Hist_Struct).filter(Hist_Struct.date_obs >= time_min,
-                                                                        Hist_Struct.date_obs <= time_max,
-                                                                        Hist_Struct.wavelength.in_(
-                                                                            wavelength)).statement,
+            query_out = pd.read_sql(db_session.query(LBCC_Hist).filter(LBCC_Hist.date_obs >= time_min,
+                                                                         LBCC_Hist.date_obs <= time_max,
+                                                                         LBCC_Hist.wavelength.in_(
+                                                                             wavelength)).statement,
                                     db_session.bind)
         else:
-            query_out = pd.read_sql(db_session.query(Hist_Struct).filter(Hist_Struct.date_obs >= time_min,
-                                                                        Hist_Struct.date_obs <= time_max,
-                                                                        Hist_Struct.instrument.in_(instrument),
-                                                                        Hist_Struct.wavelength.in_(
-                                                                            wavelength)).statement,
+            query_out = pd.read_sql(db_session.query(LBCC_Hist).filter(LBCC_Hist.date_obs >= time_min,
+                                                                         LBCC_Hist.date_obs <= time_max,
+                                                                         LBCC_Hist.instrument.in_(instrument),
+                                                                         LBCC_Hist.wavelength.in_(
+                                                                             wavelength)).statement,
                                     db_session.bind)
 
     return query_out
+
+
+def add_lbcchist(data_dir, subdir, lbcc_hist, fname, db_session):
+    """
+    Adds a row to the database session that references the hist location and metadata.
+    The updated session will need to be committed - db_session.commit() - in order to
+    write the new row to the DB.
+    :param data_dir: The local location of data directory.  If using an SQLite DB,
+    then it should be located in data_dir as well.
+    :param subdir: File location relative to data_dir.
+    :param lbcc_hist: lbcc histogram class object
+    :param fname: Hist file name.
+    :param db_session: The SQLAlchemy database session.
+    :return: the updated SQLAlchemy session.
+    """
+
+    DB_path = os.path.join(data_dir, subdir, fname)
+    date_format = "%Y-%m-%dT%H:%M:%S.%f"
+    lat_band = np.array(lbcc_hist.lat_band)
+    lat_band = lat_band.tobytes()
+    intensity_bin_edges = lbcc_hist.intensity_bin_edges.tobytes()
+    mu_bin_edges = lbcc_hist.mu_bin_edges.tobytes()
+    mu_hist = lbcc_hist.mu_hist.tobytes()
+
+    # check if row already exists in DB
+    existing_row_id = db_session.query(LBCC_Hist.hist_id).filter(
+        LBCC_Hist.instrument == lbcc_hist.info['instrument'],
+        LBCC_Hist.date_obs == lbcc_hist.info['date_string'],
+        LBCC_Hist.wavelength == lbcc_hist.info['wavelength']).all()
+    if len(existing_row_id) == 1:
+        if DB_path != existing_row_id[0][1]:
+            # this is a problem.  We now have two different files for the same image
+            print(("Current download: " + DB_path + " already exists in the database under a different file name:" +
+                   existing_row_id[0][1]))
+            sys.exit()
+        else:
+            # file has already been downloaded and entered into DB. do nothing
+            print("File is already logged in database.  Nothing added.")
+            pass
+    elif len(existing_row_id) > 1:
+        # This image already exists in the DB in MORE THAN ONE PLACE!
+        sys.exit(("Current download: " + DB_path + " already exists in the database MULTIPLE times. " +
+                  "Something is fundamentally wrong. DB unique index should " +
+                  "prevent this from happening."))
+    else:
+        # Add new entry to DB
+        # Construct now DB table row
+        hist_add = LBCC_Hist(date_obs=datetime.datetime.strptime(lbcc_hist.info['date_string'], date_format), instrument=lbcc_hist.info['instrument'],
+                             wavelength=lbcc_hist.info['wavelength'], lat_band = lat_band,
+                             intensity_bin_edges = intensity_bin_edges, mu_bin_edges = mu_bin_edges,
+                             mu_hist = mu_hist)
+        # Append to the list of rows to be added
+        db_session.add(hist_add)
+    db_session.commit()
+
+    print(("Database row added for " + lbcc_hist.info['instrument'] + ", wavelength: " + str(
+        lbcc_hist.info['wavelength']) + ", timestamp: " + lbcc_hist.info['date_string']))
+
+    return db_session
+
+
+def remove_lbcc_hist(db_session, raw_series, raw_dir, hdf_dir):
+    """
+    Simultaneously delete image from filesystem and remove metadata row
+    from EUV_Images table.
+    raw_series - expects a pandas series that results from one row of
+    the EUV_Images DB table.
+    Ex.
+    test_pd = query_euv_images(db_session=db_session, time_min=query_time_min,
+                                time_max=query_time_max)
+    remove_euv_image(raw_series=test_pd.iloc[0])
+
+    ToDo:
+        - Vectorize functionality.  If 'raw_series' is a pandas DataFrame
+            delete all rows and their corresponding files.
+    """
+
+    raw_id = raw_series['image_id']
+    raw_fname = raw_series['fname_raw']
+    raw_full_path = os.path.join(raw_dir, raw_fname)
+    hdf_fname = raw_series['fname_hdf']
+    hdf_full_path = os.path.join(hdf_dir, hdf_fname)
+
+    # check if file exists in filesystem
+    if os.path.exists(raw_full_path):
+        os.remove(raw_full_path)
+        print("Deleted file: " + raw_full_path)
+        exit_status = 0
+    else:
+        print("\nWarning: Image file not found at location: " + raw_full_path +
+              ". This may be the symptom of a larger problem.")
+        exit_status = 1
+
+    # first check if there is an hdf file listed
+    if hdf_fname != '':
+        # check if file exists in filesystem
+        if os.path.exists(hdf_full_path):
+            os.remove(hdf_full_path)
+            print("Deleted file: " + hdf_full_path)
+        else:
+            print("\nWarning: Processed HDF file not found at location: " + hdf_full_path +
+                  ". This may be the symptom of a larger problem.")
+            exit_status = exit_status + 2
+
+    # delete row where id = raw_id.  Use .item() to recover an INT from numpy.int64
+    out_flag = db_session.query(EUV_Images).filter(EUV_Images.image_id == raw_id.item()).delete()
+    if out_flag == 0:
+        exit_status = exit_status + 4
+    elif out_flag == 1:
+        db_session.commit()
+        print("Row deleted from DB for image_id=" + str(raw_id))
+
+    return exit_status, db_session

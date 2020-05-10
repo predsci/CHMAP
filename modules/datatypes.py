@@ -1,22 +1,21 @@
 """
 Module to hold the custom image and map types specific to the CHD project.
 """
-import numpy as np
-import pandas as pd
-from helpers import psihdf
-import sys
 import datetime
 import os
-
-import sunpy.map
-import sunpy.util.metadata
+import pickle
+import sys
 
 import helpers.psihdf as psihdf
 import modules.DB_classes as db
 import modules.DB_funs as db_fun
+import numpy as np
+import pandas as pd
+import sunpy.map
+import sunpy.util.metadata
 from modules.coord_manip import interp_los_image_to_map, image_grid_to_CR
 from settings.info import DTypes
-from helpers import misc_helpers
+
 
 class LosImage:
     """
@@ -380,3 +379,40 @@ class InterpResult:
         self.y = y
         self.mu_mat = mu_mat
 
+class LBCCHist:
+    """
+    Class that holds lbcc histogram information
+    """
+
+    def __init__(self, chd_meta, mu_bin_edges, intensity_bin_edges, lat_band, mu_hist):
+
+        # adds info dictionary
+        self.info = chd_meta
+
+        self.mu_bin_edges = mu_bin_edges
+        self.intensity_bin_edges = intensity_bin_edges
+        self.lat_band = lat_band
+        self.mu_hist = mu_hist
+
+    def get_data(self):
+        date_format = "%Y-%m-%dT%H:%M:%S.%f"
+        hist_data = {'image_id': self.image_id, 'date_obs':datetime.datetime.strptime(self.info['date_string'], date_format), 'wavelength':self.info['wavelength'],
+                     'instrument':self.info['instrument'], 'lat_band': self.lat_band,
+                     'mu_bin_edges':self.mu_bin_edges, 'intensity_bin_edges': self.intensity_bin_edges,
+                     'all_hists': self.mu_hist}
+        return hist_data
+
+    def write_to_pickle(self, path_for_hist, year, time_period, instrument, hist):
+        file_path = path_for_hist + str(year) + "_" + time_period + '_' + str(len(self.mu_bin_edges)) + '_' + instrument + '.pkl'
+        print('\nSaving histograms to ' + file_path + '\n')
+        f = open(file_path, 'wb')
+        pickle.dump(hist.get_data, f)
+        f.close()
+
+def create_hist(h5_file, mu_bin_edges, intensity_bin_edges, lat_band, mu_hist):
+    # read the image and metadata
+    x, y, z, data, chd_meta, sunpy_meta = psihdf.rdh5_meta(h5_file)
+
+    # create the structure
+    hist = LBCCHist(chd_meta, mu_bin_edges, intensity_bin_edges, lat_band, mu_hist)
+    return hist
