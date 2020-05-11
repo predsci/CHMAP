@@ -179,9 +179,9 @@ class LBCC_Hist(Base):
     """
     Class to hold histogram data type
     """
-    __tablename__ = 'hist_struct'
+    __tablename__ = 'lbcc_hist'
     hist_id = Column(Integer, primary_key=True)
-    image_id = Column(Integer, ForeignKey('euv_images.image_id'))
+    # image_id = Column(Integer, ForeignKey('euv_images.image_id')) - seems arbitrary and unneccessary
     date_obs = Column(DateTime, ForeignKey('euv_images.date_obs'))
     instrument = Column(String(10), ForeignKey('euv_images.instrument'))
     wavelength = Column(Integer, ForeignKey('euv_images.wavelength'))

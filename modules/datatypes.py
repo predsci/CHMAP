@@ -416,3 +416,20 @@ def create_hist(h5_file, mu_bin_edges, intensity_bin_edges, lat_band, mu_hist):
     # create the structure
     hist = LBCCHist(chd_meta, mu_bin_edges, intensity_bin_edges, lat_band, mu_hist)
     return hist
+
+def convert_to_binary(lbcc_hist):
+    """
+    convert arrays to correct binary format
+    used for adding histogram to database
+    currently do this inside db function but could call this function instead
+
+    :param lbcc_hist: LBCCHist histogram object
+    :return: binary data types for array
+    """
+    lat_band = np.array(lbcc_hist.lat_band)
+    lat_band = lat_band.tobytes()
+    intensity_bin_edges = lbcc_hist.intensity_bin_edges.tobytes()
+    mu_bin_edges = lbcc_hist.mu_bin_edges.tobytes()
+    mu_hist = lbcc_hist.mu_hist.tobytes()
+
+    return lat_band, intensity_bin_edges, mu_bin_edges, mu_hist

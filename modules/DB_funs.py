@@ -20,7 +20,7 @@ from settings.app import App
 from modules.DB_classes import *
 from modules.misc_funs import get_metadata
 from helpers import misc_helpers
-# from modules import datatypes
+from modules import datatypes
 import helpers.psihdf as psihdf
 
 
@@ -146,9 +146,10 @@ def add_image2session(data_dir, subdir, fname, db_session):
             pass
     elif len(existing_row_id) > 1:
         # This image already exists in the DB in MORE THAN ONE PLACE!
-        sys.exit(("Current download: " + DB_path + " already exists in the database MULTIPLE times. " +
+        print("Current download: " + DB_path + " already exists in the database MULTIPLE times. " +
                   "Something is fundamentally wrong. DB unique index should " +
-                  "prevent this from happening."))
+                  "prevent this from happening.")
+        sys.exit()
     else:
         # Add new entry to DB
         # Construct now DB table row
@@ -1112,22 +1113,21 @@ def query_hist(db_session, time_min=None, time_max=None, instrument=None, wavele
     return query_out
 
 
-def add_lbcchist(data_dir, subdir, lbcc_hist, fname, db_session):
+def add_lbcc_hist(lbcc_hist, db_session):
     """
     Adds a row to the database session that references the hist location and metadata.
     The updated session will need to be committed - db_session.commit() - in order to
     write the new row to the DB.
-    :param data_dir: The local location of data directory.  If using an SQLite DB,
-    then it should be located in data_dir as well.
-    :param subdir: File location relative to data_dir.
+
     :param lbcc_hist: lbcc histogram class object
-    :param fname: Hist file name.
     :param db_session: The SQLAlchemy database session.
     :return: the updated SQLAlchemy session.
     """
 
-    DB_path = os.path.join(data_dir, subdir, fname)
+    hist_identifier = lbcc_hist.info['instrument'] + " observed at " + lbcc_hist.info['date_string']
     date_format = "%Y-%m-%dT%H:%M:%S.%f"
+
+    # convert arrays to correct binary format
     lat_band = np.array(lbcc_hist.lat_band)
     lat_band = lat_band.tobytes()
     intensity_bin_edges = lbcc_hist.intensity_bin_edges.tobytes()
@@ -1137,36 +1137,32 @@ def add_lbcchist(data_dir, subdir, lbcc_hist, fname, db_session):
     # check if row already exists in DB
     existing_row_id = db_session.query(LBCC_Hist.hist_id).filter(
         LBCC_Hist.instrument == lbcc_hist.info['instrument'],
-        LBCC_Hist.date_obs == lbcc_hist.info['date_string'],
+        LBCC_Hist.date_obs == datetime.datetime.strptime(lbcc_hist.info['date_string'], date_format),
         LBCC_Hist.wavelength == lbcc_hist.info['wavelength']).all()
     if len(existing_row_id) == 1:
-        if DB_path != existing_row_id[0][1]:
-            # this is a problem.  We now have two different files for the same image
-            print(("Current download: " + DB_path + " already exists in the database under a different file name:" +
-                   existing_row_id[0][1]))
-            sys.exit()
-        else:
-            # file has already been downloaded and entered into DB. do nothing
-            print("File is already logged in database.  Nothing added.")
-            pass
+        # histogram has already been downloaded and entered into DB. do nothing
+        print("Histogram is already logged in database.  Nothing added.")
+        pass
     elif len(existing_row_id) > 1:
-        # This image already exists in the DB in MORE THAN ONE PLACE!
-        sys.exit(("Current download: " + DB_path + " already exists in the database MULTIPLE times. " +
-                  "Something is fundamentally wrong. DB unique index should " +
-                  "prevent this from happening."))
+        # This histogram already exists in the DB in MORE THAN ONE PLACE!
+        print("Current download: " + hist_identifier + " already exists in the database MULTIPLE times. " +
+                "Something is fundamentally wrong. DB unique index should " +
+                "prevent this from happening.")
+        sys.exit(0)
     else:
         # Add new entry to DB
-        # Construct now DB table row
+        # Construct new DB table row
         hist_add = LBCC_Hist(date_obs=datetime.datetime.strptime(lbcc_hist.info['date_string'], date_format), instrument=lbcc_hist.info['instrument'],
                              wavelength=lbcc_hist.info['wavelength'], lat_band = lat_band,
                              intensity_bin_edges = intensity_bin_edges, mu_bin_edges = mu_bin_edges,
                              mu_hist = mu_hist)
         # Append to the list of rows to be added
         db_session.add(hist_add)
+
     db_session.commit()
 
-    print(("Database row added for " + lbcc_hist.info['instrument'] + ", wavelength: " + str(
-        lbcc_hist.info['wavelength']) + ", timestamp: " + lbcc_hist.info['date_string']))
+    print(("Database row added for " + lbcc_hist.info['instrument'] + ", wavelength: " +
+           str(lbcc_hist.info['wavelength']) + ", timestamp: " + lbcc_hist.info['date_string']))
 
     return db_session
 

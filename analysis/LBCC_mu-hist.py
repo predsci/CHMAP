@@ -1,5 +1,5 @@
 """
-construct mu-histogram and push to database
+construct mu-histogram and push to database for any time period
 """
 
 import sys
@@ -10,21 +10,20 @@ import os
 import datetime
 import matplotlib.pyplot as plt
 import numpy as np
-import pickle
 from settings.app import App
 import modules.DB_classes as db_class
-from modules.DB_funs import init_db_conn, query_euv_images, add_lbcchist
+from modules.DB_funs import init_db_conn, query_euv_images, add_lbcc_hist
 import modules.datatypes as psi_d_types
 
 # --- 1. Select Images -----------------------------------------------------
 # PARAMETERS TO UPDATE
-# FILE PATH TO SAVE HISTOGRAMS
-path_for_hist = os.path.join(App.DATABASE_HOME, "data_files", "mu-hists-")
-year = 2011
-time_period = '1Day'
+
+# generate plots if true
+generate_plots = False
+
 # TIME RANGE
-query_time_min = datetime.datetime(2011, 1, 4, 0, 0, 0)
-query_time_max = datetime.datetime(2011, 1, 4, 12, 0, 0)
+query_time_min = datetime.datetime(2011, 1, 4, 4, 0, 0)
+query_time_max = datetime.datetime(2011, 1, 4, 8, 0, 0)
 
 # define instruments
 inst_list = ["AIA", "EUVI-A", "EUVI-B"]
@@ -58,8 +57,6 @@ for instrument in inst_list:
     query_pd = query_euv_images(db_session=db_session, time_min=query_time_min, time_max=query_time_max,
                                 instrument=query_instrument)
 
-    # read hdf file(s) to LOS objects and generate mu histograms
-    full_hist = np.full((n_mu_bins, n_intensity_bins, query_pd.__len__()), 0, dtype=np.int32)  # query_pd.__len__()
     for index, row in query_pd.iterrows():
         print("Processing image number", row.image_id, ".")
         if row.fname_hdf == "":
@@ -74,54 +71,36 @@ for instrument in inst_list:
         hist_lbcc = psi_d_types.create_hist(hdf_path, mu_bin_edges, image_intensity_bin_edges, lat_band, temp_hist)
 
         # add this histogram and meta data to database
-        fname = str(year) + "_" + time_period + '_' + str(n_intensity_bins) + '_' + instrument + '.pkl'
-        add_lbcchist(database_dir, path_for_hist, hist_lbcc, fname, db_session)
-
-        # add this histogram to the log of histograms
-        # full_hist is a log of the histograms
-        full_hist[:, :, index] = temp_hist
-
-
-    # create object for saving
-    # hist_test = psi_d_types.create_hist(query_pd.image_id.to_numpy(), query_pd.image_id.to_numpy(), mu_bin_edges, image_intensity_bin_edges, full_hist)
-
-    hist_struct = {'image_id': query_pd.image_id.to_numpy(), 'date_obs': query_pd.date_obs.to_numpy(), 'mu_bin_edges':
-        mu_bin_edges, 'intensity_bin_edges': image_intensity_bin_edges,
-                   'all_hists': full_hist}
-
-    # hist_data = hist_test.get_data()
-    # dump histograms to file
-    file_path = path_for_hist + str(year) + "_" + time_period + '_' + str(n_intensity_bins) + '_' + instrument + '.pkl'
-    print('\nSaving histograms to ' + file_path + '\n')
-    f = open(file_path, 'wb')
-    pickle.dump(hist_struct, f)
-    f.close()
-
+        add_lbcc_hist(hist_lbcc, db_session)
 
 db_session.close()
 
-# # simple plot of raw histogram
-plt.figure(1)
-fix_hist = temp_hist #original: full_hist - raised error of wrong data shape when running plt.imshow()
-plt.imshow(fix_hist, aspect="auto", interpolation='nearest', origin='low',
-           extent=[image_intensity_bin_edges[0], image_intensity_bin_edges[-2] + 1., mu_bin_edges[0], mu_bin_edges[-1]])
-plt.xlabel("Pixel intensities")
-plt.ylabel("mu")
-plt.title("Raw 2D Histogram Data")
-#
-#
-# # Normalize each mu bin
-norm_hist = np.full(fix_hist.shape, 0.)
-row_sums = fix_hist.sum(axis=1, keepdims=True)
-# but do not divide by zero
-zero_row_index = np.where(row_sums != 0)
-norm_hist[zero_row_index[0]] = fix_hist[zero_row_index[0]] / row_sums[zero_row_index[0]]
-#
-#
-# # simple plot of normed histogram
-plt.figure(2)
-plt.imshow(norm_hist, aspect="auto", interpolation='nearest', origin='low',
-           extent=[image_intensity_bin_edges[0], image_intensity_bin_edges[-1], mu_bin_edges[0], mu_bin_edges[-1]])
-plt.xlabel("Pixel intensities")
-plt.ylabel("mu")
-plt.title("2D Histogram Data Normalized by mu Bin")
+if generate_plots:
+    # # simple plot of raw histogram
+    plt.figure(1)
+    fix_hist = temp_hist  # original: full_hist - raised error of wrong data shape when running plt.imshow()
+    plt.imshow(fix_hist, aspect="auto", interpolation='nearest', origin='low',
+               extent=[image_intensity_bin_edges[0], image_intensity_bin_edges[-2] + 1., mu_bin_edges[0],
+                       mu_bin_edges[-1]])
+    plt.xlabel("Pixel intensities")
+    plt.ylabel("mu")
+    plt.title("Raw 2D Histogram Data")
+    #
+    #
+    # # Normalize each mu bin
+    norm_hist = np.full(fix_hist.shape, 0.)
+    row_sums = fix_hist.sum(axis=1, keepdims=True)
+    # but do not divide by zero
+    zero_row_index = np.where(row_sums != 0)
+    norm_hist[zero_row_index[0]] = fix_hist[zero_row_index[0]] / row_sums[zero_row_index[0]]
+    #
+    #
+    # # simple plot of normed histogram
+    plt.figure(2)
+    plt.imshow(norm_hist, aspect="auto", interpolation='nearest', origin='low',
+               extent=[image_intensity_bin_edges[0], image_intensity_bin_edges[-1], mu_bin_edges[0], mu_bin_edges[-1]])
+    plt.xlabel("Pixel intensities")
+    plt.ylabel("mu")
+    plt.title("2D Histogram Data Normalized by mu Bin")
+
+
