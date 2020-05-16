@@ -70,10 +70,11 @@ imins = cluster_meth_1(f_list=f_list, jd0=jd0)
 # maybe saving the constituent images of a map is enough?
 
 # setup database connection
-use_db = "mysql-shadow"
+use_db = "sqlite"
 sqlite_filename = "CHD_DB.db"
 if Create_Ref:
-    sqlite_path = os.path.join(App.APP_HOME, "reference_data", sqlite_filename)
+    sqlite_path = os.path.join(App.AP
+    P_HOME, "reference_data", sqlite_filename)
 else:
     sqlite_path = os.path.join(App.DATABASE_HOME, sqlite_filename)
 db_session = init_db_conn(db_name=use_db, chd_base=Base, sqlite_path=sqlite_path)
