@@ -226,7 +226,7 @@ def optim_lbcc_functional_forms(hist_ref, hist_mat, mu_vec, int_bin_edges, init_
     """
     Code to provide initial contitions and/or optimizer options for any of the three LBCC
     functional forms.
-    Code stub?  If we want a function like this, adapt the code from analysis/Beta-y_functionals_analysis.py
+    Code stub?  If we want a function like this, adapt the code from analysis/Beta-y_functionals_analysis_frompkl.py
     to this form.
     :param hist_ref:
     :param hist_mat:
