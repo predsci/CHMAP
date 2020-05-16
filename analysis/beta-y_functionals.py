@@ -4,10 +4,6 @@
 Track beta-y functional fits as moving average goes through time
 """
 
-import sys
-# location of modules/settings folders for import
-sys.path.append('/Users/tamarervin/work/chd')
-
 import numpy as np
 import datetime
 import time
@@ -24,25 +20,26 @@ import modules.datatypes as psi_d_types
 import modules.DB_classes as db_class
 
 
-# PARAMETERS TO UPDATE
+# HISTOGRAM PARAMETERS TO UPDATE
 n_mu_bins = 18 # number of mu bins
 n_intensity_bins = 400 # number of intensity bins
-start_date = "2011-01-04"
-number_of_weeks = 1
-number_of_days = 1
+
 
 # PLOT PARAMETERS
 gen_plots = False
 year = "2011" # used for naming plot file
-time_period = "1Day" # used for naming plot file
-title_time_period = "1 Day" # used for plot titles
+time_period = "3Day" # used for naming plot file
+title_time_period = "3 Day" # used for plot titles
 plot_week = 0 # index of week you want to plot
 # path to save plots to
 image_out_path = os.path.join(App.APP_HOME, "test_data", "analysis/lbcc_functionals/")
 
 # TIME FRAME TO QUERY HISTOGRAMS
 query_time_min = datetime.datetime(2011, 1, 4, 0, 0, 0)
-query_time_max = datetime.datetime(2011, 1, 4, 8, 0, 0)
+query_time_max = datetime.datetime(2011, 1, 7, 0, 0, 0)
+number_of_weeks = 1
+number_of_days = 3
+
 
 # DATABASE PATHS
 database_dir = App.DATABASE_HOME
@@ -67,7 +64,7 @@ int_bin_n = [n_intensity_bins, ]
 temp_results = np.zeros((17, 1, len(optim_vals)))
 
 # returns center date, based off start date and number of weeks
-moving_avg_centers = np.array([np.datetime64(start_date) + ii*np.timedelta64(1, 'W') for ii in range(number_of_weeks)])
+moving_avg_centers = np.array([np.datetime64(str(query_time_min)) + ii*np.timedelta64(1, 'W') for ii in range(number_of_weeks)])
 
 # number of days
 moving_width = np.timedelta64(number_of_days, 'D')
@@ -86,21 +83,7 @@ for inst_index, instrument in enumerate(instruments):
                                 instrument=query_instrument)
 
     # convert the binary types back to arrays
-    for index, row in pd_hist.iterrows():
-        lat_band = np.frombuffer(row.lat_band, dtype=np.float)
-        mu_bin_array = np.frombuffer(row.mu_bin_edges, dtype=np.float)
-        intensity_bin_array = np.frombuffer(row.intensity_bin_edges, dtype=np.float)
-
-    # TODO: generate full histogram to sum
-    # issue with converting the histogram to the correct size
-    # TODO: turn this into a function once I get it working
-    # generate histogram for time window
-    full_hist = np.full((n_mu_bins, n_intensity_bins, pd_hist.__len__()), 0, dtype=np.int32)
-    hist_list = pd_hist['mu_hist']
-
-    for index in range(hist_list.size):
-        mu_hist = np.frombuffer(hist_list[index], dtype=np.float)
-        full_hist[:, :, index] = mu_hist
+    lat_band, mu_bin_array, intensity_bin_array, full_hist = psi_d_types.binary_to_hist(pd_hist, n_mu_bins, n_intensity_bins)
 
     # create list of observed dates in time frame
     date_obs_npDT64 = pd_hist['date_obs']
@@ -139,7 +122,6 @@ for inst_index, instrument in enumerate(instruments):
         mu_vec = mu_bin_centers[:-1]
         int_bin_edges = image_intensity_bin_edges
 
-
         # -- fit the theoretical functional -----------
         model = 3
         init_pars = np.array([-0.05, -0.3, -.01, 0.4, -1., 6.])
@@ -160,7 +142,6 @@ for inst_index, instrument in enumerate(instruments):
         results3[date_index, inst_index, 6] = optim_out3.fun
         results3[date_index, inst_index, 7] = round(end3 - start3, 3)
         results3[date_index, inst_index, 8] = optim_out3.status
-
 
         # -- fit the power/log functionals -------------
         model = 2
@@ -206,10 +187,12 @@ for inst_index, instrument in enumerate(instruments):
         #                                method=method)
 
         start1 = time.time()
+
         # constrained optimization using SLSQP with numeric Jacobian
         optim_out1 = optim.minimize(lbcc.get_functional_sse, init_pars,
                                     args=(hist_ref, hist_mat, mu_vec, image_intensity_bin_edges, model),
                                     method=method, jac="2-point", constraints=lin_constraint)
+
         end1 = time.time()
         # print("Optimization time for constrained cubic functional: " + str(round(end1 - start1, 3)) + " seconds.")
 
@@ -232,8 +215,8 @@ for inst_index, instrument in enumerate(instruments):
 
 
             # estimate correction coefs that match fit_peak to ref_peak
-            fit_peak_index = np.argmax(hist_fit) #index of max value of hist_fit
-            fit_peak_val = hist_fit[fit_peak_index] #max value of hist_fit
+            fit_peak_index = np.argmax(hist_fit) # index of max value of hist_fit
+            fit_peak_val = hist_fit[fit_peak_index] # max value of hist_fit
             beta_est = fit_peak_val/ref_peak_val
 
             #convert everything from type float64 to float
@@ -248,10 +231,9 @@ for inst_index, instrument in enumerate(instruments):
 
             # optimize correction coefs
             start_time = time.time()
-
-            # doesn't like the data types in the argument - hist_ref, hist_fit, image_intensity... - says float64 not callable (works now apparently)
             optim_result = lbcc.optim_lbcc_linear(hist_ref, hist_fit, image_intensity_bin_edges, init_pars)
             end_time = time.time()
+
             # record results
             results[date_index, inst_index, ii, 0] = optim_result.x[0]
             results[date_index, inst_index, ii, 1] = optim_result.x[1]
@@ -309,7 +291,6 @@ if gen_plots:
         plt.plot(moving_avg_centers, results3[:, inst_index, sse_index3], c="green", label="theoretic")
         plt.plot(moving_avg_centers, mu_bins_SSE_tots, c="black", marker='x', linestyle="None", label="mu-bins")
 
-        # !!!!!!!!!! Stopped Here !!!!!!!!!!!!!!!!!!!!!!!
         # Add mu-bin fits to all plots/legends
 
         plt.ylabel(str(time_period) + " SSE " + instrument)
@@ -460,9 +441,4 @@ if gen_plots:
         plt.close(40 + inst_index)
 
         # Finally, take the I_0 distribution and convert it to an estimation of log(Temp)
-        # !!!!!!! Stopped working here !!!!!!!!!!!!!!!
-
-
-
-
 

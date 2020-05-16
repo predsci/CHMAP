@@ -1128,11 +1128,7 @@ def add_lbcc_hist(lbcc_hist, db_session):
     date_format = "%Y-%m-%dT%H:%M:%S.%f"
 
     # convert arrays to correct binary format
-    lat_band = np.array(lbcc_hist.lat_band)
-    lat_band = lat_band.tobytes()
-    intensity_bin_edges = lbcc_hist.intensity_bin_edges.tobytes()
-    mu_bin_edges = lbcc_hist.mu_bin_edges.tobytes()
-    mu_hist = lbcc_hist.mu_hist.tobytes()
+    lat_band, intensity_bin_edges, mu_bin_edges, mu_hist = datatypes.lbcc_to_binary(lbcc_hist)
 
     # check if row already exists in DB
     existing_row_id = db_session.query(LBCC_Hist.hist_id).filter(
@@ -1158,11 +1154,12 @@ def add_lbcc_hist(lbcc_hist, db_session):
                              mu_hist = mu_hist)
         # Append to the list of rows to be added
         db_session.add(hist_add)
+        print(("Database row added for " + lbcc_hist.info['instrument'] + ", wavelength: " +
+               str(lbcc_hist.info['wavelength']) + ", timestamp: " + lbcc_hist.info['date_string']))
 
     db_session.commit()
 
-    print(("Database row added for " + lbcc_hist.info['instrument'] + ", wavelength: " +
-           str(lbcc_hist.info['wavelength']) + ", timestamp: " + lbcc_hist.info['date_string']))
+
 
     return db_session
 

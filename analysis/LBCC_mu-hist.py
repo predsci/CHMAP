@@ -2,10 +2,6 @@
 construct mu-histogram and push to database for any time period
 """
 
-import sys
-# path to modules and settings folders
-sys.path.append('/Users/tamarervin/work/chd')
-
 import os
 import datetime
 import matplotlib.pyplot as plt
@@ -23,7 +19,7 @@ generate_plots = False
 
 # TIME RANGE
 query_time_min = datetime.datetime(2011, 1, 4, 4, 0, 0)
-query_time_max = datetime.datetime(2011, 1, 4, 8, 0, 0)
+query_time_max = datetime.datetime(2011, 1, 7, 0, 0, 0)
 
 # define instruments
 inst_list = ["AIA", "EUVI-A", "EUVI-B"]

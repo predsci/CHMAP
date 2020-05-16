@@ -2,10 +2,6 @@
 Construct mu-discretized image-intensity histogram for 2011
 """
 
-import sys
-# path to modules and settings folders
-sys.path.append('/Users/tamarervin/work/chd')
-
 import os
 import datetime
 import matplotlib.pyplot as plt
@@ -21,9 +17,10 @@ import modules.datatypes as psi_d_types
 # FILE PATH TO SAVE HISTOGRAMS
 path_for_hist = os.path.join(App.DATABASE_HOME, "data_files", "mu-hists-")
 year = 2011
+time_period = '1Day'
 # TIME RANGE
 query_time_min = datetime.datetime(2011, 1, 4, 0, 0, 0)
-query_time_max = datetime.datetime(2011, 1, 5, 0, 0, 0)
+query_time_max = datetime.datetime(2011, 1, 4, 12, 0, 0)
 
 # define instruments
 inst_list = ["AIA", "EUVI-A", "EUVI-B"]
@@ -75,22 +72,25 @@ for instrument in inst_list:
         # full_hist is a log of the histograms
         full_hist[:, :, index] = temp_hist
 
+
     # create object for saving
     hist_struct = {'image_id': query_pd.image_id.to_numpy(), 'date_obs': query_pd.date_obs.to_numpy(), 'mu_bin_edges':
         mu_bin_edges, 'intensity_bin_edges': image_intensity_bin_edges,
                    'all_hists': full_hist}
+
     # dump histograms to file
-    file_path = path_for_hist + str(year) + '_' + str(n_intensity_bins) + '_' + instrument + '.pkl'
+    file_path = path_for_hist + str(year) + "_" + time_period + '_' + str(n_intensity_bins) + '_' + instrument + '.pkl'
     print('\nSaving histograms to ' + file_path + '\n')
     f = open(file_path, 'wb')
     pickle.dump(hist_struct, f)
     f.close()
+    db_session.commit()
 
 db_session.close()
 
 # # simple plot of raw histogram
 plt.figure(1)
-fix_hist = temp_hist #original: full_hist - raised error of wrong data shape when running plt.imshow()
+fix_hist = temp_hist # want only one histogram
 plt.imshow(fix_hist, aspect="auto", interpolation='nearest', origin='low',
            extent=[image_intensity_bin_edges[0], image_intensity_bin_edges[-2] + 1., mu_bin_edges[0], mu_bin_edges[-1]])
 plt.xlabel("Pixel intensities")

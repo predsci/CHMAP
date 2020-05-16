@@ -1,12 +1,7 @@
-
-
 """
 Track beta-y functional fits as moving average goes through time
 """
 
-import sys
-# location of modules/settings folders for import
-sys.path.append('/Users/tamarervin/work/chd')
 import numpy as np
 import pickle
 import time
@@ -23,7 +18,7 @@ from settings.app import App
 bin_n = 400
 start_date = "2011-01-04"
 number_of_weeks = 1
-number_of_days = 3
+number_of_days = 1
 year = "2011" # used for naming plot file
 time_period = "1week" # used for naming plot file
 title_time_period = "1 Week" # used for plot titles
@@ -129,7 +124,6 @@ for inst_index, instrument in enumerate(instruments):
         results3[date_index, inst_index, 6] = optim_out3.fun
         results3[date_index, inst_index, 7] = round(end3 - start3, 3)
         results3[date_index, inst_index, 8] = optim_out3.status
-
 
         # -- fit the power/log functionals -------------
         model = 2
@@ -278,7 +272,6 @@ if gen_plots:
         plt.plot(moving_avg_centers, results3[:, inst_index, sse_index3], c="green", label="theoretic")
         plt.plot(moving_avg_centers, mu_bins_SSE_tots, c="black", marker='x', linestyle="None", label="mu-bins")
 
-        # !!!!!!!!!! Stopped Here !!!!!!!!!!!!!!!!!!!!!!!
         # Add mu-bin fits to all plots/legends
 
         plt.ylabel(str(time_period) + " SSE " + instrument)
@@ -430,8 +423,3 @@ if gen_plots:
 
         # Finally, take the I_0 distribution and convert it to an estimation of log(Temp)
         # !!!!!!! Stopped working here !!!!!!!!!!!!!!!
-
-
-
-
-

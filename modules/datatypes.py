@@ -417,11 +417,10 @@ def create_hist(h5_file, mu_bin_edges, intensity_bin_edges, lat_band, mu_hist):
     hist = LBCCHist(chd_meta, mu_bin_edges, intensity_bin_edges, lat_band, mu_hist)
     return hist
 
-def convert_to_binary(lbcc_hist):
+def lbcc_to_binary(lbcc_hist):
     """
     convert arrays to correct binary format
     used for adding histogram to database
-    currently do this inside db function but could call this function instead
 
     :param lbcc_hist: LBCCHist histogram object
     :return: binary data types for array
@@ -433,3 +432,20 @@ def convert_to_binary(lbcc_hist):
     mu_hist = lbcc_hist.mu_hist.tobytes()
 
     return lat_band, intensity_bin_edges, mu_bin_edges, mu_hist
+
+def binary_to_hist(lbcc_binary, n_mu_bins, n_intensity_bins):
+    for index, row in lbcc_binary.iterrows():
+        lat_band = np.frombuffer(row.lat_band, dtype=np.float)
+        mu_bin_array = np.frombuffer(row.mu_bin_edges, dtype=np.float)
+        intensity_bin_array = np.frombuffer(row.intensity_bin_edges, dtype=np.float)
+
+    # generate histogram for time window
+    full_hist = np.full((n_mu_bins, n_intensity_bins, lbcc_binary.__len__()), 0, dtype=np.int32)
+    hist_list = lbcc_binary['mu_hist']
+
+    for index in range(hist_list.size):
+        buffer_hist = np.frombuffer(hist_list[index])
+        mu_hist = np.ndarray(shape=(n_mu_bins, n_intensity_bins), buffer=buffer_hist)
+        full_hist[:, :, index] = mu_hist
+
+    return lat_band, mu_bin_array, intensity_bin_array, full_hist
