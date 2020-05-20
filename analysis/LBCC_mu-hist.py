@@ -4,22 +4,20 @@ construct mu-histogram and push to database for any time period
 
 import os
 import datetime
-import matplotlib.pyplot as plt
 import numpy as np
 from settings.app import App
 import modules.DB_classes as db_class
 from modules.DB_funs import init_db_conn, query_euv_images, add_lbcc_hist
 import modules.datatypes as psi_d_types
 
-# --- 1. Select Images -----------------------------------------------------
 # PARAMETERS TO UPDATE
 
 # generate plots if true
 generate_plots = False
 
 # TIME RANGE
-query_time_min = datetime.datetime(2011, 1, 4, 4, 0, 0)
-query_time_max = datetime.datetime(2011, 1, 7, 0, 0, 0)
+query_time_min = datetime.datetime(2011, 1, 4, 0, 0, 0)
+query_time_max = datetime.datetime(2011, 1, 8, 0, 0, 0)
 
 # define instruments
 inst_list = ["AIA", "EUVI-A", "EUVI-B"]
@@ -46,6 +44,8 @@ use_db = "sqlite"
 sqlite_path = os.path.join(database_dir, sqlite_filename)
 db_session = init_db_conn(db_name=use_db, chd_base=db_class.Base, sqlite_path=sqlite_path)
 
+# ------------ NO NEED TO UPDATE ANYTHING BELOW  ------------- #
+
 # loop over instrument
 for instrument in inst_list:
     # query wants a list
@@ -71,32 +71,5 @@ for instrument in inst_list:
 
 db_session.close()
 
-if generate_plots:
-    # # simple plot of raw histogram
-    plt.figure(1)
-    fix_hist = temp_hist  # original: full_hist - raised error of wrong data shape when running plt.imshow()
-    plt.imshow(fix_hist, aspect="auto", interpolation='nearest', origin='low',
-               extent=[image_intensity_bin_edges[0], image_intensity_bin_edges[-2] + 1., mu_bin_edges[0],
-                       mu_bin_edges[-1]])
-    plt.xlabel("Pixel intensities")
-    plt.ylabel("mu")
-    plt.title("Raw 2D Histogram Data")
-    #
-    #
-    # # Normalize each mu bin
-    norm_hist = np.full(fix_hist.shape, 0.)
-    row_sums = fix_hist.sum(axis=1, keepdims=True)
-    # but do not divide by zero
-    zero_row_index = np.where(row_sums != 0)
-    norm_hist[zero_row_index[0]] = fix_hist[zero_row_index[0]] / row_sums[zero_row_index[0]]
-    #
-    #
-    # # simple plot of normed histogram
-    plt.figure(2)
-    plt.imshow(norm_hist, aspect="auto", interpolation='nearest', origin='low',
-               extent=[image_intensity_bin_edges[0], image_intensity_bin_edges[-1], mu_bin_edges[0], mu_bin_edges[-1]])
-    plt.xlabel("Pixel intensities")
-    plt.ylabel("mu")
-    plt.title("2D Histogram Data Normalized by mu Bin")
 
 

@@ -1078,7 +1078,7 @@ def pdseries_tohdf(pd_series):
     return f_name
 
 
-def query_hist(db_session, n_mu_bins = 18, n_intensity_bins = 200, time_min=None, time_max=None, instrument=None, wavelength=None):
+def query_hist(db_session, n_mu_bins, n_intensity_bins, time_min=None, time_max=None, instrument=None, wavelength=None):
     if time_min is None and time_max is None:
         # get entire DB
         query_out = pd.read_sql(db_session.query(LBCC_Hist).statement, db_session.bind)
