@@ -22,12 +22,11 @@ inst_list = ["AIA", "EUVI-A", "EUVI-B"]
 
 # number of histograms to plot
 # if plotting one histogram choose index to plot
-plot_index =0 # 0 is default value
+plot_index = 0 # 0 will plot first histogram in time frame
 # true if want to plot more than one histogram
 plot_plus = True
 # starts looping histograms from index zero
 n_hist_plots = 2
-
 
 # define number of bins
 n_mu_bins = 18
@@ -47,6 +46,8 @@ R0 = 1.01
 mu_bin_edges = np.array(range(n_mu_bins + 1), dtype="float") * 0.05 + 0.1
 image_intensity_bin_edges = np.linspace(0, 5, num=n_intensity_bins + 1, dtype='float')
 
+# ------------ NO NEED TO UPDATE ANYTHING BELOW  ------------- #
+
 ### PLOT HISTOGRAMS ###
 # query histograms
 for instrument in inst_list:
@@ -64,35 +65,8 @@ for instrument in inst_list:
 
             # # simple plot of raw histogram
             plt.figure(instrument + " Plot: " + str(1 + 2*plot_index))
-            plt.imshow(plot_hist, aspect="auto", interpolation='nearest', origin='low',
-                       extent=[image_intensity_bin_edges[0], image_intensity_bin_edges[-2] + 1., mu_bin_edges[0],
-                               mu_bin_edges[-1]])
-            plt.xlabel("Pixel intensities")
-            plt.ylabel("mu")
-            plt.title("Raw 2D Histogram Data for Histogram: \n" + "Instrument: " + instrument + " \n " +str(date_obs))
-
-            # # Normalize each mu bin
-            norm_hist = np.full(plot_hist.shape, 0.)
-            row_sums = plot_hist.sum(axis=1, keepdims=True)
-            # but do not divide by zero
-            zero_row_index = np.where(row_sums != 0)
-            norm_hist[zero_row_index[0]] = plot_hist[zero_row_index[0]] / row_sums[zero_row_index[0]]
-
-            # # simple plot of normed histogram
-            plt.figure(instrument + " Plot: " + str(2 + 2*plot_index))
-            plt.imshow(norm_hist, aspect="auto", interpolation='nearest', origin='low',
-                       extent=[image_intensity_bin_edges[0], image_intensity_bin_edges[-1], mu_bin_edges[0], mu_bin_edges[-1]])
-            plt.xlabel("Pixel intensities")
-            plt.ylabel("mu")
-            plt.title("2D Histogram Data Normalized by mu Bin: \n" + "Instrument: " + instrument + " \n " + str(date_obs))
-
-        else:
-            # plot histogram at specific index
-            plot_hist = full_hist[:, :, plot_index]
-            date_obs = pd_hist.date_obs[plot_index]
-
-            # # simple plot of raw histogram
-            plt.figure(instrument + " Plot: " + str(1 + 2 * plot_index))
+            # this will make the plot show up
+            # TODO: just to generate plot and then save somewhere??
             plt.imshow(plot_hist, aspect="auto", interpolation='nearest', origin='low',
                        extent=[image_intensity_bin_edges[0], image_intensity_bin_edges[-2] + 1., mu_bin_edges[0],
                                mu_bin_edges[-1]])
@@ -108,11 +82,41 @@ for instrument in inst_list:
             norm_hist[zero_row_index[0]] = plot_hist[zero_row_index[0]] / row_sums[zero_row_index[0]]
 
             # # simple plot of normed histogram
-            plt.figure(instrument + " Plot: " + str(2 + 2 * plot_index))
+            plt.figure(instrument + " Plot: " + str(2 + 2*plot_index))
+            # this will make the plot show up
+            # TODO: just to generate plot and then save somewhere??
             plt.imshow(norm_hist, aspect="auto", interpolation='nearest', origin='low',
-                       extent=[image_intensity_bin_edges[0], image_intensity_bin_edges[-1], mu_bin_edges[0],
-                               mu_bin_edges[-1]])
+                       extent=[image_intensity_bin_edges[0], image_intensity_bin_edges[-1], mu_bin_edges[0], mu_bin_edges[-1]])
             plt.xlabel("Pixel intensities")
             plt.ylabel("mu")
-            plt.title(
-                "2D Histogram Data Normalized by mu Bin: \n" + "Instrument: " + instrument + " \n " + str(date_obs))
+            plt.title("2D Histogram Data Normalized by mu Bin: \n" + "Instrument: " + instrument + " \n " + str(date_obs))
+
+    else:
+        # plot histogram at specific index
+        plot_hist = full_hist[:, :, plot_index]
+        date_obs = pd_hist.date_obs[plot_index]
+
+        # # simple plot of raw histogram
+        plt.figure(instrument + " Plot: " + str(1 + 2 * plot_index))
+        plt.imshow(plot_hist, aspect="auto", interpolation='nearest', origin='low',
+                   extent=[image_intensity_bin_edges[0], image_intensity_bin_edges[-2] + 1., mu_bin_edges[0],
+                           mu_bin_edges[-1]])
+        plt.xlabel("Pixel intensities")
+        plt.ylabel("mu")
+        plt.title("Raw 2D Histogram Data for Histogram: \n" + "Instrument: " + instrument + " \n " + str(date_obs))
+
+        # # Normalize each mu bin
+        norm_hist = np.full(plot_hist.shape, 0.)
+        row_sums = plot_hist.sum(axis=1, keepdims=True)
+        # but do not divide by zero
+        zero_row_index = np.where(row_sums != 0)
+        norm_hist[zero_row_index[0]] = plot_hist[zero_row_index[0]] / row_sums[zero_row_index[0]]
+
+        # # simple plot of normed histogram
+        plt.figure(instrument + " Plot: " + str(2 + 2 * plot_index))
+        plt.imshow(norm_hist, aspect="auto", interpolation='nearest', origin='low',
+                   extent=[image_intensity_bin_edges[0], image_intensity_bin_edges[-1], mu_bin_edges[0],
+                           mu_bin_edges[-1]])
+        plt.xlabel("Pixel intensities")
+        plt.ylabel("mu")
+        plt.title("2D Histogram Data Normalized by mu Bin: \n" + "Instrument: " + instrument + " \n " + str(date_obs))

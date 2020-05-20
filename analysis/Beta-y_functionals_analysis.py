@@ -62,7 +62,7 @@ results2 = np.zeros((len(moving_avg_centers), len(instruments), len(optim_vals2)
 results3 = np.zeros((len(moving_avg_centers), len(instruments), len(optim_vals3)))
 
 for date_index, center_date in enumerate(moving_avg_centers):
-    print("Begin date " + str(center_date) + " Date Index: " + str(date_index))
+    print("Begin date " + str(center_date))
 
     # determine time range based off moving average centers
     start_time_tot = time.time()
@@ -86,16 +86,15 @@ for date_index, center_date in enumerate(moving_avg_centers):
         date_obs_pdTS = [pd.Timestamp(x) for x in date_obs_npDT64]
         date_obs = [x.to_pydatetime() for x in date_obs_pdTS]
 
-        # creates array of intensity bin centers
-        image_intensity_bin_edges = intensity_bin_array
-        intensity_centers = (image_intensity_bin_edges[:-1] + image_intensity_bin_edges[1:])/2
-
         # creates array of mu bin centers
-        mu_bin_edges = mu_bin_array
-        mu_bin_centers = (mu_bin_edges[1:] + mu_bin_edges[:-1])/2
+        mu_bin_centers = (mu_bin_array[1:] + mu_bin_array[:-1])/2
+
+        # creates array of intensity bin centers
+        intensity_centers = (intensity_bin_array[:-1] + intensity_bin_array[1:])/2
 
         # determine appropriate date range
         date_ind = (date_obs_npDT64 >= min_date) & (date_obs_npDT64 <= max_date)
+
         # sum the appropriate histograms
         summed_hist = full_hist[:, :, date_ind].sum(axis=2)
 
@@ -109,9 +108,9 @@ for date_index, center_date in enumerate(moving_avg_centers):
         # separate the reference bin from the fitted bins
         hist_ref = norm_hist[-1, ]
         hist_mat = norm_hist[:-1, ]
-
         mu_vec = mu_bin_centers[:-1]
-        int_bin_edges = image_intensity_bin_edges
+
+        ##### OPTIMIZATION METHODS ######
 
         # -- fit the THEORETICAL functional -----------
         model = 3
@@ -120,7 +119,7 @@ for date_index, center_date in enumerate(moving_avg_centers):
 
         start3 = time.time()
         optim_out3 = optim.minimize(lbcc.get_functional_sse, init_pars,
-                                    args=(hist_ref, hist_mat, mu_vec, image_intensity_bin_edges, model),
+                                    args=(hist_ref, hist_mat, mu_vec, intensity_bin_array, model),
                                     method=method)
 
         end3 = time.time()
@@ -142,7 +141,7 @@ for date_index, center_date in enumerate(moving_avg_centers):
 
         start2 = time.time()
         optim_out2 = optim.minimize(lbcc.get_functional_sse, init_pars,
-                                    args=(hist_ref, hist_mat, mu_vec, image_intensity_bin_edges, model),
+                                    args=(hist_ref, hist_mat, mu_vec, intensity_bin_array, model),
                                     method=method, jac='2-point', options={'gtol': gtol})
         end2 = time.time()
         # print("Optimization time for power/log functional: " + str(round(end2 - start2, 3)) + " seconds.")
@@ -181,7 +180,7 @@ for date_index, center_date in enumerate(moving_avg_centers):
 
         # constrained optimization using SLSQP with numeric Jacobian
         optim_out1 = optim.minimize(lbcc.get_functional_sse, init_pars,
-                                    args=(hist_ref, hist_mat, mu_vec, image_intensity_bin_edges, model),
+                                    args=(hist_ref, hist_mat, mu_vec, intensity_bin_array, model),
                                     method=method, jac="2-point", constraints=lin_constraint)
 
         end1 = time.time()
@@ -215,14 +214,14 @@ for date_index, center_date in enumerate(moving_avg_centers):
             ref_peak_val = np.float32(ref_peak_val)
             beta_est = np.float32(beta_est)
 
-            y_est = image_intensity_bin_edges[ref_peak_index] - beta_est*image_intensity_bin_edges[fit_peak_index]
+            y_est = intensity_bin_array[ref_peak_index] - beta_est*intensity_bin_array[fit_peak_index]
             y_est = np.float32(y_est)
             init_pars = np.asarray([beta_est, y_est], dtype=np.float32)
             hist_ref.astype(np.float32)
 
             # optimize correction coefs
             start_time = time.time()
-            optim_result = lbcc.optim_lbcc_linear(hist_ref, hist_fit, image_intensity_bin_edges, init_pars)
+            optim_result = lbcc.optim_lbcc_linear(hist_ref, hist_fit, intensity_bin_array, init_pars)
             end_time = time.time()
 
             # record results
