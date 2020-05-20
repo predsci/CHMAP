@@ -181,10 +181,12 @@ class LBCC_Hist(Base):
     """
     __tablename__ = 'lbcc_hist'
     hist_id = Column(Integer, primary_key=True)
-    # image_id = Column(Integer, ForeignKey('euv_images.image_id')) - seems arbitrary and unneccessary
+    image_id = Column(Integer, ForeignKey('euv_images.image_id'))
     date_obs = Column(DateTime, ForeignKey('euv_images.date_obs'))
     instrument = Column(String(10), ForeignKey('euv_images.instrument'))
     wavelength = Column(Integer, ForeignKey('euv_images.wavelength'))
+    n_mu_bins = Column(Integer)
+    n_intensity_bins = Column(Integer)
     lat_band = Column(LargeBinary)
     mu_bin_edges = Column(LargeBinary)
     intensity_bin_edges = Column(LargeBinary)

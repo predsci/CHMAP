@@ -1078,7 +1078,7 @@ def pdseries_tohdf(pd_series):
     return f_name
 
 
-def query_hist(db_session, time_min=None, time_max=None, instrument=None, wavelength=None):
+def query_hist(db_session, n_mu_bins = 18, n_intensity_bins = 200, time_min=None, time_max=None, instrument=None, wavelength=None):
     if time_min is None and time_max is None:
         # get entire DB
         query_out = pd.read_sql(db_session.query(LBCC_Hist).statement, db_session.bind)
@@ -1087,27 +1087,38 @@ def query_hist(db_session, time_min=None, time_max=None, instrument=None, wavele
     elif wavelength is None:
         if instrument is None:
             query_out = pd.read_sql(db_session.query(LBCC_Hist).filter(LBCC_Hist.date_obs >= time_min,
-                                                                         LBCC_Hist.date_obs <= time_max).statement,
+                                                                         LBCC_Hist.date_obs <= time_max,
+                                                                         LBCC_Hist.n_mu_bins == n_mu_bins,
+                                                                         LBCC_Hist.n_intensity_bins == n_intensity_bins
+                                                                        ).statement,
                                     db_session.bind)
         else:
             query_out = pd.read_sql(db_session.query(LBCC_Hist).filter(LBCC_Hist.date_obs >= time_min,
                                                                          LBCC_Hist.date_obs <= time_max,
-                                                                         LBCC_Hist.instrument.in_(
-                                                                             instrument)).statement,
+                                                                         LBCC_Hist.instrument.in_(instrument),
+                                                                         LBCC_Hist.n_mu_bins == n_mu_bins,
+                                                                         LBCC_Hist.n_intensity_bins == n_intensity_bins
+                                                                       ).statement,
                                     db_session.bind)
     else:
         if instrument is None:
             query_out = pd.read_sql(db_session.query(LBCC_Hist).filter(LBCC_Hist.date_obs >= time_min,
                                                                          LBCC_Hist.date_obs <= time_max,
                                                                          LBCC_Hist.wavelength.in_(
-                                                                             wavelength)).statement,
+                                                                             wavelength),
+                                                                         LBCC_Hist.n_mu_bins == n_mu_bins,
+                                                                         LBCC_Hist.n_intensity_bins == n_intensity_bins
+                                                                       ).statement,
                                     db_session.bind)
         else:
             query_out = pd.read_sql(db_session.query(LBCC_Hist).filter(LBCC_Hist.date_obs >= time_min,
                                                                          LBCC_Hist.date_obs <= time_max,
                                                                          LBCC_Hist.instrument.in_(instrument),
                                                                          LBCC_Hist.wavelength.in_(
-                                                                             wavelength)).statement,
+                                                                             wavelength),
+                                                                       LBCC_Hist.n_mu_bins == n_mu_bins,
+                                                                       LBCC_Hist.n_intensity_bins == n_intensity_bins
+                                                                       ).statement,
                                     db_session.bind)
 
     return query_out
@@ -1132,6 +1143,9 @@ def add_lbcc_hist(lbcc_hist, db_session):
 
     # check if row already exists in DB
     existing_row_id = db_session.query(LBCC_Hist.hist_id).filter(
+        LBCC_Hist.image_id == lbcc_hist.image_id,
+        LBCC_Hist.n_mu_bins == lbcc_hist.n_mu_bins,
+        LBCC_Hist.n_intensity_bins == lbcc_hist.n_intensity_bins,
         LBCC_Hist.instrument == lbcc_hist.info['instrument'],
         LBCC_Hist.date_obs == datetime.datetime.strptime(lbcc_hist.info['date_string'], date_format),
         LBCC_Hist.wavelength == lbcc_hist.info['wavelength']).all()
@@ -1148,9 +1162,10 @@ def add_lbcc_hist(lbcc_hist, db_session):
     else:
         # Add new entry to DB
         # Construct new DB table row
-        hist_add = LBCC_Hist(date_obs=datetime.datetime.strptime(lbcc_hist.info['date_string'], date_format), instrument=lbcc_hist.info['instrument'],
-                             wavelength=lbcc_hist.info['wavelength'], lat_band = lat_band,
-                             intensity_bin_edges = intensity_bin_edges, mu_bin_edges = mu_bin_edges,
+        hist_add = LBCC_Hist(image_id = lbcc_hist.image_id, date_obs=datetime.datetime.strptime(lbcc_hist.info['date_string'], date_format),
+                             instrument=lbcc_hist.info['instrument'], wavelength=lbcc_hist.info['wavelength'],
+                             n_mu_bins = lbcc_hist.n_mu_bins, n_intensity_bins = lbcc_hist.n_intensity_bins,
+                             lat_band = lat_band, intensity_bin_edges = intensity_bin_edges, mu_bin_edges = mu_bin_edges,
                              mu_hist = mu_hist)
         # Append to the list of rows to be added
         db_session.add(hist_add)

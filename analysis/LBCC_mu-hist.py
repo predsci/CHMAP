@@ -26,7 +26,7 @@ inst_list = ["AIA", "EUVI-A", "EUVI-B"]
 
 # define number of bins
 n_mu_bins = 18
-n_intensity_bins = 400  # changed from 1000 to match beta-y_functionals_analysis.py
+n_intensity_bins = 200
 
 # declare map and binning parameters
 R0 = 1.01
@@ -64,7 +64,7 @@ for instrument in inst_list:
         los_temp.get_coordinates(R0=R0)
         # perform 2D histogram on mu and image intensity
         temp_hist = los_temp.mu_hist(image_intensity_bin_edges, mu_bin_edges, lat_band=lat_band, log10=log10)
-        hist_lbcc = psi_d_types.create_hist(hdf_path, mu_bin_edges, image_intensity_bin_edges, lat_band, temp_hist)
+        hist_lbcc = psi_d_types.create_hist(hdf_path, row.image_id, mu_bin_edges, image_intensity_bin_edges, lat_band, temp_hist)
 
         # add this histogram and meta data to database
         add_lbcc_hist(hist_lbcc, db_session)

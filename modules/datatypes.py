@@ -384,11 +384,14 @@ class LBCCHist:
     Class that holds lbcc histogram information
     """
 
-    def __init__(self, chd_meta, mu_bin_edges, intensity_bin_edges, lat_band, mu_hist):
+    def __init__(self, chd_meta, image_id, mu_bin_edges, intensity_bin_edges, lat_band, mu_hist):
 
         # adds info dictionary
         self.info = chd_meta
+        self.image_id = image_id
 
+        self.n_mu_bins = len(mu_bin_edges) - 1
+        self.n_intensity_bins = len(intensity_bin_edges) - 1
         self.mu_bin_edges = mu_bin_edges
         self.intensity_bin_edges = intensity_bin_edges
         self.lat_band = lat_band
@@ -397,7 +400,8 @@ class LBCCHist:
     def get_data(self):
         date_format = "%Y-%m-%dT%H:%M:%S.%f"
         hist_data = {'image_id': self.image_id, 'date_obs':datetime.datetime.strptime(self.info['date_string'], date_format), 'wavelength':self.info['wavelength'],
-                     'instrument':self.info['instrument'], 'lat_band': self.lat_band,
+                     'instrument':self.info['instrument'], 'n_mu_bins': self.n_mu_bins,
+                     'n_mu_bins': self.n_intensity_bins, 'lat_band': self.lat_band,
                      'mu_bin_edges':self.mu_bin_edges, 'intensity_bin_edges': self.intensity_bin_edges,
                      'all_hists': self.mu_hist}
         return hist_data
@@ -409,12 +413,12 @@ class LBCCHist:
         pickle.dump(hist.get_data, f)
         f.close()
 
-def create_hist(h5_file, mu_bin_edges, intensity_bin_edges, lat_band, mu_hist):
+def create_hist(h5_file, image_id, mu_bin_edges, intensity_bin_edges, lat_band, mu_hist):
     # read the image and metadata
     x, y, z, data, chd_meta, sunpy_meta = psihdf.rdh5_meta(h5_file)
 
     # create the structure
-    hist = LBCCHist(chd_meta, mu_bin_edges, intensity_bin_edges, lat_band, mu_hist)
+    hist = LBCCHist(chd_meta, image_id, mu_bin_edges, intensity_bin_edges, lat_band, mu_hist)
     return hist
 
 def lbcc_to_binary(lbcc_hist):
