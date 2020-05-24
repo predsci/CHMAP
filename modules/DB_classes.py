@@ -60,7 +60,7 @@ class EUV_Maps(Base):
     __table_args__ = (Index('map_file_names', "fname", unique=True), Index('maps_idx1', "combo_id", "meth_combo_id"))
 
     combos = relationship("Image_Combos")
-    var_vals = relationship("Var_Vals")
+    var_vals = relationship("Var_Vals_Map")
     method_combo = relationship("Method_Combos")
 
 
@@ -103,12 +103,12 @@ class Image_Combo_Assoc(Base):
     image_info = relationship("EUV_Images")
 
 
-class Var_Vals(Base):
+class Var_Vals_Map(Base):
     """
     This table holds the method parameter values for each map.  Could save var_val as both
     a Float and a String or exact-valued Numeric.
     """
-    __tablename__='var_vals'
+    __tablename__='var_vals_map'
     map_id = Column(Integer, ForeignKey('euv_maps.map_id'), primary_key=True)
     combo_id = Column(Integer, ForeignKey('image_combos.combo_id'), primary_key=True)
     meth_id = Column(Integer, ForeignKey('meth_defs.meth_id'))
@@ -194,12 +194,12 @@ class LBCC_Hist(Base):
 
     __table_args__ = (Index('lbcc_index', "date_obs", "instrument", "wavelength", unique=True),)
 
-class Var_Vals_No_Map(Base):
+class Var_Vals(Base):
     """
     This table holds the method parameter values for fits with associated images.
     Could save var_val as both a Float and a String or exact-valued Numeric.
     """
-    __tablename__='var_vals_no_map'
+    __tablename__='var_vals'
     combo_id = Column(Integer, ForeignKey('image_combos.combo_id'), primary_key=True)
     meth_id = Column(Integer, ForeignKey('meth_defs.meth_id'))
     var_id = Column(Integer, ForeignKey('var_defs.var_id'), primary_key=True)

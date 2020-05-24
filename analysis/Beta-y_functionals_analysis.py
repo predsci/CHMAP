@@ -10,7 +10,7 @@ import scipy.optimize as optim
 import os
 import modules.lbcc_funs as lbcc
 from settings.app import App
-from modules.DB_funs import init_db_conn, query_hist, get_combo_id, add_combo_image_assoc, get_method_id, get_var_id
+from modules.DB_funs import init_db_conn, query_hist, get_combo_id, add_combo_image_assoc, get_method_id, get_var_id, add_var_val
 import modules.datatypes as psi_d_types
 import modules.DB_classes as db_class
 
@@ -18,12 +18,6 @@ import modules.DB_classes as db_class
 # HISTOGRAM PARAMETERS TO UPDATE
 n_mu_bins = 18 # number of mu bins
 n_intensity_bins = 200 # number of intensity bins
-
-# for saving results
-save_results = False # true if you want results saved
-year = "2011" # used for naming plot file
-time_period = "3Day" # used for naming plot file
-image_out_path = os.path.join(App.APP_HOME, "test_data", "analysis/lbcc_functionals/")
 
 # TIME FRAME TO QUERY HISTOGRAMS
 query_time_min = datetime.datetime(2011, 1, 4, 0, 0, 0)
@@ -111,22 +105,6 @@ for date_index, center_date in enumerate(moving_avg_centers):
         hist_mat = norm_hist[:-1, ]
         mu_vec = mu_bin_centers[:-1]
 
-        ##### ADD METHOD INFO TO DATABASE ######
-
-        # create image combos in db table
-        # get image_ids from queried histograms - same as ids in euv_images table
-        image_ids = tuple(pd_hist['image_id'])
-        combo_id = get_combo_id(db_session, image_ids, create=True)
-
-        # create association between combo and image_id
-        for image_id in image_ids:
-            add_combo_image_assoc(db_session, combo_id[1], image_id)
-
-        # create method definitions
-        meth_name = 'LBCC'
-        meth_desc = 'LBCC Theoretical Fit'
-        method_id = get_method_id(db_session, meth_name, meth_desc, var_names=None, var_descs=None, create=True)
-
         ##### OPTIMIZATION METHODS ######
 
         # -- fit the THEORETICAL functional -----------
@@ -152,12 +130,38 @@ for date_index, center_date in enumerate(moving_avg_centers):
 
         ###### STORE RESULT PARAMETERS IN DATABASE #######
 
-        # create variable in database
-        meth_id = method_id[1]
+        # create image combos in db table
+        # get image_ids from queried histograms - same as ids in euv_images table
+        image_ids = tuple(pd_hist['image_id'])
+        combo_id_info = get_combo_id(db_session, image_ids, create=True)
+        combo_id = combo_id_info[1]
+
+        # create association between combo and image_id
+        for image_id in image_ids:
+            add_combo_image_assoc(db_session, combo_id, image_id)
+
+        # create variables in database
         for i in range(len(optim_vals3)):
+            #### definitions #####
+            # create method definitions
+            meth_name = 'LBCC'
+            meth_desc = 'LBCC Theoretical Fit'
+            # create variable definitions
             var_name = "TheoVar" + str(i)
-            var_desc = "Theoretic fit parameter at index" + str(i)
-            get_var_id(db_session, meth_id, var_name, var_desc, create=True)
+            var_desc = "Theoretic fit parameter at index " + str(i)
+
+            ##### store values #####
+            # add method to db
+            method_id_info = get_method_id(db_session, meth_name, meth_desc, var_names=var_name, var_descs=var_desc,
+                                           create=True)
+            method_id = method_id_info[1]
+            # add variable to db
+            var_id_info = get_var_id(db_session, method_id, var_name, var_desc, create=True)
+            var_id = int(var_id_info[1])
+            # add variable value to database
+            var_val = results3[date_index, inst_index, i]
+            add_var_val(db_session, combo_id, method_id, var_id, var_val, create=True)
+
 
         # -- fit the POWER/LOG functionals -------------
         model = 2
@@ -260,13 +264,6 @@ for date_index, center_date in enumerate(moving_avg_centers):
         end_time_tot = time.time()
         print("Total elapsed time: " + str(round(end_time_tot - start_time_tot, 3)) + " seconds.")
 
-# save results
-if save_results:
-    np.save(image_out_path + "/cubic_" + time_period, results1)
-    np.save(image_out_path + "/power-log_" + time_period, results2)
-    np.save(image_out_path + "/theoretic_" + time_period, results3)
-    np.save(image_out_path + "/mu-bins_" + time_period, results)
-    print("Results saved")
 
 
 

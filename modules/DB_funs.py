@@ -290,7 +290,7 @@ def build_euvimages_from_fits(db_session, raw_data_dir, hdf_data_dir):
 
 def add_euv_map_old(db_session, combo_id, meth_id, fname, var_dict=None, time_of_compute=None):
     """
-    Simultaneously add record to EUV_Maps and Var_Vals.  Currently does not require
+    Simultaneously add record to EUV_Maps and Var_Vals_Map.  Currently does not require
     var_dict or time_of_compute.
     :param db_session: SQLAlchemy database session
     :param combo_id: The combination ID associated with the map
@@ -310,7 +310,7 @@ def add_euv_map_old(db_session, combo_id, meth_id, fname, var_dict=None, time_of
         exit_status = 1
         map_id = None
     else:
-        # check if meth_id/combo_id/var_vals already exist in DB?
+        # check if meth_id/combo_id/var_vals_map already exist in DB?
 
         # create EUV_Maps object and add to session
         map_add = EUV_Maps(combo_id=combo_id, meth_id=meth_id, fname=fname, time_of_compute=time_of_compute)
@@ -325,14 +325,14 @@ def add_euv_map_old(db_session, combo_id, meth_id, fname, var_dict=None, time_of
         if n_vars is not None:
             var_info = pd.read_sql(db_session.query(Var_Defs).filter(Var_Defs.var_name.in_(var_dict.keys())).statement,
                                    db_session.bind)
-            # Write variable values to Var_Vals
+            # Write variable values to Var_Vals_Map
             for index, var_row in var_info.iterrows():
                 var_val = var_dict[var_row.var_name]
-                add_var_val = Var_Vals(map_id=map_id, combo_id=combo_id, meth_id=meth_id, var_id=var_row.var_id,
+                add_var_val = Var_Vals_Map(map_id=map_id, combo_id=combo_id, meth_id=meth_id, var_id=var_row.var_id,
                                        var_val=var_val)
                 db_session.add(add_var_val)
 
-        # now commit EUV_Map update and Var_Vals update simultaneously
+        # now commit EUV_Map update and Var_Vals_Map update simultaneously
         db_session.commit()
 
     return db_session, exit_status, map_id
@@ -340,7 +340,7 @@ def add_euv_map_old(db_session, combo_id, meth_id, fname, var_dict=None, time_of
 
 def add_euv_map(db_session, psi_map, base_path=None, map_type=None):
     """
-    Simultaneously add record to EUV_Maps and Var_Vals. Write object to file.
+    Simultaneously add record to EUV_Maps and Var_Vals_Map. Write object to file.
     :param db_session:
     :param psi_map: PsiMap object for which all methods, variables, method_combo, and
     image_combo have been created in the database.  All variable information should
@@ -383,9 +383,9 @@ def add_euv_map(db_session, psi_map, base_path=None, map_type=None):
             no_match = False
             # check variable values
             for index, row in psi_map.method_info.iterrows():
-                var_query = db_session.query(Var_Vals.map_id).filter(Var_Vals.map_id.in_(map_matches.map_id),
-                                                                     Var_Vals.var_id == row.var_id,
-                                                                     Var_Vals.var_val == row.var_val)
+                var_query = db_session.query(Var_Vals_Map.map_id).filter(Var_Vals_Map.map_id.in_(map_matches.map_id),
+                                                                     Var_Vals_Map.var_id == row.var_id,
+                                                                     Var_Vals_Map.var_val == row.var_val)
                 map_matches = pd.read_sql(var_query.statement, db_session.bind)
                 if len(map_matches) == 0:
                     # this map does not exist in the DB
@@ -650,6 +650,42 @@ def get_var_id(db_session, meth_id, var_name, var_desc, create=False):
 
     return db_session, var_id
 
+def add_var_val(db_session, combo_id, meth_id, var_id, var_val, create=False):
+    """
+    Query for variable value by combo_id and var_id
+    @param db_session: db_session that connects to the database.
+    @param combo_id: combo_id from image_combos table
+    @param meth_id: meth_id from meth_defs table
+    @param var_id: var_id from var_defs table
+    @param var_val: float variable value
+    @param create: If var_val does not exist, create it.
+    @return:
+    """
+
+
+    # Query DB for existing variable value
+    existing_var = pd.read_sql(db_session.query(Var_Vals).filter(Var_Vals.combo_id == combo_id,
+                                                                        Var_Vals.var_id == var_id).statement,
+                               db_session.bind)
+
+    if len(existing_var.combo_id) == 0:
+        val_exists = False
+    else:
+        val_exists = True
+        var_val = existing_var.var_val[0]
+
+    if create and not val_exists:
+        # create variable value record
+        add_val = Var_Vals(combo_id = combo_id, meth_id = meth_id, var_id = var_id, var_val = var_val)
+        db_session.add(add_val)
+        # push change to DB and return var_val
+        db_session.commit()
+
+    return db_session, var_val
+
+
+
+
 
 def get_method_combo_id(db_session, meth_ids, create=False):
     # query DB to determine if this combo exists.
@@ -772,18 +808,18 @@ def query_euv_maps(db_session, mean_time_range=None, extrema_time_range=None, n_
     # variable value query
     if var_val_range is not None:
         # assume var_val_range is a dict of variable ranges with entries like: 'iter': [min, max]
-        var_map_id_query = db_session.query(Var_Vals.map_id)
+        var_map_id_query = db_session.query(Var_Vals_Map.map_id)
         # setup a query to find a list of maps in the specified variable ranges
         for var_name in var_val_range:
             var_id_query = db_session.query(Var_Defs.var_id).filter(Var_Defs.var_name == var_name)
-            var_map_id_query = var_map_id_query.filter_by(Var_Vals.var_id == var_id_query,
-                                                          Var_Vals.var_val.between(var_val_range[var_name]))
+            var_map_id_query = var_map_id_query.filter_by(Var_Vals_Map.var_id == var_id_query,
+                                                          Var_Vals_Map.var_val.between(var_val_range[var_name]))
         # update master query
         euv_map_query = euv_map_query.filter_by(EUV_Maps.map_id.in_(var_map_id_query))
 
     # Need three output tables from SQL
     # 1. map_info: euv_maps joined with image_combos
-    # 2. method_info: var_vals joined with meth_defs and var_defs
+    # 2. method_info: Var_Vals_Map joined with meth_defs and var_defs
     # 3. image_info: euv_images joined with Image_Combo_Assoc
 
     # return map_info table using a join
@@ -797,15 +833,15 @@ def query_euv_maps(db_session, mean_time_range=None, extrema_time_range=None, n_
     image_info = pd.read_sql(db_session.query(EUV_Images).filter(EUV_Images.image_id.in_(image_assoc.image_id)
                                                                  ).statement, db_session.bind)
 
-    # return var_vals joined with var_defs. they are not directly connected tables, so use explicit join syntax
-    var_query = db_session.query(Var_Vals, Var_Defs).join(Var_Defs, Var_Vals.var_id == Var_Defs.var_id
-                                                          ).filter(Var_Vals.map_id.in_(map_info.map_id))
+    # return Var_Vals_Map joined with var_defs. they are not directly connected tables, so use explicit join syntax
+    var_query = db_session.query(Var_Vals_Map, Var_Defs).join(Var_Defs, Var_Vals_Map.var_id == Var_Defs.var_id
+                                                          ).filter(Var_Vals_Map.map_id.in_(map_info.map_id))
     joint_query = var_query.join(Meth_Defs)
-    joint_query = db_session.query(Meth_Defs, Var_Defs, Var_Vals).join(Var_Defs).join(Var_Vals, Var_Defs).filter(
-        Var_Vals.map_id.in_(map_info.map_id)
+    joint_query = db_session.query(Meth_Defs, Var_Defs, Var_Vals_Map).join(Var_Defs).join(Var_Vals_Map, Var_Defs).filter(
+        Var_Vals_Map.map_id.in_(map_info.map_id)
     )
-    joint_query = db_session.query(Meth_Defs, Var_Defs, Var_Vals).filter(Meth_Defs.meth_id == Var_Defs.meth_id).filter(
-        Var_Defs.var_id == Var_Vals.var_id).filter(Var_Vals.map_id.in_(map_info.map_id))
+    joint_query = db_session.query(Meth_Defs, Var_Defs, Var_Vals_Map).filter(Meth_Defs.meth_id == Var_Defs.meth_id).filter(
+        Var_Defs.var_id == Var_Vals_Map.var_id).filter(Var_Vals_Map.map_id.in_(map_info.map_id))
     method_info = pd.read_sql(joint_query.statement, db_session.bind)
     # remove duplicate var_id columns
     method_info = method_info.T.groupby(level=0).first().T
@@ -953,7 +989,7 @@ def delete_map_dbase_record(db_session, map_object, data_dir=None):
         exit_status = 1
 
     # delete variable values
-    out_flag = db_session.query(Var_Vals).filter(Var_Vals.map_id == map_id).delete()
+    out_flag = db_session.query(Var_Vals_Map).filter(Var_Vals_Map.map_id == map_id).delete()
     if out_flag == 0:
         exit_status = exit_status + 2
     else:
