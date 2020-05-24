@@ -88,14 +88,14 @@ class Image_Combos(Base):
     date_min = Column(DateTime)
     __table_args__ = (Index('mean_time', "date_mean"), )
 
-    images = relationship("Map_Image_Assoc")
+    images = relationship("Image_Combo_Assoc")
 
 
-class Map_Image_Assoc(Base):
+class Image_Combo_Assoc(Base):
     """
     This table simply maps unique combinations of images 'combo_id' to the constituent images.
     """
-    __tablename__ = 'map_image_assoc'
+    __tablename__ = 'image_combo_assoc'
     combo_id = Column(Integer, ForeignKey('image_combos.combo_id'), primary_key=True)
     image_id = Column(Integer, ForeignKey('euv_images.image_id'), primary_key=True)
     __table_args__ = (Index('image_first', "image_id"), )
@@ -177,7 +177,7 @@ class Method_Combo_Assoc(Base):
 
 class LBCC_Hist(Base):
     """
-    Class to hold histogram data type
+    Table to hold histogram data type
     """
     __tablename__ = 'lbcc_hist'
     hist_id = Column(Integer, primary_key=True)
@@ -191,3 +191,22 @@ class LBCC_Hist(Base):
     mu_bin_edges = Column(LargeBinary)
     intensity_bin_edges = Column(LargeBinary)
     mu_hist = Column(LargeBinary)
+
+    __table_args__ = (Index('lbcc_index', "date_obs", "instrument", "wavelength", unique=True),)
+
+class Var_Vals_No_Map(Base):
+    """
+    This table holds the method parameter values for fits with associated images.
+    Could save var_val as both a Float and a String or exact-valued Numeric.
+    """
+    __tablename__='var_vals_no_map'
+    combo_id = Column(Integer, ForeignKey('image_combos.combo_id'), primary_key=True)
+    meth_id = Column(Integer, ForeignKey('meth_defs.meth_id'))
+    var_id = Column(Integer, ForeignKey('var_defs.var_id'), primary_key=True)
+    var_val = Column(Float)
+    __table_args__ = (Index('var_val_index', "combo_id", "var_id", "meth_id", unique=True),
+                      Index('var_val_index2', "meth_id", "var_id"), Index('var_val_index3', "var_id"))
+
+    var_info = relationship("Var_Defs")
+    meth_info = relationship("Meth_Defs")
+    combo_info = relationship("Image_Combos")

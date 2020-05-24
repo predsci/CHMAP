@@ -473,17 +473,17 @@ def get_combo_id(db_session, image_ids, create=False):
     n_images = len(image_ids)
     # Return the number of matching images in each combo that has n_images and contains at least one of image_ids.
     # This version uses actual SQL for the subquery
-    # match_groups = pd.read_sql("""SELECT combo_id, COUNT(image_id) AS i_count FROM map_image_assoc WHERE
+    # match_groups = pd.read_sql("""SELECT combo_id, COUNT(image_id) AS i_count FROM Image_Combo_Assoc WHERE
     #                                   combo_id IN (SELECT combo_id FROM image_combos WHERE n_images=
     #                                   """ + str(n_images) + ") AND image_id IN (" + str(image_ids) +
     #                                   " GROUP BY combo_id;", db_session.bind)
     # This version uses SQLAlchemy to re-create the SQL
     match_groups = pd.read_sql(
-        db_session.query(Map_Image_Assoc.combo_id, func.count(Map_Image_Assoc.image_id).label("i_count")).
-            filter(Map_Image_Assoc.combo_id.in_(
+        db_session.query(Image_Combo_Assoc.combo_id, func.count(Image_Combo_Assoc.image_id).label("i_count")).
+            filter(Image_Combo_Assoc.combo_id.in_(
             db_session.query(Image_Combos.combo_id).filter(Image_Combos.n_images == n_images)
-        ), Map_Image_Assoc.image_id.in_(image_ids)
-        ).group_by(Map_Image_Assoc.combo_id).statement, db_session.bind)
+        ), Image_Combo_Assoc.image_id.in_(image_ids)
+        ).group_by(Image_Combo_Assoc.combo_id).statement, db_session.bind)
 
     # for testing only
     # match_groups = pd.DataFrame(data={'combo_id': [1, 2], 'i_count': [2, 3]})
@@ -544,13 +544,13 @@ def add_combo_image_assoc(db_session, combo_id, image_id):
     """
 
     # check if association already exists
-    existing_assoc = pd.read_sql(db_session.query(Map_Image_Assoc).filter(Map_Image_Assoc.combo_id == combo_id,
-                                                                          Map_Image_Assoc.image_id == image_id).statement,
+    existing_assoc = pd.read_sql(db_session.query(Image_Combo_Assoc).filter(Image_Combo_Assoc.combo_id == combo_id,
+                                                                          Image_Combo_Assoc.image_id == image_id).statement,
                                  db_session.bind)
 
     # If association record does not exist, add it
     if len(existing_assoc.combo_id) == 0:
-        assoc_add = Map_Image_Assoc(combo_id=combo_id, image_id=image_id)
+        assoc_add = Image_Combo_Assoc(combo_id=combo_id, image_id=image_id)
         db_session.add(assoc_add)
         # commit changes to DB
         db_session.commit()
@@ -584,13 +584,15 @@ def get_method_id(db_session, meth_name, meth_desc=None, var_names=None, var_des
         # method already exists. lookup variable ids
         meth_exists = True
         meth_id = existing_meth.meth_id[0].item()
-        var_ids = [0] * len(var_names)
-        for ii in range(len(var_names)):
-            var_id_query = pd.read_sql(db_session.query(Var_Defs.var_id).filter(Var_Defs.meth_id == meth_id,
-                                                                                Var_Defs.var_name == var_names[ii]
-                                                                                ).statement, db_session.bind)
-            var_ids[ii] = var_id_query.var_id.to_list()
-
+        if var_names != None:
+            var_ids = [0] * len(var_names)
+            for ii in range(len(var_names)):
+                var_id_query = pd.read_sql(db_session.query(Var_Defs.var_id).filter(Var_Defs.meth_id == meth_id,
+                                                                                    Var_Defs.var_name == var_names[ii]
+                                                                                    ).statement, db_session.bind)
+                var_ids[ii] = var_id_query.var_id.to_list()
+        else:
+            var_ids = None
     if create and not meth_exists:
         # create method record
         add_method = Meth_Defs(meth_name=meth_name, meth_description=meth_desc)
@@ -599,13 +601,15 @@ def get_method_id(db_session, meth_name, meth_desc=None, var_names=None, var_des
         db_session.flush()
         meth_id = add_method.meth_id
         # add associated variables to var_defs
-        var_ids = [0] * len(var_names)
-        for ii in range(len(var_names)):
-            add_var = Var_Defs(meth_id=meth_id, var_name=var_names[ii], var_description=var_descs[ii])
-            db_session.add(add_var)
-            db_session.flush()
-            var_ids[ii] = add_var.var_id
-
+        if var_names != None:
+            var_ids = [0] * len(var_names)
+            for ii in range(len(var_names)):
+                add_var = Var_Defs(meth_id=meth_id, var_name=var_names[ii], var_description=var_descs[ii])
+                db_session.add(add_var)
+                db_session.flush()
+                var_ids[ii] = add_var.var_id
+        else:
+            var_ids = None
         db_session.commit()
     elif not meth_exists:
         var_ids = None
@@ -613,12 +617,12 @@ def get_method_id(db_session, meth_name, meth_desc=None, var_names=None, var_des
     return db_session, meth_id, var_ids
 
 
-def get_var_id(db_session, var_name, meth_id, var_desc, create=False):
+def get_var_id(db_session, meth_id, var_name, var_desc, create=False):
     """
     Query for variable id by var_name and meth_id
     :param db_session: db_session that connects to the database.
-    :param var_name: string variable name.
     :param meth_id method identification integer.
+    :param var_name: string variable name.
     :param var_desc: Only required for create=True.
     :param create: If var_id does not exist, create it.
     :return:
@@ -645,6 +649,49 @@ def get_var_id(db_session, var_name, meth_id, var_desc, create=False):
         var_id = add_var.var_id
 
     return db_session, var_id
+
+
+def get_method_combo_id(db_session, meth_ids, create=False):
+    # query DB to determine if this combo exists.
+    n_meths = len(meth_ids)
+    # Return the number of matching images in each combo that has n_images and contains at least one of image_ids.
+    match_groups = pd.read_sql(
+        db_session.query(Method_Combo_Assoc.meth_combo_id, func.count(Method_Combo_Assoc.meth_combo_id).label(
+            "m_count")).filter(Method_Combo_Assoc.meth_combo_id.in_(
+            db_session.query(Method_Combos.meth_combo_id).filter(Method_Combos.n_methods == n_meths)
+        ), Method_Combo_Assoc.meth_combo_id.in_(meth_ids)
+        ).group_by(Method_Combo_Assoc.meth_combo_id).statement, db_session.bind)
+
+    if len(match_groups) > 0:
+        # reduce match_groups to combos that match
+        match_groups = match_groups.loc[match_groups.m_count == n_meths]
+        if len(match_groups) == 1:
+            # return the existing meth_combo_id
+            meth_combo_id = match_groups.meth_combo_id.values[0]
+            no_match_exists = False
+        else:
+            no_match_exists = True
+            meth_combo_id = None
+
+    else:
+        no_match_exists = True
+        meth_combo_id = None
+
+    if no_match_exists and create:
+        # add record to method_combos
+        # generate record and add to session
+        combo_add = Method_Combos(n_methods=n_meths)
+        db_session.add(combo_add)
+        db_session.flush()
+        meth_combo_id = combo_add.meth_combo_id
+        for id in meth_ids:
+            # add method_id association to meth_combo. Be sure to convert to base python int
+            assoc_add = Method_Combo_Assoc(meth_combo_id=meth_combo_id, meth_id=id)
+            db_session.add(assoc_add)
+        # Add record to DB
+        db_session.commit()
+
+    return db_session, meth_combo_id
 
 
 def query_euv_maps(db_session, mean_time_range=None, extrema_time_range=None, n_images=None, image_ids=None,
@@ -697,13 +744,13 @@ def query_euv_maps(db_session, mean_time_range=None, extrema_time_range=None, n_
 
     if image_ids is not None:
         # AND filter by combos that contain image_ids
-        combo_ids_query = db_session.query(Map_Image_Assoc.combo_id).filter(Map_Image_Assoc.image_id.in_(image_ids))
+        combo_ids_query = db_session.query(Image_Combo_Assoc.combo_id).filter(Image_Combo_Assoc.image_id.in_(image_ids))
         combo_query = combo_query.filter_by(Image_Combos.combo_id.in_(combo_ids_query))
 
     if wavelength is not None:
         # AND combo contains images with wavelength in 'wavelength'
         image_ids_query = db_session.query(EUV_Images.image_id).filter(EUV_Images.wavelength.in_(wavelength))
-        combo_ids_query = db_session.query(Map_Image_Assoc.combo_id).filter(Map_Image_Assoc.image_id.in_(
+        combo_ids_query = db_session.query(Image_Combo_Assoc.combo_id).filter(Image_Combo_Assoc.image_id.in_(
             image_ids_query))
         combo_query = combo_query.filter_by(Image_Combos.combo_id.in_(combo_ids_query))
 
@@ -737,7 +784,7 @@ def query_euv_maps(db_session, mean_time_range=None, extrema_time_range=None, n_
     # Need three output tables from SQL
     # 1. map_info: euv_maps joined with image_combos
     # 2. method_info: var_vals joined with meth_defs and var_defs
-    # 3. image_info: euv_images joined with map_image_assoc
+    # 3. image_info: euv_images joined with Image_Combo_Assoc
 
     # return map_info table using a join
     map_info = pd.read_sql(euv_map_query.join(Image_Combos).statement, db_session.bind)
@@ -745,7 +792,7 @@ def query_euv_maps(db_session, mean_time_range=None, extrema_time_range=None, n_
     map_info = map_info.T.groupby(level=0).first().T
 
     # return image info. also keep image/combo associations for map-object building below
-    image_assoc = pd.read_sql(db_session.query(Map_Image_Assoc).filter(Map_Image_Assoc.combo_id.in_(map_info.combo_id)
+    image_assoc = pd.read_sql(db_session.query(Image_Combo_Assoc).filter(Image_Combo_Assoc.combo_id.in_(map_info.combo_id)
                                                                        ).statement, db_session.bind)
     image_info = pd.read_sql(db_session.query(EUV_Images).filter(EUV_Images.image_id.in_(image_assoc.image_id)
                                                                  ).statement, db_session.bind)
@@ -821,30 +868,6 @@ def create_map_input_object(new_map, fname, image_df, var_vals, method_name, tim
     new_map.append_map_info(map_info_df)
 
     return new_map
-
-
-# def create_method(db_session, meth_name, meth_desc, meth_vars, var_descs):
-#     """
-#     Create a new method record in the DB. Also create associated variable definitions in
-#     'var_defs'
-#     :param db_session: SQLAlchemy session
-#     :param meth_name: string scalar
-#     :param meth_desc: string scalar
-#     :param meth_vars: list of strings
-#     :param var_descs: list of strings
-#     :return: db_session, meth_id
-#     """
-#
-#     # First create a method; Or return meth_id if it already exists
-#     db_session, meth_id = get_method_id(db_session=db_session, meth_name=meth_name, meth_desc=meth_desc, create=True)
-#
-#     # Then create needed variables; Or return var_ids if they already exist for another method
-#     var_ids = [None]*len(meth_vars)
-#     for index, var in enumerate(meth_vars, start=0):
-#         db_session, var_ids[index] = get_var_id(db_session=db_session, var_name=var, meth_id=meth_id,
-#                                                 var_desc=var_descs[index], create=True)
-#
-#     return db_session, meth_id
 
 
 def add_map_dbase_record(db_session, psi_map, base_path=None, map_type=None):
@@ -946,49 +969,6 @@ def delete_map_dbase_record(db_session, map_object, data_dir=None):
     exit_status = 0
 
     return exit_status
-
-
-def get_method_combo_id(db_session, meth_ids, create=False):
-    # query DB to determine if this combo exists.
-    n_meths = len(meth_ids)
-    # Return the number of matching images in each combo that has n_images and contains at least one of image_ids.
-    match_groups = pd.read_sql(
-        db_session.query(Method_Combo_Assoc.meth_combo_id, func.count(Method_Combo_Assoc.meth_combo_id).label(
-            "m_count")).filter(Method_Combo_Assoc.meth_combo_id.in_(
-            db_session.query(Method_Combos.meth_combo_id).filter(Method_Combos.n_methods == n_meths)
-        ), Method_Combo_Assoc.meth_combo_id.in_(meth_ids)
-        ).group_by(Method_Combo_Assoc.meth_combo_id).statement, db_session.bind)
-
-    if len(match_groups) > 0:
-        # reduce match_groups to combos that match
-        match_groups = match_groups.loc[match_groups.m_count == n_meths]
-        if len(match_groups) == 1:
-            # return the existing meth_combo_id
-            meth_combo_id = match_groups.meth_combo_id.values[0]
-            no_match_exists = False
-        else:
-            no_match_exists = True
-            meth_combo_id = None
-
-    else:
-        no_match_exists = True
-        meth_combo_id = None
-
-    if no_match_exists and create:
-        # add record to method_combos
-        # generate record and add to session
-        combo_add = Method_Combos(n_methods=n_meths)
-        db_session.add(combo_add)
-        db_session.flush()
-        meth_combo_id = combo_add.meth_combo_id
-        for id in meth_ids:
-            # add method_id association to meth_combo. Be sure to convert to base python int
-            assoc_add = Method_Combo_Assoc(meth_combo_id=meth_combo_id, meth_id=id)
-            db_session.add(assoc_add)
-        # Add record to DB
-        db_session.commit()
-
-    return db_session, meth_combo_id
 
 
 def read_sql2pandas(sql_query):
