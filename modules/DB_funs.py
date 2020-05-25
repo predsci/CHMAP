@@ -650,6 +650,7 @@ def get_var_id(db_session, meth_id, var_name, var_desc, create=False):
 
     return db_session, var_id
 
+
 def add_var_val(db_session, combo_id, meth_id, var_id, var_val, create=False):
     """
     Query for variable value by combo_id and var_id
@@ -682,9 +683,6 @@ def add_var_val(db_session, combo_id, meth_id, var_id, var_val, create=False):
         db_session.commit()
 
     return db_session, var_val
-
-
-
 
 
 def get_method_combo_id(db_session, meth_ids, create=False):
@@ -1195,55 +1193,24 @@ def add_lbcc_hist(lbcc_hist, db_session):
     return db_session
 
 
-def remove_lbcc_hist(db_session, raw_series, raw_dir, hdf_dir):
-    """
-    Simultaneously delete image from filesystem and remove metadata row
-    from EUV_Images table.
-    raw_series - expects a pandas series that results from one row of
-    the EUV_Images DB table.
-    Ex.
-    test_pd = query_euv_images(db_session=db_session, time_min=query_time_min,
-                                time_max=query_time_max)
-    remove_euv_image(raw_series=test_pd.iloc[0])
-
-    ToDo:
-        - Vectorize functionality.  If 'raw_series' is a pandas DataFrame
-            delete all rows and their corresponding files.
-    """
-
-    raw_id = raw_series['image_id']
-    raw_fname = raw_series['fname_raw']
-    raw_full_path = os.path.join(raw_dir, raw_fname)
-    hdf_fname = raw_series['fname_hdf']
-    hdf_full_path = os.path.join(hdf_dir, hdf_fname)
-
-    # check if file exists in filesystem
-    if os.path.exists(raw_full_path):
-        os.remove(raw_full_path)
-        print("Deleted file: " + raw_full_path)
-        exit_status = 0
-    else:
-        print("\nWarning: Image file not found at location: " + raw_full_path +
-              ". This may be the symptom of a larger problem.")
-        exit_status = 1
-
-    # first check if there is an hdf file listed
-    if hdf_fname != '':
-        # check if file exists in filesystem
-        if os.path.exists(hdf_full_path):
-            os.remove(hdf_full_path)
-            print("Deleted file: " + hdf_full_path)
-        else:
-            print("\nWarning: Processed HDF file not found at location: " + hdf_full_path +
-                  ". This may be the symptom of a larger problem.")
-            exit_status = exit_status + 2
-
-    # delete row where id = raw_id.  Use .item() to recover an INT from numpy.int64
-    out_flag = db_session.query(EUV_Images).filter(EUV_Images.image_id == raw_id.item()).delete()
-    if out_flag == 0:
-        exit_status = exit_status + 4
-    elif out_flag == 1:
-        db_session.commit()
-        print("Row deleted from DB for image_id=" + str(raw_id))
-
-    return exit_status, db_session
+def query_var_vals(db_session, moving_avg_centers, moving_width, meth_name, instrument=None):
+    # query lbcc fit parameters by center date
+    for date_index, center_date in enumerate(moving_avg_centers):
+        min_date = center_date - moving_width / 2
+        max_date = center_date + moving_width / 2
+        # query image_combos for combo id
+        combo_id_query = pd.read_sql(db_session.query(Image_Combos).filter(Image_Combos.center_date == center_date,
+                                                                           Image_Combos.min_date == min_date,
+                                                                           Image_Combos.max_date == max_date
+                                                                          ).statement, db_session.bind)
+        print("Combo ID Query: ", combo_id_query)
+        meth_id_query = pd.read_sql(db_session.query(Meth_Defs).filter(Meth_Defs.meth_name == meth_name
+                                                                          ).statement, db_session.bind)
+        print("Method ID Query: ", meth_id_query)
+        var_id_query = pd.read_sql(db_session.query(Var_Defs).filter(Var_Defs.meth_id.in_(meth_id_query)
+                                                                          ).statement, db_session.bind)
+        print("Var ID Query: ", var_id_query)
+        var_val_query = pd.read_sql(db_session.query(Var_Vals).filter(Var_Vals.combo_id.in_(combo_id_query),
+                                                                      Var_Vals.var_id.in_(var_id_query)
+                                                                          ).statement, db_session.bind)
+        return var_val_query

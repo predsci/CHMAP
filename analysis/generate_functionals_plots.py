@@ -1,30 +1,60 @@
 """
-Generate plots to compare optimization methods
-This will be updated to grab parameters from the database - not useful right now:)
+Generate plots of lbcc theoretic methods
+Grabs parameter values from database
 """
 
+import os
 import numpy as np
+import datetime
 import matplotlib.pyplot as plt
 from matplotlib import cm
 from matplotlib.lines import Line2D
+
+from settings.app import App
 import modules.lbcc_funs as lbcc
+from modules.DB_funs import init_db_conn, query_var_vals
+import modules.datatypes as psi_d_types
+import modules.DB_classes as db_class
 
 # PLOT PARAMETERS
-
+n_mu_bins = 18
 year = "2011" # used for naming plot file
-time_period = "3Day" # used for naming plot file
-title_time_period = "3 Day" # used for plot titles
-plot_week = 0 # index of week you want to plot
+time_period = "6Month" # used for naming plot file
+title_time_period = "6 Month" # used for plot titles
+plot_week = 5 # index of week you want to plot
 # path to save plots to
 image_out_path = os.path.join(App.APP_HOME, "test_data", "analysis/lbcc_functionals/")
 
+# TIME FRAME TO QUERY PARAMETERS
+query_time_min = datetime.datetime(2011, 4, 1, 0, 0, 0)
+query_time_max = datetime.datetime(2011, 10, 1, 0, 0, 0)
+number_of_weeks = 27
+number_of_days = 180
+
+# INITIALIZE DATABASE CONNECTION
+# DATABASE PATHS
+database_dir = App.DATABASE_HOME
+sqlite_filename = App.DATABASE_FNAME
+# initialize database connection
+use_db = "sqlite"
+sqlite_path = os.path.join(database_dir, sqlite_filename)
+db_session = init_db_conn(db_name=use_db, chd_base=db_class.Base, sqlite_path=sqlite_path)
+
 # ------------ NO NEED TO UPDATE ANYTHING BELOW  ------------- #
 
-# generate some plots to compare methods
-sse_index1 = np.array([x == "SSE" for x in optim_vals1])
-npar1 = np.where(sse_index1)[0][0]
-sse_index2 = np.array([x == "SSE" for x in optim_vals2])
-npar2 = np.where(sse_index2)[0][0]
+# basic info
+instruments = ['AIA', "EUVI-A", "EUVI-B"]
+# returns array of moving averages center dates, based off start date and number of weeks
+moving_avg_centers = np.array([np.datetime64(str(query_time_min)) + ii*np.timedelta64(1, 'W') for ii in range(number_of_weeks)])
+# returns moving width based of number of days
+moving_width = np.timedelta64(number_of_days, 'D')
+# create mu bin array
+mu_bin_array = np.array(range(n_mu_bins + 1), dtype="float") * 0.05 + 0.1
+mu_bin_centers = (mu_bin_array[1:] + mu_bin_array[:-1])/2
+# optimization values
+optim_vals3 = ["a1", "a2", "b1", "b2", "n", "log_alpha", "SSE", "optim_time", "optim_status"]
+
+# generate plots of theoretic fit
 sse_index3 = np.array([x == "SSE" for x in optim_vals3])
 npar3 = np.where(sse_index3)[0][0]
 
@@ -43,14 +73,16 @@ linestyles = ['solid', 'dashed', 'dashdot', 'None']
 marker_types = ['None', 'None', 'None', 'x']
 
 for inst_index, instrument in enumerate(instruments):
-    mu_bins_SSE_tots = results[:, inst_index, :, 2].sum(axis=1)
+    # query lbcc fit parameters
+    # TODO: write function to query parameters
+    meth_name = "LBCC"
+    var_val_query = query_var_vals(db_session, moving_avg_centers, moving_width, meth_name, instrument)
+
     # plot SSEs for each instrument
     plt.figure(0+inst_index)
 
-    plt.plot(moving_avg_centers, results1[:, inst_index, sse_index1], c="blue", label="cubic")
-    plt.plot(moving_avg_centers, results2[:, inst_index, sse_index2], c="red", label="power-log")
     plt.plot(moving_avg_centers, results3[:, inst_index, sse_index3], c="green", label="theoretic")
-    plt.plot(moving_avg_centers, mu_bins_SSE_tots, c="black", marker='x', linestyle="None", label="mu-bins")
+
 
     # Add mu-bin fits to all plots/legends
 
@@ -68,14 +100,9 @@ for inst_index, instrument in enumerate(instruments):
     plot_y = np.zeros((sample_mu.__len__(), moving_avg_centers.__len__(), 4))
     for mu_index, mu in enumerate(sample_mu):
         for date_index, center_date in enumerate(moving_avg_centers):
-            plot_beta[mu_index, date_index, 0], plot_y[mu_index, date_index, 0] = \
-                lbcc.get_beta_y_cubic(results1[date_index, inst_index, 0:npar1], mu)
-            plot_beta[mu_index, date_index, 1], plot_y[mu_index, date_index, 1] = \
-                lbcc.get_beta_y_power_log(results2[date_index, inst_index, 0:npar2], mu)
             plot_beta[mu_index, date_index, 2], plot_y[mu_index, date_index, 2] = \
                 lbcc.get_beta_y_theoretic_based(results3[date_index, inst_index, 0:npar3], mu)
-            plot_beta[mu_index, date_index, 3] = results[date_index, inst_index, mu_results_index[mu_index], 0]
-            plot_y[mu_index, date_index, 3] = results[date_index, inst_index, mu_results_index[mu_index], 1]
+
 
 
     # plot beta for the different models as a function of time
@@ -146,10 +173,8 @@ for inst_index, instrument in enumerate(instruments):
 
     beta_y_v_mu = np.zeros((mu_bin_centers.shape[0], 2, 4))
     for index, mu in enumerate(mu_bin_centers):
-        beta_y_v_mu[index, :, 0] = lbcc.get_beta_y_cubic(results1[plot_week, inst_index, 0:npar1], mu)
-        beta_y_v_mu[index, :, 1] = lbcc.get_beta_y_power_log(results2[plot_week, inst_index, 0:npar2], mu)
         beta_y_v_mu[index, :, 2] = lbcc.get_beta_y_theoretic_based(results3[plot_week, inst_index, 0:npar3], mu)
-    beta_y_v_mu[:-1, :, 3] = results[plot_week, inst_index, :, 0:2]
+
 
     for model_index in range(linestyles.__len__()):
         if model_index != 3:
