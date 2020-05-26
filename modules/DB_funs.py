@@ -666,7 +666,7 @@ def add_var_val(db_session, combo_id, meth_id, var_id, var_val, create=False):
 
     # Query DB for existing variable value
     existing_var = pd.read_sql(db_session.query(Var_Vals).filter(Var_Vals.combo_id == combo_id,
-                                                                        Var_Vals.var_id == var_id).statement,
+                                                                 Var_Vals.var_id == var_id).statement,
                                db_session.bind)
 
     if len(existing_var.combo_id) == 0:
@@ -1193,24 +1193,32 @@ def add_lbcc_hist(lbcc_hist, db_session):
     return db_session
 
 
-def query_var_vals(db_session, moving_avg_centers, moving_width, meth_name, instrument=None):
-    # query lbcc fit parameters by center date
-    for date_index, center_date in enumerate(moving_avg_centers):
-        min_date = center_date - moving_width / 2
-        max_date = center_date + moving_width / 2
-        # query image_combos for combo id
-        combo_id_query = pd.read_sql(db_session.query(Image_Combos).filter(Image_Combos.center_date == center_date,
-                                                                           Image_Combos.min_date == min_date,
-                                                                           Image_Combos.max_date == max_date
-                                                                          ).statement, db_session.bind)
-        print("Combo ID Query: ", combo_id_query)
-        meth_id_query = pd.read_sql(db_session.query(Meth_Defs).filter(Meth_Defs.meth_name == meth_name
-                                                                          ).statement, db_session.bind)
-        print("Method ID Query: ", meth_id_query)
-        var_id_query = pd.read_sql(db_session.query(Var_Defs).filter(Var_Defs.meth_id.in_(meth_id_query)
-                                                                          ).statement, db_session.bind)
-        print("Var ID Query: ", var_id_query)
-        var_val_query = pd.read_sql(db_session.query(Var_Vals).filter(Var_Vals.combo_id.in_(combo_id_query),
-                                                                      Var_Vals.var_id.in_(var_id_query)
-                                                                          ).statement, db_session.bind)
-        return var_val_query
+def query_var_val(db_session, query_time_min, query_time_max, meth_name, instrument=None):
+    # query images for image_ids
+    query_instrument = [instrument, ]
+    query_pd = query_euv_images(db_session=db_session, time_min=query_time_min, time_max=query_time_max,
+                                instrument=query_instrument)
+
+    # query image_combos for combo id
+    image_ids = tuple(query_pd['image_id'])
+    combo_id_info = get_combo_id(db_session, image_ids, create=False)
+
+    # query meth_defs for method id
+    method_id_info = get_method_id(db_session, meth_name, meth_desc=None, var_names=None, var_descs=None, create=False)
+
+    # query var_defs for variable id
+    var_id_query = pd.read_sql(db_session.query(Var_Defs.var_id).filter(Var_Defs.meth_id == method_id_info[1]).statement,
+                               db_session.bind)
+
+
+
+    # query var_vals for variable value
+    for i in range(var_id_query.size):
+        print(method_id_info[1], var_id_query.var_id[i], combo_id_info[1])
+        var_val_query = pd.read_sql(db_session.query(Var_Vals).filter(Var_Vals.meth_id == method_id_info[1],
+                                    Var_Vals.var_id == var_id_query.var_id[i],
+                                    Var_Vals.combo_id == combo_id_info[1]).statement,
+                                    db_session.bind)
+    print(var_val_query)
+
+    return var_val_query
