@@ -617,7 +617,7 @@ def get_method_id(db_session, meth_name, meth_desc=None, var_names=None, var_des
     return db_session, meth_id, var_ids
 
 
-def get_var_id(db_session, meth_id, var_name, var_desc, create=False):
+def get_var_id(db_session, meth_id, var_name=None, var_desc=None, create=False):
     """
     Query for variable id by var_name and meth_id
     :param db_session: db_session that connects to the database.
@@ -651,7 +651,7 @@ def get_var_id(db_session, meth_id, var_name, var_desc, create=False):
     return db_session, var_id
 
 
-def add_var_val(db_session, combo_id, meth_id, var_id, var_val, create=False):
+def get_var_val(db_session, combo_id, meth_id, var_id, var_val=None, create=False):
     """
     Query for variable value by combo_id and var_id
     @param db_session: db_session that connects to the database.
@@ -669,9 +669,10 @@ def add_var_val(db_session, combo_id, meth_id, var_id, var_val, create=False):
                                                                  Var_Vals.var_id == var_id).statement,
                                db_session.bind)
 
-    if len(existing_var.combo_id) == 0:
+    if len(existing_var) == 0:
         val_exists = False
     else:
+        # value already exists
         val_exists = True
         var_val = existing_var.var_val[0]
 
@@ -1193,14 +1194,28 @@ def add_lbcc_hist(lbcc_hist, db_session):
     return db_session
 
 
-def query_var_val(db_session, query_time_min, query_time_max, meth_name, instrument=None):
-    # query images for image_ids
+def query_var_val(db_session, center_date, moving_width, meth_name, instrument=None):
+    """
+    query all variable values corresponding to a certain image combination
+    @param db_session:
+    @param center_date:
+    @param moving_width:
+    @param meth_name:
+    @param instrument:
+    @return:
+    """
+    min_date = center_date - moving_width / 2
+    max_date = center_date + moving_width / 2
+
+    # query histograms to get image ids
     query_instrument = [instrument, ]
-    query_pd = query_euv_images(db_session=db_session, time_min=query_time_min, time_max=query_time_max,
-                                instrument=query_instrument)
+    pd_hist = query_hist(db_session=db_session, n_mu_bins=18, n_intensity_bins=200,
+                         time_min=np.datetime64(min_date).astype(datetime.datetime),
+                         time_max=np.datetime64(max_date).astype(datetime.datetime),
+                         instrument=query_instrument)
 
     # query image_combos for combo id
-    image_ids = tuple(query_pd['image_id'])
+    image_ids = tuple(pd_hist['image_id'])
     combo_id_info = get_combo_id(db_session, image_ids, create=False)
 
     # query meth_defs for method id
@@ -1210,15 +1225,75 @@ def query_var_val(db_session, query_time_min, query_time_max, meth_name, instrum
     var_id_query = pd.read_sql(db_session.query(Var_Defs.var_id).filter(Var_Defs.meth_id == method_id_info[1]).statement,
                                db_session.bind)
 
-
-
     # query var_vals for variable value
     for i in range(var_id_query.size):
-        print(method_id_info[1], var_id_query.var_id[i], combo_id_info[1])
-        var_val_query = pd.read_sql(db_session.query(Var_Vals).filter(Var_Vals.meth_id == method_id_info[1],
-                                    Var_Vals.var_id == var_id_query.var_id[i],
-                                    Var_Vals.combo_id == combo_id_info[1]).statement,
-                                    db_session.bind)
-    print(var_val_query)
+        #print("combo id: ",combo_id_info[1], "var id", var_id_query.var_id[i])
+        var_val_query = pd.read_sql(db_session.query(Var_Vals).filter(Var_Vals.combo_id == combo_id_info[1],
+                                                                 ).statement,
+                               db_session.bind)
+        #print("var val", var_val_query.var_val)
 
-    return var_val_query
+    return var_val_query.var_val
+
+def store_lbcc_values(db_session, pd_hist, meth_name, meth_desc, var_name, var_desc, date_index, inst_index, optim_vals, results, create=False):
+
+    # create image combos in db table
+    # get image_ids from queried histograms - same as ids in euv_images table
+    image_ids = tuple(pd_hist['image_id'])
+    combo_id_info = get_combo_id(db_session, image_ids, create)
+    combo_id = combo_id_info[1]
+
+    # create association between combo and image_id
+    for image_id in image_ids:
+        add_combo_image_assoc(db_session, combo_id, image_id)
+
+    # create variables in database
+    for i in range(len(optim_vals)):
+        #### definitions #####
+        # create variable definitions
+        var_name_i = var_name + str(i)
+        var_desc_i = var_desc + str(i)
+
+        ##### store values #####
+        # add method to db
+        method_id_info = get_method_id(db_session, meth_name, meth_desc, var_name_i, var_desc_i, create)
+        method_id = method_id_info[1]
+        # add variable to db
+        var_id_info = get_var_id(db_session, method_id, var_name_i, var_desc_i, create)
+        var_id = int(var_id_info[1])
+        # add variable value to database
+        var_val = results[date_index, inst_index, i]
+        get_var_val(db_session, combo_id, method_id, var_id, var_val, create)
+
+    return db_session
+
+def store_mu_values(db_session, pd_hist, meth_name, meth_desc, var_name, var_desc, date_index,
+                          inst_index, ii, optim_vals,  results, create=False):
+
+    # create image combos in db table
+    # get image_ids from queried histograms - same as ids in euv_images table
+    image_ids = tuple(pd_hist['image_id'])
+    combo_id_info = get_combo_id(db_session, image_ids, create)
+    combo_id = combo_id_info[1]
+
+    # create association between combo and image_id
+    for image_id in image_ids:
+        add_combo_image_assoc(db_session, combo_id, image_id)
+
+    # create variables in database
+    for i in range(len(optim_vals)):
+        #### definitions #####
+        # create variable definitions
+        var_name_i = var_name + str(i)
+        var_desc_i = var_desc + str(i)
+
+        ##### store values #####
+        # add method to db
+        method_id_info = get_method_id(db_session, meth_name, meth_desc, var_name_i, var_desc_i, create)
+        method_id = method_id_info[1]
+        # add variable to db
+        var_id_info = get_var_id(db_session, method_id, var_name_i, var_desc_i, create)
+        var_id = int(var_id_info[1])
+        # add variable value to database
+        var_val = results[date_index, inst_index, ii, i]
+        get_var_val(db_session, combo_id, method_id, var_id, var_val, create)

@@ -10,7 +10,7 @@ import scipy.optimize as optim
 import os
 import modules.lbcc_funs as lbcc
 from settings.app import App
-from modules.DB_funs import init_db_conn, query_hist, get_combo_id, add_combo_image_assoc, get_method_id, get_var_id, add_var_val
+from modules.DB_funs import init_db_conn, query_hist, get_combo_id, add_combo_image_assoc, get_method_id, get_var_id, get_var_val, store_lbcc_values, store_mu_values
 import modules.datatypes as psi_d_types
 import modules.DB_classes as db_class
 
@@ -20,10 +20,10 @@ n_mu_bins = 18 # number of mu bins
 n_intensity_bins = 200 # number of intensity bins
 
 # TIME FRAME TO QUERY HISTOGRAMS
-query_time_min = datetime.datetime(2011, 1, 4, 0, 0, 0)
-query_time_max = datetime.datetime(2011, 1, 7, 0, 0, 0)
-number_of_weeks = 1
-number_of_days = 3
+query_time_min = datetime.datetime(2011, 4, 1, 0, 0, 0)
+query_time_max = datetime.datetime(2011, 5, 1, 0, 0, 0)
+number_of_weeks = 4
+number_of_days = 30
 
 # DATABASE PATHS
 database_dir = App.DATABASE_HOME
@@ -36,14 +36,14 @@ db_session = init_db_conn(db_name=use_db, chd_base=db_class.Base, sqlite_path=sq
 # ------------ NO NEED TO UPDATE ANYTHING BELOW  ------------- #
 
 instruments = ['AIA', "EUVI-A", "EUVI-B"]
-optim_vals = ["Beta", "y", "SSE", "optim_time", "optim_status"]
-optim_vals1 = ["a1", "a2", "a3", "b1", "b2", "b3", "SSE", "optim_time", "optim_status"]
-optim_vals2 = ["a1", "a2", "b1", "SSE", "optim_time", "optim_status"]
-optim_vals3 = ["a1", "a2", "b1", "b2", "n", "log_alpha", "SSE", "optim_time", "optim_status"]
+optim_vals_mu = ["Beta", "y", "SSE", "optim_time", "optim_status"]
+optim_vals_cubic = ["a1", "a2", "a3", "b1", "b2", "b3", "SSE", "optim_time", "optim_status"]
+optim_vals_power = ["a1", "a2", "b1", "SSE", "optim_time", "optim_status"]
+optim_vals_theo = ["a1", "a2", "b1", "b2", "n", "log_alpha", "SSE", "optim_time", "optim_status"]
 
 # bin number - must match bins for data you use
 int_bin_n = [n_intensity_bins, ]
-temp_results = np.zeros((17, 1, len(optim_vals)))
+temp_results = np.zeros((17, 1, len(optim_vals_mu)))
 
 # returns array of moving averages center dates, based off start date and number of weeks
 moving_avg_centers = np.array([np.datetime64(str(query_time_min)) + ii*np.timedelta64(1, 'W') for ii in range(number_of_weeks)])
@@ -51,10 +51,10 @@ moving_avg_centers = np.array([np.datetime64(str(query_time_min)) + ii*np.timede
 # returns moving width based of number of days
 moving_width = np.timedelta64(number_of_days, 'D')
 
-results = np.zeros((len(moving_avg_centers), len(instruments), 17, len(optim_vals)))
-results1 = np.zeros((len(moving_avg_centers), len(instruments), len(optim_vals1)))
-results2 = np.zeros((len(moving_avg_centers), len(instruments), len(optim_vals2)))
-results3 = np.zeros((len(moving_avg_centers), len(instruments), len(optim_vals3)))
+results_mu = np.zeros((len(moving_avg_centers), len(instruments), 17, len(optim_vals_mu)))
+results_cubic = np.zeros((len(moving_avg_centers), len(instruments), len(optim_vals_cubic)))
+results_power = np.zeros((len(moving_avg_centers), len(instruments), len(optim_vals_power)))
+results_theo = np.zeros((len(moving_avg_centers), len(instruments), len(optim_vals_theo)))
 
 for date_index, center_date in enumerate(moving_avg_centers):
     print("Begin date " + str(center_date))
@@ -118,49 +118,19 @@ for date_index, center_date in enumerate(moving_avg_centers):
                                     method=method)
 
         end3 = time.time()
-        # print("Optimization time for theoretic functional: " + str(round(end3 - start3, 3)) + " seconds.")
-        # resulting_pars3 = pd.DataFrame(data={'beta': mu_bin_centers, 'y': mu_bin_centers})
-        # for index, mu in enumerate(mu_bin_centers):
-        #     resulting_pars3.beta[index], resulting_pars3.y[index] = lbcc.get_beta_y_theoretic_based(optim_out3.x, mu)
 
-        results3[date_index, inst_index, 0:6] = optim_out3.x
-        results3[date_index, inst_index, 6] = optim_out3.fun
-        results3[date_index, inst_index, 7] = round(end3 - start3, 3)
-        results3[date_index, inst_index, 8] = optim_out3.status
+        results_theo[date_index, inst_index, 0:6] = optim_out3.x
+        results_theo[date_index, inst_index, 6] = optim_out3.fun
+        results_theo[date_index, inst_index, 7] = round(end3 - start3, 3)
+        results_theo[date_index, inst_index, 8] = optim_out3.status
 
         ###### STORE RESULT PARAMETERS IN DATABASE #######
-
-        # create image combos in db table
-        # get image_ids from queried histograms - same as ids in euv_images table
-        image_ids = tuple(pd_hist['image_id'])
-        combo_id_info = get_combo_id(db_session, image_ids, create=True)
-        combo_id = combo_id_info[1]
-
-        # create association between combo and image_id
-        for image_id in image_ids:
-            add_combo_image_assoc(db_session, combo_id, image_id)
-
-        # create variables in database
-        for i in range(len(optim_vals3)):
-            #### definitions #####
-            # create method definitions
-            meth_name = 'LBCC'
-            meth_desc = 'LBCC Theoretical Fit'
-            # create variable definitions
-            var_name = "TheoVar" + str(i)
-            var_desc = "Theoretic fit parameter at index " + str(i)
-
-            ##### store values #####
-            # add method to db
-            method_id_info = get_method_id(db_session, meth_name, meth_desc, var_names=var_name, var_descs=var_desc,
-                                           create=True)
-            method_id = method_id_info[1]
-            # add variable to db
-            var_id_info = get_var_id(db_session, method_id, var_name, var_desc, create=True)
-            var_id = int(var_id_info[1])
-            # add variable value to database
-            var_val = results3[date_index, inst_index, i]
-            add_var_val(db_session, combo_id, method_id, var_id, var_val, create=True)
+        meth_name = 'LBCC'
+        meth_desc = 'LBCC Method'
+        var_name = "TheoVar"
+        var_desc = "Theoretic fit parameter at index "
+        store_lbcc_values(db_session, pd_hist, meth_name, meth_desc, var_name, var_desc, date_index,
+                          inst_index, optim_vals = optim_vals_theo,  results = results_theo, create=True)
 
 
         # -- fit the POWER/LOG functionals -------------
@@ -174,15 +144,18 @@ for date_index, center_date in enumerate(moving_avg_centers):
                                     args=(hist_ref, hist_mat, mu_vec, intensity_bin_array, model),
                                     method=method, jac='2-point', options={'gtol': gtol})
         end2 = time.time()
-        # print("Optimization time for power/log functional: " + str(round(end2 - start2, 3)) + " seconds.")
-        # resulting_pars2 = pd.DataFrame(data={'beta': mu_bin_centers, 'y': mu_bin_centers})
-        # for index, mu in enumerate(mu_bin_centers):
-        #     resulting_pars2.beta[index], resulting_pars2.y[index] = lbcc.get_beta_y_power_log(optim_out2.x, mu)
 
-        results2[date_index, inst_index, 0:3] = optim_out2.x
-        results2[date_index, inst_index, 3] = optim_out2.fun
-        results2[date_index, inst_index, 4] = round(end2 - start2, 3)
-        results2[date_index, inst_index, 5] = optim_out2.status
+        results_power[date_index, inst_index, 0:3] = optim_out2.x
+        results_power[date_index, inst_index, 3] = optim_out2.fun
+        results_power[date_index, inst_index, 4] = round(end2 - start2, 3)
+        results_power[date_index, inst_index, 5] = optim_out2.status
+
+        ###### STORE RESULT PARAMETERS IN DATABASE #######
+        var_name = "PowerVar"
+        var_desc = "Power fit parameter at index "
+        store_lbcc_values(db_session, pd_hist, meth_name, meth_desc, var_name, var_desc, date_index,
+                          inst_index, optim_vals = optim_vals_power,  results = results_power, create=True)
+
 
         # -- fit constrained CUBIC functionals -------
         model = 1
@@ -202,10 +175,6 @@ for date_index, center_date in enumerate(moving_avg_centers):
 
         lin_constraint = optim.LinearConstraint(A, lb, ub)
 
-        # unconstrained optimization using Nelder-Meade
-        # optim_out1 = optim.minimize(get_functional_sse, init_pars, args=(hist_ref, hist_mat, mu_vec, image_intensity_bin_edges, model),
-        #                                method=method)
-
         start1 = time.time()
 
         # constrained optimization using SLSQP with numeric Jacobian
@@ -214,17 +183,17 @@ for date_index, center_date in enumerate(moving_avg_centers):
                                     method=method, jac="2-point", constraints=lin_constraint)
 
         end1 = time.time()
-        # print("Optimization time for constrained cubic functional: " + str(round(end1 - start1, 3)) + " seconds.")
 
-        # resulting_pars1 = pd.DataFrame(data={'beta': mu_bin_centers, 'y': mu_bin_centers})
-        # for index, mu in enumerate(mu_bin_centers):
-        #     resulting_pars1.beta[index], resulting_pars1.y[index] = lbcc.get_beta_y_cubic(optim_out1.x, mu)
+        results_cubic[date_index, inst_index, 0:6] = optim_out1.x
+        results_cubic[date_index, inst_index, 6] = optim_out1.fun
+        results_cubic[date_index, inst_index, 7] = round(end1-start1, 3)
+        results_cubic[date_index, inst_index, 8] = optim_out1.status
 
-        results1[date_index, inst_index, 0:6] = optim_out1.x
-        results1[date_index, inst_index, 6] = optim_out1.fun
-        results1[date_index, inst_index, 7] = round(end1-start1, 3)
-        results1[date_index, inst_index, 8] = optim_out1.status
-
+        ###### STORE RESULT PARAMETERS IN DATABASE #######
+        var_name = "CubicVar"
+        var_desc = "Cubic fit parameter at index "
+        store_lbcc_values(db_session, pd_hist, meth_name, meth_desc, var_name, var_desc, date_index,
+                          inst_index, optim_vals = optim_vals_cubic,  results = results_cubic, create=True)
 
         # -- Do MU-BIN direct calcs of beta and y -----
         ref_peak_index = np.argmax(hist_ref)
@@ -255,11 +224,17 @@ for date_index, center_date in enumerate(moving_avg_centers):
             end_time = time.time()
 
             # record results
-            results[date_index, inst_index, ii, 0] = optim_result.x[0]
-            results[date_index, inst_index, ii, 1] = optim_result.x[1]
-            results[date_index, inst_index, ii, 2] = optim_result.fun
-            results[date_index, inst_index, ii, 3] = round(end_time-start_time, 3)
-            results[date_index, inst_index, ii, 4] = optim_result.status
+            results_mu[date_index, inst_index, ii, 0] = optim_result.x[0]
+            results_mu[date_index, inst_index, ii, 1] = optim_result.x[1]
+            results_mu[date_index, inst_index, ii, 2] = optim_result.fun
+            results_mu[date_index, inst_index, ii, 3] = round(end_time-start_time, 3)
+            results_mu[date_index, inst_index, ii, 4] = optim_result.status
+
+            ###### STORE RESULT PARAMETERS IN DATABASE ########
+            var_name = "MuBinVar"
+            var_desc = "Mu Bins fit parameter at index "
+            store_mu_values(db_session, pd_hist, meth_name, meth_desc, var_name, var_desc, date_index,
+                              inst_index, ii, optim_vals = optim_vals_mu,  results = results_mu, create=True)
 
         end_time_tot = time.time()
         print("Total elapsed time: " + str(round(end_time_tot - start_time_tot, 3)) + " seconds.")

@@ -60,7 +60,7 @@ def hist_integration(hist, old_bins, new_bins):
             # do nothing, the value was initialized to 0
             continue
         else:
-            overlap_index = np.where(np.logical_and(old_bins[-1] < r_edge, old_bins[0] >= l_edge)) #was old_bins[:-1] and old_bins [1:]
+            overlap_index = np.where(np.logical_and(old_bins[:-1] < r_edge, old_bins[1:] >= l_edge))
             # loop through each new bin that overlaps the evaluation bin
             for bin_num in overlap_index[0]:
                 # determine what portion of the new bin intersects the evaluation bin
