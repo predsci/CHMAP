@@ -17,20 +17,19 @@ from modules.DB_funs import init_db_conn, query_var_val
 import modules.DB_classes as db_class
 
 # PLOT PARAMETERS
-plot = False
 n_mu_bins = 18
 year = "2011" # used for naming plot file
 time_period = "6Month" # used for naming plot file
 title_time_period = "6 Month" # used for plot titles
-plot_week = 2 # index of week you want to plot
+plot_week = 15 # index of week you want to plot
 # path to save plots to
 image_out_path = os.path.join(App.APP_HOME, "test_data", "analysis/lbcc_functionals/")
 
 # TIME FRAME TO QUERY PARAMETERS
 query_time_min = datetime.datetime(2011, 4, 1, 0, 0, 0)
-query_time_max = datetime.datetime(2011, 5, 1, 0, 0, 0)
-number_of_weeks = 4
-number_of_days = 30
+query_time_max = datetime.datetime(2011, 10, 1, 0, 0, 0)
+number_of_weeks = 27
+number_of_days = 180
 
 # INITIALIZE DATABASE CONNECTION
 # DATABASE PATHS
@@ -94,12 +93,13 @@ for inst_index, instrument in enumerate(instruments):
     # get variable values for each image combination
     for date_ind, center_date in enumerate(moving_avg_centers):
         var_val_query = query_var_val(db_session, center_date, moving_width, meth_name, instrument)
+        # print(var_val_query)
         # save to the correct results type
         # TODO: ensure that this works no matter the order...
         results_theo[date_ind, :] = var_val_query[:9]
         results_power[date_ind, :] = var_val_query[9:15]
         results_cubic[date_ind, :] = var_val_query[15:24]
-        results_mu[date_ind, :] = var_val_query[24:]
+        results_mu[date_ind, :, :] = var_val_query[24:]
 
     mu_bins_SSE_tots = results_mu[:, :, 2].sum(axis=1)
     # plot SSEs for each instrument
