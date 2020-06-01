@@ -1256,10 +1256,10 @@ def store_lbcc_values(db_session, pd_hist, meth_name, meth_desc, var_name, var_d
 
         ##### store values #####
         # add method to db
-        method_id_info = get_method_id(db_session, meth_name, meth_desc, var_name_i, var_desc_i, create)
+        method_id_info = get_method_id(db_session, meth_name, meth_desc, var_name_i, var_desc_i, create=create)
         method_id = method_id_info[1]
         # add variable to db
-        var_id_info = get_var_id(db_session, method_id, var_name_i, var_desc_i, create)
+        var_id_info = get_var_id(db_session, method_id, var_name_i, var_desc_i, create=create)
         var_id = int(var_id_info[1])
         # add variable value to database
         var_val = results[date_index, inst_index, i]
@@ -1284,8 +1284,8 @@ def store_mu_values(db_session, pd_hist, meth_name, meth_desc, var_name, var_des
     for i in range(len(optim_vals)):
         #### definitions #####
         # create variable definitions
-        var_name_i = var_name + str(i)
-        var_desc_i = var_desc + str(i)
+        var_name_i = var_name + str(i) + str(ii)
+        var_desc_i = var_desc + str(i) + str(ii)
 
         ##### store values #####
         # add method to db

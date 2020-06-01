@@ -21,11 +21,11 @@ n_mu_bins = 18
 year = "2011" # used for naming plot file
 time_period = "6Month" # used for naming plot file
 title_time_period = "6 Month" # used for plot titles
-plot_week = 15 # index of week you want to plot
+plot_week = 5 # index of week you want to plot
 # path to save plots to
 image_out_path = os.path.join(App.APP_HOME, "test_data", "analysis/lbcc_functionals/")
 
-# TIME FRAME TO QUERY PARAMETERS
+# TIME FRAME TO QUERY HISTOGRAMS
 query_time_min = datetime.datetime(2011, 4, 1, 0, 0, 0)
 query_time_max = datetime.datetime(2011, 10, 1, 0, 0, 0)
 number_of_weeks = 27
@@ -68,10 +68,10 @@ sse_index3 = np.array([x == "SSE" for x in optim_vals_theo])
 npar3 = np.where(sse_index3)[0][0]
 
 # calc beta and y for a few sample mu-values
-results_mu = mu_bin_centers[0:-1]
+mu_results = mu_bin_centers[0:-1]
 sample_mu = [0.125, 0.325, 0.575, 0.875]
 
-mu_results_index = np.nonzero(np.in1d(results_mu, sample_mu))[0]
+mu_results_index = np.nonzero(np.in1d(mu_results, sample_mu))[0]
 
 # sample mu colors
 v_cmap = cm.get_cmap('viridis')
@@ -81,7 +81,7 @@ color_dist = np.linspace(0., 1., n_mu)
 linestyles = ['solid', 'dashed', 'dashdot', 'None']
 marker_types = ['None', 'None', 'None', 'x']
 
-results_mu = np.zeros((len(moving_avg_centers), 17, len(optim_vals_mu)))
+results = np.zeros((len(moving_avg_centers), 17, len(optim_vals_mu)))
 results_cubic = np.zeros((len(moving_avg_centers), len(optim_vals_cubic)))
 results_power = np.zeros((len(moving_avg_centers), len(optim_vals_power)))
 results_theo = np.zeros((len(moving_avg_centers), len(optim_vals_theo)))
@@ -99,9 +99,10 @@ for inst_index, instrument in enumerate(instruments):
         results_theo[date_ind, :] = var_val_query[:9]
         results_power[date_ind, :] = var_val_query[9:15]
         results_cubic[date_ind, :] = var_val_query[15:24]
-        results_mu[date_ind, :, :] = var_val_query[24:]
+        for ii in range(mu_bin_centers.__len__() - 1):
+            results[date_ind, ii, :] = var_val_query[24+ii*5:29+ii*5]
 
-    mu_bins_SSE_tots = results_mu[:, :, 2].sum(axis=1)
+    mu_bins_SSE_tots = results[:, :, 2].sum(axis=1)
     # plot SSEs for each instrument
     plt.figure(0 + inst_index)
 
@@ -129,12 +130,12 @@ for inst_index, instrument in enumerate(instruments):
         for date_index, center_date in enumerate(moving_avg_centers):
             plot_beta[mu_index, date_index, 0], plot_y[mu_index, date_index, 0] = \
                 lbcc.get_beta_y_cubic(results_cubic[date_index, 0:npar1], mu)
-            plot_beta[mu_index, date_index, 1], plot_y[mu_index, 1] = \
+            plot_beta[mu_index, date_index, 1], plot_y[mu_index, date_index, 1] = \
                 lbcc.get_beta_y_power_log(results_power[date_index, 0:npar2], mu)
             plot_beta[mu_index, date_index, 2], plot_y[mu_index, date_index, 2] = \
                 lbcc.get_beta_y_theoretic_based(results_theo[date_index, 0:npar3], mu)
-            plot_beta[mu_index, date_index, 3] = results_mu[date_index, mu_results_index[mu_index], 0]
-            plot_y[mu_index, date_index, 3] = results_mu[date_index, mu_results_index[mu_index], 1]
+            plot_beta[mu_index, date_index, 3] = results[date_index, mu_results_index[mu_index], 0]
+            plot_y[mu_index, date_index, 3] = results[date_index, mu_results_index[mu_index], 1]
 
 
     # plot beta for the different models as a function of time
@@ -208,7 +209,7 @@ for inst_index, instrument in enumerate(instruments):
         beta_y_v_mu[index, :, 0] = lbcc.get_beta_y_cubic(results_cubic[plot_week, 0:npar1], mu)
         beta_y_v_mu[index, :, 1] = lbcc.get_beta_y_power_log(results_power[plot_week, 0:npar2], mu)
         beta_y_v_mu[index, :, 2] = lbcc.get_beta_y_theoretic_based(results_theo[plot_week, 0:npar3], mu)
-    beta_y_v_mu[:-1, :, 3] = results_mu[plot_week, :, 0:2]
+    beta_y_v_mu[:-1, :, 3] = results[plot_week, :, 0:2]
 
     for model_index in range(linestyles.__len__()):
         if model_index != 3:

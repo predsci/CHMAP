@@ -24,16 +24,14 @@ from modules.DB_funs import init_db_conn, query_euv_images, add_image2session, u
 
 
 # to create the reference DB and files, set Create_Ref=True
-Create_Ref = False
+Create_Ref = True
 
 # Get the data dir from the installed app settings.
 if Create_Ref:
-    raw_data_dir = os.path.join(App.RAW_DATA_HOME, "reference_data", "raw")
+    raw_data_dir = os.path.join(App.APP_HOME, "reference_data", "raw")
     hdf_data_dir = os.path.join(App.APP_HOME, "reference_data", "processed")
-    print("getting data")
 else:
     raw_data_dir = App.RAW_DATA_HOME
-    print(raw_data_dir)
     hdf_data_dir = App.PROCESSED_DATA_HOME
 
 
@@ -71,10 +69,9 @@ imins = cluster_meth_1(f_list=f_list, jd0=jd0)
 
 # setup database connection
 use_db = "sqlite"
-sqlite_filename = "CHD_DB.db"
+sqlite_filename = "dbtest.db"
 if Create_Ref:
-    sqlite_path = os.path.join(App.AP
-    P_HOME, "reference_data", sqlite_filename)
+    sqlite_path = os.path.join(App.APP_HOME, "test_data", sqlite_filename)
 else:
     sqlite_path = os.path.join(App.DATABASE_HOME, sqlite_filename)
 db_session = init_db_conn(db_name=use_db, chd_base=Base, sqlite_path=sqlite_path)
