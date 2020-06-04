@@ -18,6 +18,8 @@ import modules.DB_classes as db_class
 
 # PLOT PARAMETERS
 n_mu_bins = 18
+n_intensity_bins = 200
+lat_band = [-np.pi / 64., np.pi / 64.]
 year = "2011" # used for naming plot file
 time_period = "6Month" # used for naming plot file
 title_time_period = "6 Month" # used for plot titles
@@ -92,8 +94,7 @@ for inst_index, instrument in enumerate(instruments):
 
     # get variable values for each image combination
     for date_ind, center_date in enumerate(moving_avg_centers):
-        var_val_query = query_var_val(db_session, center_date, moving_width, meth_name, instrument)
-        # print(var_val_query)
+        var_val_query = query_var_val(db_session, n_mu_bins, n_intensity_bins, lat_band, center_date, moving_width, meth_name, instrument)
         # save to the correct results type
         # TODO: ensure that this works no matter the order...
         results_theo[date_ind, :] = var_val_query[:9]

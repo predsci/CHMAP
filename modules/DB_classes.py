@@ -182,9 +182,9 @@ class LBCC_Hist(Base):
     __tablename__ = 'lbcc_hist'
     hist_id = Column(Integer, primary_key=True)
     image_id = Column(Integer, ForeignKey('euv_images.image_id'))
-    date_obs = Column(DateTime, ForeignKey('euv_images.date_obs'))
-    instrument = Column(String(10), ForeignKey('euv_images.instrument'))
-    wavelength = Column(Integer, ForeignKey('euv_images.wavelength'))
+    date_obs = Column(DateTime)
+    instrument = Column(String(10))
+    wavelength = Column(Integer)
     n_mu_bins = Column(Integer)
     n_intensity_bins = Column(Integer)
     lat_band = Column(LargeBinary)
@@ -192,7 +192,7 @@ class LBCC_Hist(Base):
     intensity_bin_edges = Column(LargeBinary)
     mu_hist = Column(LargeBinary)
 
-    __table_args__ = (Index('lbcc_index', "date_obs", "instrument", "wavelength", unique=True),)
+    __table_args__ = (Index('lbcc_index', "date_obs", "instrument", "wavelength"),)
 
 class Var_Vals(Base):
     """

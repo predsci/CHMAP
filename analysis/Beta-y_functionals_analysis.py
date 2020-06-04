@@ -18,14 +18,16 @@ import modules.DB_classes as db_class
 # HISTOGRAM PARAMETERS TO UPDATE
 n_mu_bins = 18 # number of mu bins
 n_intensity_bins = 200 # number of intensity bins
+lat_band = [-np.pi / 64., np.pi / 64.]
 
 # TIME FRAME TO QUERY HISTOGRAMS
 query_time_min = datetime.datetime(2011, 4, 1, 0, 0, 0)
-query_time_max = datetime.datetime(2011, 5, 1, 0, 0, 0)
-number_of_weeks = 4
-number_of_days = 30
+query_time_max = datetime.datetime(2011, 10, 1, 0, 0, 0)
+number_of_weeks = 27
+number_of_days = 180
 
 # DATABASE PATHS
+save_to_db = True
 database_dir = App.DATABASE_HOME
 sqlite_filename = App.DATABASE_FNAME
 # initialize database connection
@@ -51,7 +53,7 @@ moving_avg_centers = np.array([np.datetime64(str(query_time_min)) + ii*np.timede
 # returns moving width based of number of days
 moving_width = np.timedelta64(number_of_days, 'D')
 
-results_mu = np.zeros((len(moving_avg_centers), len(instruments), 17, len(optim_vals_mu)))
+results_mu = np.zeros((len(moving_avg_centers), len(instruments), n_mu_bins-1, len(optim_vals_mu)))
 results_cubic = np.zeros((len(moving_avg_centers), len(instruments), len(optim_vals_cubic)))
 results_power = np.zeros((len(moving_avg_centers), len(instruments), len(optim_vals_power)))
 results_theo = np.zeros((len(moving_avg_centers), len(instruments), len(optim_vals_theo)))
@@ -69,7 +71,7 @@ for date_index, center_date in enumerate(moving_avg_centers):
 
         # query the histograms for time range based off moving average centers
         query_instrument = [instrument, ]
-        pd_hist = query_hist(db_session=db_session, n_mu_bins = n_mu_bins, n_intensity_bins = n_intensity_bins,
+        pd_hist = query_hist(db_session=db_session, n_mu_bins = n_mu_bins, n_intensity_bins = n_intensity_bins, lat_band = lat_band,
                              time_min = np.datetime64(min_date).astype(datetime.datetime), time_max = np.datetime64(max_date).astype(datetime.datetime),
                              instrument=query_instrument)
 
@@ -125,12 +127,13 @@ for date_index, center_date in enumerate(moving_avg_centers):
         results_theo[date_index, inst_index, 8] = optim_out3.status
 
         ###### STORE RESULT PARAMETERS IN DATABASE #######
-        meth_name = 'LBCC'
-        meth_desc = 'LBCC Method'
-        var_name = "TheoVar"
-        var_desc = "Theoretic fit parameter at index "
-        store_lbcc_values(db_session, pd_hist, meth_name, meth_desc, var_name, var_desc, date_index,
-                          inst_index, optim_vals = optim_vals_theo,  results = results_theo, create=True)
+        if save_to_db:
+            meth_name = 'LBCC'
+            meth_desc = 'LBCC Method'
+            var_name = "TheoVar"
+            var_desc = "Theoretic fit parameter at index "
+            store_lbcc_values(db_session, pd_hist, meth_name, meth_desc, var_name, var_desc, date_index,
+                              inst_index, optim_vals = optim_vals_theo,  results = results_theo, create=True)
 
 
         # -- fit the POWER/LOG functionals -------------
@@ -151,10 +154,11 @@ for date_index, center_date in enumerate(moving_avg_centers):
         results_power[date_index, inst_index, 5] = optim_out2.status
 
         ###### STORE RESULT PARAMETERS IN DATABASE #######
-        var_name = "PowerVar"
-        var_desc = "Power fit parameter at index "
-        store_lbcc_values(db_session, pd_hist, meth_name, meth_desc, var_name, var_desc, date_index,
-                          inst_index, optim_vals = optim_vals_power,  results = results_power, create=True)
+        if save_to_db:
+            var_name = "PowerVar"
+            var_desc = "Power fit parameter at index "
+            store_lbcc_values(db_session, pd_hist, meth_name, meth_desc, var_name, var_desc, date_index,
+                              inst_index, optim_vals = optim_vals_power,  results = results_power, create=True)
 
 
         # -- fit constrained CUBIC functionals -------
@@ -190,10 +194,11 @@ for date_index, center_date in enumerate(moving_avg_centers):
         results_cubic[date_index, inst_index, 8] = optim_out1.status
 
         ###### STORE RESULT PARAMETERS IN DATABASE #######
-        var_name = "CubicVar"
-        var_desc = "Cubic fit parameter at index "
-        store_lbcc_values(db_session, pd_hist, meth_name, meth_desc, var_name, var_desc, date_index,
-                          inst_index, optim_vals = optim_vals_cubic,  results = results_cubic, create=True)
+        if save_to_db:
+            var_name = "CubicVar"
+            var_desc = "Cubic fit parameter at index "
+            store_lbcc_values(db_session, pd_hist, meth_name, meth_desc, var_name, var_desc, date_index,
+                              inst_index, optim_vals = optim_vals_cubic,  results = results_cubic, create=True)
 
         # -- Do MU-BIN direct calcs of beta and y -----
         ref_peak_index = np.argmax(hist_ref)
@@ -231,10 +236,11 @@ for date_index, center_date in enumerate(moving_avg_centers):
             results_mu[date_index, inst_index, ii, 4] = optim_result.status
 
             ###### STORE RESULT PARAMETERS IN DATABASE ########
-            var_name = "MuBinVar"
-            var_desc = "Mu Bins fit parameter at index "
-            store_mu_values(db_session, pd_hist, meth_name, meth_desc, var_name, var_desc, date_index,
-                              inst_index, ii, optim_vals = optim_vals_mu,  results = results_mu, create=True)
+            if save_to_db:
+                var_name = "MuBinVar"
+                var_desc = "Mu Bins fit parameter at index "
+                store_mu_values(db_session, pd_hist, meth_name, meth_desc, var_name, var_desc, date_index,
+                                  inst_index, ii, optim_vals = optim_vals_mu,  results = results_mu, create=True)
 
         end_time_tot = time.time()
         print("Total elapsed time: " + str(round(end_time_tot - start_time_tot, 3)) + " seconds.")

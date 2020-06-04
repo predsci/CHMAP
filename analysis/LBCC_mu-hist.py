@@ -1,7 +1,9 @@
 """
 construct mu-histogram and push to database for any time period
 """
-
+import sys
+# path to modules and settings folders
+sys.path.append('/Users/tamarervin/work/chd')
 import os
 import datetime
 import numpy as np
@@ -16,8 +18,8 @@ import modules.datatypes as psi_d_types
 generate_plots = False
 
 # TIME RANGE
-query_time_min = datetime.datetime(2011, 1, 4, 0, 0, 0)
-query_time_max = datetime.datetime(2011, 1, 8, 0, 0, 0)
+query_time_min = datetime.datetime(2011, 1, 1, 0, 0, 0)
+query_time_max = datetime.datetime(2012, 1, 1, 0, 0, 0)
 
 # define instruments
 inst_list = ["AIA", "EUVI-A", "EUVI-B"]
@@ -31,7 +33,7 @@ R0 = 1.01
 mu_bin_edges = np.array(range(n_mu_bins + 1), dtype="float") * 0.05 + 0.1
 image_intensity_bin_edges = np.linspace(0, 5, num=n_intensity_bins + 1, dtype='float')
 log10 = True
-lat_band = [-np.pi / 64., np.pi / 64.]
+lat_band = [- 2* np.pi / 64., 2 * np.pi / 64.]
 
 # recover database paths
 raw_data_dir = App.RAW_DATA_HOME
