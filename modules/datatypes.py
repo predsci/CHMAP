@@ -401,7 +401,7 @@ class LBCCHist:
         date_format = "%Y-%m-%dT%H:%M:%S.%f"
         hist_data = {'image_id': self.image_id, 'date_obs':datetime.datetime.strptime(self.info['date_string'], date_format), 'wavelength':self.info['wavelength'],
                      'instrument':self.info['instrument'], 'n_mu_bins': self.n_mu_bins,
-                     'n_mu_bins': self.n_intensity_bins, 'lat_band': self.lat_band,
+                     'n_intensity_bins': self.n_intensity_bins, 'lat_band': self.lat_band,
                      'mu_bin_edges':self.mu_bin_edges, 'intensity_bin_edges': self.intensity_bin_edges,
                      'all_hists': self.mu_hist}
         return hist_data

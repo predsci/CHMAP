@@ -12,9 +12,10 @@ import numpy as np
 import astropy.time as astro_time
 import collections  # for checking if an input is iterable
 import sunpy.map
+import datetime
 
-from sqlalchemy import create_engine, func, or_
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy import create_engine, func, or_, union_all, case
+from sqlalchemy.orm import sessionmaker, aliased
 
 from settings.app import App
 from modules.DB_classes import *
@@ -651,7 +652,7 @@ def get_var_id(db_session, meth_id, var_name=None, var_desc=None, create=False):
     return db_session, var_id
 
 
-def get_var_val(db_session, combo_id, meth_id, var_id, var_val=None, create=False):
+def get_var_val(db_session, combo_id, meth_id, var_id, var_val=None, mu_bin_value = None, create=False):
     """
     Query for variable value by combo_id and var_id
     @param db_session: db_session that connects to the database.
@@ -678,7 +679,7 @@ def get_var_val(db_session, combo_id, meth_id, var_id, var_val=None, create=Fals
 
     if create and not val_exists:
         # create variable value record
-        add_val = Var_Vals(combo_id = combo_id, meth_id = meth_id, var_id = var_id, var_val = var_val)
+        add_val = Var_Vals(combo_id = combo_id, meth_id = meth_id, var_id = var_id, var_val = var_val, mu_bin_value = mu_bin_value)
         db_session.add(add_val)
         # push change to DB and return var_val
         db_session.commit()
@@ -1094,6 +1095,18 @@ def pdseries_tohdf(pd_series):
 
 
 def query_hist(db_session, n_mu_bins, n_intensity_bins, lat_band, time_min=None, time_max=None, instrument=None, wavelength=None):
+    """
+    query histogram based on time frame
+    @param db_session:
+    @param n_mu_bins:
+    @param n_intensity_bins:
+    @param lat_band:
+    @param time_min:
+    @param time_max:
+    @param instrument:
+    @param wavelength:
+    @return: pandas dataframe
+    """
     if time_min is None and time_max is None:
         # get entire DB
         query_out = pd.read_sql(db_session.query(LBCC_Hist).statement, db_session.bind)
@@ -1111,7 +1124,8 @@ def query_hist(db_session, n_mu_bins, n_intensity_bins, lat_band, time_min=None,
         else:
             query_out = pd.read_sql(db_session.query(LBCC_Hist).filter(LBCC_Hist.date_obs >= time_min,
                                                                          LBCC_Hist.date_obs <= time_max,
-                                                                         LBCC_Hist.instrument.in_(instrument),
+                                                                         LBCC_Hist.instrument.in_(
+                                                                             instrument),
                                                                          LBCC_Hist.n_mu_bins == n_mu_bins,
                                                                          LBCC_Hist.n_intensity_bins == n_intensity_bins,
                                                                          LBCC_Hist.lat_band == lat_band
@@ -1131,12 +1145,13 @@ def query_hist(db_session, n_mu_bins, n_intensity_bins, lat_band, time_min=None,
         else:
             query_out = pd.read_sql(db_session.query(LBCC_Hist).filter(LBCC_Hist.date_obs >= time_min,
                                                                          LBCC_Hist.date_obs <= time_max,
-                                                                         LBCC_Hist.instrument.in_(instrument),
+                                                                         LBCC_Hist.instrument.in_(
+                                                                             instrument),
                                                                          LBCC_Hist.wavelength.in_(
                                                                              wavelength),
-                                                                       LBCC_Hist.n_mu_bins == n_mu_bins,
-                                                                       LBCC_Hist.n_intensity_bins == n_intensity_bins,
-                                                                       LBCC_Hist.lat_band == lat_band
+                                                                         LBCC_Hist.n_mu_bins == n_mu_bins,
+                                                                         LBCC_Hist.n_intensity_bins == n_intensity_bins,
+                                                                         LBCC_Hist.lat_band == lat_band
                                                                        ).statement,
                                     db_session.bind)
 
@@ -1163,8 +1178,8 @@ def add_lbcc_hist(lbcc_hist, db_session):
     # check if row already exists in DB
     existing_row_id = db_session.query(LBCC_Hist.hist_id).filter(
         LBCC_Hist.image_id == lbcc_hist.image_id,
-        LBCC_Hist.n_mu_bins == mu_bin_edges,
-        LBCC_Hist.n_intensity_bins == intensity_bin_edges,
+        LBCC_Hist.n_mu_bins == lbcc_hist.n_mu_bins,
+        LBCC_Hist.n_intensity_bins == lbcc_hist.n_intensity_bins,
         LBCC_Hist.instrument == lbcc_hist.info['instrument'],
         LBCC_Hist.date_obs == datetime.datetime.strptime(lbcc_hist.info['date_string'], date_format),
         LBCC_Hist.lat_band == lat_band,
@@ -1184,7 +1199,7 @@ def add_lbcc_hist(lbcc_hist, db_session):
         # Construct new DB table row
         hist_add = LBCC_Hist(image_id = lbcc_hist.image_id, date_obs=datetime.datetime.strptime(lbcc_hist.info['date_string'], date_format),
                              instrument=lbcc_hist.info['instrument'], wavelength=lbcc_hist.info['wavelength'],
-                             n_mu_bins = mu_bin_edges, n_intensity_bins = intensity_bin_edges,
+                             n_mu_bins = lbcc_hist.n_mu_bins, n_intensity_bins = lbcc_hist.n_intensity_bins,
                              lat_band = lat_band, intensity_bin_edges = intensity_bin_edges, mu_bin_edges = mu_bin_edges,
                              mu_hist = mu_hist)
         # Append to the list of rows to be added
@@ -1192,9 +1207,6 @@ def add_lbcc_hist(lbcc_hist, db_session):
         print(("Database row added for " + lbcc_hist.info['instrument'] + ", wavelength: " +
                str(lbcc_hist.info['wavelength']) + ", timestamp: " + lbcc_hist.info['date_string']))
     db_session.commit()
-
-
-
     return db_session
 
 
@@ -1304,3 +1316,106 @@ def store_mu_values(db_session, pd_hist, meth_name, meth_desc, var_name, var_des
         get_var_val(db_session, combo_id, method_id, var_id, var_val, create)
 
     return db_session
+
+def store_beta_y_values(db_session, pd_hist, meth_name, meth_desc, var_name, var_desc, var_index, mu_value, beta_y_parameters, create=False):
+
+    # create image combos in db table
+    # get image_ids from queried histograms - same as ids in euv_images table
+    image_ids = tuple(pd_hist['image_id'])
+    combo_id_info = get_combo_id(db_session, image_ids, create)
+    combo_id = combo_id_info[1]
+
+    # create association between combo and image_id
+    for image_id in image_ids:
+        add_combo_image_assoc(db_session, combo_id, image_id)
+
+    # create variables in database]
+    for i in range(len(beta_y_parameters)):
+        #### definitions #####
+        # create variable definitions
+        if i == 0:
+            beta_y = "Beta"
+        elif i == 1:
+            beta_y = "Y"
+        elif i == 2:
+            beta_y = "SSE"
+
+        var_name_i = var_name + beta_y + str(var_index)
+        var_desc_i = var_desc + beta_y + str(var_index)
+
+        ##### store values #####
+        # add method to db
+        method_id_info = get_method_id(db_session, meth_name, meth_desc, var_name_i, var_desc_i, create=create)
+        method_id = method_id_info[1]
+        # add variable to db
+        var_id_info = get_var_id(db_session, method_id, var_name_i, var_desc_i, create=create)
+        var_id = int(var_id_info[1])
+        # add variable value to database
+        var_val = beta_y_parameters[i]
+        get_var_val(db_session, combo_id, method_id, var_id, var_val, mu_bin_value = mu_value, create = create)
+
+    return db_session
+
+
+def query_lbcc_fit(db_session, image, meth_name):
+
+    image_id = image.image_id
+    date_obs = image.date_obs
+    instrument = image.instrument
+
+    # get method id based on method name
+    method_id_info = get_method_id(db_session, meth_name, meth_desc=None, var_names=None, var_descs=None, create=False)
+
+    # query for combo id
+    # check date_obs against mean date of image combo
+    image_combo_query = pd.read_sql(db_session.query(Image_Combos).filter(Image_Combos.date_mean == date_obs
+                                                                                   ).statement,
+                    db_session.bind)
+
+    # if none, then need to find closest center date
+    if len(image_combo_query) == 0:
+        image_combo_query = return_closest_combo(db_session, Image_Combos, Image_Combos.date_mean, date_obs)
+
+    # get variable id info based on method and combo id
+    var_id_query = pd.read_sql(db_session.query(Var_Vals.var_id).filter(Var_Vals.meth_id == method_id_info[1],
+                                                                        Var_Vals.combo_id == image_combo_query.combo_id).statement,
+                               db_session.bind)
+
+    # query var_val for variables values near the date_obs
+    var_vals = np.zeros((len(var_id_query)))
+    for i, var_id in enumerate(var_id_query.var_id):
+        var_val_query = pd.read_sql(db_session.query(Var_Vals).filter(Var_Vals.combo_id == image_combo_query.combo_id,
+                                                                      Var_Vals.var_id == var_id
+                                                                      ).statement,
+                                    db_session.bind)
+
+        var_vals[i] = var_val_query.var_val[0]
+    return var_vals
+
+def return_closest_combo(db_session, class_name, class_column, time):
+    """
+    function to return combo_id with mean date closest to that of date observed
+    @param db_session:
+    @param class_name: name of sqlalchemy class
+    @param class_column: class_name.column_name
+    @param time: date observed for image
+    @return:
+    """
+    greater = db_session.query(class_name).filter(class_column > time). \
+        order_by(class_name.date_mean.asc()).limit(1).subquery().select()
+
+
+    lesser = db_session.query(class_name).filter(class_column <= time). \
+        order_by(class_column.desc()).limit(1).subquery().select()
+
+    the_union = union_all(lesser, greater).alias()
+    the_alias = aliased(class_name, the_union)
+    the_diff = getattr(the_alias, class_column.name) - time
+    abs_diff = case([(the_diff < datetime.timedelta(0), -the_diff)],
+    else_ = the_diff)
+
+    image_combo_query = db_session.query(the_alias). \
+        order_by(abs_diff.asc()). \
+        first()
+
+    return image_combo_query

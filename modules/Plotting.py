@@ -90,3 +90,32 @@ def PlotMap(map_plot, nfig=None, title=None):
 
     plt.show(block=False)
     return None
+
+def PlotLBCCImage(lbcc_data, los_image, nfig=None, title=None):
+
+    # set color map
+    norm = mpl.colors.LogNorm(vmin=1.0, vmax=np.nanmax(los_image.data))
+    # norm = mpl.colors.LogNorm()
+    im_cmap = plt.get_cmap('sohoeit195')
+
+    plot_arr = lbcc_data
+    plot_arr[plot_arr < .001] = .001
+
+    # plot the initial image
+    if nfig is None:
+        cur_figs = plt.get_fignums()
+        if not nfig:
+            nfig = 0
+        else:
+            nfig = cur_figs.max() + 1
+
+    plt.figure(nfig)
+
+    plt.imshow(plot_arr, extent=[los_image.x.min(), los_image.x.max(), los_image.y.min(), los_image.y.max()],
+               origin="lower", cmap=im_cmap, aspect="equal", norm=norm)
+    plt.xlabel("x (solar radii)")
+    plt.ylabel("y (solar radii)")
+    if title is not None:
+        plt.title(title)
+
+    return None

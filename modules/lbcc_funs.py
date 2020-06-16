@@ -459,3 +459,20 @@ def get_beta_y_theoretic_based(x, mu):
 
     return beta, y
 
+def get_beta_y_theoretic_matrix(x, mu_array):
+    """
+    theoretic form of LBCC optimization
+    using array of mu values
+    @param x: list of parameter values
+    @param mu: array of mu bins
+    @return: array of beta and y values
+    """
+
+    beta_y_array = np.zeros((len(mu_array), 2))
+
+    for mu_index, mu in enumerate(mu_array):
+        beta_theoretic, y_theoretic = get_beta_y_theoretic_based(x,mu)
+        beta_y_array[mu_index, 0] = beta_theoretic
+        beta_y_array[mu_index, 1] = y_theoretic
+
+    return beta_y_array
