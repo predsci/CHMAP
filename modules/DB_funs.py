@@ -679,7 +679,7 @@ def get_var_val(db_session, combo_id, meth_id, var_id, var_val=None, mu_bin_valu
 
     if create and not val_exists:
         # create variable value record
-        add_val = Var_Vals(combo_id = combo_id, meth_id = meth_id, var_id = var_id, var_val = var_val, mu_bin_value = mu_bin_value)
+        add_val = Var_Vals(combo_id = combo_id, meth_id = meth_id, var_id = var_id, var_val = var_val)
         db_session.add(add_val)
         # push change to DB and return var_val
         db_session.commit()
@@ -1210,54 +1210,54 @@ def add_lbcc_hist(lbcc_hist, db_session):
     return db_session
 
 
-def query_var_val(db_session, n_mu_bins, n_intensity_bins, lat_band, center_date, moving_width, meth_name, instrument=None):
+def query_var_val(db_session, meth_name, image, instrument):
     """
-    query all variable values corresponding to a certain image combination
+    query variable value corresponding to image
     @param db_session:
-    @param center_date:
-    @param moving_width:
     @param meth_name:
+    @param image:
     @param instrument:
     @return:
     """
-    min_date = center_date - moving_width / 2
-    max_date = center_date + moving_width / 2
 
-    # query histograms to get image ids
-    query_instrument = [instrument, ]
-    pd_hist = query_hist(db_session=db_session, n_mu_bins=n_mu_bins,
-                         n_intensity_bins=n_intensity_bins, lat_band = lat_band,
-                         time_min=np.datetime64(min_date).astype(datetime.datetime),
-                         time_max=np.datetime64(max_date).astype(datetime.datetime),
-                         instrument=query_instrument)
+    # definitions
+    date_obs = image.info['date_string']
 
-    # query image_combos for combo id
-    image_ids = tuple(pd_hist['image_id'])
-    combo_id_info = get_combo_id(db_session, image_ids, create=False)
+    # query for combo id
+    # check date_obs against mean date of image combo
+    combo_id_query = pd.read_sql(db_session.query(Image_Combos).filter(Image_Combos.date_mean == date_obs).statement,
+                               db_session.bind)
+    #print('image combo', combo_id_query)
+    # if none, then need to find closest center date
+    if len(combo_id_query) ==0:
+        combo_id_query = return_closest_combo(db_session, Image_Combos, Image_Combos.date_mean, date_obs)
 
+    print('combo', combo_id_query.combo_id)
     # query meth_defs for method id
     method_id_info = get_method_id(db_session, meth_name, meth_desc=None, var_names=None, var_descs=None, create=False)
-
+    #print('method id', method_id_info[1])
     # query var_defs for variable id
     var_id_query = pd.read_sql(db_session.query(Var_Defs.var_id).filter(Var_Defs.meth_id == method_id_info[1]).statement,
                                db_session.bind)
-
+    #print('var id query', var_id_query)
     # query var_vals for variable value
-    for i in range(var_id_query.size):
-        #print("combo id: ",combo_id_info[1], "var id", var_id_query.var_id[i])
-        var_val_query = pd.read_sql(db_session.query(Var_Vals).filter(Var_Vals.combo_id == combo_id_info[1],
+    var_val = np.zeros((var_id_query.var_id.size))
+    for i, var_id in enumerate(var_id_query.var_id):
+        #print(var_id)
+        var_val_query = pd.read_sql(db_session.query(Var_Vals).filter(Var_Vals.combo_id == combo_id_query.combo_id,
+                                                                      Var_Vals.var_id == var_id
                                                                  ).statement,
                                db_session.bind)
-        #print("var val", var_val_query.var_val)
+        var_val[i] = var_val_query.var_val
 
-    return var_val_query.var_val
+    return var_val
 
 def store_lbcc_values(db_session, pd_hist, meth_name, meth_desc, var_name, var_desc, date_index, inst_index, optim_vals, results, create=False):
 
     # create image combos in db table
     # get image_ids from queried histograms - same as ids in euv_images table
     image_ids = tuple(pd_hist['image_id'])
-    combo_id_info = get_combo_id(db_session, image_ids, create)
+    combo_id_info = get_combo_id(db_session, image_ids, create=create)
     combo_id = combo_id_info[1]
 
     # create association between combo and image_id
@@ -1280,7 +1280,7 @@ def store_lbcc_values(db_session, pd_hist, meth_name, meth_desc, var_name, var_d
         var_id = int(var_id_info[1])
         # add variable value to database
         var_val = results[date_index, inst_index, i]
-        get_var_val(db_session, combo_id, method_id, var_id, var_val, create)
+        get_var_val(db_session, combo_id, method_id, var_id, var_val, create=create)
 
     return db_session
 
@@ -1317,7 +1317,7 @@ def store_mu_values(db_session, pd_hist, meth_name, meth_desc, var_name, var_des
 
     return db_session
 
-def store_beta_y_values(db_session, pd_hist, meth_name, meth_desc, var_name, var_desc, var_index, mu_value, beta_y_parameters, create=False):
+def store_beta_y_values(db_session, pd_hist, meth_name, meth_desc, var_name, var_desc, beta_y_parameters, create=False):
 
     # create image combos in db table
     # get image_ids from queried histograms - same as ids in euv_images table
@@ -1337,11 +1337,9 @@ def store_beta_y_values(db_session, pd_hist, meth_name, meth_desc, var_name, var
             beta_y = "Beta"
         elif i == 1:
             beta_y = "Y"
-        elif i == 2:
-            beta_y = "SSE"
 
-        var_name_i = var_name + beta_y + str(var_index)
-        var_desc_i = var_desc + beta_y + str(var_index)
+        var_name_i = var_name + beta_y
+        var_desc_i = var_desc + beta_y
 
         ##### store values #####
         # add method to db
@@ -1351,8 +1349,9 @@ def store_beta_y_values(db_session, pd_hist, meth_name, meth_desc, var_name, var
         var_id_info = get_var_id(db_session, method_id, var_name_i, var_desc_i, create=create)
         var_id = int(var_id_info[1])
         # add variable value to database
+        # beta_y_binary = beta_y_parameters[i].tobytes()
         var_val = beta_y_parameters[i]
-        get_var_val(db_session, combo_id, method_id, var_id, var_val, mu_bin_value = mu_value, create = create)
+        get_var_val(db_session, combo_id, method_id, var_id, var_val, create = create)
 
     return db_session
 
@@ -1374,13 +1373,14 @@ def query_lbcc_fit(db_session, image, meth_name):
 
     # if none, then need to find closest center date
     if len(image_combo_query) == 0:
+        # print("Finding closest")
         image_combo_query = return_closest_combo(db_session, Image_Combos, Image_Combos.date_mean, date_obs)
 
     # get variable id info based on method and combo id
-    var_id_query = pd.read_sql(db_session.query(Var_Vals.var_id).filter(Var_Vals.meth_id == method_id_info[1],
+    var_id_query = pd.read_sql(db_session.query(Var_Vals.var_id).filter(Var_Vals.meth_id == method_id_info.meth_id,
                                                                         Var_Vals.combo_id == image_combo_query.combo_id).statement,
                                db_session.bind)
-
+    #print("found var id")
     # query var_val for variables values near the date_obs
     var_vals = np.zeros((len(var_id_query)))
     for i, var_id in enumerate(var_id_query.var_id):
@@ -1388,9 +1388,13 @@ def query_lbcc_fit(db_session, image, meth_name):
                                                                       Var_Vals.var_id == var_id
                                                                       ).statement,
                                     db_session.bind)
-
-        var_vals[i] = var_val_query.var_val[0]
-    return var_vals
+        #print("var val query")
+        if i == 0:
+            beta = var_val_query.var_val[0]
+        if i == 1:
+            y = var_val_query.var_val[0]
+        #print("got var vals")
+    return beta, y
 
 def return_closest_combo(db_session, class_name, class_column, time):
     """

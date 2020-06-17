@@ -12,15 +12,20 @@ import os
 import modules.lbcc_funs as lbcc
 from settings.app import App
 from modules.DB_funs import init_db_conn, query_hist, get_combo_id, add_combo_image_assoc, get_method_id, get_var_id, \
-    get_var_val, store_lbcc_values, store_mu_values, store_beta_y_values
+    get_var_val, store_lbcc_values, store_mu_values, store_beta_y_values, query_euv_images
 import modules.datatypes as psi_d_types
 import modules.DB_classes as db_class
+import modules.Plotting as Plotting
 
 
 # HISTOGRAM PARAMETERS TO UPDATE
 n_mu_bins = 18  # number of mu bins
 n_intensity_bins = 200  # number of intensity bins
 lat_band = [- np.pi / 64., np.pi / 64.]
+R0 = 1.01
+# define directory paths
+raw_data_dir = App.RAW_DATA_HOME
+hdf_data_dir = App.PROCESSED_DATA_HOME
 
 # TIME FRAME TO QUERY HISTOGRAMS
 query_time_min = datetime.datetime(2011, 4, 1, 0, 0, 0)
@@ -29,6 +34,7 @@ number_of_weeks = 1
 number_of_days = 2
 
 # DATABASE PATHS
+create = True # true if save to database
 database_dir = App.DATABASE_HOME
 sqlite_filename = App.DATABASE_FNAME
 # initialize database connection
@@ -38,16 +44,15 @@ db_session = init_db_conn(db_name=use_db, chd_base=db_class.Base, sqlite_path=sq
 
 # ------------ NO NEED TO UPDATE ANYTHING BELOW  ------------- #
 
-instruments = ['AIA', "EUVI-A", "EUVI-B"]
-optim_vals_theo = ["a1", "a2", "b1", "b2", "n", "log_alpha", "SSE", "optim_time", "optim_status"]
-
 # returns array of moving averages center dates, based off start date and number of weeks
-moving_avg_centers = np.array(
-    [np.datetime64(str(query_time_min)) + ii * np.timedelta64(1, 'W') for ii in range(number_of_weeks)])
+moving_avg_centers = np.array([np.datetime64(str(query_time_min)) + ii * np.timedelta64(1, 'W') for \
+                               ii in range(number_of_weeks)])
 
 # returns moving width based of number of days
 moving_width = np.timedelta64(number_of_days, 'D')
 
+instruments = ['AIA', "EUVI-A", "EUVI-B"]
+optim_vals_theo = ["a1", "a2", "b1", "b2", "n", "log_alpha", "SSE", "optim_time", "optim_status"]
 results_theo = np.zeros((len(moving_avg_centers), len(instruments), len(optim_vals_theo)))
 
 for date_index, center_date in enumerate(moving_avg_centers):
@@ -121,24 +126,12 @@ for date_index, center_date in enumerate(moving_avg_centers):
         results_theo[date_index, inst_index, 7] = round(end3 - start3, 3)
         results_theo[date_index, inst_index, 8] = optim_out3.status
 
-        # theoretic parameters
-        sse_index_theo = np.array([x == "SSE" for x in optim_vals_theo])
-        npar_theo = np.where(sse_index_theo)[0][0]
-
-        # get beta and y from theoretic fit
-        beta_y_theoretic = lbcc.get_beta_y_theoretic_matrix(results_theo[date_index, inst_index, 0:npar_theo],
-                                                                      mu_bin_centers)
-
-        # save to database
         meth_name = 'LBCC Theoretic'
         meth_desc = 'LBCC Theoretic Fit Method'
-        var_name = "Theoretic_"
-        var_desc = "Theoretic Parameter: "
-        for var_index, var_value in enumerate(beta_y_theoretic):
-            store_beta_y_values(db_session, pd_hist, meth_name, meth_desc, var_name, var_desc, var_index, mu_value = mu_bin_centers[var_index],
-                          beta_y_parameters=var_value, create=True)
-
+        var_name = "TheoVar"
+        var_desc = "Theoretic fit parameter at index "
+        store_lbcc_values(db_session, pd_hist, meth_name, meth_desc, var_name, var_desc, date_index,
+                          inst_index, optim_vals=optim_vals_theo, results=results_theo[0:6], create=create)
 
         end_time_tot = time.time()
         print("Total elapsed time: " + str(round(end_time_tot - start_time_tot, 3)) + " seconds.")
-
