@@ -15,7 +15,6 @@ from modules.DB_funs import init_db_conn, query_hist, get_combo_id, add_combo_im
     get_var_val, store_lbcc_values, store_mu_values, store_beta_y_values, query_euv_images
 import modules.datatypes as psi_d_types
 import modules.DB_classes as db_class
-import modules.Plotting as Plotting
 
 
 # HISTOGRAM PARAMETERS TO UPDATE
@@ -45,7 +44,7 @@ db_session = init_db_conn(db_name=use_db, chd_base=db_class.Base, sqlite_path=sq
 # ------------ NO NEED TO UPDATE ANYTHING BELOW  ------------- #
 
 # returns array of moving averages center dates, based off start date and number of weeks
-moving_avg_centers = np.array([np.datetime64(str(query_time_min)) + ii * np.timedelta64(1, 'W') for \
+moving_avg_centers = np.array([np.datetime64(str(query_time_min)) + ii * np.timedelta64(1, 'W') for\
                                ii in range(number_of_weeks)])
 
 # returns moving width based of number of days
@@ -131,7 +130,7 @@ for date_index, center_date in enumerate(moving_avg_centers):
         var_name = "TheoVar"
         var_desc = "Theoretic fit parameter at index "
         store_lbcc_values(db_session, pd_hist, meth_name, meth_desc, var_name, var_desc, date_index,
-                          inst_index, optim_vals=optim_vals_theo, results=results_theo[0:6], create=create)
+                          inst_index, optim_vals=optim_vals_theo[0:6], results=results_theo, create=create)
 
         end_time_tot = time.time()
         print("Total elapsed time: " + str(round(end_time_tot - start_time_tot, 3)) + " seconds.")

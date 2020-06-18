@@ -204,9 +204,6 @@ class Var_Vals(Base):
     meth_id = Column(Integer, ForeignKey('meth_defs.meth_id'))
     var_id = Column(Integer, ForeignKey('var_defs.var_id'), primary_key=True)
     var_val = Column(Float)
-    mu_bin_value = Column(Float)
-    # __table_args__ = (Index('var_val_index', "combo_id", "var_id", "meth_id", unique=True),
-                   #   Index('var_val_index2', "meth_id", "var_id"), Index('var_val_index3', "var_id"))
 
     var_info = relationship("Var_Defs")
     meth_info = relationship("Meth_Defs")

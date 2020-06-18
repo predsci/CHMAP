@@ -12,10 +12,7 @@ import modules.DB_classes as db_class
 from modules.DB_funs import init_db_conn, query_euv_images, add_lbcc_hist
 import modules.datatypes as psi_d_types
 
-# PARAMETERS TO UPDATE
-
-# generate plots if true
-generate_plots = False
+###### ------ PARAMETERS TO UPDATE -------- ########
 
 # TIME RANGE
 query_time_min = datetime.datetime(2011, 4, 1, 0, 0, 0)
@@ -62,11 +59,12 @@ for instrument in inst_list:
             continue
         hdf_path = os.path.join(hdf_data_dir, row.fname_hdf)
         los_temp = psi_d_types.read_los_image(hdf_path)
-        # add coordinates to los object (is there a way to do this outside the loop?)
+        # add coordinates to los object
         los_temp.get_coordinates(R0=R0)
         # perform 2D histogram on mu and image intensity
         temp_hist = los_temp.mu_hist(image_intensity_bin_edges, mu_bin_edges, lat_band=lat_band, log10=log10)
-        hist_lbcc = psi_d_types.create_hist(hdf_path, row.image_id, mu_bin_edges, image_intensity_bin_edges, lat_band, temp_hist)
+        hist_lbcc = psi_d_types.create_hist(hdf_path, row.image_id, mu_bin_edges, image_intensity_bin_edges, lat_band,
+                                            temp_hist)
 
         # add this histogram and meta data to database
         add_lbcc_hist(hist_lbcc, db_session)

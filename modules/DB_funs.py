@@ -1223,28 +1223,34 @@ def query_var_val(db_session, meth_name, image, instrument):
     # definitions
     date_obs = image.info['date_string']
 
-    # query for combo id
-    # check date_obs against mean date of image combo
-    combo_id_query = pd.read_sql(db_session.query(Image_Combos).filter(Image_Combos.date_mean == date_obs).statement,
-                               db_session.bind)
-    #print('image combo', combo_id_query)
-    # if none, then need to find closest center date
-    if len(combo_id_query) ==0:
-        combo_id_query = return_closest_combo(db_session, Image_Combos, Image_Combos.date_mean, date_obs)
+    combo_date_query = return_closest_combo(db_session, Image_Combos, Image_Combos.date_mean, date_obs)
 
-    print('combo', combo_id_query.combo_id)
+    # query for combo ids that correspond to instruments
+    # determine image_ids that correspond to instrument
+    inst_image_query = pd.read_sql(db_session.query(EUV_Images).filter(EUV_Images.instrument == instrument).statement,
+                                   db_session.bind)
+    # get image_ids corresponding to these combo_ids
+    inst_combo_query = pd.read_sql(db_session.query(Image_Combo_Assoc.combo_id).filter(Image_Combo_Assoc.image_id.in_(
+        inst_image_query.image_id)).statement,
+                               db_session.bind)
+
+    # determine the match
+    for i, combo_date in enumerate(combo_date_query.combo_id):
+        for j, combo_inst in enumerate(inst_combo_query.combo_id):
+            if combo_date == combo_inst:
+                combo_id = combo_date
+    print("combo id: ", combo_id)
     # query meth_defs for method id
     method_id_info = get_method_id(db_session, meth_name, meth_desc=None, var_names=None, var_descs=None, create=False)
-    #print('method id', method_id_info[1])
+
     # query var_defs for variable id
     var_id_query = pd.read_sql(db_session.query(Var_Defs.var_id).filter(Var_Defs.meth_id == method_id_info[1]).statement,
                                db_session.bind)
-    #print('var id query', var_id_query)
+
     # query var_vals for variable value
     var_val = np.zeros((var_id_query.var_id.size))
     for i, var_id in enumerate(var_id_query.var_id):
-        #print(var_id)
-        var_val_query = pd.read_sql(db_session.query(Var_Vals).filter(Var_Vals.combo_id == combo_id_query.combo_id,
+        var_val_query = pd.read_sql(db_session.query(Var_Vals).filter(Var_Vals.combo_id == combo_id,
                                                                       Var_Vals.var_id == var_id
                                                                  ).statement,
                                db_session.bind)
@@ -1405,12 +1411,13 @@ def return_closest_combo(db_session, class_name, class_column, time):
     @param time: date observed for image
     @return:
     """
+    # TODO: is it possible the three closest are actually all from the same instrument, or 2/3 instruments...
     greater = db_session.query(class_name).filter(class_column > time). \
-        order_by(class_name.date_mean.asc()).limit(1).subquery().select()
+        order_by(class_name.date_mean.asc()).limit(3).subquery().select()
 
 
     lesser = db_session.query(class_name).filter(class_column <= time). \
-        order_by(class_column.desc()).limit(1).subquery().select()
+        order_by(class_column.desc()).limit(3).subquery().select()
 
     the_union = union_all(lesser, greater).alias()
     the_alias = aliased(class_name, the_union)
@@ -1418,8 +1425,7 @@ def return_closest_combo(db_session, class_name, class_column, time):
     abs_diff = case([(the_diff < datetime.timedelta(0), -the_diff)],
     else_ = the_diff)
 
-    image_combo_query = db_session.query(the_alias). \
-        order_by(abs_diff.asc()). \
-        first()
+    image_combo_query = pd.read_sql(db_session.query(the_alias).order_by(abs_diff.asc()).statement,
+                               db_session.bind)
 
     return image_combo_query

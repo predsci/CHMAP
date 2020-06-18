@@ -7,6 +7,7 @@ import matplotlib.pyplot as plt
 import matplotlib as mpl
 # import sunpy
 import numpy as np
+from settings.info import DTypes
 from astropy.visualization import AsymmetricPercentileInterval
 
 
@@ -93,13 +94,15 @@ def PlotMap(map_plot, nfig=None, title=None):
 
 def PlotLBCCImage(lbcc_data, los_image, nfig=None, title=None):
 
+    lbcc_data = lbcc_data.astype(DTypes.LOS_DATA)
+
     # set color map
     norm = mpl.colors.LogNorm(vmin=1.0, vmax=np.nanmax(los_image.data))
     # norm = mpl.colors.LogNorm()
     im_cmap = plt.get_cmap('sohoeit195')
 
     plot_arr = lbcc_data
-    plot_arr[plot_arr < .001] = .001
+    plot_arr[plot_arr <= .0] = .001
 
     # plot the initial image
     if nfig is None:
@@ -110,11 +113,43 @@ def PlotLBCCImage(lbcc_data, los_image, nfig=None, title=None):
             nfig = cur_figs.max() + 1
 
     plt.figure(nfig)
-
+    #plt.imshow(plot_arr, extent=[np.min(lbcc_data[0:]), np.max(lbcc_data[0:]), np.min(lbcc_data[1:]), np.amax(lbcc_data[1:])],
     plt.imshow(plot_arr, extent=[los_image.x.min(), los_image.x.max(), los_image.y.min(), los_image.y.max()],
                origin="lower", cmap=im_cmap, aspect="equal", norm=norm)
     plt.xlabel("x (solar radii)")
     plt.ylabel("y (solar radii)")
+    if title is not None:
+        plt.title(title)
+
+    return None
+
+def Plot2D_Data(data, nfig=None, xlabel=None, ylabel=None, title=None):
+
+    data = data /data.max()
+    # normalize by log10
+    norm = mpl.colors.LogNorm(vmin=1.0, vmax=data.max(), clip=True)
+
+    plot_arr = data
+    plot_arr[plot_arr < .001] = .001
+
+    if nfig is None:
+        cur_figs = plt.get_fignums()
+        if not nfig:
+            nfig = 0
+        else:
+            nfig = cur_figs.max() + 1
+
+    plt.figure(nfig)
+
+    plt.imshow(plot_arr, extent=[np.min(data[0:]), np.max(data[0:]), np.min(data[1:]), np.amax(data[1:])],
+               origin="lower", cmap='Greys', aspect="equal", norm=norm)
+    plt.colorbar()
+
+    # plot title and axes labels
+    if xlabel is not None:
+        plt.xlabel(xlabel)
+    if ylabel is not None:
+        plt.ylabel(ylabel)
     if title is not None:
         plt.title(title)
 

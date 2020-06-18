@@ -459,7 +459,7 @@ def get_beta_y_theoretic_based(x, mu):
 
     return beta, y
 
-def get_beta_y_theoretic_matrix(x, mu_array):
+def get_beta_y_theoretic_old(x, mu_array):
     """
     theoretic form of LBCC optimization
     using array of mu values
@@ -468,11 +468,33 @@ def get_beta_y_theoretic_matrix(x, mu_array):
     @return: array of beta and y values
     """
 
-    beta_y_array = np.zeros((len(mu_array), 2))
+    beta_array = np.zeros((len(mu_array), len(mu_array)))
+    y_array = np.zeros((len(mu_array), len(mu_array)))
+    for i in range(len(mu_array)):
+        for j in range(len(mu_array)):
+            if mu_array[i][j] == -9999:
+                beta_theoretic = 0
+                y_theoretic = 0
+            else:
+                beta_theoretic, y_theoretic = get_beta_y_theoretic_based(x, mu_array[i][j])
+            beta_array[i][j] = beta_theoretic
+            y_array[i][j]  = y_theoretic
 
-    for mu_index, mu in enumerate(mu_array):
-        beta_theoretic, y_theoretic = get_beta_y_theoretic_based(x,mu)
-        beta_y_array[mu_index, 0] = beta_theoretic
-        beta_y_array[mu_index, 1] = y_theoretic
+    return beta_array, y_array
 
-    return beta_y_array
+def get_beta_y_theoretic_continuous(x, mu_array):
+
+    array_1d = mu_array.flatten()
+    for i, element in enumerate(array_1d):
+        if element == -9999:
+            array_1d[i] = 0.000001
+    mu_array = array_1d.reshape((len(mu_array), len(mu_array)))
+
+    f1 = -x[0] + x[0] * mu_array + x[1] * np.log10(mu_array)
+    f0 = -x[2] + x[2] * mu_array + x[3] * np.log10(mu_array)
+    n = x[4]
+    log_alpha = x[5]
+    beta_array = n / (f1 + n)
+    y_array = (f1 * log_alpha / n - f0) * beta_array
+
+    return beta_array, y_array

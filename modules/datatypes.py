@@ -77,7 +77,7 @@ class LosImage:
 
         self.lat = cr_theta - np.pi/2.
         self.lon = cr_phi
-        self.mu  = image_mu
+        self.mu = image_mu
         self.no_data_val = outside_map_val
 
 
