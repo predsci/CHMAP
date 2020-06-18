@@ -5,10 +5,8 @@ Functions to plot EUV images and maps
 
 import matplotlib.pyplot as plt
 import matplotlib as mpl
-# import sunpy
 import numpy as np
-from settings.info import DTypes
-from astropy.visualization import AsymmetricPercentileInterval
+
 
 
 def PlotImage(los_image, nfig=None, mask_rad=1.5, title=None):
@@ -94,15 +92,13 @@ def PlotMap(map_plot, nfig=None, title=None):
 
 def PlotLBCCImage(lbcc_data, los_image, nfig=None, title=None):
 
-    lbcc_data = lbcc_data.astype(DTypes.LOS_DATA)
-
     # set color map
     norm = mpl.colors.LogNorm(vmin=1.0, vmax=np.nanmax(los_image.data))
     # norm = mpl.colors.LogNorm()
     im_cmap = plt.get_cmap('sohoeit195')
 
     plot_arr = lbcc_data
-    plot_arr[plot_arr <= .0] = .001
+    plot_arr[plot_arr < .001] = .001
 
     # plot the initial image
     if nfig is None:
@@ -113,7 +109,7 @@ def PlotLBCCImage(lbcc_data, los_image, nfig=None, title=None):
             nfig = cur_figs.max() + 1
 
     plt.figure(nfig)
-    #plt.imshow(plot_arr, extent=[np.min(lbcc_data[0:]), np.max(lbcc_data[0:]), np.min(lbcc_data[1:]), np.amax(lbcc_data[1:])],
+
     plt.imshow(plot_arr, extent=[los_image.x.min(), los_image.x.max(), los_image.y.min(), los_image.y.max()],
                origin="lower", cmap=im_cmap, aspect="equal", norm=norm)
     plt.xlabel("x (solar radii)")
@@ -125,7 +121,7 @@ def PlotLBCCImage(lbcc_data, los_image, nfig=None, title=None):
 
 def Plot2D_Data(data, nfig=None, xlabel=None, ylabel=None, title=None):
 
-    data = data /data.max()
+    #data = data /data.max()
     # normalize by log10
     norm = mpl.colors.LogNorm(vmin=1.0, vmax=data.max(), clip=True)
 
@@ -141,7 +137,7 @@ def Plot2D_Data(data, nfig=None, xlabel=None, ylabel=None, title=None):
 
     plt.figure(nfig)
 
-    plt.imshow(plot_arr, extent=[np.min(data[0:]), np.max(data[0:]), np.min(data[1:]), np.amax(data[1:])],
+    plt.imshow(plot_arr, extent=[np.amin(data[0:]), np.amax(data[0:]), np.amin(data[1:]), np.amax(data[1:])],
                origin="lower", cmap='Greys', aspect="equal", norm=norm)
     plt.colorbar()
 

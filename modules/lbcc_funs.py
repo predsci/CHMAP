@@ -2,11 +2,11 @@
 Functions for evaluating the Limb Brightening Correction Coeffecients
 """
 
-
 import numpy as np
 import scipy.interpolate as interp
 import scipy.optimize as optim
 import scipy.integrate as integrate
+
 
 def LinTrans_1Dhist(hist, bins, a, b):
     """
@@ -27,10 +27,10 @@ def LinTrans_1Dhist(hist, bins, a, b):
 
     # double check that bins are sorted
     if not np.all(np.diff(bins) > 0):
-        raise("from LinTrans_1Dhist(): bin edges must be a strictly ascending list or 1D array.")
+        raise ("from LinTrans_1Dhist(): bin edges must be a strictly ascending list or 1D array.")
 
     # histogram is accurately transformed by transforming bin edges
-    new_bins = bins*a + b
+    new_bins = bins * a + b
     # transform back to original bins by integration
     new_hist = hist_integration(hist, new_bins, bins)
 
@@ -51,7 +51,7 @@ def hist_integration(hist, old_bins, new_bins):
     """
     old_max = old_bins[-1]
     old_min = old_bins[0]
-    new_hist = np.full((len(new_bins)-1, ), 0., dtype='float')
+    new_hist = np.full((len(new_bins) - 1,), 0., dtype='float')
     for ii in range(len(new_bins) - 1):
         l_edge = new_bins[ii]
         r_edge = new_bins[ii + 1]
@@ -66,9 +66,9 @@ def hist_integration(hist, old_bins, new_bins):
                 # determine what portion of the new bin intersects the evaluation bin
                 l_overlap = max(l_edge, old_bins[bin_num])
                 r_overlap = min(r_edge, old_bins[bin_num + 1])
-                portion = (r_overlap - l_overlap)/(old_bins[bin_num + 1] - old_bins[bin_num])
+                portion = (r_overlap - l_overlap) / (old_bins[bin_num + 1] - old_bins[bin_num])
                 # add the appropriate portion to the evaluation bin
-                new_hist[ii] = new_hist[ii] + portion*hist[bin_num]
+                new_hist[ii] = new_hist[ii] + portion * hist[bin_num]
 
     # re-normalize the new histogram (should only be necessary when 'bins' range does not
     # fully encompass the non-zero values of hist)
@@ -92,8 +92,8 @@ def LinTrans_1DHist_Interp(hist, bins, a, b):
     if not np.all(np.diff(bins) > 0):
         raise ("from LinTrans_1Dhist(): bin edges must be a strictly ascending list or 1D array.")
 
-    bin_centers = (bins[:-1] + bins[1:])/2
-    new_centers = bin_centers*a + b
+    bin_centers = (bins[:-1] + bins[1:]) / 2
+    new_centers = bin_centers * a + b
 
     interp_fun = interp.interp1d(new_centers, hist, bounds_error=False, fill_value=0, assume_sorted=True)
     new_hist = interp_fun(bin_centers)
@@ -143,7 +143,7 @@ def optim_lbcc_linear(hist_ref, hist_fit, bin_edges, init_pars=np.asarray([1., 0
     :param init_pars: values of [Beta, y] to initialize the Nelder-Mead process
     :return: minimized
     """
-    #init_pars = np.asarray([1., 0.])
+    # init_pars = np.asarray([1., 0.])
 
     optim_out = optim.minimize(get_hist_sse, init_pars, args=(hist_fit, hist_ref, bin_edges), method="Nelder-Mead")
 
@@ -191,7 +191,7 @@ def get_functional_sse(x, hist_ref, hist_mat, mu_vec, int_bin_edges, model, tran
         elif model == 3:
             beta, y = get_beta_y_theoretic_based(x, mu)
         else:
-            raise("Error: in get_functional_sse(), model=" + str(model) + " is not a valid selection.")
+            raise ("Error: in get_functional_sse(), model=" + str(model) + " is not a valid selection.")
 
         sse = 0
         # check for limb-dimming parameters
@@ -203,16 +203,16 @@ def get_functional_sse(x, hist_ref, hist_mat, mu_vec, int_bin_edges, model, tran
         # Impose penalties for beta/y outside 0 <= beta*I + y <= 5 for I in [2,2.5]
         # Essentially, the 2 to 2.5 range of the original histogram must fall in the
         # range 0 to 5 after being transformed. Do not allow extreme shifts
-        if beta < -y/2.:
-            sse += abs(beta + y/2.)
-        elif beta > (5-y)/2.5:
-            sse += abs((5-y)/2.5 - beta)
+        if beta < -y / 2.:
+            sse += abs(beta + y / 2.)
+        elif beta > (5 - y) / 2.5:
+            sse += abs((5 - y) / 2.5 - beta)
         else:
             # calc the linear transformation of hist
             if trans_method == 1:
-                trans_hist = LinTrans_1Dhist(hist_mat[index, ], int_bin_edges, beta, y)
+                trans_hist = LinTrans_1Dhist(hist_mat[index,], int_bin_edges, beta, y)
             elif trans_method == 2:
-                trans_hist = LinTrans_1DHist_Interp(hist_mat[index, ], int_bin_edges, beta, y)
+                trans_hist = LinTrans_1DHist_Interp(hist_mat[index,], int_bin_edges, beta, y)
 
             # calc sum of squared errors
             sse += sum(np.square(trans_hist - hist_ref))
@@ -242,7 +242,7 @@ def optim_lbcc_functional_forms(hist_ref, hist_mat, mu_vec, int_bin_edges, init_
     if model == 1:
         # first check for the appropriate number of initial parameters
         if init_pars is not None and len(init_pars) != 6:
-            raise("Error: optim_lbcc_functional_forms(model=1) requires len(init_params)==6")
+            raise ("Error: optim_lbcc_functional_forms(model=1) requires len(init_params)==6")
         # set initial conditions and optim method
         if init_pars is None:
             init_pars = np.array([-1., 1.1, -0.4, 4.7, -5., 2.1])
@@ -262,8 +262,8 @@ def optim_lbcc_functional_forms(hist_ref, hist_mat, mu_vec, int_bin_edges, init_
         lin_constraint = optim.LinearConstraint(A, lb, ub)
 
         optim_out = optim.minimize(get_functional_sse, init_pars,
-                                    args=(hist_ref, hist_mat, mu_vec, int_bin_edges, model),
-                                    method=method, jac="2-point", constraints=lin_constraint)
+                                   args=(hist_ref, hist_mat, mu_vec, int_bin_edges, model),
+                                   method=method, jac="2-point", constraints=lin_constraint)
 
     elif model == 2:
         # first check for the appropriate number of initial parameters
@@ -291,7 +291,6 @@ def optim_lbcc_functional_forms(hist_ref, hist_mat, mu_vec, int_bin_edges, init_
         optim_out = optim.minimize(get_functional_sse, init_pars,
                                    args=(hist_ref, hist_mat, mu_vec, int_bin_edges, model),
                                    method=method)
-
 
     # init_pars = np.asarray([1., 0.])
     # optim_out = optim.minimize(get_functional_sse, init_pars, args=(hist_ref, hist_mat, mu_vec, int_bin_edges, model),
@@ -322,13 +321,13 @@ def eval_lbcc_4reduced_bins(norm_hist, image_intensity_bin_edges, int_bin_n, mu_
     """
     results = cur_results
 
-    for step in range(1, half_steps+1):
+    for step in range(1, half_steps + 1):
         if step == 1:
-            hist_ref = norm_hist[-1, ]
+            hist_ref = norm_hist[-1,]
             new_bins = image_intensity_bin_edges
         else:
-            new_bins = image_intensity_bin_edges[::2**(step - 1)]
-            hist_ref = hist_integration(norm_hist[-1, ], image_intensity_bin_edges, new_bins)
+            new_bins = image_intensity_bin_edges[::2 ** (step - 1)]
+            hist_ref = hist_integration(norm_hist[-1,], image_intensity_bin_edges, new_bins)
 
         n_bins = len(new_bins) - 1
         n_bin_index = np.where(np.equal(n_bins, int_bin_n))
@@ -339,15 +338,15 @@ def eval_lbcc_4reduced_bins(norm_hist, image_intensity_bin_edges, int_bin_n, mu_
 
         for ii in range(mu_bin_centers.__len__() - 1):
             if step == 1:
-                hist_fit = norm_hist[ii, ]
+                hist_fit = norm_hist[ii,]
             else:
-                hist_fit = hist_integration(norm_hist[ii, ], image_intensity_bin_edges, new_bins)
+                hist_fit = hist_integration(norm_hist[ii,], image_intensity_bin_edges, new_bins)
 
             # estimate correction coefs that match fit_peak to ref_peak
             fit_peak_index = np.argmax(hist_fit)
             fit_peak_val = hist_fit[fit_peak_index]
-            beta_est = fit_peak_val/ref_peak_val
-            y_est = new_bins[ref_peak_index] - beta_est*new_bins[fit_peak_index]
+            beta_est = fit_peak_val / ref_peak_val
+            y_est = new_bins[ref_peak_index] - beta_est * new_bins[fit_peak_index]
             init_pars = np.asarray([beta_est, y_est])
 
             # optimize correction coefs
@@ -358,7 +357,6 @@ def eval_lbcc_4reduced_bins(norm_hist, image_intensity_bin_edges, int_bin_n, mu_
             results[ii, n_bin_index, 2] = optim_result.fun
 
     return results
-
 
 
 def get_analytic_limb_brightening_curve(t=1.5e6, g_type=1, R0=1.0, mu_vec=None):
@@ -373,23 +371,23 @@ def get_analytic_limb_brightening_curve(t=1.5e6, g_type=1, R0=1.0, mu_vec=None):
     :return: vectors of observed brightness and corresponding mu values
     """
     # T_theory = 1.5e6
-    t_mas = t/2.807067e7      # Convert T to MAS units.
+    t_mas = t / 2.807067e7  # Convert T to MAS units.
 
     # Constants(MAS units)
-    g0 = 0.823/(R0**2)
+    g0 = 0.823 / (R0 ** 2)
     mu_w = 0.6
     kb = 1
     mp = 1
-    mu_limb = np.sqrt(1-1/(R0**2))
-    lamb = (kb*t_mas)/(g0*mu_w*mp)
+    mu_limb = np.sqrt(1 - 1 / (R0 ** 2))
+    lamb = (kb * t_mas) / (g0 * mu_w * mp)
 
     # Hard-coded parameters:
-    x_max = 10.      # Max x for integral
+    x_max = 10.  # Max x for integral
     dx = 0.0001
 
     if mu_vec is None:
-        n_mu = 50   # Number of mu points in curve (size of array).
-        mu_vec = np.linspace(mu_limb, 1, num=n_mu)    # Equal-spaced mu values to mu=1.
+        n_mu = 50  # Number of mu points in curve (size of array).
+        mu_vec = np.linspace(mu_limb, 1, num=n_mu)  # Equal-spaced mu values to mu=1.
 
     # define x-grid to integrate over
     x_vec = np.arange(0., x_max, dx)
@@ -398,18 +396,18 @@ def get_analytic_limb_brightening_curve(t=1.5e6, g_type=1, R0=1.0, mu_vec=None):
     mu_mat, x_mat = np.meshgrid(mu_vec, x_vec)
 
     # define observer radius 'r' at each grid point
-    r = np.sqrt(np.power(x_mat, 2) + 2.*x_mat*mu_mat*R0 + R0**2)
+    r = np.sqrt(np.power(x_mat, 2) + 2. * x_mat * mu_mat * R0 + R0 ** 2)
 
     # Select density function based on gravity assumption:
     if g_type == 0:
-        n_of_r = np.exp(-(r - R0)/lamb)
+        n_of_r = np.exp(-(r - R0) / lamb)
     elif g_type == 1:
-        n_of_r = np.exp(2*(R0*(R0 - r))/(r*lamb))
+        n_of_r = np.exp(2 * (R0 * (R0 - r)) / (r * lamb))
     else:
-        n_of_r = 0.*r
+        n_of_r = 0. * r
 
     # Compute intensity integral:
-    obsv_int = integrate.simps(n_of_r, axis=0)*dx
+    obsv_int = integrate.simps(n_of_r, axis=0) * dx
 
     return obsv_int, mu_vec
 
@@ -422,8 +420,8 @@ def get_beta_y_cubic(x, mu):
     :param mu: value of mu
     :return: Beta and y
     """
-    beta = 1. - (x[0] + x[1] + x[2]) + x[0]*mu + x[1]*mu**2 + x[2]*mu**3
-    y = -(x[3] + x[4] + x[5]) + x[3]*mu + x[4]*mu**2 + x[5]*mu**3
+    beta = 1. - (x[0] + x[1] + x[2]) + x[0] * mu + x[1] * mu ** 2 + x[2] * mu ** 3
+    y = -(x[3] + x[4] + x[5]) + x[3] * mu + x[4] * mu ** 2 + x[5] * mu ** 3
 
     return beta, y
 
@@ -436,8 +434,8 @@ def get_beta_y_power_log(x, mu):
     :param mu: value of mu
     :return: Beta and y
     """
-    beta = 1. - x[0] + x[0]*mu**x[1]
-    y = x[2]*np.log10(mu)
+    beta = 1. - x[0] + x[0] * mu ** x[1]
+    y = x[2] * np.log10(mu)
 
     return beta, y
 
@@ -450,16 +448,17 @@ def get_beta_y_theoretic_based(x, mu):
     :param mu: value of mu
     :return: Beta and y
     """
-    f1 = -x[0] + x[0]*mu + x[1]*np.log10(mu)
-    f0 = -x[2] + x[2]*mu + x[3]*np.log10(mu)
+    f1 = -x[0] + x[0] * mu + x[1] * np.log10(mu)
+    f0 = -x[2] + x[2] * mu + x[3] * np.log10(mu)
     n = x[4]
     log_alpha = x[5]
-    beta = n/(f1 + n)
-    y = (f1*log_alpha/n - f0)*beta
+    beta = n / (f1 + n)
+    y = (f1 * log_alpha / n - f0) * beta
 
     return beta, y
 
-def get_beta_y_theoretic_old(x, mu_array):
+
+def get_beta_y_theoretic_continuous_loop(x, mu_array):
     """
     theoretic form of LBCC optimization
     using array of mu values
@@ -478,12 +477,12 @@ def get_beta_y_theoretic_old(x, mu_array):
             else:
                 beta_theoretic, y_theoretic = get_beta_y_theoretic_based(x, mu_array[i][j])
             beta_array[i][j] = beta_theoretic
-            y_array[i][j]  = y_theoretic
+            y_array[i][j] = y_theoretic
 
     return beta_array, y_array
 
-def get_beta_y_theoretic_continuous(x, mu_array):
 
+def get_beta_y_theoretic_continuous(x, mu_array):
     array_1d = mu_array.flatten()
     for i, element in enumerate(array_1d):
         if element == -9999:
