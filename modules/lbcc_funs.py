@@ -483,17 +483,16 @@ def get_beta_y_theoretic_continuous_loop(x, mu_array):
 
 
 def get_beta_y_theoretic_continuous(x, mu_array):
+
+    # flatten array to 1d
     array_1d = mu_array.flatten()
+    # check for empty elements
     for i, element in enumerate(array_1d):
         if element == -9999:
             array_1d[i] = 0.000001
+    # reshape array
     mu_array = array_1d.reshape((len(mu_array), len(mu_array)))
 
-    f1 = -x[0] + x[0] * mu_array + x[1] * np.log10(mu_array)
-    f0 = -x[2] + x[2] * mu_array + x[3] * np.log10(mu_array)
-    n = x[4]
-    log_alpha = x[5]
-    beta_array = n / (f1 + n)
-    y_array = (f1 * log_alpha / n - f0) * beta_array
+    beta_array, y_array = get_beta_y_theoretic_based(x, mu_array)
 
     return beta_array, y_array

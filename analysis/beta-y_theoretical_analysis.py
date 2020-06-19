@@ -28,9 +28,9 @@ hdf_data_dir = App.PROCESSED_DATA_HOME
 
 # TIME FRAME TO QUERY HISTOGRAMS
 query_time_min = datetime.datetime(2011, 4, 1, 0, 0, 0)
-query_time_max = datetime.datetime(2011, 4, 3, 0, 0, 0)
-number_of_weeks = 1
-number_of_days = 2
+query_time_max = datetime.datetime(2011, 10, 1, 0, 0, 0)
+number_of_weeks = 27
+number_of_days = 180
 
 # DATABASE PATHS
 create = True # true if save to database
@@ -79,14 +79,9 @@ for date_index, center_date in enumerate(moving_avg_centers):
 
         # create list of observed dates in time frame
         date_obs_npDT64 = pd_hist['date_obs']
-        date_obs_pdTS = [pd.Timestamp(x) for x in date_obs_npDT64]
-        date_obs = [x.to_pydatetime() for x in date_obs_pdTS]
 
         # creates array of mu bin centers
         mu_bin_centers = (mu_bin_array[1:] + mu_bin_array[:-1]) / 2
-
-        # creates array of intensity bin centers
-        intensity_centers = (intensity_bin_array[:-1] + intensity_bin_array[1:]) / 2
 
         # determine appropriate date range
         date_ind = (date_obs_npDT64 >= min_date) & (date_obs_npDT64 <= max_date)

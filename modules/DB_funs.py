@@ -1210,7 +1210,7 @@ def add_lbcc_hist(lbcc_hist, db_session):
     return db_session
 
 
-def query_var_val(db_session, meth_name, image, instrument):
+def query_var_val(db_session, meth_name, date_obs, instrument):
     """
     query variable value corresponding to image
     @param db_session:
@@ -1220,10 +1220,8 @@ def query_var_val(db_session, meth_name, image, instrument):
     @return:
     """
 
-    # definitions
-    date_obs = image.info['date_string']
-
     combo_date_query = return_closest_combo(db_session, Image_Combos, Image_Combos.date_mean, date_obs)
+    print("date query:", combo_date_query.combo_id, "date: ", combo_date_query.date_mean)
 
     # query for combo ids that correspond to instruments
     # determine image_ids that correspond to instrument
@@ -1233,6 +1231,7 @@ def query_var_val(db_session, meth_name, image, instrument):
     inst_combo_query = pd.read_sql(db_session.query(Image_Combo_Assoc.combo_id).filter(Image_Combo_Assoc.image_id.in_(
         inst_image_query.image_id)).statement,
                                db_session.bind)
+    print(inst_combo_query)
 
     # determine the match
     for i, combo_date in enumerate(combo_date_query.combo_id):
@@ -1240,6 +1239,7 @@ def query_var_val(db_session, meth_name, image, instrument):
             if combo_date == combo_inst:
                 combo_id = combo_date
     print("combo id: ", combo_id)
+
     # query meth_defs for method id
     method_id_info = get_method_id(db_session, meth_name, meth_desc=None, var_names=None, var_descs=None, create=False)
 
@@ -1413,19 +1413,19 @@ def return_closest_combo(db_session, class_name, class_column, time):
     """
     # TODO: is it possible the three closest are actually all from the same instrument, or 2/3 instruments...
     greater = db_session.query(class_name).filter(class_column > time). \
-        order_by(class_name.date_mean.asc()).limit(3).subquery().select()
-
+        order_by(class_name.date_mean.asc()).limit(5).subquery().select()
 
     lesser = db_session.query(class_name).filter(class_column <= time). \
-        order_by(class_column.desc()).limit(3).subquery().select()
+        order_by(class_column.desc()).limit(5).subquery().select()
 
     the_union = union_all(lesser, greater).alias()
     the_alias = aliased(class_name, the_union)
     the_diff = getattr(the_alias, class_column.name) - time
-    abs_diff = case([(the_diff < datetime.timedelta(0), -the_diff)],
-    else_ = the_diff)
+    abs_diff = case([(the_diff < datetime.timedelta(0), -the_diff)], else_ = the_diff)
 
     image_combo_query = pd.read_sql(db_session.query(the_alias).order_by(abs_diff.asc()).statement,
                                db_session.bind)
+    image_combo_query.sort_values(by=['date_mean'])
+    print(image_combo_query.date_mean)
 
     return image_combo_query

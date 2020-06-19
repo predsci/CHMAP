@@ -1,6 +1,6 @@
 """
-Generate plots of lbcc theoretic methods
-Grabs parameter values from database - still working on this
+Generate plots of lbcc functionals methods
+Grabs parameter values from database
 """
 
 
