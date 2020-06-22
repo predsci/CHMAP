@@ -1243,14 +1243,11 @@ def query_var_val(db_session, meth_name, date_obs, instrument):
 
     # query var_vals for variable value
     var_val = np.zeros((var_id_query.var_id.size))
-    print("combo id", combo_id)
     for i, var_id in enumerate(var_id_query.var_id):
-        print("var id", var_id)
         var_val_query = pd.read_sql(db_session.query(Var_Vals).filter(Var_Vals.combo_id == combo_id,
                                                                       Var_Vals.var_id == var_id
-                                                                 ).statement,
-                               db_session.bind)
-        print(var_val_query)
+                                                                      ).statement,
+                                    db_session.bind)
         var_val[i] = var_val_query.var_val
 
     return var_val
@@ -1410,6 +1407,7 @@ def return_closest_combo(db_session, class_name, class_column, inst_query, time)
     """
     if type(time) == str:
         time = datetime.datetime.strptime(time, "%Y-%m-%dT%H:%M:%S.%f")
+
     greater = db_session.query(class_name).filter(class_column > time,
                                                   class_name.combo_id.in_(inst_query.combo_id)). \
         order_by(class_name.date_mean.asc()).limit(3).subquery().select()
@@ -1423,9 +1421,7 @@ def return_closest_combo(db_session, class_name, class_column, inst_query, time)
     the_diff = getattr(the_alias, class_column.name) - time
     abs_diff = case([(the_diff < datetime.timedelta(0), -the_diff)], else_=the_diff)
 
-    image_combo_query = pd.read_sql(db_session.query(the_alias).order_by(abs_diff.asc()).statement,
-                                   db_session.bind)
+    image_combo_query = pd.read_sql(db_session.query(the_alias).order_by(abs_diff.asc()).statement, db_session.bind)
 
-    #print(image_combo_query.date_mean)
 
     return image_combo_query

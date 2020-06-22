@@ -20,8 +20,8 @@ import modules.lbcc_funs as lbcc
 plot=False
 
 # define time range to query
-query_time_min = datetime.datetime(2011, 4, 8, 0, 0, 0)
-query_time_max = datetime.datetime(2011, 4, 8, 3, 0, 0)
+query_time_min = datetime.datetime(2011, 4, 1, 0, 0, 0)
+query_time_max = datetime.datetime(2011, 4, 1, 3, 0, 0)
 
 # define instruments
 inst_list = ['AIA', "EUVI-A", "EUVI-B"]
@@ -61,20 +61,18 @@ for inst_index, instrument in enumerate(inst_list):
 
     ###### GET LOS IMAGES COORDINATES (DATA) #####
     for index, row in image_pd.iterrows():
-        print("Processing image number", row.image_id, ".")
+        print("Processing image number " + str(row.image_id) + ".")
         if row.fname_hdf == "":
             print("Warning: Image # " + str(row.image_id) + " does not have an associated hdf file. Skipping")
             continue
         hdf_path = os.path.join(hdf_data_dir, row.fname_hdf)
         original_los = psi_d_types.read_los_image(hdf_path)
         original_los.get_coordinates(R0=R0)
-        print("date obs: ", original_los.info['date_string'])
+        print("date obs:", original_los.info['date_string'])
         theoretic_query = query_var_val(db_session, meth_name, date_obs=original_los.info['date_string'], instrument=instrument)
         # get beta and y from theoretic fit
         beta, y = lbcc.get_beta_y_theoretic_continuous_loop(theoretic_query, original_los.mu)
-        #print("calculated correction")
         corrected_los_data = beta * original_los.data + y
-        #print("applied correction")
 
         ###### APPLY LBC CORRECTION ######
         Plotting.PlotImage(original_los, nfig=400 + inst_index, title="Original LOS Image for " + instrument)
@@ -82,7 +80,7 @@ for inst_index, instrument in enumerate(inst_list):
                                title="Corrected LBCC Image for " + instrument)
 
         #Plotting.PlotLBCCImage(lbcc_data=original_los.mu, los_image=original_los, nfig=600 + inst_index,
-                            #   title = "Mu Plot for " + instrument)
+         #                      title = "Mu Plot for " + instrument)
         #Plotting.PlotLBCCImage(lbcc_data=beta, los_image=original_los, nfig=700 + inst_index,
                              #  title = "Beta Plot for " + instrument)
         Plotting.PlotLBCCImage(lbcc_data=original_los.data - corrected_los_data, los_image=original_los,
