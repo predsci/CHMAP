@@ -1235,33 +1235,35 @@ def query_var_val(db_session, meth_name, date_obs, instrument):
     inst_combo_query = pd.read_sql(db_session.query(Image_Combo_Assoc.combo_id).filter(Image_Combo_Assoc.image_id.in_(
         inst_image_query.image_id)).statement,
                                    db_session.bind)
-
+    # get combo_ids that are lesser and greater than time
     combo_query = return_closest_combo(db_session, Image_Combos, Image_Combos.date_mean, inst_combo_query, date_obs)
 
     # query meth_defs for method id
     method_id_info = get_method_id(db_session, meth_name, meth_desc=None, var_names=None, var_descs=None, create=False)
+
     # query var_vals for variable values
     var_vals = np.zeros((len(combo_query.combo_id), 6))
-    abs_avg = np.ndarray(len(combo_query.combo_id))
+    date_mean = np.zeros((len(combo_query.combo_id)))
     for i, combo_id in enumerate(combo_query.combo_id):
         # query variable values
         var_val_query = pd.read_sql(db_session.query(Var_Vals).filter(Var_Vals.meth_id == method_id_info[1],
                                                                       Var_Vals.combo_id == combo_id
                                                                       ).statement,
                                     db_session.bind)
-        # time differences
-        if len(combo_query.combo_id) > 1:
-            the_diff = date_obs - combo_query.date_mean[i]
-            trange = combo_query.date_mean[0] - combo_query.date_mean[1]
-            avg = the_diff / trange
-            abs_avg[i] = np.abs(avg)
-            var_vals[i, :] = var_val_query.var_val*abs_avg[i]
-        else:
-            var_vals[i, :] = var_val_query.var_val
+        var_vals[i, :] = var_val_query.var_val
+        timeutc = datetime.datetime.utcfromtimestamp(0)
+        date_float = (combo_query.date_mean[i] - timeutc).total_seconds()
+        date_mean[i] = date_float
 
+    # interpolate
     var_val = np.zeros(6)
-    for i in range(len(combo_query.combo_id)):
-        var_val += var_vals[i]
+    if len(combo_query.combo_id) > 1:
+        for i in range(6):
+            interp_values = interpolate.interp1d(x=date_mean, y=var_vals[:, i])
+            date_obs_fl = (date_obs - timeutc).total_seconds()
+            var_val[i] = interp_values(date_obs_fl)
+    else:
+        var_val[:] = var_vals[:, :]
     return var_val
 
 

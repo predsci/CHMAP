@@ -53,7 +53,7 @@ def save_histograms(db_session, hdf_data_dir, inst_list, query_time_min, query_t
 
 ###### STEP TWO: CALCULATE AND SAVE THEORETIC FIT PARAMETERS #######
 def calc_theoretic_fit(db_session, inst_list, query_time_min, number_of_weeks, number_of_days, n_mu_bins=18,
-                       n_intensity_bins=200, lat_band=[-np.pi / 64., np.pi / 64.], create=False):
+                       n_intensity_bins=200, lat_band=[-np.pi/64., np.pi/64.], create=False):
 
     # returns array of moving averages center dates, based off start date and number of weeks
     moving_avg_centers = np.array(
