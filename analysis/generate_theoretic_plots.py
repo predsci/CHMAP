@@ -2,9 +2,6 @@
 Generate plots of lbcc theoretic methods
 Grabs parameter values from database - still working on this
 """
-import sys
-# path to modules and settings folders
-sys.path.append('/Users/tamarervin/work/chd')
 
 import os
 import numpy as np
@@ -22,9 +19,9 @@ import modules.lbcc_funs as lbcc
 # PLOT PARAMETERS
 n_mu_bins = 18
 year = "2011" # used for naming plot file
-time_period = "Test2" # used for naming plot file
-title_time_period = "Test2" # used for plot titles
-plot_week = 0 # index of week you want to plot
+time_period = "Theoretic-6Month" # used for naming plot file
+title_time_period = "6 Month" # used for plot titles
+plot_week = 5 #index of week you want to plot
 # path to save plots to
 image_out_path = os.path.join(App.APP_HOME, "test_data", "analysis/lbcc_functionals/")
 
@@ -75,45 +72,45 @@ v_cmap = cm.get_cmap('viridis')
 n_mu = len(sample_mu)
 color_dist = np.linspace(0., 1., n_mu)
 
-linestyles = ['solid', 'dashed', 'dashdot', 'None']
-marker_types = ['None', 'None', 'None', 'x']
+linestyles = ['dashed']
+marker_types = ['None']
 meth_name = 'LBCC Theoretic'
 
 for inst_index, instrument in enumerate(instruments):
-
+    print("Generating plots for " + instrument + ".")
+    # query theoretic parameters
+    theoretic_query = np.zeros((len(moving_avg_centers), 6))
     plot_beta = np.zeros((sample_mu.__len__(), moving_avg_centers.__len__()))
     plot_y = np.zeros((sample_mu.__len__(), moving_avg_centers.__len__()))
     for mu_index, mu in enumerate(sample_mu):
         for date_index, center_date in enumerate(moving_avg_centers):
-            print(center_date)
             # query for variable value
-            theoretic_query = query_var_val(db_session, meth_name, date_obs=np.datetime64(center_date).astype(datetime.datetime), instrument=instrument)
-            # calculate beta and y
-            plot_beta[mu_index, date_index], plot_y[mu_index, date_index] = \
-                lbcc.get_beta_y_theoretic_based(theoretic_query, mu)
+            theoretic_query[date_index, :] = query_var_val(db_session, meth_name,
+                                                           date_obs=np.datetime64(center_date).astype(
+                                                               datetime.datetime),
+                                                           instrument=instrument)
+            plot_beta[mu_index, date_index], plot_y[mu_index, date_index] = lbcc.get_beta_y_theoretic_based(
+                theoretic_query[date_index, :], mu)
 
-    # plot some beta and y v mu curves
+
+    #### BETA AND Y v. MU FOR SPECIFIED WEEK #####
 
     plt.figure(10 + inst_index)
 
     beta_y_v_mu = np.zeros((mu_bin_centers.shape[0], 2))
-    for index, mu in enumerate(mu_bin_centers):
-        beta_y_v_mu[index, :] = theoretic_query[plot_week]
 
-    for model_index in range(linestyles.__len__()):
-        if model_index != 3:
-            plt.plot(mu_bin_centers, beta_y_v_mu[:, 0], ls=linestyles[model_index],
-                     c=v_cmap(color_dist[model_index-3]), marker=marker_types[model_index])
-        else:
-            plt.plot(mu_bin_centers[:-1], beta_y_v_mu[:-1, 0], ls=linestyles[model_index],
-                     c=v_cmap(color_dist[model_index-3]), marker=marker_types[model_index])
+    for index, mu in enumerate(mu_bin_centers):
+        beta_y_v_mu[index, :] = lbcc.get_beta_y_theoretic_based(theoretic_query[plot_week, :], mu)
+
+    plt.plot(mu_bin_centers, beta_y_v_mu[:, 0], ls=linestyles[0],
+             c=v_cmap(color_dist[0-3]), marker=marker_types[0])
 
     plt.ylabel(r"$\beta$ " + instrument)
     plt.xlabel(r"$\mu$")
     plt.title(instrument + " " + title_time_period + " average " + str(moving_avg_centers[plot_week]))
     ax = plt.gca()
 
-    ax.legend(["cubic", "power/log", "theoretic", r"$\mu$-bins"], loc='upper right',
+    ax.legend(["theoretic"], loc='upper right',
               bbox_to_anchor=(1., 1.),
               title="model")
     plt.grid()
@@ -123,24 +120,18 @@ for inst_index, instrument in enumerate(instruments):
 
     plt.close(10 + inst_index)
 
-
     # repeat for y
     plt.figure(20 + inst_index)
 
-    for model_index in range(linestyles.__len__()):
-        if model_index != 3:
-            plt.plot(mu_bin_centers, beta_y_v_mu[:, 1], ls=linestyles[model_index],
-                     c=v_cmap(color_dist[model_index - 3]), marker=marker_types[model_index])
-        else:
-            plt.plot(mu_bin_centers[:-1], beta_y_v_mu[:-1, 1], ls=linestyles[model_index],
-                     c=v_cmap(color_dist[model_index - 3]), marker=marker_types[model_index])
+    plt.plot(mu_bin_centers, beta_y_v_mu[:, 1], ls=linestyles[0],
+             c=v_cmap(color_dist[0 - 3]), marker=marker_types[0])
 
     plt.ylabel(r"$y$ " + instrument)
     plt.xlabel(r"$\mu$")
     plt.title(instrument + " " + title_time_period + " average " + str(moving_avg_centers[plot_week]))
     ax = plt.gca()
 
-    ax.legend(["cubic", "power/log", "theoretic", r"$\mu$-bins"], loc='lower right',
+    ax.legend(["theoretic"], loc='lower right',
               bbox_to_anchor=(1., 0.),
               title="model")
     plt.grid()
@@ -149,3 +140,63 @@ for inst_index, instrument in enumerate(instruments):
     plt.savefig(plot_fname)
 
     plt.close(20 + inst_index)
+
+    #### BETA AND Y AS FUNCTION OF TIME ####
+    # plot beta for the different models as a function of time
+    plt.figure(100 + inst_index)
+
+    mu_lines = []
+    for mu_index, mu in enumerate(sample_mu):
+        plt.plot(moving_avg_centers, plot_beta[mu_index, :], ls=linestyles[0],
+                 c=v_cmap(color_dist[mu_index]), marker=marker_types[0])
+    plt.ylabel(r"$\beta$ " + instrument)
+    plt.xlabel("Center Date")
+    ax = plt.gca()
+    model_lines = []
+    model_lines.append(Line2D([0], [0], color="black", linestyle=linestyles[0], lw=2,
+                              marker=marker_types[0]))
+    legend1 = plt.legend(mu_lines, [str(round(x, 3)) for x in sample_mu], loc='upper left', bbox_to_anchor=(1., 1.),
+                         title=r"$\mu$ value")
+    ax.legend(model_lines, ["theoretic"], loc='upper left',
+              bbox_to_anchor=(1., 0.65), title="model")
+    plt.gca().add_artist(legend1)
+    # adjust margin to incorporate legend
+    plt.subplots_adjust(right=0.8)
+    plt.grid()
+
+    plot_fname = image_out_path + instrument + '_beta_' + year + "-" + time_period + '.pdf'
+    plt.savefig(plot_fname)
+
+    plt.close(100 + inst_index)
+
+    # plot y for the different models as a function of time
+    plt.figure(200 + inst_index)
+
+    mu_lines = []
+    for mu_index, mu in enumerate(sample_mu):
+        mu_lines.append(Line2D([0], [0], color=v_cmap(color_dist[mu_index]), lw=2))
+        plt.plot(moving_avg_centers, plot_y[mu_index, :], ls=linestyles[0],
+                 c=v_cmap(color_dist[mu_index]), marker=marker_types[0])
+    plt.ylabel(r"$y$ " + instrument)
+    plt.xlabel("Center Date")
+    ax = plt.gca()
+    model_lines = []
+    model_lines.append(Line2D([0], [0], color="black", linestyle=linestyles[0], lw=2,
+                              marker=marker_types[0]))
+    legend1 = plt.legend(mu_lines, [str(round(x, 3)) for x in sample_mu], loc='upper left', bbox_to_anchor=(1., 1.),
+                         title=r"$\mu$ value")
+    ax.legend(model_lines, ["theoretic"], loc='upper left',
+              bbox_to_anchor=(1., 0.65),
+              title="model")
+    plt.gca().add_artist(legend1)
+    # adjust margin to incorporate legend
+    plt.subplots_adjust(right=0.8)
+    plt.grid()
+
+    plot_fname = image_out_path + instrument + '_y_' + year + "-" + time_period + '.pdf'
+    plt.savefig(plot_fname)
+
+    plt.close(200 + inst_index)
+
+
+

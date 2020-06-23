@@ -463,36 +463,69 @@ def get_beta_y_theoretic_continuous_loop(x, mu_array):
     theoretic form of LBCC optimization
     using array of mu values
     @param x: list of parameter values
-    @param mu: array of mu bins
+    @param mu_array: array of mu bins
     @return: array of beta and y values
     """
-
     beta_array = np.zeros((len(mu_array), len(mu_array)))
     y_array = np.zeros((len(mu_array), len(mu_array)))
     for i in range(len(mu_array)):
         for j in range(len(mu_array)):
             if mu_array[i][j] == -9999:
-                beta_theoretic = 0
-                y_theoretic = 0
+                pass
             else:
                 beta_theoretic, y_theoretic = get_beta_y_theoretic_based(x, mu_array[i][j])
             beta_array[i][j] = beta_theoretic
             y_array[i][j] = y_theoretic
 
     return beta_array, y_array
+    # return beta_theoretic, y_theoretic
 
 
 def get_beta_y_theoretic_continuous(x, mu_array):
-
     # flatten array to 1d
     array_1d = mu_array.flatten()
+    beta_array = np.zeros(len(array_1d))
+    y_array = np.zeros(len(array_1d))
     # check for empty elements
     for i, element in enumerate(array_1d):
         if element == -9999:
-            array_1d[i] = 0.000001
+            array_1d[i] = 0.001
+
     # reshape array
     mu_array = array_1d.reshape((len(mu_array), len(mu_array)))
+    beta, y = get_beta_y_theoretic_based(x, mu_array)
 
-    beta_array, y_array = get_beta_y_theoretic_based(x, mu_array)
+    beta_array = beta_array.reshape((len(mu_array), len(mu_array)))
+    y_array = y_array.reshape((len(mu_array), len(mu_array)))
 
-    return beta_array, y_array
+    return beta, y
+
+
+def get_beta_y_theoretic_interp(x, mu_array_2d, mu_array_1d):
+    """
+    calculate beta and y using the theoretic fit
+    for a 2D array of mu values
+    @param x: theoretic fit parameters
+    @param mu_array_2d: 2D array of mu values
+    @param mu_array_1d: 1D array of mu bin centers
+    @return:
+    """
+
+    # calculate beta and y for mu bin centers array
+    beta_y_mu = np.zeros((len(mu_array_1d), 3))
+    for mu_index, mu in enumerate(mu_array_1d):
+        beta_y_mu[mu_index, 0] = mu
+        beta_y_mu[mu_index, 1:] = get_beta_y_theoretic_based(x, mu)
+    mu = beta_y_mu[0]
+    beta_mu = beta_y_mu[1]
+    y_mu = beta_y_mu[2]
+
+    # interpolate to work for 2D mu array
+    beta_interp = interp.interp1d(x=mu, y=beta_mu, fill_value=0, bounds_error=False)
+    y_interp = interp.interp1d(x=mu, y=y_mu, fill_value=0, bounds_error=False)
+
+    # calculate beta and y array
+    beta = beta_interp(mu_array_2d)
+    y = y_interp(mu_array_2d)
+
+    return beta, y

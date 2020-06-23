@@ -15,8 +15,8 @@ import modules.datatypes as psi_d_types
 ###### ------ PARAMETERS TO UPDATE -------- ########
 
 # TIME RANGE
-query_time_min = datetime.datetime(2011, 4, 1, 0, 0, 0)
-query_time_max = datetime.datetime(2011, 4, 3, 0, 0, 0)
+query_time_min = datetime.datetime(2011, 1, 1, 0, 0, 0)
+query_time_max = datetime.datetime(2012, 1, 1, 0, 0, 0)
 
 # define instruments
 inst_list = ["AIA", "EUVI-A", "EUVI-B"]
@@ -53,7 +53,7 @@ for instrument in inst_list:
                                 instrument=query_instrument)
 
     for index, row in query_pd.iterrows():
-        print("Processing image number", row.image_id, ".")
+        print("Processing image number" + str(row.image_id) + ".")
         if row.fname_hdf == "":
             print("Warning: Image # " + str(row.image_id) + " does not have an associated hdf file. Skipping")
             continue
