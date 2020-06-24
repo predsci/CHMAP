@@ -1,22 +1,26 @@
 """
 generate LBC for images using theoretic fit
 """
-
 import os
 import datetime
 import numpy as np
 import time
 import scipy.optimize as optim
+import matplotlib.pyplot as plt
+from matplotlib import cm
+from matplotlib.lines import Line2D
 
 import modules.DB_funs as db_funcs
 import modules.datatypes as psi_d_types
 import modules.lbcc_funs as lbcc
-import modules.plotting as Plotting
+import modules.Plotting as Plotting
 
 
 ####### STEP ONE: CREATE AND SAVE HISTOGRAMS #######
-def save_histograms(db_session, hdf_data_dir, inst_list, query_time_min, query_time_max, n_mu_bins=18,
-                    n_intensity_bins=200,lat_band=[-np.pi/64., np.pi/64.], log10=True, R0=1.01):
+def save_histograms(db_session, hdf_data_dir, inst_list, hist_query_time_min, hist_query_time_max, n_mu_bins=18,
+                    n_intensity_bins=200, lat_band=[-np.pi / 64., np.pi / 64.], log10=True, R0=1.01):
+    # start time
+    start_time_tot = time.time()
 
     # creates mu bin & intensity bin arrays
     mu_bin_edges = np.array(range(n_mu_bins + 1), dtype="float") * 0.05 + 0.1
@@ -27,8 +31,8 @@ def save_histograms(db_session, hdf_data_dir, inst_list, query_time_min, query_t
 
         # query EUV images
         query_instrument = [instrument, ]
-        query_pd = db_funcs.query_euv_images(db_session=db_session, time_min=query_time_min, time_max=query_time_max,
-                                             instrument=query_instrument)
+        query_pd = db_funcs.query_euv_images(db_session=db_session, time_min=hist_query_time_min,
+                                             time_max=hist_query_time_max, instrument=query_instrument)
 
         for index, row in query_pd.iterrows():
             print("Processing image number", row.image_id, ".")
@@ -48,16 +52,22 @@ def save_histograms(db_session, hdf_data_dir, inst_list, query_time_min, query_t
             db_funcs.add_lbcc_hist(hist_lbcc, db_session)
 
     db_session.close()
+
+    end_time_tot = time.time()
+    print("Histograms have been created and saved to the database.")
+    print("Total elapsed time for histogram creation: " + str(round(end_time_tot - start_time_tot, 3)) + " seconds.")
     return None
 
 
 ###### STEP TWO: CALCULATE AND SAVE THEORETIC FIT PARAMETERS #######
-def calc_theoretic_fit(db_session, inst_list, query_time_min, number_of_weeks, number_of_days, n_mu_bins=18,
-                       n_intensity_bins=200, lat_band=[-np.pi/64., np.pi/64.], create=False):
+def calc_theoretic_fit(db_session, inst_list, calc_query_time_min, number_of_weeks, number_of_days, n_mu_bins=18,
+                       n_intensity_bins=200, lat_band=[-np.pi / 64., np.pi / 64.], create=False):
+    # start time
+    start_time_tot = time.time()
 
     # returns array of moving averages center dates, based off start date and number of weeks
     moving_avg_centers = np.array(
-        [np.datetime64(str(query_time_min)) + ii * np.timedelta64(1, 'W') for ii in range(number_of_weeks)])
+        [np.datetime64(str(calc_query_time_min)) + ii * np.timedelta64(1, 'W') for ii in range(number_of_weeks)])
 
     # returns moving width based of number of days
     moving_width = np.timedelta64(number_of_days, 'D')
@@ -69,7 +79,6 @@ def calc_theoretic_fit(db_session, inst_list, query_time_min, number_of_weeks, n
         print("Begin date " + str(center_date))
 
         # determine time range based off moving average centers
-        start_time_tot = time.time()
         min_date = center_date - moving_width / 2
         max_date = center_date + moving_width / 2
 
@@ -137,14 +146,19 @@ def calc_theoretic_fit(db_session, inst_list, query_time_min, number_of_weeks, n
             db_funcs.store_lbcc_values(db_session, pd_hist, meth_name, meth_desc, var_name, var_desc, date_index,
                                        inst_index, optim_vals=optim_vals_theo[0:6], results=results_theo, create=create)
 
-            end_time_tot = time.time()
-            print("Total elapsed time: " + str(round(end_time_tot - start_time_tot, 3)) + " seconds.")
+    end_time_tot = time.time()
+    print("Theoretical fit parameters have been calculated and saved to the database.")
+    print("Total elapsed time for theoretical fit parameter calculation: " +
+          str(round(end_time_tot - start_time_tot, 3)) + " seconds.")
 
     return None
 
 
 ###### STEP THREE: APPLY CORRECTION AND PLOT IMAGES #######
-def apply_lbc_correction(db_session, hdf_data_dir, inst_list, query_time_min, query_time_max, n_mu_bins=18, R0=1.01):
+def apply_lbc_correction(db_session, hdf_data_dir, inst_list, lbc_query_time_min, lbc_query_time_max, n_mu_bins=18,
+                         R0=1.01):
+    # start time
+    start_time_tot = time.time()
 
     meth_name = "LBCC Theoretic"
     mu_bin_edges = np.array(range(n_mu_bins + 1), dtype="float") * 0.05 + 0.1
@@ -154,8 +168,8 @@ def apply_lbc_correction(db_session, hdf_data_dir, inst_list, query_time_min, qu
     for inst_index, instrument in enumerate(inst_list):
 
         query_instrument = [instrument, ]
-        image_pd = db_funcs.query_euv_images(db_session=db_session, time_min=query_time_min, time_max=query_time_max,
-                                             instrument=query_instrument)
+        image_pd = db_funcs.query_euv_images(db_session=db_session, time_min=lbc_query_time_min,
+                                             time_max=lbc_query_time_max, instrument=query_instrument)
 
         ###### GET LOS IMAGES COORDINATES (DATA) #####
         for index, row in image_pd.iterrows():
@@ -182,5 +196,164 @@ def apply_lbc_correction(db_session, hdf_data_dir, inst_list, query_time_min, qu
                                    title="Corrected LBCC Image for " + instrument)
             Plotting.PlotLBCCImage(lbcc_data=original_los.data - corrected_los_data, los_image=original_los,
                                    nfig=300 + inst_index, title="Difference Plot for " + instrument)
+    # end time
+    end_time_tot = time.time()
+    print("LBC has been applied and specified images plotted.")
+    print("Total elapsed time to apply correction and plot: " + str(round(end_time_tot - start_time_tot, 3))
+          + " seconds.")
 
+    return None
+
+
+###### STEP FOUR: GENERATE PLOTS OF BETA AND Y ######
+def generate_theoretic_plots(db_session, inst_list, plot_query_time_min, plot_number_of_weeks, image_out_path, year='2011',
+                             time_period='6 Month', plot_week=0, n_mu_bins=18):
+    # start time
+    start_time_tot = time.time()
+
+    # create mu bin array
+    mu_bin_array = np.array(range(n_mu_bins + 1), dtype="float") * 0.05 + 0.1
+    mu_bin_centers = (mu_bin_array[1:] + mu_bin_array[:-1]) / 2
+
+    # time arrays
+    # returns array of moving averages center dates, based off start date and number of weeks
+    moving_avg_centers = np.array(
+        [np.datetime64(str(plot_query_time_min)) + ii * np.timedelta64(1, 'W') for ii in range(plot_number_of_weeks)])
+
+    # calc beta and y for a few sample mu-values
+    sample_mu = [0.125, 0.325, 0.575, 0.875]
+
+    # sample mu colors
+    v_cmap = cm.get_cmap('viridis')
+    n_mu = len(sample_mu)
+    color_dist = np.linspace(0., 1., n_mu)
+
+    linestyles = ['dashed']
+    marker_types = ['None']
+    meth_name = 'LBCC Theoretic'
+
+    for inst_index, instrument in enumerate(inst_list):
+        print("Generating plots for " + instrument + ".")
+        # query theoretic parameters
+        theoretic_query = np.zeros((len(moving_avg_centers), 6))
+        plot_beta = np.zeros((sample_mu.__len__(), moving_avg_centers.__len__()))
+        plot_y = np.zeros((sample_mu.__len__(), moving_avg_centers.__len__()))
+        for mu_index, mu in enumerate(sample_mu):
+            for date_index, center_date in enumerate(moving_avg_centers):
+                # query for variable value
+                theoretic_query[date_index, :] = db_funcs.query_var_val(db_session, meth_name,
+                                                                        date_obs=np.datetime64(center_date).astype(
+                                                                            datetime.datetime),
+                                                                        instrument=instrument)
+                plot_beta[mu_index, date_index], plot_y[mu_index, date_index] = lbcc.get_beta_y_theoretic_based(
+                    theoretic_query[date_index, :], mu)
+
+        #### BETA AND Y v. MU FOR SPECIFIED WEEK #####
+
+        plt.figure(10 + inst_index)
+
+        beta_y_v_mu = np.zeros((mu_bin_centers.shape[0], 2))
+
+        for index, mu in enumerate(mu_bin_centers):
+            beta_y_v_mu[index, :] = lbcc.get_beta_y_theoretic_based(theoretic_query[plot_week, :], mu)
+
+        plt.plot(mu_bin_centers, beta_y_v_mu[:, 0], ls=linestyles[0],
+                 c=v_cmap(color_dist[0 - 3]), marker=marker_types[0])
+
+        plt.ylabel(r"$\beta$ " + instrument)
+        plt.xlabel(r"$\mu$")
+        plt.title(instrument + " " + time_period + " average " + str(moving_avg_centers[plot_week]))
+        ax = plt.gca()
+
+        ax.legend(["theoretic"], loc='upper right',
+                  bbox_to_anchor=(1., 1.),
+                  title="model")
+        plt.grid()
+
+        plot_fname = image_out_path + instrument + '_beta_v_mu_' + year + "-" + time_period.replace(" ", "") + '.pdf'
+        plt.savefig(plot_fname)
+
+        plt.close(10 + inst_index)
+
+        # repeat for y
+        plt.figure(20 + inst_index)
+
+        plt.plot(mu_bin_centers, beta_y_v_mu[:, 1], ls=linestyles[0],
+                 c=v_cmap(color_dist[0 - 3]), marker=marker_types[0])
+
+        plt.ylabel(r"$y$ " + instrument)
+        plt.xlabel(r"$\mu$")
+        plt.title(instrument + " " + time_period + " average " + str(moving_avg_centers[plot_week]))
+        ax = plt.gca()
+
+        ax.legend(["theoretic"], loc='lower right',
+                  bbox_to_anchor=(1., 0.),
+                  title="model")
+        plt.grid()
+
+        plot_fname = image_out_path + instrument + '_y_v_mu_' + year + "-" + time_period.replace(" ", "") + '.pdf'
+        plt.savefig(plot_fname)
+
+        plt.close(20 + inst_index)
+
+        #### BETA AND Y AS FUNCTION OF TIME ####
+        # plot beta for the different models as a function of time
+        plt.figure(100 + inst_index)
+
+        mu_lines = []
+        for mu_index, mu in enumerate(sample_mu):
+            plt.plot(moving_avg_centers, plot_beta[mu_index, :], ls=linestyles[0],
+                     c=v_cmap(color_dist[mu_index]), marker=marker_types[0])
+        plt.ylabel(r"$\beta$ " + instrument)
+        plt.xlabel("Center Date")
+        ax = plt.gca()
+        model_lines = []
+        model_lines.append(Line2D([0], [0], color="black", linestyle=linestyles[0], lw=2,
+                                  marker=marker_types[0]))
+        legend1 = plt.legend(mu_lines, [str(round(x, 3)) for x in sample_mu], loc='upper left', bbox_to_anchor=(1., 1.),
+                             title=r"$\mu$ value")
+        ax.legend(model_lines, ["theoretic"], loc='upper left',
+                  bbox_to_anchor=(1., 0.65), title="model")
+        plt.gca().add_artist(legend1)
+        # adjust margin to incorporate legend
+        plt.subplots_adjust(right=0.8)
+        plt.grid()
+
+        plot_fname = image_out_path + instrument + '_beta_' + year + "-" + time_period.replace(" ", "") + '.pdf'
+        plt.savefig(plot_fname)
+
+        plt.close(100 + inst_index)
+
+        # plot y for the different models as a function of time
+        plt.figure(200 + inst_index)
+
+        mu_lines = []
+        for mu_index, mu in enumerate(sample_mu):
+            mu_lines.append(Line2D([0], [0], color=v_cmap(color_dist[mu_index]), lw=2))
+            plt.plot(moving_avg_centers, plot_y[mu_index, :], ls=linestyles[0],
+                     c=v_cmap(color_dist[mu_index]), marker=marker_types[0])
+        plt.ylabel(r"$y$ " + instrument)
+        plt.xlabel("Center Date")
+        ax = plt.gca()
+        model_lines = []
+        model_lines.append(Line2D([0], [0], color="black", linestyle=linestyles[0], lw=2,
+                                  marker=marker_types[0]))
+        legend1 = plt.legend(mu_lines, [str(round(x, 3)) for x in sample_mu], loc='upper left', bbox_to_anchor=(1., 1.),
+                             title=r"$\mu$ value")
+        ax.legend(model_lines, ["theoretic"], loc='upper left',
+                  bbox_to_anchor=(1., 0.65),
+                  title="model")
+        plt.gca().add_artist(legend1)
+        # adjust margin to incorporate legend
+        plt.subplots_adjust(right=0.8)
+        plt.grid()
+
+        plot_fname = image_out_path + instrument + '_y_' + year + "-" + time_period.replace(" ", "") + '.pdf'
+        plt.savefig(plot_fname)
+
+        plt.close(200 + inst_index)
+
+    end_time_tot = time.time()
+    print("Theoretical plots of beta and y over time hvae been generated and saved.")
+    print("Total elapsed time for plot creation: " + str(round(end_time_tot - start_time_tot, 3)) + " seconds.")
     return None
