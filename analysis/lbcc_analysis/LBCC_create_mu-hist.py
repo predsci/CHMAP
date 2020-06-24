@@ -1,9 +1,7 @@
 """
 construct mu-histogram and push to database for any time period
 """
-import sys
-# path to modules and settings folders
-sys.path.append('/Users/tamarervin/work/chd')
+
 import os
 import datetime
 import numpy as np

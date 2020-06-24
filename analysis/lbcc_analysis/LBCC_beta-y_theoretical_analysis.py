@@ -2,13 +2,12 @@
 Track beta-y functional fits
 for theoretical fit.
 """
-
+import os
 import numpy as np
 import datetime
 import time
-import pandas as pd
 import scipy.optimize as optim
-import os
+
 import modules.lbcc_funs as lbcc
 from settings.app import App
 from modules.DB_funs import init_db_conn, query_hist, get_combo_id, add_combo_image_assoc, get_method_id, get_var_id, \

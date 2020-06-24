@@ -2,8 +2,6 @@
 Generate plots of lbcc functionals methods
 Grabs parameter values from database
 """
-
-
 import os
 import numpy as np
 import datetime
@@ -147,7 +145,7 @@ for inst_index, instrument in enumerate(instruments):
     plt.subplots_adjust(right=0.8)
     plt.grid()
 
-    plot_fname = image_out_path + instrument + '_beta_' + year + "-" +  time_period + '.pdf'
+    plot_fname = image_out_path + instrument + '_beta_' + year + "-" + time_period + '.pdf'
     plt.savefig(plot_fname)
 
     plt.close(10+inst_index)

@@ -1,8 +1,7 @@
 """
-generate plots of histograms based off histograms grabbed from database
-allows you to plot one histogram or multiple starting from a specific index
+Generate plots of histograms based off histograms grabbed from database
+Allows you to plot one histogram or multiple starting from a specific index
 """
-
 import os
 import datetime
 import numpy as np

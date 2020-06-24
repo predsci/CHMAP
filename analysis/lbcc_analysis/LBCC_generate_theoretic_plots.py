@@ -15,11 +15,10 @@ from modules.DB_funs import init_db_conn, query_var_val, query_euv_images
 import modules.DB_classes as db_class
 import modules.lbcc_funs as lbcc
 
-
 # PLOT PARAMETERS
 n_mu_bins = 18
 year = "2011" # used for naming plot file
-time_period = "Theoretic-6Month" # used for naming plot file
+time_period = "Theoretic-6Month(2)" # used for naming plot file
 title_time_period = "6 Month" # used for plot titles
 plot_week = 5 #index of week you want to plot
 # path to save plots to

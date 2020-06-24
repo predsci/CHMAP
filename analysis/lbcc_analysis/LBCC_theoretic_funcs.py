@@ -1,5 +1,5 @@
 """
-generate LBC for images using theoretic fit
+functions to generate LBC for images using theoretic fit
 """
 import os
 import datetime
@@ -19,6 +19,20 @@ import modules.Plotting as Plotting
 ####### STEP ONE: CREATE AND SAVE HISTOGRAMS #######
 def save_histograms(db_session, hdf_data_dir, inst_list, hist_query_time_min, hist_query_time_max, n_mu_bins=18,
                     n_intensity_bins=200, lat_band=[-np.pi / 64., np.pi / 64.], log10=True, R0=1.01):
+    """
+    create and save (to database) mu-histograms from EUV images
+    @param db_session: connected db session for querying EUV images and saving histograms
+    @param hdf_data_dir: directory of processed hdf images
+    @param inst_list: list of instruments
+    @param hist_query_time_min: minimum time for histogram creation
+    @param hist_query_time_max: maximum time for histogram creation
+    @param n_mu_bins: number of mu bins
+    @param n_intensity_bins: number of intensity bins
+    @param lat_band: latitude band
+    @param log10: boolean value
+    @param R0: radius
+    @return:
+    """
     # start time
     start_time_tot = time.time()
 
@@ -60,8 +74,21 @@ def save_histograms(db_session, hdf_data_dir, inst_list, hist_query_time_min, hi
 
 
 ###### STEP TWO: CALCULATE AND SAVE THEORETIC FIT PARAMETERS #######
-def calc_theoretic_fit(db_session, inst_list, calc_query_time_min, number_of_weeks, number_of_days, n_mu_bins=18,
+def calc_theoretic_fit(db_session, inst_list, calc_query_time_min, number_of_weeks=27, number_of_days=180, n_mu_bins=18,
                        n_intensity_bins=200, lat_band=[-np.pi / 64., np.pi / 64.], create=False):
+    """
+    calculate and save (to database) theoretic LBC fit parameters
+    @param db_session: connected database session to query histograms from and save fit parameters
+    @param inst_list: list of instruments
+    @param calc_query_time_min: start time for creation of moving average centers
+    @param number_of_weeks: number of weeks for querying/creation of moving average centers
+    @param number_of_days: number of days for creation of moving width
+    @param n_mu_bins: number mu bins
+    @param n_intensity_bins: number intensity bins
+    @param lat_band: latitude band
+    @param create: boolean, whether to create new variable values in database (True if create new)
+    @return:
+    """
     # start time
     start_time_tot = time.time()
 
@@ -157,6 +184,17 @@ def calc_theoretic_fit(db_session, inst_list, calc_query_time_min, number_of_wee
 ###### STEP THREE: APPLY CORRECTION AND PLOT IMAGES #######
 def apply_lbc_correction(db_session, hdf_data_dir, inst_list, lbc_query_time_min, lbc_query_time_max, n_mu_bins=18,
                          R0=1.01):
+    """
+    function to apply limb-brightening correction and plot images within a certain time frame
+    @param db_session: connected database session to query theoretic fit parameters from
+    @param hdf_data_dir: directory of processed images to plot original images
+    @param inst_list: list of instruments
+    @param lbc_query_time_min: minimum query time for applying lbc fit
+    @param lbc_query_time_max: maximum query time for applying lbc fit
+    @param n_mu_bins: number of mu bins
+    @param R0: radius
+    @return:
+    """
     # start time
     start_time_tot = time.time()
 
@@ -208,6 +246,19 @@ def apply_lbc_correction(db_session, hdf_data_dir, inst_list, lbc_query_time_min
 ###### STEP FOUR: GENERATE PLOTS OF BETA AND Y ######
 def generate_theoretic_plots(db_session, inst_list, plot_query_time_min, plot_number_of_weeks, image_out_path, year='2011',
                              time_period='6 Month', plot_week=0, n_mu_bins=18):
+    """
+    function to generate plot of theoretical beta and y over time and beta/y v. mu
+    @param db_session: connected database session to query theoretic fit parameters from
+    @param inst_list: list of instruments
+    @param plot_query_time_min: minimum time to query fit parameters and create moving average centers
+    @param plot_number_of_weeks: number of weeks to query
+    @param image_out_path: path to save plots to
+    @param year: year
+    @param time_period: time period of query
+    @param plot_week: specific index of week you want to plot for beta/y v. mu
+    @param n_mu_bins: number of mu bins
+    @return:
+    """
     # start time
     start_time_tot = time.time()
 

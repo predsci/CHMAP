@@ -1,7 +1,8 @@
 """
-example of LBC theoretic pipeline
-calls functions from analysis/lbcc_theoretic_pipeline.py
+Example of LBC theoretic pipeline
+Calls functions from analysis/lbcc_analysis/lbcc_theoretic_funcs.py
 """
+
 import os
 import time
 import datetime
@@ -9,7 +10,7 @@ import numpy as np
 from settings.app import App
 from modules.DB_funs import init_db_conn
 import modules.DB_classes as db_class
-import analysis.LBCC_theoretic_funcs as lbcc_funcs
+import analysis.lbcc_analysis.LBCC_theoretic_funcs as lbcc_funcs
 
 start_time_tot = time.time()
 
