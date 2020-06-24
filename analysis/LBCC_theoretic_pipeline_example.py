@@ -9,7 +9,7 @@ import numpy as np
 from settings.app import App
 from modules.DB_funs import init_db_conn
 import modules.DB_classes as db_class
-import analysis.LBCC_theoretic_pipeline as lbcc_funcs
+import analysis.LBCC_theoretic_funcs as lbcc_funcs
 
 start_time_tot = time.time()
 
