@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  
+  
+  <link rel="shortcut icon" href="../../img/favicon.ico">
+  <title>Limb-Brightening Correction - Coronal Hole Detection Project</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700" />
+
+  <link rel="stylesheet" href="../../css/theme.css" />
+  <link rel="stylesheet" href="../../css/theme_extra.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css" />
+  
+  <script>
+    // Current page data
+    var mkdocs_page_name = "Limb-Brightening Correction";
+    var mkdocs_page_input_path = "ipp/lbc.md";
+    var mkdocs_page_url = null;
+  </script>
+  
+  <script src="../../js/jquery-2.1.1.min.js" defer></script>
+  <script src="../../js/modernizr-2.8.3.min.js" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+  <script>hljs.initHighlightingOnLoad();</script> 
+  
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+        <a href="../.." class="icon icon-home"> Coronal Hole Detection Project</a>
+        <div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+                <ul>
+                    <li class="toctree-l1"><a class="reference internal" href="../..">Home</a>
+                    </li>
+                </ul>
+                <ul>
+                    <li class="toctree-l1"><a class="reference internal" href="../../about/">About the Project</a>
+                    </li>
+                </ul>
+                <p class="caption"><span class="caption-text">Image Pre-Processing</span></p>
+                <ul class="current">
+                    <li class="toctree-l1"><a class="reference internal" href="../psf/">PSF Deconvolution</a>
+                    </li>
+                    <li class="toctree-l1 current"><a class="reference internal current" href="./">Limb-Brightening Correction</a>
+    <ul class="current">
+    <li class="toctree-l2"><a class="reference internal" href="#examples-of-corrected-images">Examples of Corrected Images</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#aia-images">AIA Images</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#euvi-a-images">EUVI-A Images</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#euvi-b-images">EUVI-B Images</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#theoretical-analysis-pipeline">Theoretical Analysis Pipeline</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#compute-histograms">Compute Histograms</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#calculate-and-save-theoretical-fit-parameters">Calculate and Save Theoretical Fit Parameters</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#generate-plots-of-beta-and-y-correction-coefficients">Generate Plots of Beta and y Correction Coefficients</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#apply-limb-brightening-correction-and-plot-corrected-images">Apply Limb-Brightening Correction and Plot Corrected Images</a>
+    </li>
+        </ul>
+    </li>
+    </ul>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../iit/">Inter-Instrument Transformation</a>
+                    </li>
+                </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../..">Coronal Hole Detection Project</a>
+      </nav>
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../..">Docs</a> &raquo;</li>
+    
+      
+        
+          <li>Image Pre-Processing &raquo;</li>
+        
+      
+    
+    <li>Limb-Brightening Correction</li>
+    <li class="wy-breadcrumbs-aside">
+      
+        <a href="https://github.com/predsci/CHD/CHD-mkdocs/edit/master/docs/ipp/lbc.md"
+          class="icon icon-github"> Edit on GitHub</a>
+      
+    </li>
+  </ul>
+  
+  <hr/>
+</div>
+          <div role="main">
+            <div class="section">
+              
+                <h1 id="limb-brightening-correction">Limb-Brightening Correction</h1>
+<p>Limb Brightening Correction (LBC) is the second step in the data pre-processing pipeline. 
+The goal of LBC is to correct for brightening of structures that is 
+dependent on their distance from disk center. This process uses a theoretic model.... </p>
+<h2 id="examples-of-corrected-images">Examples of Corrected Images</h2>
+<h3 id="aia-images">AIA Images</h3>
+<table>
+<thead>
+<tr>
+<th>Original Image</th>
+<th>Corrected Image</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><img alt="Original AIA Image" src="../../img/original_AIA.png" /></td>
+<td><img alt="Corrected AIA Image" src="../../img/corrected_AIA.png" /></td>
+</tr>
+</tbody>
+</table>
+<h3 id="euvi-a-images">EUVI-A Images</h3>
+<table>
+<thead>
+<tr>
+<th>Original Image</th>
+<th>Corrected Image</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><img alt="Original STA Image" src="../../img/original_STA.png" /></td>
+<td><img alt="Corrected STA Image" src="../../img/corrected_STA.png" /></td>
+</tr>
+</tbody>
+</table>
+<h3 id="euvi-b-images">EUVI-B Images</h3>
+<table>
+<thead>
+<tr>
+<th>Original Image</th>
+<th>Corrected Image</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><img alt="Original STB Image" src="../../img/original_STB.png" /></td>
+<td><img alt="Corrected STB Image" src="../../img/corrected_STB.png" /></td>
+</tr>
+</tbody>
+</table>
+<h2 id="theoretical-analysis-pipeline">Theoretical Analysis Pipeline</h2>
+<h3 id="compute-histograms">Compute Histograms</h3>
+<p>The source code for this is found in the CHD GitHub at:<br />
+analysis/lbcc_analysis/LBCC_create_mu-hist.py</p>
+<pre class="codehilite"><code class="linenums">def save_histograms(db_session, hdf_data_dir, inst_list, hist_query_time_min, hist_query_time_max, n_mu_bins=18,
+                    n_intensity_bins=200, lat_band=[-np.pi / 64., np.pi / 64.], log10=True, R0=1.01):
+        &quot;&quot;&quot;
+        function to create and save histograms to database
+        &quot;&quot;&quot;
+        query_pd = db_funcs.query_euv_images(db_session=db_session, time_min=hist_query_time_min,
+                                             time_max=hist_query_time_max, instrument=query_instrument)
+        temp_hist = los_temp.mu_hist(image_intensity_bin_edges, mu_bin_edges, lat_band=lat_band, log10=log10)
+        hist_lbcc = psi_d_types.create_hist(hdf_path, row.image_id, mu_bin_edges, image_intensity_bin_edges,
+                                            lat_band, temp_hist)
+        db_funcs.add_lbcc_hist(hist_lbcc, db_session)
+        return None</code></pre>
+
+
+<ul>
+<li>1.)  <code>db_funcs.query_euv_images</code>  <ul>
+<li>queries database for images (from EUV_Images table) in specified date range  </li>
+</ul>
+</li>
+<li>2.)  <code>los_temp.mu_hist</code>  <ul>
+<li>creates histogram based on number of mu and intensity bins    </li>
+</ul>
+</li>
+<li>3.)   <code>psi_d_types.create_hist</code>  <ul>
+<li>converts histogram to lbcc_hist datatype  </li>
+</ul>
+</li>
+<li>4.)  <code>db_funcs.add_lbcc_hist</code>  <ul>
+<li>saves histograms to database (table LBCC_Hist) associating an image_id and basic information with histogram  </li>
+</ul>
+</li>
+</ul>
+<h3 id="calculate-and-save-theoretical-fit-parameters">Calculate and Save Theoretical Fit Parameters</h3>
+<p>The source code for this is found in the CHD GitHub at:<br />
+analysis/lbcc_analysis/LBCC_beta-y_theoretical_analysis.py</p>
+<pre class="codehilite"><code class="linenums">def calc_theoretic_fit(db_session, inst_list, calc_query_time_min, number_of_weeks=27, number_of_days=180, n_mu_bins=18,
+                   n_intensity_bins=200, lat_band=[-np.pi / 64., np.pi / 64.], create=False):
+    &quot;&quot;&quot;
+    function to calculate and save (to database) theoretic LBC fit parameters
+    &quot;&quot;&quot;
+    pd_hist = db_funcs.query_hist(db_session=db_session, n_mu_bins=n_mu_bins, n_intensity_bins=n_intensity_bins,
+                                      lat_band=np.array(lat_band).tobytes(),
+                                      time_min=np.datetime64(min_date).astype(datetime.datetime),
+                                      time_max=np.datetime64(max_date).astype(datetime.datetime),
+                                      instrument=query_instrument)
+    optim_out_theo = optim.minimize(lbcc.get_functional_sse, init_pars,
+                                        args=(hist_ref, hist_mat, mu_vec, intensity_bin_array, model),
+                                        method=&quot;BFGS&quot;)  
+    db_funcs.store_lbcc_values(db_session, pd_hist, meth_name, meth_desc, var_name, var_desc, date_index,
+                                   inst_index, optim_vals=optim_vals_theo[0:6], results=results_theo, create=True)</code></pre>
+
+
+<ul>
+<li>1.) <code>db_funcs.query_hist</code><ul>
+<li>queries database for histograms (from LBCC_Hist table) in specified date range</li>
+</ul>
+</li>
+<li>2.) <code>optim.minimize</code><ul>
+<li>use theoretical optimization method to calculate fit parameters</li>
+</ul>
+</li>
+<li>3.) <code>db_funcs.store_lbcc_values</code><ul>
+<li>save the six fit parameters to database using function store_lbcc_values from modules/DB_funs<ul>
+<li>creates image combination combo_id of image_ids and dates in Images_Combos table</li>
+<li>creates association between each image_id and combo_id in Image_Combo_Assoc table</li>
+<li>creates new method “LBCC Theoretic” with an associated meth_id in Meth_Defs table</li>
+<li>creates new variable definitions “TheoVar” + index with an associated var_id in Var_Defs table</li>
+<li>store variable value as float in Var_Vals table with associated combo_id, meth_id, and var_id  </li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h3 id="generate-plots-of-beta-and-y-correction-coefficients">Generate Plots of Beta and y Correction Coefficients</h3>
+<p>The source code for this is found in the CHD GitHub at:<br />
+analysis/lbcc_analysis/LBCC_generate_theoretic_plots.py</p>
+<pre class="codehilite"><code class="linenums">def generate_theoretic_plots(db_session, inst_list, plot_query_time_min, plot_number_of_weeks, image_out_path,
+                     year='2011', time_period='6 Month', plot_week=0, n_mu_bins=18):
+    &quot;&quot;&quot;
+    function to generate plots of beta/y over time and beta/y v. mu
+    &quot;&quot;&quot;
+    theoretic_query[date_index, :] = db_funcs.query_var_val(db_session, meth_name,
+                     date_obs=np.datetime64(center_date).astype(datetime.datetime), instrument=instrument)
+    plot_beta[mu_index, date_index], plot_y[mu_index, date_index] = lbcc.get_beta_y_theoretic_based(
+                    theoretic_query[date_index, :], mu)
+    beta_y_v_mu[index, :] = lbcc.get_beta_y_theoretic_based(theoretic_query[plot_week, :], mu)</code></pre>
+
+
+<ul>
+<li>1.) <code>db_funcs.query_var_val</code><ul>
+<li>query fit parameters from database</li>
+</ul>
+</li>
+<li>2.) <code>lbcc.get_beta_y_theoretic_based(theoretic_query[date_index, :], mu)</code><ul>
+<li>calculate beta and y correction coefficients over time using theoretic fit parameters and mu values</li>
+<li>used for plotting beta and y over time</li>
+</ul>
+</li>
+<li>3.) <code>lbcc.get_beta_y_theoretic_based(theoretic_query[plot_week, :], mu)</code><ul>
+<li>calculate beta and y correction coefficients for a specific week using theoretic fit parameters and mu values</li>
+<li>used for plotting beta and y v. mu for a specific week</li>
+</ul>
+</li>
+</ul>
+<h3 id="apply-limb-brightening-correction-and-plot-corrected-images">Apply Limb-Brightening Correction and Plot Corrected Images</h3>
+<p>The source code for this is found in the CHD GitHub at:<br />
+analysis/lbcc_analysis/LBCC_apply_fit.py</p>
+<pre class="codehilite"><code class="linenums">def apply_lbc_correction(db_session, hdf_data_dir, inst_list, lbc_query_time_min, lbc_query_time_max, n_mu_bins=18,
+                     R0=1.01, plot=False):
+    &quot;&quot;&quot;
+    function to apply limb-brightening correction and plot images within a certain time frame
+    &quot;&quot;&quot; 
+    image_pd = db_funcs.query_euv_images(db_session=db_session, time_min=lbc_query_time_min,
+                                         time_max=lbc_query_time_max, instrument=query_instrument) 
+    theoretic_query = db_funcs.query_var_val(db_session, meth_name, date_obs=original_los.info['date_string'],
+                                             instrument=instrument)
+    beta, y = lbcc.get_beta_y_theoretic_interp(theoretic_query, mu_array_2d=original_los.mu,
+                                               mu_array_1d=mu_bin_centers)
+    corrected_los_data = beta * original_los.data + y
+    Plotting.PlotImage(original_los, nfig=100 + inst_index, title=&quot;Original LOS Image for &quot; + instrument)
+    Plotting.PlotLBCCImage(lbcc_data=corrected_los_data, los_image=original_los, nfig=200 + inst_index,
+                           title=&quot;Corrected LBCC Image for &quot; + instrument)
+    Plotting.PlotLBCCImage(lbcc_data=original_los.data - corrected_los_data, los_image=original_los,
+                           nfig=300 + inst_index, title=&quot;Difference Plot for &quot; + instrument)</code></pre>
+
+
+<ul>
+<li>1.) <code>db_funcs.query_euv_images</code><ul>
+<li>queries database for images (from EUV_Images table) in specified date range</li>
+</ul>
+</li>
+<li>2.) <code>db_funcs.query_var_val</code><ul>
+<li>queries database for variable values associated with specific image (from Var_Vals table)</li>
+</ul>
+</li>
+<li>3.) <code>lbcc.get_beta_y_theoretic_interp</code><ul>
+<li>calculates beta and y arrays <ul>
+<li>uses variable values from query in step two</li>
+<li>uses mu array from original LOS image</li>
+<li>uses mu_bin_centers array to calculate beta and y then interpolate for 2D mu array</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>4.) <code>corrected_los_data = beta * original_los.data + y</code><ul>
+<li>applies correction to image based off beta, y, and original data arrays</li>
+</ul>
+</li>
+<li>5.) <code>Plotting.PlotImage</code> and <code>Plotting.PlotLBCCImage</code><ul>
+<li>plots original and corrected images and difference between them   </li>
+</ul>
+</li>
+</ul>
+              
+            </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="../iit/" class="btn btn-neutral float-right" title="Inter-Instrument Transformation">Next <span class="icon icon-circle-arrow-right"></span></a>
+      
+      
+        <a href="../psf/" class="btn btn-neutral" title="PSF Deconvolution"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+    
+  </div>
+
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+      
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="versions">
+    <span class="rst-current-version" data-toggle="rst-current-version">
+      
+          <a href="https://github.com/predsci/CHD/CHD-mkdocs/" class="fa fa-github" style="float: left; color: #fcfcfc"> GitHub</a>
+      
+      
+        <span><a href="../psf/" style="color: #fcfcfc;">&laquo; Previous</a></span>
+      
+      
+        <span style="margin-left: 15px"><a href="../iit/" style="color: #fcfcfc">Next &raquo;</a></span>
+      
+    </span>
+</div>
+    <script>var base_url = '../..';</script>
+    <script src="../../js/theme.js" defer></script>
+      <script src="../../search/main.js" defer></script>
+    <script defer>
+        window.onload = function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        };
+    </script>
+
+</body>
+</html>
