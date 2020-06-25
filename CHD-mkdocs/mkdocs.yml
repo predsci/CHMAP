@@ -1,0 +1,36 @@
+# basic site info
+site_name: Coronal Hole Detection Project
+side_description: Python routines and documentation for the PSI Coronal Hole Detection Project.
+
+# repository information
+repo_url: https://github.com/predsci/CHD/CHD-mkdocs
+
+# site navigation
+nav:
+  - Home: index.md
+  - About the Project: about.md
+  - Image Pre-Processing:
+      - PSF Deconvolution: ipp/psf.md
+      - Limb-Brightening Correction: ipp/lbc.md
+      - Inter-Instrument Transformation: ipp/iit.md
+  
+
+# theme
+theme:
+  name: readthedocs
+  language: en
+  palette:
+    primary: black
+    accent: indigo
+
+# plugins
+plugins:
+  - search:
+      lang: en
+      foo: bar
+
+# extensions
+markdown_extensions:
+  - attr_list
+  - codehilite:
+      linenums: true

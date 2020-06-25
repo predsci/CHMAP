@@ -32,7 +32,7 @@ def save_histograms(db_session, hdf_data_dir, inst_list, hist_query_time_min, hi
     @param lat_band: latitude band
     @param log10: boolean value
     @param R0: radius
-    @return:
+    @return: None, saves histograms to database
     """
     # start time
     start_time_tot = time.time()
@@ -88,7 +88,7 @@ def calc_theoretic_fit(db_session, inst_list, calc_query_time_min, number_of_wee
     @param n_intensity_bins: number intensity bins
     @param lat_band: latitude band
     @param create: boolean, whether to create new variable values in database (True if create new)
-    @return:
+    @return: None, saves theoretic fit parameters to database
     """
     # start time
     start_time_tot = time.time()
@@ -155,17 +155,17 @@ def calc_theoretic_fit(db_session, inst_list, calc_query_time_min, number_of_wee
             init_pars = np.array([-0.05, -0.3, -.01, 0.4, -1., 6.])
             method = "BFGS"
 
-            start3 = time.time()
-            optim_out3 = optim.minimize(lbcc.get_functional_sse, init_pars,
-                                        args=(hist_ref, hist_mat, mu_vec, intensity_bin_array, model),
-                                        method=method)
+            start_time = time.time()
+            optim_out_theo = optim.minimize(lbcc.get_functional_sse, init_pars,
+                                            args=(hist_ref, hist_mat, mu_vec, intensity_bin_array, model),
+                                            method=method)
 
-            end3 = time.time()
+            end_time = time.time()
 
-            results_theo[date_index, inst_index, 0:6] = optim_out3.x
-            results_theo[date_index, inst_index, 6] = optim_out3.fun
-            results_theo[date_index, inst_index, 7] = round(end3 - start3, 3)
-            results_theo[date_index, inst_index, 8] = optim_out3.status
+            results_theo[date_index, inst_index, 0:6] = optim_out_theo.x
+            results_theo[date_index, inst_index, 6] = optim_out_theo.fun
+            results_theo[date_index, inst_index, 7] = round(end_time - start_time, 3)
+            results_theo[date_index, inst_index, 8] = optim_out_theo.status
 
             meth_name = 'LBCC Theoretic'
             meth_desc = 'LBCC Theoretic Fit Method'
@@ -246,7 +246,8 @@ def apply_lbc_correction(db_session, hdf_data_dir, inst_list, lbc_query_time_min
 
 
 ###### STEP FOUR: GENERATE PLOTS OF BETA AND Y ######
-def generate_theoretic_plots(db_session, inst_list, plot_query_time_min, plot_number_of_weeks, image_out_path, year='2011',
+def generate_theoretic_plots(db_session, inst_list, plot_query_time_min, plot_number_of_weeks, image_out_path,
+                             year='2011',
                              time_period='6 Month', plot_week=0, n_mu_bins=18):
     """
     function to generate plot of theoretical beta and y over time and beta/y v. mu
@@ -300,58 +301,9 @@ def generate_theoretic_plots(db_session, inst_list, plot_query_time_min, plot_nu
                                                                         instrument=instrument)
                 plot_beta[mu_index, date_index], plot_y[mu_index, date_index] = lbcc.get_beta_y_theoretic_based(
                     theoretic_query[date_index, :], mu)
-
-        #### BETA AND Y v. MU FOR SPECIFIED WEEK #####
-
-        plt.figure(10 + inst_index)
-
-        beta_y_v_mu = np.zeros((mu_bin_centers.shape[0], 2))
-
-        for index, mu in enumerate(mu_bin_centers):
-            beta_y_v_mu[index, :] = lbcc.get_beta_y_theoretic_based(theoretic_query[plot_week, :], mu)
-
-        plt.plot(mu_bin_centers, beta_y_v_mu[:, 0], ls=linestyles[0],
-                 c=v_cmap(color_dist[0 - 3]), marker=marker_types[0])
-
-        plt.ylabel(r"$\beta$ " + instrument)
-        plt.xlabel(r"$\mu$")
-        plt.title(instrument + " " + time_period + " average " + str(moving_avg_centers[plot_week]))
-        ax = plt.gca()
-
-        ax.legend(["theoretic"], loc='upper right',
-                  bbox_to_anchor=(1., 1.),
-                  title="model")
-        plt.grid()
-
-        plot_fname = image_out_path + instrument + '_beta_v_mu_' + year + "-" + time_period.replace(" ", "") + '.pdf'
-        plt.savefig(plot_fname)
-
-        plt.close(10 + inst_index)
-
-        # repeat for y
-        plt.figure(20 + inst_index)
-
-        plt.plot(mu_bin_centers, beta_y_v_mu[:, 1], ls=linestyles[0],
-                 c=v_cmap(color_dist[0 - 3]), marker=marker_types[0])
-
-        plt.ylabel(r"$y$ " + instrument)
-        plt.xlabel(r"$\mu$")
-        plt.title(instrument + " " + time_period + " average " + str(moving_avg_centers[plot_week]))
-        ax = plt.gca()
-
-        ax.legend(["theoretic"], loc='lower right',
-                  bbox_to_anchor=(1., 0.),
-                  title="model")
-        plt.grid()
-
-        plot_fname = image_out_path + instrument + '_y_v_mu_' + year + "-" + time_period.replace(" ", "") + '.pdf'
-        plt.savefig(plot_fname)
-
-        plt.close(20 + inst_index)
-
         #### BETA AND Y AS FUNCTION OF TIME ####
         # plot beta for the different models as a function of time
-        plt.figure(100 + inst_index)
+        plt.figure(10 + inst_index)
 
         mu_lines = []
         for mu_index, mu in enumerate(sample_mu):
@@ -375,10 +327,10 @@ def generate_theoretic_plots(db_session, inst_list, plot_query_time_min, plot_nu
         plot_fname = image_out_path + instrument + '_beta_' + year + "-" + time_period.replace(" ", "") + '.pdf'
         plt.savefig(plot_fname)
 
-        plt.close(100 + inst_index)
+        plt.close(10 + inst_index)
 
         # plot y for the different models as a function of time
-        plt.figure(200 + inst_index)
+        plt.figure(20 + inst_index)
 
         mu_lines = []
         for mu_index, mu in enumerate(sample_mu):
@@ -402,6 +354,54 @@ def generate_theoretic_plots(db_session, inst_list, plot_query_time_min, plot_nu
         plt.grid()
 
         plot_fname = image_out_path + instrument + '_y_' + year + "-" + time_period.replace(" ", "") + '.pdf'
+        plt.savefig(plot_fname)
+
+        plt.close(20 + inst_index)
+
+        #### BETA AND Y v. MU FOR SPECIFIED WEEK #####
+
+        plt.figure(100 + inst_index)
+
+        beta_y_v_mu = np.zeros((mu_bin_centers.shape[0], 2))
+
+        for index, mu in enumerate(mu_bin_centers):
+            beta_y_v_mu[index, :] = lbcc.get_beta_y_theoretic_based(theoretic_query[plot_week, :], mu)
+
+        plt.plot(mu_bin_centers, beta_y_v_mu[:, 0], ls=linestyles[0],
+                 c=v_cmap(color_dist[0 - 3]), marker=marker_types[0])
+
+        plt.ylabel(r"$\beta$ " + instrument)
+        plt.xlabel(r"$\mu$")
+        plt.title(instrument + " " + time_period + " average " + str(moving_avg_centers[plot_week]))
+        ax = plt.gca()
+
+        ax.legend(["theoretic"], loc='upper right',
+                  bbox_to_anchor=(1., 1.),
+                  title="model")
+        plt.grid()
+
+        plot_fname = image_out_path + instrument + '_beta_v_mu_' + year + "-" + time_period.replace(" ", "") + '.pdf'
+        plt.savefig(plot_fname)
+
+        plt.close(100 + inst_index)
+
+        # repeat for y
+        plt.figure(200 + inst_index)
+
+        plt.plot(mu_bin_centers, beta_y_v_mu[:, 1], ls=linestyles[0],
+                 c=v_cmap(color_dist[0 - 3]), marker=marker_types[0])
+
+        plt.ylabel(r"$y$ " + instrument)
+        plt.xlabel(r"$\mu$")
+        plt.title(instrument + " " + time_period + " average " + str(moving_avg_centers[plot_week]))
+        ax = plt.gca()
+
+        ax.legend(["theoretic"], loc='lower right',
+                  bbox_to_anchor=(1., 0.),
+                  title="model")
+        plt.grid()
+
+        plot_fname = image_out_path + instrument + '_y_v_mu_' + year + "-" + time_period.replace(" ", "") + '.pdf'
         plt.savefig(plot_fname)
 
         plt.close(200 + inst_index)
