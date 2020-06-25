@@ -2,6 +2,7 @@
 Generate plots of histograms based off histograms grabbed from database
 Allows you to plot one histogram or multiple starting from a specific index
 """
+
 import os
 import datetime
 import numpy as np
@@ -21,7 +22,7 @@ inst_list = ["AIA", "EUVI-A", "EUVI-B"]
 
 # number of histograms to plot
 # if plotting one histogram choose index to plot
-plot_index = 0 # 0 will plot first histogram in time frame
+plot_index = 0  # 0 will plot first histogram in time frame
 # true if want to plot more than one histogram
 plot_plus = True
 # starts looping histograms from index zero
@@ -30,7 +31,7 @@ n_hist_plots = 2
 # define number of bins
 n_mu_bins = 18
 n_intensity_bins = 200
-
+lat_band = [- np.pi / 64., np.pi / 64.]
 # DATABASE PATHS
 database_dir = App.DATABASE_HOME
 sqlite_filename = App.DATABASE_FNAME
@@ -51,11 +52,12 @@ image_intensity_bin_edges = np.linspace(0, 5, num=n_intensity_bins + 1, dtype='f
 # query histograms
 for instrument in inst_list:
     query_instrument = [instrument, ]
-    pd_hist = query_hist(db_session=db_session, n_mu_bins = n_mu_bins, n_intensity_bins = n_intensity_bins,
-                                 time_min = query_time_min, time_max = query_time_max,
-                                 instrument=query_instrument)
+    pd_hist = query_hist(db_session=db_session, n_mu_bins=n_mu_bins, n_intensity_bins=n_intensity_bins,
+                         lat_band=np.array(lat_band).tobytes(), time_min=query_time_min, time_max=query_time_max,
+                         instrument=query_instrument)
     # convert from binary to usable histogram type
-    lat_band, mu_bin_array, intensity_bin_array, full_hist = psi_d_types.binary_to_hist(pd_hist, n_mu_bins, n_intensity_bins)
+    lat_band, mu_bin_array, intensity_bin_array, full_hist = psi_d_types.binary_to_hist(pd_hist, n_mu_bins,
+                                                                                        n_intensity_bins)
 
     if plot_plus:
         for plot_index in range(n_hist_plots):
@@ -63,9 +65,8 @@ for instrument in inst_list:
             date_obs = pd_hist.date_obs[plot_index]
 
             # # simple plot of raw histogram
-            plt.figure(instrument + " Plot: " + str(1 + 2*plot_index))
+            plt.figure(instrument + " Plot: " + str(1 + 2 * plot_index))
             # this will make the plot show up
-            # TODO: just to generate plot and then save somewhere??
             plt.imshow(plot_hist, aspect="auto", interpolation='nearest', origin='low',
                        extent=[image_intensity_bin_edges[0], image_intensity_bin_edges[-2] + 1., mu_bin_edges[0],
                                mu_bin_edges[-1]])
@@ -81,14 +82,15 @@ for instrument in inst_list:
             norm_hist[zero_row_index[0]] = plot_hist[zero_row_index[0]] / row_sums[zero_row_index[0]]
 
             # # simple plot of normed histogram
-            plt.figure(instrument + " Plot: " + str(2 + 2*plot_index))
+            plt.figure(instrument + " Plot: " + str(2 + 2 * plot_index))
             # this will make the plot show up
-            # TODO: just to generate plot and then save somewhere??
             plt.imshow(norm_hist, aspect="auto", interpolation='nearest', origin='low',
-                       extent=[image_intensity_bin_edges[0], image_intensity_bin_edges[-1], mu_bin_edges[0], mu_bin_edges[-1]])
+                       extent=[image_intensity_bin_edges[0], image_intensity_bin_edges[-1], mu_bin_edges[0],
+                               mu_bin_edges[-1]])
             plt.xlabel("Pixel intensities")
             plt.ylabel("mu")
-            plt.title("2D Histogram Data Normalized by mu Bin: \n" + "Instrument: " + instrument + " \n " + str(date_obs))
+            plt.title(
+                "2D Histogram Data Normalized by mu Bin: \n" + "Instrument: " + instrument + " \n " + str(date_obs))
 
     else:
         # plot histogram at specific index

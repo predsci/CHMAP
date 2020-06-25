@@ -22,7 +22,7 @@ raw_data_dir = os.path.join(App.APP_HOME, "reference_data", "raw")
 hdf_data_dir = os.path.join(App.APP_HOME, "reference_data", "processed")
 # manually set the database location
 database_dir = os.path.join(App.APP_HOME, "reference_data")
-sqlite_filename = "dbtest.db"
+sqlite_filename = "CHD_DB.db"
 
 # setup database connection
 use_db = "sqlite"
@@ -32,8 +32,8 @@ db_session = init_db_conn(db_name=use_db, chd_base=db_class.Base, sqlite_path=sq
 
 
 # query some images
-query_time_min = datetime.datetime(2014, 4, 13, 19, 35, 0)
-query_time_max = datetime.datetime(2014, 4, 13, 19, 37, 0)
+query_time_min = datetime.datetime(2011, 4, 1, 19, 35, 0)
+query_time_max = datetime.datetime(2011, 4, 13, 21, 37, 0)
 query_pd = query_euv_images(db_session=db_session, time_min=query_time_min, time_max=query_time_max)
 
 # select and image (index 0)

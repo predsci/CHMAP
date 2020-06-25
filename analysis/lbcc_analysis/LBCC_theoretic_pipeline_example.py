@@ -33,6 +33,7 @@ lbc_query_time_max = datetime.datetime(2011, 4, 1, 3, 0, 0)
 # TIME RANGE FOR BETA&Y PLOT GENERATION
 plot_query_time_min = datetime.datetime(2011, 4, 1, 0, 0, 0)
 plot_number_of_weeks = 27
+plot = True # true if you want images plotted
 
 # define instruments
 inst_list = ["AIA", "EUVI-A", "EUVI-B"]
@@ -74,7 +75,7 @@ lbcc_funcs.calc_theoretic_fit(db_session, inst_list, calc_query_time_min, number
 
 ###### STEP THREE: APPLY CORRECTION AND PLOT IMAGES #######
 lbcc_funcs.apply_lbc_correction(db_session, hdf_data_dir, inst_list, lbc_query_time_min, lbc_query_time_max,
-                                n_mu_bins=n_mu_bins, R0=R0)
+                                n_mu_bins=n_mu_bins, R0=R0, plot=plot)
 
 ###### STEP FOUR: GENERATE PLOTS OF BETA AND Y ######
 lbcc_funcs.generate_theoretic_plots(db_session, inst_list, plot_query_time_min, plot_number_of_weeks,

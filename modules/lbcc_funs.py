@@ -143,7 +143,6 @@ def optim_lbcc_linear(hist_ref, hist_fit, bin_edges, init_pars=np.asarray([1., 0
     :param init_pars: values of [Beta, y] to initialize the Nelder-Mead process
     :return: minimized
     """
-    # init_pars = np.asarray([1., 0.])
 
     optim_out = optim.minimize(get_hist_sse, init_pars, args=(hist_fit, hist_ref, bin_edges), method="Nelder-Mead")
 

@@ -2,6 +2,9 @@
 Apply LBC to images based on theoretic fit.
 Get images and parameers from database to apply correction.
 """
+import sys
+# path to modules and settings folders
+sys.path.append('/Users/tamarervin/work/chd')
 
 import os
 import numpy as np

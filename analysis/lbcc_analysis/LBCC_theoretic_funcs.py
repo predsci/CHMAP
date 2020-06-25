@@ -1,6 +1,7 @@
 """
 functions to generate LBC for images using theoretic fit
 """
+
 import os
 import datetime
 import numpy as np
@@ -183,7 +184,7 @@ def calc_theoretic_fit(db_session, inst_list, calc_query_time_min, number_of_wee
 
 ###### STEP THREE: APPLY CORRECTION AND PLOT IMAGES #######
 def apply_lbc_correction(db_session, hdf_data_dir, inst_list, lbc_query_time_min, lbc_query_time_max, n_mu_bins=18,
-                         R0=1.01):
+                         R0=1.01, plot=False):
     """
     function to apply limb-brightening correction and plot images within a certain time frame
     @param db_session: connected database session to query theoretic fit parameters from
@@ -228,12 +229,13 @@ def apply_lbc_correction(db_session, hdf_data_dir, inst_list, lbc_query_time_min
             ###### APPLY LBC CORRECTION ######
             corrected_los_data = beta * original_los.data + y
 
-            ###### PLOT IMAGES #####
-            Plotting.PlotImage(original_los, nfig=100 + inst_index, title="Original LOS Image for " + instrument)
-            Plotting.PlotLBCCImage(lbcc_data=corrected_los_data, los_image=original_los, nfig=200 + inst_index,
-                                   title="Corrected LBCC Image for " + instrument)
-            Plotting.PlotLBCCImage(lbcc_data=original_los.data - corrected_los_data, los_image=original_los,
-                                   nfig=300 + inst_index, title="Difference Plot for " + instrument)
+            if plot:
+                ###### PLOT IMAGES #####
+                Plotting.PlotImage(original_los, nfig=100 + inst_index, title="Original LOS Image for " + instrument)
+                Plotting.PlotLBCCImage(lbcc_data=corrected_los_data, los_image=original_los, nfig=200 + inst_index,
+                                       title="Corrected LBCC Image for " + instrument)
+                Plotting.PlotLBCCImage(lbcc_data=original_los.data - corrected_los_data, los_image=original_los,
+                                       nfig=300 + inst_index, title="Difference Plot for " + instrument)
     # end time
     end_time_tot = time.time()
     print("LBC has been applied and specified images plotted.")
