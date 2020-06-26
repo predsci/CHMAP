@@ -18,3 +18,6 @@ vi setup.conf
 ./setup.sh setup.conf
 
 This will create the settings/app.py file from settings/app.py.template
+
+## Documentation
+Documentation site is hosted by GitHub [here](https://predsci.github.io/CHD/).
