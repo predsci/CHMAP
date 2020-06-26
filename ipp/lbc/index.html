@@ -77,15 +77,22 @@
     </li>
     <li class="toctree-l3"><a class="reference internal" href="#calculate-and-save-theoretical-fit-parameters">Calculate and Save Theoretical Fit Parameters</a>
     </li>
-    <li class="toctree-l3"><a class="reference internal" href="#generate-plots-of-beta-and-y-correction-coefficients">Generate Plots of Beta and y Correction Coefficients</a>
-    </li>
     <li class="toctree-l3"><a class="reference internal" href="#apply-limb-brightening-correction-and-plot-corrected-images">Apply Limb-Brightening Correction and Plot Corrected Images</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#generate-plots-of-beta-and-y-correction-coefficients">Generate Plots of Beta and y Correction Coefficients</a>
     </li>
         </ul>
     </li>
     </ul>
                     </li>
                     <li class="toctree-l1"><a class="reference internal" href="../iit/">Inter-Instrument Transformation</a>
+                    </li>
+                </ul>
+                <p class="caption"><span class="caption-text">Database</span></p>
+                <ul>
+                    <li class="toctree-l1"><a class="reference internal" href="../../db/db/">Database Basics</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../../db/lbc/">Database for LBC</a>
                     </li>
                 </ul>
       </div>
@@ -136,8 +143,8 @@ dependent on their distance from disk center. This process uses a theoretic mode
 <table>
 <thead>
 <tr>
-<th>Original Image</th>
-<th>Corrected Image</th>
+<th><a href="../../img/original_AIA.png">Original AIA Image</a></th>
+<th><a href="../../img/corrected_AIA.png">Corrected AIA Image</a></th>
 </tr>
 </thead>
 <tbody>
@@ -151,8 +158,8 @@ dependent on their distance from disk center. This process uses a theoretic mode
 <table>
 <thead>
 <tr>
-<th>Original Image</th>
-<th>Corrected Image</th>
+<th><a href="../../img/original_STA.png">Original STA Image</a></th>
+<th><a href="../../img/corrected_STA.png">Corrected STA Image</a></th>
 </tr>
 </thead>
 <tbody>
@@ -166,8 +173,8 @@ dependent on their distance from disk center. This process uses a theoretic mode
 <table>
 <thead>
 <tr>
-<th>Original Image</th>
-<th>Corrected Image</th>
+<th><a href="../../img/original_STB.png">Original STB Image</a></th>
+<th><a href="../../img/corrected_STB.png">Corrected STB Image</a></th>
 </tr>
 </thead>
 <tbody>
@@ -179,8 +186,8 @@ dependent on their distance from disk center. This process uses a theoretic mode
 </table>
 <h2 id="theoretical-analysis-pipeline">Theoretical Analysis Pipeline</h2>
 <h3 id="compute-histograms">Compute Histograms</h3>
-<p>The source code for this is found in the CHD GitHub at:<br />
-analysis/lbcc_analysis/LBCC_create_mu-hist.py</p>
+<p>The source code for this is found in the <a href="https://github.com/predsci/CHD/blob/master/analysis/lbcc_analysis/LBCC_create_mu-hist.py">CHD GitHub</a> 
+and the generalized function can be found <a href="https://github.com/predsci/CHD/blob/master/analysis/lbcc_analysis/LBCC_theoretic_funcs.py">here</a>.  </p>
 <pre class="codehilite"><code class="linenums">def save_histograms(db_session, hdf_data_dir, inst_list, hist_query_time_min, hist_query_time_max, n_mu_bins=18,
                     n_intensity_bins=200, lat_band=[-np.pi / 64., np.pi / 64.], log10=True, R0=1.01):
         &quot;&quot;&quot;
@@ -191,8 +198,7 @@ analysis/lbcc_analysis/LBCC_create_mu-hist.py</p>
         temp_hist = los_temp.mu_hist(image_intensity_bin_edges, mu_bin_edges, lat_band=lat_band, log10=log10)
         hist_lbcc = psi_d_types.create_hist(hdf_path, row.image_id, mu_bin_edges, image_intensity_bin_edges,
                                             lat_band, temp_hist)
-        db_funcs.add_lbcc_hist(hist_lbcc, db_session)
-        return None</code></pre>
+        db_funcs.add_lbcc_hist(hist_lbcc, db_session)</code></pre>
 
 
 <ul>
@@ -214,8 +220,8 @@ analysis/lbcc_analysis/LBCC_create_mu-hist.py</p>
 </li>
 </ul>
 <h3 id="calculate-and-save-theoretical-fit-parameters">Calculate and Save Theoretical Fit Parameters</h3>
-<p>The source code for this is found in the CHD GitHub at:<br />
-analysis/lbcc_analysis/LBCC_beta-y_theoretical_analysis.py</p>
+<p>The source code for this is found in the <a href="https://github.com/predsci/CHD/blob/master/analysis/lbcc_analysis/LBCC_beta-y_theoretical_analysis.py">CHD GitHub</a> 
+and the generalized function can be found <a href="https://github.com/predsci/CHD/blob/master/analysis/lbcc_analysis/LBCC_theoretic_funcs.py">here</a>. </p>
 <pre class="codehilite"><code class="linenums">def calc_theoretic_fit(db_session, inst_list, calc_query_time_min, number_of_weeks=27, number_of_days=180, n_mu_bins=18,
                    n_intensity_bins=200, lat_band=[-np.pi / 64., np.pi / 64.], create=False):
     &quot;&quot;&quot;
@@ -254,40 +260,9 @@ analysis/lbcc_analysis/LBCC_beta-y_theoretical_analysis.py</p>
 </ul>
 </li>
 </ul>
-<h3 id="generate-plots-of-beta-and-y-correction-coefficients">Generate Plots of Beta and y Correction Coefficients</h3>
-<p>The source code for this is found in the CHD GitHub at:<br />
-analysis/lbcc_analysis/LBCC_generate_theoretic_plots.py</p>
-<pre class="codehilite"><code class="linenums">def generate_theoretic_plots(db_session, inst_list, plot_query_time_min, plot_number_of_weeks, image_out_path,
-                     year='2011', time_period='6 Month', plot_week=0, n_mu_bins=18):
-    &quot;&quot;&quot;
-    function to generate plots of beta/y over time and beta/y v. mu
-    &quot;&quot;&quot;
-    theoretic_query[date_index, :] = db_funcs.query_var_val(db_session, meth_name,
-                     date_obs=np.datetime64(center_date).astype(datetime.datetime), instrument=instrument)
-    plot_beta[mu_index, date_index], plot_y[mu_index, date_index] = lbcc.get_beta_y_theoretic_based(
-                    theoretic_query[date_index, :], mu)
-    beta_y_v_mu[index, :] = lbcc.get_beta_y_theoretic_based(theoretic_query[plot_week, :], mu)</code></pre>
-
-
-<ul>
-<li>1.) <code>db_funcs.query_var_val</code><ul>
-<li>query fit parameters from database</li>
-</ul>
-</li>
-<li>2.) <code>lbcc.get_beta_y_theoretic_based(theoretic_query[date_index, :], mu)</code><ul>
-<li>calculate beta and y correction coefficients over time using theoretic fit parameters and mu values</li>
-<li>used for plotting beta and y over time</li>
-</ul>
-</li>
-<li>3.) <code>lbcc.get_beta_y_theoretic_based(theoretic_query[plot_week, :], mu)</code><ul>
-<li>calculate beta and y correction coefficients for a specific week using theoretic fit parameters and mu values</li>
-<li>used for plotting beta and y v. mu for a specific week</li>
-</ul>
-</li>
-</ul>
 <h3 id="apply-limb-brightening-correction-and-plot-corrected-images">Apply Limb-Brightening Correction and Plot Corrected Images</h3>
-<p>The source code for this is found in the CHD GitHub at:<br />
-analysis/lbcc_analysis/LBCC_apply_fit.py</p>
+<p>The source code for this is found in the <a href="https://github.com/predsci/CHD/blob/master/analysis/lbcc_analysis/LBCC_apply_fit.py">CHD GitHub</a> 
+and the generalized function can be found <a href="https://github.com/predsci/CHD/blob/master/analysis/lbcc_analysis/LBCC_theoretic_funcs.py">here</a>. </p>
 <pre class="codehilite"><code class="linenums">def apply_lbc_correction(db_session, hdf_data_dir, inst_list, lbc_query_time_min, lbc_query_time_max, n_mu_bins=18,
                      R0=1.01, plot=False):
     &quot;&quot;&quot;
@@ -331,6 +306,37 @@ analysis/lbcc_analysis/LBCC_apply_fit.py</p>
 </li>
 <li>5.) <code>Plotting.PlotImage</code> and <code>Plotting.PlotLBCCImage</code><ul>
 <li>plots original and corrected images and difference between them   </li>
+</ul>
+</li>
+</ul>
+<h3 id="generate-plots-of-beta-and-y-correction-coefficients">Generate Plots of Beta and y Correction Coefficients</h3>
+<p>The source code for this is found in the <a href="https://github.com/predsci/CHD/blob/master/analysis/lbcc_analysis/LBCC_generate_theoretic_plots.py">CHD GitHub</a> 
+and the generalized function can be found <a href="https://github.com/predsci/CHD/blob/master/analysis/lbcc_analysis/LBCC_theoretic_funcs.py">here</a>.    </p>
+<pre class="codehilite"><code class="linenums">def generate_theoretic_plots(db_session, inst_list, plot_query_time_min, plot_number_of_weeks, image_out_path,
+                     year='2011', time_period='6 Month', plot_week=0, n_mu_bins=18):
+    &quot;&quot;&quot;
+    function to generate plots of beta/y over time and beta/y v. mu
+    &quot;&quot;&quot;
+    theoretic_query[date_index, :] = db_funcs.query_var_val(db_session, meth_name,
+                     date_obs=np.datetime64(center_date).astype(datetime.datetime), instrument=instrument)
+    plot_beta[mu_index, date_index], plot_y[mu_index, date_index] = lbcc.get_beta_y_theoretic_based(
+                    theoretic_query[date_index, :], mu)
+    beta_y_v_mu[index, :] = lbcc.get_beta_y_theoretic_based(theoretic_query[plot_week, :], mu)</code></pre>
+
+
+<ul>
+<li>1.) <code>db_funcs.query_var_val</code><ul>
+<li>query fit parameters from database</li>
+</ul>
+</li>
+<li>2.) <code>lbcc.get_beta_y_theoretic_based(theoretic_query[date_index, :], mu)</code><ul>
+<li>calculate beta and y correction coefficients over time using theoretic fit parameters and mu values</li>
+<li>used for plotting beta and y over time</li>
+</ul>
+</li>
+<li>3.) <code>lbcc.get_beta_y_theoretic_based(theoretic_query[plot_week, :], mu)</code><ul>
+<li>calculate beta and y correction coefficients for a specific week using theoretic fit parameters and mu values</li>
+<li>used for plotting beta and y v. mu for a specific week</li>
 </ul>
 </li>
 </ul>
