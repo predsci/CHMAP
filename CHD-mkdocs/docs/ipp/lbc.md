@@ -5,25 +5,25 @@ dependent on their distance from disk center. This process uses a theoretic mode
 
 ## Examples of Corrected Images
 ### AIA Images
-Original Image | Corrected Image
+[Original AIA Image](../img/original_AIA.png) | [Corrected AIA Image](../img/corrected_AIA.png)
 - | - 
 ![Original AIA Image](../img/original_AIA.png) | ![Corrected AIA Image](../img/corrected_AIA.png)  
 
 ### EUVI-A Images
-Original Image | Corrected Image
+[Original STA Image](../img/original_STA.png) | [Corrected STA Image](../img/corrected_STA.png)
 - | - 
 ![Original STA Image](../img/original_STA.png) | ![Corrected STA Image](../img/corrected_STA.png)  
 
 ### EUVI-B Images
-Original Image | Corrected Image
+[Original STB Image](../img/original_STB.png) | [Corrected STB Image](../img/corrected_STB.png)
 - | - 
 ![Original STB Image](../img/original_STB.png) | ![Corrected STB Image](../img/corrected_STB.png)    
 
 ## Theoretical Analysis Pipeline
 
 ### Compute Histograms 
-The source code for this is found in the CHD GitHub at:  
-analysis/lbcc_analysis/LBCC_create_mu-hist.py
+The source code for this is found in the [CHD GitHub](https://github.com/predsci/CHD/blob/master/analysis/lbcc_analysis/LBCC_create_mu-hist.py) 
+and the generalized function can be found [here](https://github.com/predsci/CHD/blob/master/analysis/lbcc_analysis/LBCC_theoretic_funcs.py).  
 
     def save_histograms(db_session, hdf_data_dir, inst_list, hist_query_time_min, hist_query_time_max, n_mu_bins=18,
                         n_intensity_bins=200, lat_band=[-np.pi / 64., np.pi / 64.], log10=True, R0=1.01):
@@ -36,7 +36,6 @@ analysis/lbcc_analysis/LBCC_create_mu-hist.py
             hist_lbcc = psi_d_types.create_hist(hdf_path, row.image_id, mu_bin_edges, image_intensity_bin_edges,
                                                 lat_band, temp_hist)
             db_funcs.add_lbcc_hist(hist_lbcc, db_session)
-            return None
     
  
 * 1.)  <code>db_funcs.query_euv_images</code>  
@@ -50,8 +49,8 @@ analysis/lbcc_analysis/LBCC_create_mu-hist.py
 
 
 ### Calculate and Save Theoretical Fit Parameters
-The source code for this is found in the CHD GitHub at:  
-analysis/lbcc_analysis/LBCC_beta-y_theoretical_analysis.py
+The source code for this is found in the [CHD GitHub](https://github.com/predsci/CHD/blob/master/analysis/lbcc_analysis/LBCC_beta-y_theoretical_analysis.py) 
+and the generalized function can be found [here](https://github.com/predsci/CHD/blob/master/analysis/lbcc_analysis/LBCC_theoretic_funcs.py). 
 
     def calc_theoretic_fit(db_session, inst_list, calc_query_time_min, number_of_weeks=27, number_of_days=180, n_mu_bins=18,
                        n_intensity_bins=200, lat_band=[-np.pi / 64., np.pi / 64.], create=False):
@@ -84,34 +83,10 @@ analysis/lbcc_analysis/LBCC_beta-y_theoretical_analysis.py
         
 
 
-### Generate Plots of Beta and y Correction Coefficients
-The source code for this is found in the CHD GitHub at:  
-analysis/lbcc_analysis/LBCC_generate_theoretic_plots.py
-
-    def generate_theoretic_plots(db_session, inst_list, plot_query_time_min, plot_number_of_weeks, image_out_path,
-                         year='2011', time_period='6 Month', plot_week=0, n_mu_bins=18):
-        """
-        function to generate plots of beta/y over time and beta/y v. mu
-        """
-        theoretic_query[date_index, :] = db_funcs.query_var_val(db_session, meth_name,
-                         date_obs=np.datetime64(center_date).astype(datetime.datetime), instrument=instrument)
-        plot_beta[mu_index, date_index], plot_y[mu_index, date_index] = lbcc.get_beta_y_theoretic_based(
-                        theoretic_query[date_index, :], mu)
-        beta_y_v_mu[index, :] = lbcc.get_beta_y_theoretic_based(theoretic_query[plot_week, :], mu)                                
-
-* 1.) <code>db_funcs.query_var_val</code>
-    * query fit parameters from database
-* 2.) <code>lbcc.get_beta_y_theoretic_based(theoretic_query[date_index, :], mu)</code>
-    * calculate beta and y correction coefficients over time using theoretic fit parameters and mu values
-    * used for plotting beta and y over time
-* 3.) <code>lbcc.get_beta_y_theoretic_based(theoretic_query[plot_week, :], mu)</code>
-    * calculate beta and y correction coefficients for a specific week using theoretic fit parameters and mu values
-    * used for plotting beta and y v. mu for a specific week
-
-
 ### Apply Limb-Brightening Correction and Plot Corrected Images
-The source code for this is found in the CHD GitHub at:  
-analysis/lbcc_analysis/LBCC_apply_fit.py
+The source code for this is found in the [CHD GitHub](https://github.com/predsci/CHD/blob/master/analysis/lbcc_analysis/LBCC_apply_fit.py) 
+and the generalized function can be found [here](https://github.com/predsci/CHD/blob/master/analysis/lbcc_analysis/LBCC_theoretic_funcs.py). 
+
 
     def apply_lbc_correction(db_session, hdf_data_dir, inst_list, lbc_query_time_min, lbc_query_time_max, n_mu_bins=18,
                          R0=1.01, plot=False):
@@ -144,3 +119,29 @@ analysis/lbcc_analysis/LBCC_apply_fit.py
     * applies correction to image based off beta, y, and original data arrays
 * 5.) <code>Plotting.PlotImage</code> and <code>Plotting.PlotLBCCImage</code>
     * plots original and corrected images and difference between them   
+    
+
+### Generate Plots of Beta and y Correction Coefficients
+The source code for this is found in the [CHD GitHub](https://github.com/predsci/CHD/blob/master/analysis/lbcc_analysis/LBCC_generate_theoretic_plots.py) 
+and the generalized function can be found [here](https://github.com/predsci/CHD/blob/master/analysis/lbcc_analysis/LBCC_theoretic_funcs.py).    
+
+
+    def generate_theoretic_plots(db_session, inst_list, plot_query_time_min, plot_number_of_weeks, image_out_path,
+                         year='2011', time_period='6 Month', plot_week=0, n_mu_bins=18):
+        """
+        function to generate plots of beta/y over time and beta/y v. mu
+        """
+        theoretic_query[date_index, :] = db_funcs.query_var_val(db_session, meth_name,
+                         date_obs=np.datetime64(center_date).astype(datetime.datetime), instrument=instrument)
+        plot_beta[mu_index, date_index], plot_y[mu_index, date_index] = lbcc.get_beta_y_theoretic_based(
+                        theoretic_query[date_index, :], mu)
+        beta_y_v_mu[index, :] = lbcc.get_beta_y_theoretic_based(theoretic_query[plot_week, :], mu)                                
+
+* 1.) <code>db_funcs.query_var_val</code>
+    * query fit parameters from database
+* 2.) <code>lbcc.get_beta_y_theoretic_based(theoretic_query[date_index, :], mu)</code>
+    * calculate beta and y correction coefficients over time using theoretic fit parameters and mu values
+    * used for plotting beta and y over time
+* 3.) <code>lbcc.get_beta_y_theoretic_based(theoretic_query[plot_week, :], mu)</code>
+    * calculate beta and y correction coefficients for a specific week using theoretic fit parameters and mu values
+    * used for plotting beta and y v. mu for a specific week

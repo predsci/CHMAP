@@ -1,9 +1,10 @@
 # basic site info
 site_name: Coronal Hole Detection Project
-side_description: Python routines and documentation for the PSI Coronal Hole Detection Project.
+site_description: Python routines and documentation for the PSI Coronal Hole Detection Project.
+site_author: Tamar Ervin
 
 # repository information
-repo_url: https://github.com/predsci/CHD/CHD-mkdocs
+repo_url: https://github.com/predsci/CHD
 
 # site navigation
 nav:
@@ -13,7 +14,9 @@ nav:
       - PSF Deconvolution: ipp/psf.md
       - Limb-Brightening Correction: ipp/lbc.md
       - Inter-Instrument Transformation: ipp/iit.md
-  
+  - Database:
+      - Database Basics: db/db.md
+      - Database for LBC: db/lbc.md
 
 # theme
 theme:
@@ -21,13 +24,12 @@ theme:
   language: en
   palette:
     primary: black
-    accent: indigo
+    accent: blue
 
 # plugins
 plugins:
   - search:
       lang: en
-      foo: bar
 
 # extensions
 markdown_extensions:

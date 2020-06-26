@@ -43,7 +43,7 @@ n_mu_bins = 18
 n_intensity_bins = 200
 R0 = 1.01
 log10 = True
-lat_band = [- 2 * np.pi / 64., 2 * np.pi / 64.]
+lat_band = [- np.pi / 64., np.pi / 64.]
 
 # define database paths
 raw_data_dir = App.RAW_DATA_HOME

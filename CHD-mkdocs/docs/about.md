@@ -1,2 +1,5 @@
 # About the Project
-About the project
+
+## Contact
+Cooper Downs: cdowns@predsci.com  
+James Turtle: jturtle@predsci.com

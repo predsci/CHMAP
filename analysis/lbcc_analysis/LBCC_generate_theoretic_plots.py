@@ -1,6 +1,8 @@
 """
-Generate plots of lbcc theoretic methods
-Grabs parameter values from database - still working on this
+Generate beta and y plots of lbcc theoretic method for each instrument
+- beta and y over time
+- beta and y v. mu
+Queries parameter values from database
 """
 
 import os
