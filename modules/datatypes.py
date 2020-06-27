@@ -51,9 +51,8 @@ class LosImage:
         # add placeholders for carrington coords and mu
         self.lat = None
         self.lon = None
-        self.mu  = None
+        self.mu = None
         self.no_data_val = None
-
 
     def get_coordinates(self, R0=1.0, outside_map_val=-9999.):
         """
@@ -69,17 +68,17 @@ class LosImage:
         y_vec = y_mat.flatten(order="C")
 
         cr_theta_all, cr_phi_all, image_mu = image_grid_to_CR(x_vec, y_vec, R0=R0, obsv_lat=self.info['cr_lat'],
-                                obsv_lon=self.info['cr_lon'], get_mu=True, outside_map_val=outside_map_val)
+                                                              obsv_lon=self.info['cr_lon'], get_mu=True,
+                                                              outside_map_val=outside_map_val)
 
         cr_theta = cr_theta_all.reshape(self.data.shape, order="C")
         cr_phi = cr_phi_all.reshape(self.data.shape, order="C")
         image_mu = image_mu.reshape(self.data.shape, order="C")
 
-        self.lat = cr_theta - np.pi/2.
+        self.lat = cr_theta - np.pi / 2.
         self.lon = cr_phi
         self.mu = image_mu
         self.no_data_val = outside_map_val
-
 
     def add_map(self, sunpy_meta):
         """
@@ -110,7 +109,7 @@ class LosImage:
             # Generate map grid based on number of image pixels vertically within R0
             # map parameters (assumed)
             y_range = [-1, 1]
-            x_range = [0, 2*np.pi]
+            x_range = [0, 2 * np.pi]
 
             # observer parameters (from image)
             cr_lat = self.info['cr_lat']
@@ -118,11 +117,11 @@ class LosImage:
 
             # determine number of pixels in map y-grid
             map_nycoord = sum(abs(self.y) < R0)
-            del_y = (y_range[1] - y_range[0])/(map_nycoord - 1)
+            del_y = (y_range[1] - y_range[0]) / (map_nycoord - 1)
             # how to define pixels? square in sin-lat v phi or lat v phi?
             # del_x = del_y*np.pi/2
             del_x = del_y
-            map_nxcoord = (np.floor((x_range[1] - x_range[0])/del_x) + 1).astype(int)
+            map_nxcoord = (np.floor((x_range[1] - x_range[0]) / del_x) + 1).astype(int)
 
             # generate map x,y grids. y grid centered on equator, x referenced from lon=0
             map_y = np.linspace(y_range[0], y_range[1], map_nycoord, dtype=DTypes.MAP_AXES)
@@ -147,7 +146,7 @@ class LosImage:
 
         return map_out
 
-    def mu_hist(self, intensity_bin_edges, mu_bin_edges, lat_band=[-np.pi/64., np.pi/64.], log10=True):
+    def mu_hist(self, intensity_bin_edges, mu_bin_edges, lat_band=[-np.pi / 64., np.pi / 64.], log10=True):
         """
         Given an LOS image, bin an equatorial band of mu-bins by intensity.  This will generally
         be in preparation to fit Limb Brightening Correction Curves (LBCC).
@@ -253,20 +252,19 @@ class PsiMap:
 
         # Type cast data arrays
         self.data = data.astype(DTypes.MAP_DATA)
-        self.x    = x.astype(DTypes.MAP_AXES)
-        self.y    = y.astype(DTypes.MAP_AXES)
+        self.x = x.astype(DTypes.MAP_AXES)
+        self.y = y.astype(DTypes.MAP_AXES)
         if mu is not None:
             self.mu = mu.astype(DTypes.MAP_MU)
         else:
             # create placeholder
-            self.mu   = None
+            self.mu = None
         self.no_data_val = no_data_val
         if origin_image is not None:
             self.origin_image = origin_image.astype(DTypes.MAP_ORIGIN_IMAGE)
         else:
             # create placeholder
             self.origin_image = None
-
 
     def append_map_info(self, map_df):
         """
@@ -372,12 +370,12 @@ class InterpResult:
     """
 
     def __init__(self, data, x, y, mu_mat=None):
-
         # create the data tags
         self.data = data
         self.x = x
         self.y = y
         self.mu_mat = mu_mat
+
 
 class LBCCHist:
     """
@@ -385,7 +383,6 @@ class LBCCHist:
     """
 
     def __init__(self, chd_meta, image_id, mu_bin_edges, intensity_bin_edges, lat_band, mu_hist):
-
         # adds info dictionary
         self.info = chd_meta
         self.image_id = image_id
@@ -399,19 +396,23 @@ class LBCCHist:
 
     def get_data(self):
         date_format = "%Y-%m-%dT%H:%M:%S.%f"
-        hist_data = {'image_id': self.image_id, 'date_obs':datetime.datetime.strptime(self.info['date_string'], date_format), 'wavelength':self.info['wavelength'],
-                     'instrument':self.info['instrument'], 'n_mu_bins': self.n_mu_bins,
+        hist_data = {'image_id': self.image_id,
+                     'date_obs': datetime.datetime.strptime(self.info['date_string'], date_format),
+                     'wavelength': self.info['wavelength'],
+                     'instrument': self.info['instrument'], 'n_mu_bins': self.n_mu_bins,
                      'n_intensity_bins': self.n_intensity_bins, 'lat_band': self.lat_band,
-                     'mu_bin_edges':self.mu_bin_edges, 'intensity_bin_edges': self.intensity_bin_edges,
+                     'mu_bin_edges': self.mu_bin_edges, 'intensity_bin_edges': self.intensity_bin_edges,
                      'all_hists': self.mu_hist}
         return hist_data
 
     def write_to_pickle(self, path_for_hist, year, time_period, instrument, hist):
-        file_path = path_for_hist + str(year) + "_" + time_period + '_' + str(len(self.mu_bin_edges)) + '_' + instrument + '.pkl'
+        file_path = path_for_hist + str(year) + "_" + time_period + '_' + str(
+            len(self.mu_bin_edges)) + '_' + instrument + '.pkl'
         print('\nSaving histograms to ' + file_path + '\n')
         f = open(file_path, 'wb')
         pickle.dump(hist.get_data, f)
         f.close()
+
 
 def create_hist(h5_file, image_id, mu_bin_edges, intensity_bin_edges, lat_band, mu_hist):
     # read the image and metadata
@@ -420,6 +421,7 @@ def create_hist(h5_file, image_id, mu_bin_edges, intensity_bin_edges, lat_band, 
     # create the structure
     hist = LBCCHist(chd_meta, image_id, mu_bin_edges, intensity_bin_edges, lat_band, mu_hist)
     return hist
+
 
 def lbcc_to_binary(lbcc_hist):
     """
@@ -437,6 +439,7 @@ def lbcc_to_binary(lbcc_hist):
 
     return lat_band, intensity_bin_edges, mu_bin_edges, mu_hist
 
+
 def binary_to_hist(lbcc_binary, n_mu_bins, n_intensity_bins):
     for index, row in lbcc_binary.iterrows():
         lat_band = np.frombuffer(row.lat_band, dtype=np.float)
@@ -453,3 +456,11 @@ def binary_to_hist(lbcc_binary, n_mu_bins, n_intensity_bins):
         full_hist[:, :, index] = mu_hist
 
     return lat_band, mu_bin_array, intensity_bin_array, full_hist
+
+
+class LBCCImage:
+    """
+    Class that holds limb-brightening corrected data
+    """
+
+    def __init__(self):
