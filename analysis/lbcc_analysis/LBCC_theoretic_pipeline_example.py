@@ -2,7 +2,9 @@
 Example of LBC theoretic pipeline
 Calls functions from analysis/lbcc_analysis/lbcc_theoretic_funcs.py
 """
+import sys
 
+sys.path.append('/Users/tamarervin/Dropbox/work/CHD')
 import os
 import time
 import datetime
