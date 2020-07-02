@@ -60,11 +60,11 @@ def save_histograms(db_session, hdf_data_dir, inst_list, hist_query_time_min, hi
             los_temp.get_coordinates(R0=R0)
             # perform 2D histogram on mu and image intensity
             temp_hist = los_temp.mu_hist(image_intensity_bin_edges, mu_bin_edges, lat_band=lat_band, log10=log10)
-            hist_lbcc = psi_d_types.create_hist(hdf_path, row.image_id, mu_bin_edges, image_intensity_bin_edges,
+            hist_lbcc = psi_d_types.create_lbcc_hist(hdf_path, row.image_id, mu_bin_edges, image_intensity_bin_edges,
                                                 lat_band, temp_hist)
 
             # add this histogram and meta data to database
-            db_funcs.add_lbcc_hist(hist_lbcc, db_session)
+            db_funcs.add_hist(db_session, hist_lbcc)
 
     db_session.close()
 
@@ -145,7 +145,7 @@ def calc_theoretic_fit(db_session, inst_list, calc_query_time_min, number_of_wee
             norm_hist[zero_row_index[0]] = summed_hist[zero_row_index[0]] / row_sums[zero_row_index[0]]
 
             # separate the reference bin from the fitted bins
-            hist_ref = norm_hist[-1,]
+            hist_ref = norm_hist[-1, ]
             hist_mat = norm_hist[:-1, ]
             mu_vec = mu_bin_centers[:-1]
 
@@ -194,6 +194,7 @@ def apply_lbc_correction(db_session, hdf_data_dir, inst_list, lbc_query_time_min
     @param lbc_query_time_max: maximum query time for applying lbc fit
     @param n_mu_bins: number of mu bins
     @param R0: radius
+    @param plot: whether or not to plot images
     @return:
     """
     # start time
@@ -229,8 +230,15 @@ def apply_lbc_correction(db_session, hdf_data_dir, inst_list, lbc_query_time_min
             ###### APPLY LBC CORRECTION ######
             corrected_los_data = beta * original_los.data + y
 
+            ###### CREATE LBCC DATATYPE ######
+            lbcc_data = psi_d_types.create_lbcc_image(corrected_los_data, los_image=original_los,
+                                                      intensity_bin_edges=intensity_bin_edges)
+
+            ###### SAVE LBCC IMAGE TO DATABASE ######
+            db_funcs.add_corrected_image(db_session, corrected_image=lbcc_data)
+
+            ###### PLOT IMAGES #####
             if plot:
-                ###### PLOT IMAGES #####
                 Plotting.PlotImage(original_los, nfig=100 + inst_index, title="Original LOS Image for " + instrument)
                 Plotting.PlotLBCCImage(lbcc_data=corrected_los_data, los_image=original_los, nfig=200 + inst_index,
                                        title="Corrected LBCC Image for " + instrument)
