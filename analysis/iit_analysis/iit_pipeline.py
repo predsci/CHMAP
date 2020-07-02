@@ -73,10 +73,11 @@ for inst_index, instrument in enumerate(inst_list):
         hdf_path = os.path.join(hdf_data_dir, row.fname_hdf)
         original_los = psi_d_types.read_los_image(hdf_path)
         original_los.get_coordinates(R0=R0)
+        # query for theoretic LBCC parameters
         theoretic_query = db_funcs.query_var_val(db_session, meth_name, date_obs=original_los.info['date_string'],
                                                  instrument=instrument)
 
-        # get beta and y from theoretic fit
+        # calculate beta and y from theoretic fit
         beta, y = lbcc.get_beta_y_theoretic_interp(theoretic_query, mu_array_2d=original_los.mu,
                                                    mu_array_1d=mu_bin_centers)
 
@@ -85,8 +86,11 @@ for inst_index, instrument in enumerate(inst_list):
         corrected_los_data[index, :, :] = corrected_data
         intensity_bin_edges = np.linspace(0, 5, num=n_intensity_bins + 1, dtype='float')
 
-        hist_test, use_data = iit.iit_hist(corrected_data, original_los, intensity_bin_edges,
-                                           lat_band=lat_band, log10=True)
+        lbcc_data = psi_d_types.create_lbcc_data(corrected_data, original_los)
+        hist_test, use_data = psi_d_types.create_iit_hist(lbcc_data,
+                                                          intensity_bin_array=intensity_bin_edges,
+                                                          lat_band=lat_band, log10=True)
+
         norm_hist = np.full(hist_test.shape, 0.)
         row_sums = hist_test.sum(axis=0, keepdims=True)
         # but do not divide by zero
@@ -109,7 +113,7 @@ iit_data = np.log10(hist_fit)
 # plot the histogram??
 plt.hist(iit_data)
 
-##### STEP ONE: CREATE 1D HISTOGRAMS ######
+##### STEP ONE: CREATE 1D HISTOGRAMS AND SAVE TO DATABASE ######
 
 ##### STEP TWO: CALCULATE TRANSFORMATION COEFFICIENTS ######
 
