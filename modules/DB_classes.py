@@ -175,11 +175,28 @@ class Method_Combo_Assoc(Base):
 
     method_info = relationship("Meth_Defs")
 
-class LBCC_Hist(Base):
+
+class Var_Vals(Base):
+    """
+    This table holds the method parameter values for fits with associated images.
+    Could save var_val as both a Float and a String or exact-valued Numeric.
+    """
+    __tablename__ = 'var_vals'
+    combo_id = Column(Integer, ForeignKey('image_combos.combo_id'), primary_key=True)
+    meth_id = Column(Integer, ForeignKey('meth_defs.meth_id'))
+    var_id = Column(Integer, ForeignKey('var_defs.var_id'), primary_key=True)
+    var_val = Column(Float)
+
+    var_info = relationship("Var_Defs")
+    meth_info = relationship("Meth_Defs")
+    combo_info = relationship("Image_Combos")
+
+
+class Histogram(Base):
     """
     Table to hold histogram data type
     """
-    __tablename__ = 'lbcc_hist'
+    __tablename__ = 'histogram'
     hist_id = Column(Integer, primary_key=True)
     image_id = Column(Integer, ForeignKey('euv_images.image_id'))
     date_obs = Column(DateTime)
@@ -190,21 +207,25 @@ class LBCC_Hist(Base):
     lat_band = Column(LargeBinary)
     mu_bin_edges = Column(LargeBinary)
     intensity_bin_edges = Column(LargeBinary)
-    mu_hist = Column(LargeBinary)
+    hist = Column(LargeBinary)
 
     __table_args__ = (Index('lbcc_index', "date_obs", "instrument", "wavelength"),)
 
-class Var_Vals(Base):
-    """
-    This table holds the method parameter values for fits with associated images.
-    Could save var_val as both a Float and a String or exact-valued Numeric.
-    """
-    __tablename__='var_vals'
-    combo_id = Column(Integer, ForeignKey('image_combos.combo_id'), primary_key=True)
-    meth_id = Column(Integer, ForeignKey('meth_defs.meth_id'))
-    var_id = Column(Integer, ForeignKey('var_defs.var_id'), primary_key=True)
-    var_val = Column(Float)
 
-    var_info = relationship("Var_Defs")
-    meth_info = relationship("Meth_Defs")
-    combo_info = relationship("Image_Combos")
+class Corrected_Images(Base):
+    """
+    Table to hold Limb-Brightening Corrected Data and associated image information
+    """
+    __tablename__ = 'corrected_images'
+    image_id = Column(Integer, primary_key=True)
+    meth_id = Column(Integer, ForeignKey('meth_defs.meth_id'))
+    date_obs = Column(DateTime)
+    instrument = Column(String(10))
+    wavelength = Column(Integer)
+    distance = Column(Float)
+    cr_lon = Column(Float)
+    cr_lat = Column(Float)
+    cr_rot = Column(Float)
+    lat_array = Column(LargeBinary)
+    mu_array = Column(LargeBinary)
+    lbcc_data = Column(LargeBinary)
