@@ -15,7 +15,7 @@
         <meta name="author" content="Tamar Ervin">
       
       <link rel="shortcut icon" href="../../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.1.2, mkdocs-material-5.3.3">
+      <meta name="generator" content="mkdocs-1.1.2, mkdocs-material-5.4.0">
     
     
       
@@ -433,6 +433,18 @@
   </li>
 
         
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../../db/iit/" title="Database for IIT" class="md-nav__link">
+      Database for IIT
+    </a>
+  </li>
+
+        
       </ul>
     </nav>
   </li>
@@ -729,7 +741,9 @@ and the generalized function can be found <a href="https://github.com/predsci/CH
 14
 15
 16
-17</pre></div></td><td class="code"><div class="codehilite"><pre><span></span><code><span class="err">def apply_lbc_correction(db_session, hdf_data_dir, inst_list, lbc_query_time_min, lbc_query_time_max, n_mu_bins=18,</span>
+17
+18
+19</pre></div></td><td class="code"><div class="codehilite"><pre><span></span><code><span class="err">def apply_lbc_correction(db_session, hdf_data_dir, inst_list, lbc_query_time_min, lbc_query_time_max, n_mu_bins=18,</span>
 <span class="err">                     R0=1.01, plot=False):</span>
 <span class="err">    &quot;&quot;&quot;</span>
 <span class="err">    function to apply limb-brightening correction and plot images within a certain time frame</span>
@@ -741,11 +755,13 @@ and the generalized function can be found <a href="https://github.com/predsci/CH
 <span class="err">    beta, y = lbcc.get_beta_y_theoretic_interp(theoretic_query, mu_array_2d=original_los.mu,</span>
 <span class="err">                                               mu_array_1d=mu_bin_centers)</span>
 <span class="err">    corrected_los_data = beta * original_los.data + y</span>
-<span class="err">    Plotting.PlotImage(original_los, nfig=100 + inst_index, title=&quot;Original LOS Image for &quot; + instrument)</span>
-<span class="err">    Plotting.PlotLBCCImage(lbcc_data=corrected_los_data, los_image=original_los, nfig=200 + inst_index,</span>
-<span class="err">                           title=&quot;Corrected LBCC Image for &quot; + instrument)</span>
-<span class="err">    Plotting.PlotLBCCImage(lbcc_data=original_los.data - corrected_los_data, los_image=original_los,</span>
-<span class="err">                           nfig=300 + inst_index, title=&quot;Difference Plot for &quot; + instrument)</span>
+<span class="err">    db_funcs.add_corrected_image(db_session, corrected_image=lbcc_data)</span>
+<span class="err">    if plot:</span>
+<span class="err">        Plotting.PlotImage(original_los, nfig=100 + inst_index, title=&quot;Original LOS Image for &quot; + instrument)</span>
+<span class="err">        Plotting.PlotLBCCImage(lbcc_data=corrected_los_data, los_image=original_los, nfig=200 + inst_index,</span>
+<span class="err">                               title=&quot;Corrected LBCC Image for &quot; + instrument)</span>
+<span class="err">        Plotting.PlotLBCCImage(lbcc_data=original_los.data - corrected_los_data, los_image=original_los,</span>
+<span class="err">                               nfig=300 + inst_index, title=&quot;Difference Plot for &quot; + instrument)</span>
 </code></pre></div>
 </td></tr></table>
 
@@ -771,7 +787,11 @@ and the generalized function can be found <a href="https://github.com/predsci/CH
 <li>applies correction to image based off beta, y, and original data arrays</li>
 </ul>
 </li>
-<li>5.) <code>Plotting.PlotImage</code> and <code>Plotting.PlotLBCCImage</code><ul>
+<li>5.) <code>db_funcs.add_corrected_image</code><ul>
+<li>adds Limb-Brightening Corrected data to database  </li>
+</ul>
+</li>
+<li>6.) <code>Plotting.PlotImage</code> and <code>Plotting.PlotLBCCImage</code><ul>
 <li>plots original and corrected images and difference between them   </li>
 </ul>
 </li>
@@ -884,14 +904,14 @@ and the generalized function can be found <a href="https://github.com/predsci/CH
     </div>
     
       <script src="../../assets/javascripts/vendor.d710d30a.min.js"></script>
-      <script src="../../assets/javascripts/bundle.4a5ba8d6.min.js"></script><script id="__lang" type="application/json">{"clipboard.copy": "Copy to clipboard", "clipboard.copied": "Copied to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.result.placeholder": "Type to start searching", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents"}</script>
+      <script src="../../assets/javascripts/bundle.b39636ac.min.js"></script><script id="__lang" type="application/json">{"clipboard.copy": "Copy to clipboard", "clipboard.copied": "Copied to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.result.placeholder": "Type to start searching", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents"}</script>
       
       <script>
         app = initialize({
           base: "../..",
           features: [],
           search: Object.assign({
-            worker: "../../assets/javascripts/worker/search.9b3611bd.min.js"
+            worker: "../../assets/javascripts/worker/search.a68abb33.min.js"
           }, typeof search !== "undefined" && search)
         })
       </script>

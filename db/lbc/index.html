@@ -15,7 +15,7 @@
         <meta name="author" content="Tamar Ervin">
       
       <link rel="shortcut icon" href="../../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.1.2, mkdocs-material-5.3.3">
+      <meta name="generator" content="mkdocs-1.1.2, mkdocs-material-5.4.0">
     
     
       
@@ -367,8 +367,8 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#lbcc-hist" class="md-nav__link">
-    LBCC Hist
+  <a href="#histogram" class="md-nav__link">
+    Histogram
   </a>
   
 </li>
@@ -408,6 +408,13 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#corrected-images" class="md-nav__link">
+    Corrected Images
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -417,6 +424,18 @@
   
 </nav>
     
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../iit/" title="Database for IIT" class="md-nav__link">
+      Database for IIT
+    </a>
   </li>
 
         
@@ -466,8 +485,8 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#lbcc-hist" class="md-nav__link">
-    LBCC Hist
+  <a href="#histogram" class="md-nav__link">
+    Histogram
   </a>
   
 </li>
@@ -507,6 +526,13 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#corrected-images" class="md-nav__link">
+    Corrected Images
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -534,7 +560,8 @@
                 
                 <h1 id="database-for-limb-brightening-correction">Database for Limb-Brightening Correction</h1>
 <p>For the Limb-Brightening Correction, the database is used to query for images, store histograms, and store fit parameter values.<br />
-These fit parameter values can then be queried in order to apply the Limb-Brightening correction. </p>
+These fit parameter values can then be queried in order to apply the Limb-Brightening correction and save corrected 
+data to the database. </p>
 <h2 id="tables">Tables</h2>
 <h3 id="euv-images">EUV Images</h3>
 <p>This table stores files and information associated with EUV Images. </p>
@@ -553,7 +580,7 @@ These fit parameter values can then be queried in order to apply the Limb-Bright
 <em>flag:</em> default 0 (Integer)<br />
 <em>time_of_download:</em> time of image download to database (DateTime)  </p>
 </blockquote>
-<h3 id="lbcc-hist">LBCC Hist</h3>
+<h3 id="histogram">Histogram</h3>
 <p>This table stores histogram and information associated with LBC Histograms.<br />
 The histograms are created in <a href="../../ipp/lbc/#compute-histograms">Step One</a> of Limb Brightening.</p>
 <p><strong>Columns:</strong>  </p>
@@ -567,7 +594,7 @@ The histograms are created in <a href="../../ipp/lbc/#compute-histograms">Step O
 <em>lat_band:</em> latitude band (Blob)<br />
 <em>mu_bin_edges:</em> array of mu bin edges from number of mu bins (Blob)<br />
 <em>intensity_bin_edges:</em> array of intensity bin edges from number of intensity bins (Blob)<br />
-<em>mu_hist:</em> histogram associated with image (Blob)  </p>
+<em>hist:</em> histogram associated with image (Blob)  </p>
 </blockquote>
 <h3 id="image-combos">Image Combos</h3>
 <p>This table stores information regarding the combination of images used to calculate the fit parameter. </p>
@@ -616,6 +643,25 @@ and during the creation of beta and y plots (<a href="../../ipp/lbc/#generate-pl
 <em>var_id:</em> auto-incremented integer id associated with the specific variable (Primary Key, Foreign Key: Var Defs, Integer)<br />
 <em>var_val:</em> variable value (Float)  </p>
 </blockquote>
+<h3 id="corrected-images">Corrected Images</h3>
+<p>This table stores data associated with images after corrections have been applied.<br />
+Images are stored after the Limb-Brightening Correction has been applied (<a href="../../ipp/lbc/#apply-limb-brightening-correction-and-plot-corrected-images">LBC Step Three</a>).  </p>
+<p><strong>Columns:</strong></p>
+<blockquote>
+<p><em>image_id:</em> auto-incremented integer id associated with the image (Primary Key, Integer)<br />
+<em>date_obs:</em> time of image observation (DateTime)<br />
+<em>instrument:</em> observation instrument (String)<br />
+<em>wavelength:</em> observation wavelength (Integer)<br />
+<em>fname_raw:</em> associated fits file (String)<br />
+<em>fname_hdf:</em> associated hdf5 file (String)<br />
+<em>distance:</em> associated distance (Float)<br />
+<em>cr_lon:</em> Carrington Longitude (Float)<br />
+<em>cr_lat:</em> Carrington Latitude (Float)<br />
+<em>cr_rot:</em> Carrington Rotation (Float)<br />
+<em>lat_array:</em> 2D latitude array (Blob)<br />
+<em>mu_array:</em> 2D array of mu values (Blob)
+<em>corrected_data:</em> array of corrected data (Blob)  </p>
+</blockquote>
                 
               
               
@@ -649,6 +695,20 @@ and during the creation of beta and y plots (<a href="../../ipp/lbc/#generate-pl
           </a>
         
         
+          <a href="../iit/" title="Database for IIT" class="md-footer-nav__link md-footer-nav__link--next" rel="next">
+            <div class="md-footer-nav__title">
+              <div class="md-ellipsis">
+                <span class="md-footer-nav__direction">
+                  Next
+                </span>
+                Database for IIT
+              </div>
+            </div>
+            <div class="md-footer-nav__button md-icon">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11H4z"/></svg>
+            </div>
+          </a>
+        
       </nav>
     </div>
   
@@ -669,14 +729,14 @@ and during the creation of beta and y plots (<a href="../../ipp/lbc/#generate-pl
     </div>
     
       <script src="../../assets/javascripts/vendor.d710d30a.min.js"></script>
-      <script src="../../assets/javascripts/bundle.4a5ba8d6.min.js"></script><script id="__lang" type="application/json">{"clipboard.copy": "Copy to clipboard", "clipboard.copied": "Copied to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.result.placeholder": "Type to start searching", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents"}</script>
+      <script src="../../assets/javascripts/bundle.b39636ac.min.js"></script><script id="__lang" type="application/json">{"clipboard.copy": "Copy to clipboard", "clipboard.copied": "Copied to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.result.placeholder": "Type to start searching", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents"}</script>
       
       <script>
         app = initialize({
           base: "../..",
           features: [],
           search: Object.assign({
-            worker: "../../assets/javascripts/worker/search.9b3611bd.min.js"
+            worker: "../../assets/javascripts/worker/search.a68abb33.min.js"
           }, typeof search !== "undefined" && search)
         })
       </script>
