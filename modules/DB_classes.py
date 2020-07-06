@@ -228,4 +228,4 @@ class Corrected_Images(Base):
     cr_rot = Column(Float)
     lat_array = Column(LargeBinary)
     mu_array = Column(LargeBinary)
-    lbcc_data = Column(LargeBinary)
+    corrected_data = Column(LargeBinary)

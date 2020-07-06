@@ -1,15 +1,18 @@
-# Database for Limb-Brightening Correction
-For the Limb-Brightening Correction, the database is used to query for images, store histograms, and store fit parameter values.  
-These fit parameter values can then be queried in order to apply the Limb-Brightening correction and save corrected 
-data to the database. 
+# Database for Inter-Instrument Transformation
+For the Inter-Instrument Transformation. The database is used to query Limb-Brightening Corrected data.
+1D Intensity Histograms are created and stored in the database. After calculation, fit parameters are stored in the database
+then queried to apply the IIT Correction and corrected data is saved in the database.  
 
 ## Tables
 
-### EUV Images
-This table stores files and information associated with EUV Images. 
+### Corrected Images
+This table stores data associated with images after corrections have been applied.  
+Images are stored after the Limb-Brightening Correction has been applied ([LBC Step Three](../ipp/lbc.md#apply-limb-brightening-correction-and-plot-corrected-images))
+then queried for the IIT Calculation. After IIT Correction is applied, data is saved here as well.  
 
-__Columns:__  
+__Columns:__
 > *image_id:* auto-incremented integer id associated with the image (Primary Key, Integer)  
+> *meth_id:*  auto-incremented integer id associated with the specific method (Foreign Key: Meth Defs, Integer)  
 > *date_obs:* time of image observation (DateTime)  
 > *instrument:* observation instrument (String)  
 > *wavelength:* observation wavelength (Integer)  
@@ -19,8 +22,9 @@ __Columns:__
 > *cr_lon:* Carrington Longitude (Float)  
 > *cr_lat:* Carrington Latitude (Float)  
 > *cr_rot:* Carrington Rotation (Float)  
-> *flag:* default 0 (Integer)  
-> *time_of_download:* time of image download to database (DateTime)  
+> *lat_array:* 2D latitude array (LargeBinary)  
+> *mu_array:* 2D array of mu values (LargeBinary)  
+> *corrected_data:* array of corrected data (LargeBinary)
 
 
 ### Histogram
@@ -38,6 +42,7 @@ __Columns:__
 > *mu_bin_edges:* array of mu bin edges from number of mu bins (Blob)  
 > *intensity_bin_edges:* array of intensity bin edges from number of intensity bins (Blob)  
 > *hist:* histogram associated with image (Blob)  
+
 
 ### Image Combos
 This table stores information regarding the combination of images used to calculate the fit parameter. 
@@ -79,34 +84,13 @@ __Columns:__
 
 ### Var Vals
 This table stores variable values with the associated variable, method, and image combination.  
-These values are calculated from the theoretical fit analysis ([LBC Step Two](../ipp/lbc.md#calculate-and-save-theoretical-fit-parameters)).  
-These values are queried during the application of the correction ([LBC Step Three](../ipp/lbc.md#apply-limb-brightening-correction-and-plot-corrected-images)) 
-and during the creation of beta and y plots ([LBC Step Four](../ipp/lbc.md#generate-plots-of-beta-and-y-correction-coefficients)).
+These values are calculated from the IIT fit analysis ([IIT Step Two](../ipp/iit.md)).  
+These values are queried during the application of the correction ([IIT Step Three](../ipp/iit.md)) 
+and during the creation of histogram plots ([IIT Step Four](../ipp/iit.md)).
 
 __Columns:__
 > *combo_id:* auto-incremented integer id associated with that specific combination of images 
     (Primary Key, Foreign Key: Image Combos, Integer)    
 > *meth_id:* auto-incremented integer id associated with the specific method (Foreign Key: Meth Defs, Integer)  
 > *var_id:* auto-incremented integer id associated with the specific variable (Primary Key, Foreign Key: Var Defs, Integer)  
-> *var_val:* variable value (Float)  
-
-
-### Corrected Images
-This table stores data associated with images after corrections have been applied.  
-Images are stored after the Limb-Brightening Correction has been applied ([LBC Step Three](../ipp/lbc.md#apply-limb-brightening-correction-and-plot-corrected-images)).  
-
-__Columns:__
-> *image_id:* auto-incremented integer id associated with the image (Primary Key, Integer) 
-> *meth_id:*  auto-incremented integer id associated with the specific method (Foreign Key: Meth Defs, Integer)  
-> *date_obs:* time of image observation (DateTime)  
-> *instrument:* observation instrument (String)  
-> *wavelength:* observation wavelength (Integer)  
-> *fname_raw:* associated fits file (String)  
-> *fname_hdf:* associated hdf5 file (String)  
-> *distance:* associated distance (Float)  
-> *cr_lon:* Carrington Longitude (Float)  
-> *cr_lat:* Carrington Latitude (Float)  
-> *cr_rot:* Carrington Rotation (Float)  
-> *lat_array:* 2D latitude array (Blob)  
-> *mu_array:* 2D array of mu values (Blob)  
-> *corrected_data:* array of corrected data (Blob)  
+> *var_val:* variable value (Float)

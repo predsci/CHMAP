@@ -19,6 +19,7 @@ nav:
   - Database:
       - Database Basics: db/db.md
       - Database for LBC: db/lbc.md
+      - Database for IIT: db/iit.md
 
 # theme
 theme:

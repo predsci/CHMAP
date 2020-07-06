@@ -100,11 +100,13 @@ and the generalized function can be found [here](https://github.com/predsci/CHD/
         beta, y = lbcc.get_beta_y_theoretic_interp(theoretic_query, mu_array_2d=original_los.mu,
                                                    mu_array_1d=mu_bin_centers)
         corrected_los_data = beta * original_los.data + y
-        Plotting.PlotImage(original_los, nfig=100 + inst_index, title="Original LOS Image for " + instrument)
-        Plotting.PlotLBCCImage(lbcc_data=corrected_los_data, los_image=original_los, nfig=200 + inst_index,
-                               title="Corrected LBCC Image for " + instrument)
-        Plotting.PlotLBCCImage(lbcc_data=original_los.data - corrected_los_data, los_image=original_los,
-                               nfig=300 + inst_index, title="Difference Plot for " + instrument)
+        db_funcs.add_corrected_image(db_session, corrected_image=lbcc_data)
+        if plot:
+            Plotting.PlotImage(original_los, nfig=100 + inst_index, title="Original LOS Image for " + instrument)
+            Plotting.PlotLBCCImage(lbcc_data=corrected_los_data, los_image=original_los, nfig=200 + inst_index,
+                                   title="Corrected LBCC Image for " + instrument)
+            Plotting.PlotLBCCImage(lbcc_data=original_los.data - corrected_los_data, los_image=original_los,
+                                   nfig=300 + inst_index, title="Difference Plot for " + instrument)
                                                               
 * 1.) <code>db_funcs.query_euv_images</code>
     * queries database for images (from EUV_Images table) in specified date range
@@ -117,7 +119,9 @@ and the generalized function can be found [here](https://github.com/predsci/CHD/
         * uses mu_bin_centers array to calculate beta and y then interpolate for 2D mu array
 * 4.) <code>corrected_los_data = beta * original_los.data + y</code>
     * applies correction to image based off beta, y, and original data arrays
-* 5.) <code>Plotting.PlotImage</code> and <code>Plotting.PlotLBCCImage</code>
+* 5.) <code>db_funcs.add_corrected_image</code>
+    * adds Limb-Brightening Corrected data to database  
+* 6.) <code>Plotting.PlotImage</code> and <code>Plotting.PlotLBCCImage</code>
     * plots original and corrected images and difference between them   
     
 
