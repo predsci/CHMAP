@@ -15,7 +15,7 @@
         <meta name="author" content="Tamar Ervin">
       
       <link rel="shortcut icon" href="../../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.1.2, mkdocs-material-5.4.0">
+      <meta name="generator" content="mkdocs-1.1.2, mkdocs-material-5.3.3">
     
     
       
@@ -408,13 +408,6 @@
   
 </li>
         
-          <li class="md-nav__item">
-  <a href="#corrected-images" class="md-nav__link">
-    Corrected Images
-  </a>
-  
-</li>
-        
       </ul>
     </nav>
   
@@ -526,13 +519,6 @@
   
 </li>
         
-          <li class="md-nav__item">
-  <a href="#corrected-images" class="md-nav__link">
-    Corrected Images
-  </a>
-  
-</li>
-        
       </ul>
     </nav>
   
@@ -587,6 +573,7 @@ The histograms are created in <a href="../../ipp/lbc/#compute-histograms">Step O
 <blockquote>
 <p><em>hist_id:</em> auto-incremented integer id associated with the histogram (Primary Key, Integer)<br />
 <em>image_id:</em> integer id associated with image (Foreign Key: EUV Images, Integer)  <br />
+<em>meth_id:</em> auto-incremented integer id associated with the specific method (Foreign Key: Meth Defs, Integer)<br />
 <em>date_obs:</em> time of image observation (DateTime)<br />
 <em>wavelength:</em> observation wavelength (Integer)<br />
 <em>n_mu_bins:</em> number of mu bins (Integer)<br />
@@ -642,25 +629,6 @@ and during the creation of beta and y plots (<a href="../../ipp/lbc/#generate-pl
 <em>meth_id:</em> auto-incremented integer id associated with the specific method (Foreign Key: Meth Defs, Integer)<br />
 <em>var_id:</em> auto-incremented integer id associated with the specific variable (Primary Key, Foreign Key: Var Defs, Integer)<br />
 <em>var_val:</em> variable value (Float)  </p>
-</blockquote>
-<h3 id="corrected-images">Corrected Images</h3>
-<p>This table stores data associated with images after corrections have been applied.<br />
-Images are stored after the Limb-Brightening Correction has been applied (<a href="../../ipp/lbc/#apply-limb-brightening-correction-and-plot-corrected-images">LBC Step Three</a>).  </p>
-<p><strong>Columns:</strong></p>
-<blockquote>
-<p><em>image_id:</em> auto-incremented integer id associated with the image (Primary Key, Integer)<br />
-<em>date_obs:</em> time of image observation (DateTime)<br />
-<em>instrument:</em> observation instrument (String)<br />
-<em>wavelength:</em> observation wavelength (Integer)<br />
-<em>fname_raw:</em> associated fits file (String)<br />
-<em>fname_hdf:</em> associated hdf5 file (String)<br />
-<em>distance:</em> associated distance (Float)<br />
-<em>cr_lon:</em> Carrington Longitude (Float)<br />
-<em>cr_lat:</em> Carrington Latitude (Float)<br />
-<em>cr_rot:</em> Carrington Rotation (Float)<br />
-<em>lat_array:</em> 2D latitude array (Blob)<br />
-<em>mu_array:</em> 2D array of mu values (Blob)
-<em>corrected_data:</em> array of corrected data (Blob)  </p>
 </blockquote>
                 
               
@@ -729,14 +697,14 @@ Images are stored after the Limb-Brightening Correction has been applied (<a hre
     </div>
     
       <script src="../../assets/javascripts/vendor.d710d30a.min.js"></script>
-      <script src="../../assets/javascripts/bundle.b39636ac.min.js"></script><script id="__lang" type="application/json">{"clipboard.copy": "Copy to clipboard", "clipboard.copied": "Copied to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.result.placeholder": "Type to start searching", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents"}</script>
+      <script src="../../assets/javascripts/bundle.4a5ba8d6.min.js"></script><script id="__lang" type="application/json">{"clipboard.copy": "Copy to clipboard", "clipboard.copied": "Copied to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.result.placeholder": "Type to start searching", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents"}</script>
       
       <script>
         app = initialize({
           base: "../..",
           features: [],
           search: Object.assign({
-            worker: "../../assets/javascripts/worker/search.a68abb33.min.js"
+            worker: "../../assets/javascripts/worker/search.9b3611bd.min.js"
           }, typeof search !== "undefined" && search)
         })
       </script>

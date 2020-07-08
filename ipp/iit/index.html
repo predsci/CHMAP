@@ -15,7 +15,7 @@
         <meta name="author" content="Tamar Ervin">
       
       <link rel="shortcut icon" href="../../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.1.2, mkdocs-material-5.4.0">
+      <meta name="generator" content="mkdocs-1.1.2, mkdocs-material-5.3.3">
     
     
       
@@ -271,9 +271,83 @@
       
     
     
+      <label class="md-nav__link md-nav__link--active" for="__toc">
+        Inter-Instrument Transformation
+        <span class="md-nav__icon md-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 9h14V7H3v2m0 4h14v-2H3v2m0 4h14v-2H3v2m16 0h2v-2h-2v2m0-10v2h2V7h-2m0 6h2v-2h-2v2z"/></svg>
+        </span>
+      </label>
+    
     <a href="./" title="Inter-Instrument Transformation" class="md-nav__link md-nav__link--active">
       Inter-Instrument Transformation
     </a>
+    
+      
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"/></svg>
+      </span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#example-images-and-histograms" class="md-nav__link">
+    Example Images and Histograms
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#analysis-pipeline" class="md-nav__link">
+    Analysis Pipeline
+  </a>
+  
+    <nav class="md-nav" aria-label="Analysis Pipeline">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#apply-limb-brightening-correction-compute-histograms-and-save-to-database" class="md-nav__link">
+    Apply Limb-Brightening Correction, Compute Histograms, and Save to Database
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#calculate-inter-instrument-transformation-coefficients-and-save-to-database" class="md-nav__link">
+    Calculate Inter-Instrument Transformation Coefficients and Save to Database
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#apply-transformation-and-plot-new-images" class="md-nav__link">
+    Apply Transformation and Plot New Images
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#generate-new-histogram-plots" class="md-nav__link">
+    Generate New Histogram Plots
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
     
   </li>
 
@@ -366,6 +440,64 @@
     
   
   
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"/></svg>
+      </span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#example-images-and-histograms" class="md-nav__link">
+    Example Images and Histograms
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#analysis-pipeline" class="md-nav__link">
+    Analysis Pipeline
+  </a>
+  
+    <nav class="md-nav" aria-label="Analysis Pipeline">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#apply-limb-brightening-correction-compute-histograms-and-save-to-database" class="md-nav__link">
+    Apply Limb-Brightening Correction, Compute Histograms, and Save to Database
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#calculate-inter-instrument-transformation-coefficients-and-save-to-database" class="md-nav__link">
+    Calculate Inter-Instrument Transformation Coefficients and Save to Database
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#apply-transformation-and-plot-new-images" class="md-nav__link">
+    Apply Transformation and Plot New Images
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#generate-new-histogram-plots" class="md-nav__link">
+    Generate New Histogram Plots
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
 </nav>
                   </div>
                 </div>
@@ -387,6 +519,68 @@
                 <h1 id="inter-instrument-transformation">Inter-Instrument Transformation</h1>
 <p>The goal of the inter-instrument correction is to equate the intensities from one instrument to the intensities of another.
 The choice of which instrument to use as the "reference instrument" is an updatable parameter. </p>
+<h2 id="example-images-and-histograms">Example Images and Histograms</h2>
+<h2 id="analysis-pipeline">Analysis Pipeline</h2>
+<h3 id="apply-limb-brightening-correction-compute-histograms-and-save-to-database">Apply Limb-Brightening Correction, Compute Histograms, and Save to Database</h3>
+<p>The generalized function can be found <a href="https://github.com/predsci/CHD/blob/master/analysis/iit_analysis/IIT_pipeline_funcs.py">here</a>.  </p>
+<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
+ 2
+ 3
+ 4
+ 5
+ 6
+ 7
+ 8
+ 9
+10
+11
+12
+13
+14</pre></div></td><td class="code"><div class="codehilite"><pre><span></span><code><span class="err">    def create_histograms(db_session, inst_list, lbc_query_time_min, lbc_query_time_max, hdf_data_dir, n_mu_bins=18,</span>
+<span class="err">                  n_intensity_bins=200, lat_band=[-np.pi / 64., np.pi / 64.],</span>
+<span class="err">                  log10=True, R0=1.01):</span>
+<span class="err">              &quot;&quot;&quot; </span>
+<span class="err">              function to apply LBC, create and save histograms to the database</span>
+<span class="err">              &quot;&quot;&quot;</span>
+<span class="err">              image_pd = db_funcs.query_euv_images(db_session=db_session, time_min=lbc_query_time_min,</span>
+<span class="err">                                         time_max=lbc_query_time_max, instrument=query_instrument)</span>
+<span class="err">              lbcc_data = apply_lbc_correction(db_session, hdf_data_dir, instrument, image_row=row,</span>
+<span class="err">                                                   n_mu_bins=n_mu_bins,</span>
+<span class="err">                                                   n_intensity_bins=n_intensity_bins, R0=R0)</span>
+<span class="err">              hist = psi_d_types.LBCCImage.iit_hist(lbcc_data, lat_band, log10)</span>
+<span class="err">              iit_hist = psi_d_types.create_iit_hist(lbcc_data, method_id[1], intensity_bin_edges, lat_band, hist)</span>
+<span class="err">              db_funcs.add_hist(db_session, iit_hist)</span>
+</code></pre></div>
+</td></tr></table>
+
+<ul>
+<li>1.)  <code>db_funcs.query_euv_images</code>  <ul>
+<li>queries database for images (from EUV_Images table) in specified date range  </li>
+</ul>
+</li>
+<li>2.)  <code>apply_lbc_correction</code>  <ul>
+<li>applies Limb-Brightening Correction to images and creates LBCCImage datatype    </li>
+</ul>
+</li>
+<li>3.)   <code>psi_d_types.LBCCImage.iit_hist</code>  <ul>
+<li>calculates IIT histogram from LBC corrected data  </li>
+</ul>
+</li>
+<li>4.)  <code>psi_d_types.create_iit_hist</code>  <ul>
+<li>creates IIT histogram datatype                                 </li>
+</ul>
+</li>
+<li>5.)  <code>db_funcs.add_hist</code>  <ul>
+<li>saves histograms to database (table Histogram) associating an image_id, meth_id, and basic information with histogram                               </li>
+</ul>
+</li>
+</ul>
+<h3 id="calculate-inter-instrument-transformation-coefficients-and-save-to-database">Calculate Inter-Instrument Transformation Coefficients and Save to Database</h3>
+<p>The generalized function can be found <a href="https://github.com/predsci/CHD/blob/master/analysis/iit_analysis/IIT_pipeline_funcs.py">here</a>.  </p>
+<h3 id="apply-transformation-and-plot-new-images">Apply Transformation and Plot New Images</h3>
+<p>The generalized function can be found <a href="https://github.com/predsci/CHD/blob/master/analysis/iit_analysis/IIT_pipeline_funcs.py">here</a>.  </p>
+<h3 id="generate-new-histogram-plots">Generate New Histogram Plots</h3>
+<p>The generalized function can be found <a href="https://github.com/predsci/CHD/blob/master/analysis/iit_analysis/IIT_pipeline_funcs.py">here</a>.  </p>
                 
               
               
@@ -454,14 +648,14 @@ The choice of which instrument to use as the "reference instrument" is an updata
     </div>
     
       <script src="../../assets/javascripts/vendor.d710d30a.min.js"></script>
-      <script src="../../assets/javascripts/bundle.b39636ac.min.js"></script><script id="__lang" type="application/json">{"clipboard.copy": "Copy to clipboard", "clipboard.copied": "Copied to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.result.placeholder": "Type to start searching", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents"}</script>
+      <script src="../../assets/javascripts/bundle.4a5ba8d6.min.js"></script><script id="__lang" type="application/json">{"clipboard.copy": "Copy to clipboard", "clipboard.copied": "Copied to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.result.placeholder": "Type to start searching", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents"}</script>
       
       <script>
         app = initialize({
           base: "../..",
           features: [],
           search: Object.assign({
-            worker: "../../assets/javascripts/worker/search.a68abb33.min.js"
+            worker: "../../assets/javascripts/worker/search.9b3611bd.min.js"
           }, typeof search !== "undefined" && search)
         })
       </script>
