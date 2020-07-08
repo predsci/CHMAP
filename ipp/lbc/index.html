@@ -349,8 +349,8 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#generate-plots-of-beta-and-y-correction-coefficients" class="md-nav__link">
-    Generate Plots of Beta and y Correction Coefficients
+  <a href="#generate-plots-of-beta-and-y" class="md-nav__link">
+    Generate Plots of Beta and y
   </a>
   
 </li>
@@ -539,8 +539,8 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#generate-plots-of-beta-and-y-correction-coefficients" class="md-nav__link">
-    Generate Plots of Beta and y Correction Coefficients
+  <a href="#generate-plots-of-beta-and-y" class="md-nav__link">
+    Generate Plots of Beta and y
   </a>
   
 </li>
@@ -573,7 +573,7 @@
                 <h1 id="limb-brightening-correction">Limb-Brightening Correction</h1>
 <p>Limb Brightening Correction (LBC) is the second step in the data pre-processing pipeline. 
 The goal of LBC is to correct for brightening of structures that is 
-dependent on their distance from disk center.  </p>
+dependent upon their distance from disk center.  </p>
 <h2 id="examples-of-corrected-images">Examples of Corrected Images</h2>
 <h3 id="aia-images">AIA Images</h3>
 <table>
@@ -622,7 +622,8 @@ dependent on their distance from disk center.  </p>
 </table>
 <h2 id="theoretical-analysis-pipeline">Theoretical Analysis Pipeline</h2>
 <h3 id="compute-histograms-and-save-to-database">Compute Histograms and Save to Database</h3>
-<p>The source code for this is found in the <a href="https://github.com/predsci/CHD/blob/master/analysis/lbcc_analysis/LBCC_create_mu-hist.py">CHD GitHub</a> 
+<p>This function computes 2D Histograms from processed images for use in the LBC process. It then saves these computed histograms to the database.<br />
+The source code for this is found in the <a href="https://github.com/predsci/CHD/blob/master/analysis/lbcc_analysis/LBCC_create_mu-hist.py">CHD GitHub</a> 
 and the generalized function can be found <a href="https://github.com/predsci/CHD/blob/master/analysis/lbcc_analysis/LBCC_theoretic_funcs.py">here</a>.  </p>
 <table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
  2
@@ -667,7 +668,8 @@ and the generalized function can be found <a href="https://github.com/predsci/CH
 </li>
 </ul>
 <h3 id="calculate-and-save-theoretical-fit-parameters">Calculate and Save Theoretical Fit Parameters</h3>
-<p>The source code for this is found in the <a href="https://github.com/predsci/CHD/blob/master/analysis/lbcc_analysis/LBCC_beta-y_theoretical_analysis.py">CHD GitHub</a> 
+<p>This function queries histograms from the database then calculates LBC fit parameters which are then saved in the database.<br />
+The source code for this is found in the <a href="https://github.com/predsci/CHD/blob/master/analysis/lbcc_analysis/LBCC_beta-y_theoretical_analysis.py">CHD GitHub</a> 
 and the generalized function can be found <a href="https://github.com/predsci/CHD/blob/master/analysis/lbcc_analysis/LBCC_theoretic_funcs.py">here</a>. </p>
 <table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
  2
@@ -705,7 +707,7 @@ and the generalized function can be found <a href="https://github.com/predsci/CH
 
 <ul>
 <li>1.) <code>db_funcs.query_hist</code><ul>
-<li>queries database for histograms (from LBCC_Hist table) in specified date range</li>
+<li>queries database for histograms (from Histogram table) in specified date range</li>
 </ul>
 </li>
 <li>2.) <code>optim.minimize</code><ul>
@@ -725,7 +727,8 @@ and the generalized function can be found <a href="https://github.com/predsci/CH
 </li>
 </ul>
 <h3 id="apply-limb-brightening-correction-and-plot-corrected-images">Apply Limb-Brightening Correction and Plot Corrected Images</h3>
-<p>The source code for this is found in the <a href="https://github.com/predsci/CHD/blob/master/analysis/lbcc_analysis/LBCC_apply_fit.py">CHD GitHub</a> 
+<p>This function queries the database for LBC fit parameters then applies them to specified images, plotting resulting images before and after the correction.<br />
+The source code for this is found in the <a href="https://github.com/predsci/CHD/blob/master/analysis/lbcc_analysis/LBCC_apply_fit.py">CHD GitHub</a> 
 and the generalized function can be found <a href="https://github.com/predsci/CHD/blob/master/analysis/lbcc_analysis/LBCC_theoretic_funcs.py">here</a>. </p>
 <table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
  2
@@ -791,8 +794,9 @@ and the generalized function can be found <a href="https://github.com/predsci/CH
 </ul>
 </li>
 </ul>
-<h3 id="generate-plots-of-beta-and-y-correction-coefficients">Generate Plots of Beta and y Correction Coefficients</h3>
-<p>The source code for this is found in the <a href="https://github.com/predsci/CHD/blob/master/analysis/lbcc_analysis/LBCC_generate_theoretic_plots.py">CHD GitHub</a> 
+<h3 id="generate-plots-of-beta-and-y">Generate Plots of Beta and y</h3>
+<p>This function queries the database for LBC fit parameters then generates plots of Beta and y over time.<br />
+The source code for this is found in the <a href="https://github.com/predsci/CHD/blob/master/analysis/lbcc_analysis/LBCC_generate_theoretic_plots.py">CHD GitHub</a> 
 and the generalized function can be found <a href="https://github.com/predsci/CHD/blob/master/analysis/lbcc_analysis/LBCC_theoretic_funcs.py">here</a>.    </p>
 <table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
  2

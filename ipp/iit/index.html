@@ -313,29 +313,29 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#apply-limb-brightening-correction-compute-histograms-and-save-to-database" class="md-nav__link">
-    Apply Limb-Brightening Correction, Compute Histograms, and Save to Database
+  <a href="#compute-histograms-and-save-to-database" class="md-nav__link">
+    Compute Histograms and Save to Database
   </a>
   
 </li>
         
           <li class="md-nav__item">
-  <a href="#calculate-inter-instrument-transformation-coefficients-and-save-to-database" class="md-nav__link">
-    Calculate Inter-Instrument Transformation Coefficients and Save to Database
+  <a href="#calculate-and-save-correction-coefficients" class="md-nav__link">
+    Calculate and Save Correction Coefficients
   </a>
   
 </li>
         
           <li class="md-nav__item">
-  <a href="#apply-transformation-and-plot-new-images" class="md-nav__link">
-    Apply Transformation and Plot New Images
+  <a href="#apply-inter-instrument-transformation-and-plot-new-images" class="md-nav__link">
+    Apply Inter-Instrument Transformation and Plot New Images
   </a>
   
 </li>
         
           <li class="md-nav__item">
-  <a href="#generate-new-histogram-plots" class="md-nav__link">
-    Generate New Histogram Plots
+  <a href="#generate-histogram-plots" class="md-nav__link">
+    Generate Histogram Plots
   </a>
   
 </li>
@@ -464,29 +464,29 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#apply-limb-brightening-correction-compute-histograms-and-save-to-database" class="md-nav__link">
-    Apply Limb-Brightening Correction, Compute Histograms, and Save to Database
+  <a href="#compute-histograms-and-save-to-database" class="md-nav__link">
+    Compute Histograms and Save to Database
   </a>
   
 </li>
         
           <li class="md-nav__item">
-  <a href="#calculate-inter-instrument-transformation-coefficients-and-save-to-database" class="md-nav__link">
-    Calculate Inter-Instrument Transformation Coefficients and Save to Database
+  <a href="#calculate-and-save-correction-coefficients" class="md-nav__link">
+    Calculate and Save Correction Coefficients
   </a>
   
 </li>
         
           <li class="md-nav__item">
-  <a href="#apply-transformation-and-plot-new-images" class="md-nav__link">
-    Apply Transformation and Plot New Images
+  <a href="#apply-inter-instrument-transformation-and-plot-new-images" class="md-nav__link">
+    Apply Inter-Instrument Transformation and Plot New Images
   </a>
   
 </li>
         
           <li class="md-nav__item">
-  <a href="#generate-new-histogram-plots" class="md-nav__link">
-    Generate New Histogram Plots
+  <a href="#generate-histogram-plots" class="md-nav__link">
+    Generate Histogram Plots
   </a>
   
 </li>
@@ -521,8 +521,9 @@
 The choice of which instrument to use as the "reference instrument" is an updatable parameter. </p>
 <h2 id="example-images-and-histograms">Example Images and Histograms</h2>
 <h2 id="analysis-pipeline">Analysis Pipeline</h2>
-<h3 id="apply-limb-brightening-correction-compute-histograms-and-save-to-database">Apply Limb-Brightening Correction, Compute Histograms, and Save to Database</h3>
-<p>The generalized function can be found <a href="https://github.com/predsci/CHD/blob/master/analysis/iit_analysis/IIT_pipeline_funcs.py">here</a>.  </p>
+<h3 id="compute-histograms-and-save-to-database">Compute Histograms and Save to Database</h3>
+<p>This function applies the limb-brightening correction, calculates the associated IIT histogram, and saves these histograms to the database.<br />
+The generalized function can be found <a href="https://github.com/predsci/CHD/blob/master/analysis/iit_analysis/IIT_pipeline_funcs.py">here</a>.  </p>
 <table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
  2
  3
@@ -575,12 +576,15 @@ The choice of which instrument to use as the "reference instrument" is an updata
 </ul>
 </li>
 </ul>
-<h3 id="calculate-inter-instrument-transformation-coefficients-and-save-to-database">Calculate Inter-Instrument Transformation Coefficients and Save to Database</h3>
-<p>The generalized function can be found <a href="https://github.com/predsci/CHD/blob/master/analysis/iit_analysis/IIT_pipeline_funcs.py">here</a>.  </p>
-<h3 id="apply-transformation-and-plot-new-images">Apply Transformation and Plot New Images</h3>
-<p>The generalized function can be found <a href="https://github.com/predsci/CHD/blob/master/analysis/iit_analysis/IIT_pipeline_funcs.py">here</a>.  </p>
-<h3 id="generate-new-histogram-plots">Generate New Histogram Plots</h3>
-<p>The generalized function can be found <a href="https://github.com/predsci/CHD/blob/master/analysis/iit_analysis/IIT_pipeline_funcs.py">here</a>.  </p>
+<h3 id="calculate-and-save-correction-coefficients">Calculate and Save Correction Coefficients</h3>
+<p>This function queries the database for IIT histograms, calculates correction coefficients, and saves them to the database.<br />
+The generalized function can be found <a href="https://github.com/predsci/CHD/blob/master/analysis/iit_analysis/IIT_pipeline_funcs.py">here</a>.  </p>
+<h3 id="apply-inter-instrument-transformation-and-plot-new-images">Apply Inter-Instrument Transformation and Plot New Images</h3>
+<p>This function queries the database for IIT coefficients, applies the correction, and plots resulting images.<br />
+The generalized function can be found <a href="https://github.com/predsci/CHD/blob/master/analysis/iit_analysis/IIT_pipeline_funcs.py">here</a>.  </p>
+<h3 id="generate-histogram-plots">Generate Histogram Plots</h3>
+<p>This function generates histogram plots comparing data from before and after the IIT correction.<br />
+The generalized function can be found <a href="https://github.com/predsci/CHD/blob/master/analysis/iit_analysis/IIT_pipeline_funcs.py">here</a>.  </p>
                 
               
               

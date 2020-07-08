@@ -531,13 +531,14 @@
                 
                 
                 <h1 id="database-for-inter-instrument-transformation">Database for Inter-Instrument Transformation</h1>
-<p>For the Inter-Instrument Transformation. The database is used to query Limb-Brightening Corrected data.
+<p>For the Inter-Instrument Transformation. The database is used to query EUV Images and LBC Fit Parameters to apply the correction.
 1D Intensity Histograms are created and stored in the database. After calculation, fit parameters are stored in the database
-then queried to apply the IIT Correction and corrected data is saved in the database.  </p>
+then queried to apply the IIT Correction.  </p>
 <h2 id="tables">Tables</h2>
 <h3 id="histogram">Histogram</h3>
-<p>This table stores histogram and information associated with LBC Histograms.<br />
-The histograms are created in <a href="../../ipp/lbc/#compute-histograms">Step One</a> of Limb Brightening.</p>
+<p>This table stores histogram and information associated with IIT Histograms.<br />
+The histograms are created in <a href="../../ipp/iit/#compute-histograms-and-save-to-database">Step One</a> 
+of Inter-Instrument Transformation Correction.</p>
 <p><strong>Columns:</strong>  </p>
 <blockquote>
 <p><em>hist_id:</em> auto-incremented integer id associated with the histogram (Primary Key, Integer)<br />
@@ -588,9 +589,9 @@ The histograms are created in <a href="../../ipp/lbc/#compute-histograms">Step O
 </blockquote>
 <h3 id="var-vals">Var Vals</h3>
 <p>This table stores variable values with the associated variable, method, and image combination.<br />
-These values are calculated from the IIT fit analysis (<a href="../../ipp/iit/">IIT Step Two</a>).<br />
-These values are queried during the application of the correction (<a href="../../ipp/iit/">IIT Step Three</a>) 
-and during the creation of histogram plots (<a href="../../ipp/iit/">IIT Step Four</a>).</p>
+These values are calculated from the IIT fit analysis (<a href="../../ipp/iit/#calculate-and-save-correction-coefficients">IIT Step Two</a>).<br />
+These values are queried during the application of the correction (<a href="../../ipp/iit/#apply-inter-instrument-transformation-and-plot-new-images">IIT Step Three</a>) 
+and during the creation of histogram plots (<a href="../../ipp/iit/#generate-histogram-plots">IIT Step Four</a>).</p>
 <p><strong>Columns:</strong></p>
 <blockquote>
 <p><em>combo_id:</em> auto-incremented integer id associated with that specific combination of images 
