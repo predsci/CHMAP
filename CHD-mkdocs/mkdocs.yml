@@ -2,7 +2,6 @@
 site_name: Coronal Hole Detection Project
 site_description: Python routines and documentation for the PSI Coronal Hole Detection Project.
 site_author: Tamar Ervin
-site_favicon: img/favicon.ico
 
 # repository information
 repo_url: https://github.com/predsci/CHD
@@ -28,7 +27,7 @@ theme:
   palette:
     primary: indigo
     accent: black
-  logo: img/logo.png
+  logo: img/psi_logo.png
 
 
 

@@ -477,7 +477,7 @@ def moving_averages(time_min, time_max, weekday, days=None):
     # find day of the week of start time
     day_start = time_min.weekday()
     if day_start != weekday:
-        time_min = time_max + datetime.timedelta(days=7 - day_start)
+        time_min = time_min + datetime.timedelta(days=7 - day_start)
     # calculate number of weeks
     number_of_weeks = int((time_max - time_min).days / 7)
     # returns array of moving averages center dates, based off start date and number of weeks
