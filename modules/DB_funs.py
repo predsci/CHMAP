@@ -1096,11 +1096,12 @@ def pdseries_tohdf(pd_series):
     return f_name
 
 
-def query_hist(db_session, n_mu_bins=None, n_intensity_bins=None, lat_band=[-np.pi / 64., np.pi / 64.], time_min=None,
+def query_hist(db_session, meth_id, n_mu_bins=None, n_intensity_bins=None, lat_band=[-np.pi / 64., np.pi / 64.], time_min=None,
                time_max=None, instrument=None, wavelength=None):
     """
     query histogram based on time frame
     @param db_session:
+    @param meth_id:
     @param n_mu_bins:
     @param n_intensity_bins:
     @param lat_band:
@@ -1119,6 +1120,7 @@ def query_hist(db_session, n_mu_bins=None, n_intensity_bins=None, lat_band=[-np.
         if instrument is None:
             query_out = pd.read_sql(db_session.query(Histogram).filter(Histogram.date_obs >= time_min,
                                                                        Histogram.date_obs <= time_max,
+                                                                       Histogram.meth_id == meth_id,
                                                                        Histogram.n_mu_bins == n_mu_bins,
                                                                        Histogram.n_intensity_bins == n_intensity_bins,
                                                                        Histogram.lat_band == lat_band
@@ -1127,6 +1129,7 @@ def query_hist(db_session, n_mu_bins=None, n_intensity_bins=None, lat_band=[-np.
         elif n_mu_bins is None:
             query_out = pd.read_sql(db_session.query(Histogram).filter(Histogram.date_obs >= time_min,
                                                                        Histogram.date_obs <= time_max,
+                                                                       Histogram.meth_id == meth_id,
                                                                        Histogram.n_intensity_bins == n_intensity_bins,
                                                                        Histogram.lat_band == lat_band
                                                                        ).statement,
@@ -1134,6 +1137,7 @@ def query_hist(db_session, n_mu_bins=None, n_intensity_bins=None, lat_band=[-np.
         else:
             query_out = pd.read_sql(db_session.query(Histogram).filter(Histogram.date_obs >= time_min,
                                                                        Histogram.date_obs <= time_max,
+                                                                       Histogram.meth_id == meth_id,
                                                                        Histogram.instrument.in_(
                                                                            instrument),
                                                                        Histogram.n_mu_bins == n_mu_bins,
@@ -1145,6 +1149,7 @@ def query_hist(db_session, n_mu_bins=None, n_intensity_bins=None, lat_band=[-np.
         if instrument is None:
             query_out = pd.read_sql(db_session.query(Histogram).filter(Histogram.date_obs >= time_min,
                                                                        Histogram.date_obs <= time_max,
+                                                                       Histogram.meth_id == meth_id,
                                                                        Histogram.wavelength.in_(
                                                                            wavelength),
                                                                        Histogram.n_mu_bins == n_mu_bins,
@@ -1155,6 +1160,7 @@ def query_hist(db_session, n_mu_bins=None, n_intensity_bins=None, lat_band=[-np.
         elif n_mu_bins is None:
             query_out = pd.read_sql(db_session.query(Histogram).filter(Histogram.date_obs >= time_min,
                                                                        Histogram.date_obs <= time_max,
+                                                                       Histogram.meth_id == meth_id,
                                                                        Histogram.wavelength.in_(
                                                                            wavelength),
                                                                        Histogram.n_intensity_bins == n_intensity_bins,
@@ -1165,6 +1171,7 @@ def query_hist(db_session, n_mu_bins=None, n_intensity_bins=None, lat_band=[-np.
         else:
             query_out = pd.read_sql(db_session.query(Histogram).filter(Histogram.date_obs >= time_min,
                                                                        Histogram.date_obs <= time_max,
+                                                                       Histogram.meth_id == meth_id,
                                                                        Histogram.instrument.in_(
                                                                            instrument),
                                                                        Histogram.wavelength.in_(
@@ -1189,8 +1196,7 @@ def add_hist(db_session, histogram):
     :return: the updated SQLAlchemy session.
     """
 
-    hist_identifier = histogram.info['instrument'] + " observed at " + histogram.info['date_string']
-    date_format = "%Y-%m-%dT%H:%M:%S.%f"
+    hist_identifier = histogram.instrument + " observed at " + str(histogram.date_obs)
 
     # convert arrays to correct binary format
     lat_band, intensity_bin_edges, mu_bin_edges, hist = datatypes.hist_to_binary(histogram)
@@ -1198,12 +1204,13 @@ def add_hist(db_session, histogram):
     # check if row already exists in DB
     existing_row_id = db_session.query(Histogram.hist_id).filter(
         Histogram.image_id == histogram.image_id,
+        Histogram.meth_id == histogram.meth_id,
         Histogram.n_mu_bins == histogram.n_mu_bins,
         Histogram.n_intensity_bins == histogram.n_intensity_bins,
-        Histogram.instrument == histogram.info['instrument'],
-        Histogram.date_obs == datetime.datetime.strptime(histogram.info['date_string'], date_format),
+        Histogram.instrument == histogram.instrument,
+        Histogram.date_obs == histogram.date_obs,
         Histogram.lat_band == lat_band,
-        Histogram.wavelength == histogram.info['wavelength']).all()
+        Histogram.wavelength == histogram.wavelength).all()
     if len(existing_row_id) == 1:
         # histogram has already been downloaded and entered into DB. do nothing
         print("Histogram is already logged in database.  Nothing added.")
@@ -1217,16 +1224,16 @@ def add_hist(db_session, histogram):
     else:
         # Add new entry to DB
         # Construct new DB table row
-        hist_add = Histogram(image_id=histogram.image_id,
-                             date_obs=datetime.datetime.strptime(histogram.info['date_string'], date_format),
-                             instrument=histogram.info['instrument'], wavelength=histogram.info['wavelength'],
+        hist_add = Histogram(image_id=histogram.image_id, meth_id=histogram.meth_id,
+                             date_obs=histogram.date_obs,
+                             instrument=histogram.instrument, wavelength=histogram.wavelength,
                              n_mu_bins=histogram.n_mu_bins, n_intensity_bins=histogram.n_intensity_bins,
                              lat_band=lat_band, intensity_bin_edges=intensity_bin_edges, mu_bin_edges=mu_bin_edges,
                              hist=hist)
         # Append to the list of rows to be added
         db_session.add(hist_add)
-        print(("Database row added for " + histogram.info['instrument'] + ", wavelength: " +
-               str(histogram.info['wavelength']) + ", timestamp: " + histogram.info['date_string']))
+        print("Database row added for " + histogram.instrument + ", wavelength: " +
+              str(histogram.wavelength) + ", timestamp: " + str(histogram.date_obs))
     db_session.commit()
     return db_session
 
@@ -1282,6 +1289,149 @@ def query_var_val(db_session, meth_name, date_obs, instrument):
     else:
         var_val[:] = var_vals[:, :]
     return var_val
+
+
+def return_closest_combo(db_session, class_name, class_column, inst_query, time):
+    """
+    function to return combo_id with mean date closest to that of date observed
+    @param db_session:
+    @param class_name: name of sqlalchemy class
+    @param class_column: class_name.column_name
+    @param inst_query: return of query for combo_ids of instrument
+    @param time: date observed for image
+    @return:
+    """
+
+    greater = db_session.query(class_name).filter(class_column > time,
+                                                  class_name.combo_id.in_(inst_query.combo_id)). \
+        order_by(class_name.date_mean.asc()).limit(1).subquery().select()
+
+    lesser = db_session.query(class_name).filter(class_column <= time,
+                                                 class_name.combo_id.in_(inst_query.combo_id)). \
+        order_by(class_column.desc()).limit(1).subquery().select()
+
+    the_union = union_all(lesser, greater).alias()
+    the_alias = aliased(class_name, the_union)
+    the_diff = getattr(the_alias, class_column.name) - time
+    abs_diff = case([(the_diff < datetime.timedelta(0), -the_diff)], else_=the_diff)
+
+    image_combo_query = pd.read_sql(db_session.query(the_alias).order_by(abs_diff.asc()).statement, db_session.bind)
+    return image_combo_query
+
+
+def store_iit_values(db_session, pd_hist, meth_name, meth_desc, alpha_x_parameters, create=False):
+    # create image combos in db table
+    # get image_ids from queried histograms - same as ids in euv_images table
+    image_ids = tuple(pd_hist['image_id'])
+    combo_id_info = get_combo_id(db_session, image_ids, create=create)
+    combo_id = combo_id_info[1]
+
+    # create association between combo and image_id
+    for image_id in image_ids:
+        add_combo_image_assoc(db_session, combo_id, image_id)
+
+    # create variables in database
+    for i in range(len(alpha_x_parameters)):
+        #### definitions #####
+        # create variable definitions
+        if i == 0:
+            var_name = "alpha"
+            var_desc = "alpha IIT correction coefficient"
+        elif i == 1:
+            var_name = "x"
+            var_desc = "x IIT correction coefficient"
+
+        ##### store values #####
+        # add method to db
+        method_id_info = get_method_id(db_session, meth_name, meth_desc, var_name, var_desc, create=create)
+        method_id = method_id_info[1]
+        # add variable to db
+        var_id_info = get_var_id(db_session, method_id, var_name, var_desc, create=create)
+        var_id = int(var_id_info[1])
+        # add variable value to database
+        var_val = alpha_x_parameters[i]  # TODO: check this
+        get_var_val(db_session, combo_id, method_id, var_id, var_val, create=create)
+
+    return db_session
+
+
+
+#### NOT CURRENTLY USED ####
+
+
+def add_corrected_image(db_session, corrected_image):
+    corrected_image_id = corrected_image.instrument + " observed at " + str(corrected_image.date_obs)
+
+    # check if row already exists in DB
+    existing_row_id = db_session.query(Corrected_Images.image_id).filter(
+        Corrected_Images.image_id == corrected_image.image_id,
+        Corrected_Images.meth_id == corrected_image.meth_id,
+        # Corrected_Images.n_intensity_bins == corrected_image.n_intensity_bins,
+        Corrected_Images.instrument == corrected_image.instrument,
+        Corrected_Images.date_obs == corrected_image.date_obs,
+        Corrected_Images.wavelength == corrected_image.wavelength).all()
+
+    if len(existing_row_id) == 1:
+        # lbcc image has already been downloaded and entered into DB. do nothing
+        print("LBCC Image is already logged in database.  Nothing added.")
+        pass
+    elif len(existing_row_id) > 1:
+        # This lbcc image already exists in the DB in MORE THAN ONE PLACE!
+        print("Current download: " + corrected_image_id + " already exists in the database MULTIPLE times. " +
+              "Something is fundamentally wrong. DB unique index should prevent this from happening.")
+        sys.exit(0)
+    else:
+        # add this lbcc image to the database
+        # convert LBCC Image to binary
+        mu_array, lat_array, corrected_data = datatypes.LBCCImage.lbcc_to_binary(corrected_image)
+        corrected_image_add = Corrected_Images(image_id=corrected_image.image_id, meth_id=corrected_image.meth_id,
+                                               date_obs=corrected_image.date_obs, instrument=corrected_image.instrument,
+                                               wavelength=corrected_image.wavelength, distance=corrected_image.distance,
+                                               cr_lon=corrected_image.cr_lon, cr_lat=corrected_image.cr_lat,
+                                               cr_rot=corrected_image.cr_rot, lat_array=lat_array,
+                                               mu_array=mu_array, corrected_data=corrected_data)
+        # Append to the list of rows to be added
+        db_session.add(corrected_image_add)
+        print("Database row added for", corrected_image.instrument, "at time", corrected_image.date_obs)
+    # commit to database
+    db_session.commit()
+    return db_session
+
+
+def query_corrected_images(db_session, time_min=None, time_max=None, instrument=None, wavelength=None):
+    if time_min is None and time_max is None:
+        # get entire DB
+        query_out = pd.read_sql(db_session.query(Corrected_Images).statement, db_session.bind)
+    elif not isinstance(time_min, datetime.datetime) or not isinstance(time_max, datetime.datetime):
+        sys.exit("Error: time_min and time_max must have matching entries of 'None' or of type Datetime.")
+    elif wavelength is None:
+        if instrument is None:
+            query_out = pd.read_sql(db_session.query(Corrected_Images).filter(Corrected_Images.date_obs >= time_min,
+                                                                              Corrected_Images.date_obs <= time_max).statement,
+                                    db_session.bind)
+        else:
+            query_out = pd.read_sql(db_session.query(Corrected_Images).filter(Corrected_Images.date_obs >= time_min,
+                                                                              Corrected_Images.date_obs <= time_max,
+                                                                              Corrected_Images.instrument.in_(
+                                                                                  instrument)
+                                                                              ).statement,
+                                    db_session.bind)
+    else:
+        if instrument is None:
+            query_out = pd.read_sql(db_session.query(Corrected_Images).filter(Corrected_Images.date_obs >= time_min,
+                                                                              Corrected_Images.date_obs <= time_max,
+                                                                              Corrected_Images.wavelength.in_(
+                                                                                  wavelength)).statement,
+                                    db_session.bind)
+        else:
+            query_out = pd.read_sql(db_session.query(Corrected_Images).filter(Corrected_Images.date_obs >= time_min,
+                                                                              Corrected_Images.date_obs <= time_max,
+                                                                              Corrected_Images.instrument.in_(
+                                                                                  instrument),
+                                                                              Corrected_Images.wavelength.in_(
+                                                                                  wavelength)).statement,
+                                    db_session.bind)
+    return query_out
 
 
 def store_lbcc_values(db_session, pd_hist, meth_name, meth_desc, var_name, var_desc, date_index, inst_index, optim_vals,
@@ -1403,14 +1553,13 @@ def query_lbcc_fit(db_session, image, meth_name):
 
     # if none, then need to find closest center date
     if len(image_combo_query) == 0:
-        # print("Finding closest")
         image_combo_query = return_closest_combo(db_session, Image_Combos, Image_Combos.date_mean, date_obs)
 
     # get variable id info based on method and combo id
     var_id_query = pd.read_sql(db_session.query(Var_Vals.var_id).filter(Var_Vals.meth_id == method_id_info.meth_id,
                                                                         Var_Vals.combo_id == image_combo_query.combo_id).statement,
                                db_session.bind)
-    # print("found var id")
+
     # query var_val for variables values near the date_obs
     var_vals = np.zeros((len(var_id_query)))
     for i, var_id in enumerate(var_id_query.var_id):
@@ -1418,149 +1567,9 @@ def query_lbcc_fit(db_session, image, meth_name):
                                                                       Var_Vals.var_id == var_id
                                                                       ).statement,
                                     db_session.bind)
-        # print("var val query")
         if i == 0:
             beta = var_val_query.var_val[0]
         if i == 1:
             y = var_val_query.var_val[0]
-        # print("got var vals")
+
     return beta, y
-
-
-def return_closest_combo(db_session, class_name, class_column, inst_query, time):
-    """
-    function to return combo_id with mean date closest to that of date observed
-    @param db_session:
-    @param class_name: name of sqlalchemy class
-    @param class_column: class_name.column_name
-    @param inst_query: return of query for combo_ids of instrument
-    @param time: date observed for image
-    @return:
-    """
-
-    greater = db_session.query(class_name).filter(class_column > time,
-                                                  class_name.combo_id.in_(inst_query.combo_id)). \
-        order_by(class_name.date_mean.asc()).limit(1).subquery().select()
-
-    lesser = db_session.query(class_name).filter(class_column <= time,
-                                                 class_name.combo_id.in_(inst_query.combo_id)). \
-        order_by(class_column.desc()).limit(1).subquery().select()
-
-    the_union = union_all(lesser, greater).alias()
-    the_alias = aliased(class_name, the_union)
-    the_diff = getattr(the_alias, class_column.name) - time
-    abs_diff = case([(the_diff < datetime.timedelta(0), -the_diff)], else_=the_diff)
-
-    image_combo_query = pd.read_sql(db_session.query(the_alias).order_by(abs_diff.asc()).statement, db_session.bind)
-    return image_combo_query
-
-
-def store_iit_values(db_session, pd_hist, meth_name, meth_desc, alpha_x_parameters, create=False):
-
-    # create image combos in db table
-    # get image_ids from queried histograms - same as ids in euv_images table
-    image_ids = tuple(pd_hist['image_id'])
-    combo_id_info = get_combo_id(db_session, image_ids, create=create)
-    combo_id = combo_id_info[1]
-
-    # create association between combo and image_id
-    for image_id in image_ids:
-        add_combo_image_assoc(db_session, combo_id, image_id)
-
-    # create variables in database
-    for i in range(len(alpha_x_parameters)):
-        #### definitions #####
-        # create variable definitions
-        if i == 0:
-            var_name = "alpha"
-            var_desc = "alpha IIT correction coefficient"
-        elif i == 1:
-            var_name = "x"
-            var_desc = "x IIT correction coefficient"
-
-        ##### store values #####
-        # add method to db
-        method_id_info = get_method_id(db_session, meth_name, meth_desc, var_name, var_desc, create=create)
-        method_id = method_id_info[1]
-        # add variable to db
-        var_id_info = get_var_id(db_session, method_id, var_name, var_desc, create=create)
-        var_id = int(var_id_info[1])
-        # add variable value to database
-        var_val = alpha_x_parameters[i] # TODO: check this
-        get_var_val(db_session, combo_id, method_id, var_id, var_val, create=create)
-
-    return db_session
-
-
-def add_corrected_image(db_session, corrected_image):
-
-    corrected_image_id = corrected_image.instrument + " observed at " + corrected_image.date_obs
-
-    # check if row already exists in DB
-    existing_row_id = db_session.query(Corrected_Images.image_id).filter(
-        Corrected_Images.image_id == corrected_image.image_id,
-        Corrected_Images.meth_id == corrected_image.meth_id,
-        Corrected_Images.n_intensity_bins == corrected_image.n_intensity_bins,
-        Corrected_Images.instrument == corrected_image.instrument,
-        Corrected_Images.date_obs == corrected_image.date_obs,
-        Corrected_Images.wavelength == corrected_image.wavelength).all()
-
-    if len(existing_row_id) == 1:
-        # lbcc image has already been downloaded and entered into DB. do nothing
-        print("LBCC Image is already logged in database.  Nothing added.")
-        pass
-    elif len(existing_row_id) > 1:
-        # This lbcc image already exists in the DB in MORE THAN ONE PLACE!
-        print("Current download: " + corrected_image_id + " already exists in the database MULTIPLE times. " +
-              "Something is fundamentally wrong. DB unique index should prevent this from happening.")
-        sys.exit(0)
-    else:
-        # add this lbcc image to the database
-        # convert LBCC Image to binary
-        mu_array, lat_array, lbcc_data = datatypes.lbcc_to_binary(corrected_image)
-        corrected_image_add = Corrected_Images(image_id=corrected_image.image_id, date_obs=corrected_image.date_obs,
-                                     instrument=corrected_image.instrument, wavelength=corrected_image.wavelength,
-                                     distance=corrected_image.distance, cr_lon=corrected_image.cr_lon, cr_lat=corrected_image.cr_lat,
-                                     cr_rot=corrected_image.cr_rot, lat_array=lat_array,
-                                     mu_array=mu_array, lbcc_data=lbcc_data)
-        # Append to the list of rows to be added
-        db_session.add(corrected_image_add)
-        print(("Database row added for", corrected_image.instrument, "at time", corrected_image.date_obs))
-    # commit to database
-    db_session.commit()
-    return db_session
-
-
-def query_corrected_images(db_session, time_min=None, time_max=None, instrument=None, wavelength=None):
-
-    if time_min is None and time_max is None:
-        # get entire DB
-        query_out = pd.read_sql(db_session.query(Corrected_Images).statement, db_session.bind)
-    elif not isinstance(time_min, datetime.datetime) or not isinstance(time_max, datetime.datetime):
-        sys.exit("Error: time_min and time_max must have matching entries of 'None' or of type Datetime.")
-    elif wavelength is None:
-        if instrument is None:
-            query_out = pd.read_sql(db_session.query(Corrected_Images).filter(Corrected_Images.date_obs >= time_min,
-                                                                        Corrected_Images.date_obs <= time_max).statement,
-                                    db_session.bind)
-        else:
-            query_out = pd.read_sql(db_session.query(Corrected_Images).filter(Corrected_Images.date_obs >= time_min,
-                                                                        Corrected_Images.date_obs <= time_max,
-                                                                        Corrected_Images.instrument.in_(
-                                                                            instrument)).statement,
-                                    db_session.bind)
-    else:
-        if instrument is None:
-            query_out = pd.read_sql(db_session.query(Corrected_Images).filter(Corrected_Images.date_obs >= time_min,
-                                                                        Corrected_Images.date_obs <= time_max,
-                                                                        Corrected_Images.wavelength.in_(
-                                                                            wavelength)).statement,
-                                    db_session.bind)
-        else:
-            query_out = pd.read_sql(db_session.query(Corrected_Images).filter(Corrected_Images.date_obs >= time_min,
-                                                                        Corrected_Images.date_obs <= time_max,
-                                                                        Corrected_Images.instrument.in_(instrument),
-                                                                        Corrected_Images.wavelength.in_(
-                                                                            wavelength)).statement,
-                                    db_session.bind)
-    return query_out

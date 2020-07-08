@@ -199,6 +199,7 @@ class Histogram(Base):
     __tablename__ = 'histogram'
     hist_id = Column(Integer, primary_key=True)
     image_id = Column(Integer, ForeignKey('euv_images.image_id'))
+    meth_id = Column(Integer, ForeignKey('meth_defs.meth_id'))
     date_obs = Column(DateTime)
     instrument = Column(String(10))
     wavelength = Column(Integer)
@@ -211,21 +212,3 @@ class Histogram(Base):
 
     __table_args__ = (Index('lbcc_index', "date_obs", "instrument", "wavelength"),)
 
-
-class Corrected_Images(Base):
-    """
-    Table to hold Limb-Brightening Corrected Data and associated image information
-    """
-    __tablename__ = 'corrected_images'
-    image_id = Column(Integer, primary_key=True)
-    meth_id = Column(Integer, ForeignKey('meth_defs.meth_id'))
-    date_obs = Column(DateTime)
-    instrument = Column(String(10))
-    wavelength = Column(Integer)
-    distance = Column(Float)
-    cr_lon = Column(Float)
-    cr_lat = Column(Float)
-    cr_rot = Column(Float)
-    lat_array = Column(LargeBinary)
-    mu_array = Column(LargeBinary)
-    corrected_data = Column(LargeBinary)

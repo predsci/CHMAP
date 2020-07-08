@@ -3,6 +3,7 @@ Functions for evaluating the Limb Brightening Correction Coeffecients
 """
 
 import numpy as np
+import datetime
 import scipy.interpolate as interp
 import scipy.optimize as optim
 import scipy.integrate as integrate
@@ -447,6 +448,7 @@ def get_beta_y_theoretic_based(x, mu):
     :param mu: value of mu
     :return: Beta and y
     """
+
     f1 = -x[0] + x[0] * mu + x[1] * np.log10(mu)
     f0 = -x[2] + x[2] * mu + x[3] * np.log10(mu)
     n = x[4]
@@ -457,49 +459,60 @@ def get_beta_y_theoretic_based(x, mu):
     return beta, y
 
 
-def get_beta_y_theoretic_continuous_loop(x, mu_array):
-    """
-    theoretic form of LBCC optimization
-    using array of mu values
-    @param x: list of parameter values
-    @param mu_array: array of mu bins
-    @return: array of beta and y values
-    """
-    beta_array = np.zeros((len(mu_array), len(mu_array)))
-    y_array = np.zeros((len(mu_array), len(mu_array)))
-    for i in range(len(mu_array)):
-        for j in range(len(mu_array)):
-            if mu_array[i][j] == -9999:
-                pass
-            else:
-                beta_theoretic, y_theoretic = get_beta_y_theoretic_based(x, mu_array[i][j])
-            beta_array[i][j] = beta_theoretic
-            y_array[i][j] = y_theoretic
-
-    return beta_array, y_array
-    # return beta_theoretic, y_theoretic
-
-
+# SOMETHING WRONG WITH THE BETA/Y CALCULATION FROM GET_BETA_Y_THEORETIC_BASED ####
 def get_beta_y_theoretic_continuous(x, mu_array):
-    # flatten array to 1d
-    array_1d = mu_array.flatten()
-    beta_array = np.zeros(len(array_1d))
-    y_array = np.zeros(len(array_1d))
-    # check for empty elements
-    for i, element in enumerate(array_1d):
-        if element == -9999:
-            array_1d[i] = 0.001
 
-    # reshape array
-    mu_array = array_1d.reshape((len(mu_array), len(mu_array)))
-    beta, y = get_beta_y_theoretic_based(x, mu_array)
+    # determine where mu is -9999
+    mu = np.where(mu_array > 0, mu_array, 0.0001)
 
-    beta_array = beta_array.reshape((len(mu_array), len(mu_array)))
-    y_array = y_array.reshape((len(mu_array), len(mu_array)))
+    # calculate beta and y
+    beta, y = get_beta_y_theoretic_based(x, mu)
+    beta = np.where(mu_array > 0, beta, 0)
+    y = np.where(mu_array > 0, y, 0)
 
     return beta, y
 
 
+def moving_averages(time_min, time_max, weekday, days=None):
+    # find day of the week of start time
+    day_start = time_min.weekday()
+    if day_start != weekday:
+        time_min = time_max + datetime.timedelta(days=7 - day_start)
+    # calculate number of weeks
+    number_of_weeks = int((time_max - time_min).days / 7)
+    # returns array of moving averages center dates, based off start date and number of weeks
+    moving_avg_centers = np.array(
+        [np.datetime64(str(time_min)) + ii * np.timedelta64(1, 'W') for ii in range(number_of_weeks)])
+    # returns moving width based of number of days
+    if days is not None:
+        moving_width = np.timedelta64(days, 'D')
+    else:
+        moving_width = None
+
+    return moving_avg_centers, moving_width
+
+
+#### DOESN'T WORK, NOT USED ####
+def get_beta_y_theoretic_continuous_1d(x, mu_array):
+    """
+    this method isn't currently working
+    only gets rid of the outer portion of the stuff
+    """
+    # flatten mu into 1D array
+    mu1d = mu_array.flatten()
+    inds = np.logical_and(mu1d <= 1, mu1d > 0)
+    # calculate beta and y
+    beta1d = np.zeros(mu1d.shape)
+    y1d = np.zeros(mu1d.shape)
+    beta1d[inds], y1d[inds] = get_beta_y_theoretic_based(x, mu1d[inds])
+    # create 2d beta& y arrays
+    beta = beta1d.reshape(mu_array.shape)
+    y = y1d.reshape(mu_array.shape)
+
+    return beta, y
+
+
+#### SHOULD NOT BE USED - WORKS THOUGH ####
 def get_beta_y_theoretic_interp(x, mu_array_2d, mu_array_1d):
     """
     calculate beta and y using the theoretic fit

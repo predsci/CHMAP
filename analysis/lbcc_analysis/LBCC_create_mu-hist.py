@@ -7,7 +7,7 @@ import datetime
 import numpy as np
 from settings.app import App
 import modules.DB_classes as db_class
-from modules.DB_funs import init_db_conn, query_euv_images, add_lbcc_hist
+from modules.DB_funs import init_db_conn, query_euv_images, add_hist, get_method_id
 import modules.datatypes as psi_d_types
 
 ###### ------ PARAMETERS TO UPDATE -------- ########
@@ -43,15 +43,21 @@ db_session = init_db_conn(db_name=use_db, chd_base=db_class.Base, sqlite_path=sq
 
 # ------------ NO NEED TO UPDATE ANYTHING BELOW  ------------- #
 
+# create LBC method
+meth_name = 'LBCC Theoretic'
+meth_desc = 'LBCC Theoretic Fit Method'
+method_id = get_method_id(db_session, meth_name, meth_desc, var_names=None, var_descs=None, create=True)
+
 # loop over instrument
 for instrument in inst_list:
-    # query wants a list
+
+    # query EUV images
     query_instrument = [instrument, ]
-    query_pd = query_euv_images(db_session=db_session, time_min=query_time_min, time_max=query_time_max,
-                                instrument=query_instrument)
+    query_pd = query_euv_images(db_session=db_session, time_min=query_time_min,
+                                         time_max=query_time_max, instrument=query_instrument)
 
     for index, row in query_pd.iterrows():
-        print("Processing image number" + str(row.image_id) + ".")
+        print("Processing image number", row.image_id, ".")
         if row.fname_hdf == "":
             print("Warning: Image # " + str(row.image_id) + " does not have an associated hdf file. Skipping")
             continue
@@ -61,13 +67,14 @@ for instrument in inst_list:
         los_temp.get_coordinates(R0=R0)
         # perform 2D histogram on mu and image intensity
         temp_hist = los_temp.mu_hist(image_intensity_bin_edges, mu_bin_edges, lat_band=lat_band, log10=log10)
-        hist_lbcc = psi_d_types.create_hist(hdf_path, row.image_id, mu_bin_edges, image_intensity_bin_edges, lat_band,
-                                            temp_hist)
+        hist_lbcc = psi_d_types.create_lbcc_hist(hdf_path, row.image_id, method_id[1], mu_bin_edges,
+                                                 image_intensity_bin_edges, lat_band, temp_hist)
 
         # add this histogram and meta data to database
-        add_lbcc_hist(hist_lbcc, db_session)
+        add_hist(db_session, hist_lbcc)
 
 db_session.close()
+
 
 
 

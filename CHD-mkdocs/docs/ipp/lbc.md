@@ -1,7 +1,7 @@
 # Limb-Brightening Correction
 Limb Brightening Correction (LBC) is the second step in the data pre-processing pipeline. 
 The goal of LBC is to correct for brightening of structures that is 
-dependent on their distance from disk center. This process uses a theoretic model.... 
+dependent upon their distance from disk center.  
 
 ## Examples of Corrected Images
 ### AIA Images
@@ -21,7 +21,8 @@ dependent on their distance from disk center. This process uses a theoretic mode
 
 ## Theoretical Analysis Pipeline
 
-### Compute Histograms 
+### Compute Histograms and Save to Database
+This function computes 2D Histograms from processed images for use in the LBC process. It then saves these computed histograms to the database.  
 The source code for this is found in the [CHD GitHub](https://github.com/predsci/CHD/blob/master/analysis/lbcc_analysis/LBCC_create_mu-hist.py) 
 and the generalized function can be found [here](https://github.com/predsci/CHD/blob/master/analysis/lbcc_analysis/LBCC_theoretic_funcs.py).  
 
@@ -33,9 +34,9 @@ and the generalized function can be found [here](https://github.com/predsci/CHD/
             query_pd = db_funcs.query_euv_images(db_session=db_session, time_min=hist_query_time_min,
                                                  time_max=hist_query_time_max, instrument=query_instrument)
             temp_hist = los_temp.mu_hist(image_intensity_bin_edges, mu_bin_edges, lat_band=lat_band, log10=log10)
-            hist_lbcc = psi_d_types.create_hist(hdf_path, row.image_id, mu_bin_edges, image_intensity_bin_edges,
-                                                lat_band, temp_hist)
-            db_funcs.add_lbcc_hist(hist_lbcc, db_session)
+            hist_lbcc = psi_d_types.create_lbcc_hist(hdf_path, row.image_id, method_id[1], mu_bin_edges,
+                                                     image_intensity_bin_edges, lat_band, temp_hist)
+            db_funcs.add_hist(hist_lbcc, db_session)
     
  
 * 1.)  <code>db_funcs.query_euv_images</code>  
@@ -44,20 +45,22 @@ and the generalized function can be found [here](https://github.com/predsci/CHD/
     * creates histogram based on number of mu and intensity bins    
 * 3.)   <code>psi_d_types.create_hist</code>  
     * converts histogram to lbcc_hist datatype  
-* 4.)  <code>db_funcs.add_lbcc_hist</code>  
-    * saves histograms to database (table LBCC_Hist) associating an image_id and basic information with histogram  
+* 4.)  <code>db_funcs.add_hist</code>  
+    * saves histograms to database (table Histogram) associating an image_id, meth_id, and basic information with histogram  
 
 
 ### Calculate and Save Theoretical Fit Parameters
+This function queries histograms from the database then calculates LBC fit parameters which are then saved in the database.  
 The source code for this is found in the [CHD GitHub](https://github.com/predsci/CHD/blob/master/analysis/lbcc_analysis/LBCC_beta-y_theoretical_analysis.py) 
 and the generalized function can be found [here](https://github.com/predsci/CHD/blob/master/analysis/lbcc_analysis/LBCC_theoretic_funcs.py). 
 
-    def calc_theoretic_fit(db_session, inst_list, calc_query_time_min, number_of_weeks=27, number_of_days=180, n_mu_bins=18,
-                       n_intensity_bins=200, lat_band=[-np.pi / 64., np.pi / 64.], create=False):
+    def calc_theoretic_fit(db_session, inst_list, calc_query_time_min, calc_query_time_max, weekday=0, number_of_days=180,
+                       n_mu_bins=18, n_intensity_bins=200, lat_band=[-np.pi / 64., np.pi / 64.], create=False):
         """
         function to calculate and save (to database) theoretic LBC fit parameters
         """
-        pd_hist = db_funcs.query_hist(db_session=db_session, n_mu_bins=n_mu_bins, n_intensity_bins=n_intensity_bins,
+        pd_hist = db_funcs.query_hist(db_session=db_session, meth_id=method_id[1], n_mu_bins=n_mu_bins,
+                                          n_intensity_bins=n_intensity_bins,
                                           lat_band=np.array(lat_band).tobytes(),
                                           time_min=np.datetime64(min_date).astype(datetime.datetime),
                                           time_max=np.datetime64(max_date).astype(datetime.datetime),
@@ -69,7 +72,7 @@ and the generalized function can be found [here](https://github.com/predsci/CHD/
                                        inst_index, optim_vals=optim_vals_theo[0:6], results=results_theo, create=True)                                                                   
                                           
 * 1.) <code>db_funcs.query_hist</code>
-    * queries database for histograms (from LBCC_Hist table) in specified date range
+    * queries database for histograms (from Histogram table) in specified date range
 * 2.) <code>optim.minimize</code>
     * use theoretical optimization method to calculate fit parameters
 * 3.) <code>db_funcs.store_lbcc_values</code>
@@ -84,12 +87,13 @@ and the generalized function can be found [here](https://github.com/predsci/CHD/
 
 
 ### Apply Limb-Brightening Correction and Plot Corrected Images
+This function queries the database for LBC fit parameters then applies them to specified images, plotting resulting images before and after the correction.  
 The source code for this is found in the [CHD GitHub](https://github.com/predsci/CHD/blob/master/analysis/lbcc_analysis/LBCC_apply_fit.py) 
 and the generalized function can be found [here](https://github.com/predsci/CHD/blob/master/analysis/lbcc_analysis/LBCC_theoretic_funcs.py). 
 
 
-    def apply_lbc_correction(db_session, hdf_data_dir, inst_list, lbc_query_time_min, lbc_query_time_max, n_mu_bins=18,
-                         R0=1.01, plot=False):
+    def apply_lbc_correction(db_session, hdf_data_dir, inst_list, lbc_query_time_min, lbc_query_time_max,
+                            n_intensity_bins=200, R0=1.01, plot=False):
         """
         function to apply limb-brightening correction and plot images within a certain time frame
         """ 
@@ -97,10 +101,9 @@ and the generalized function can be found [here](https://github.com/predsci/CHD/
                                              time_max=lbc_query_time_max, instrument=query_instrument) 
         theoretic_query = db_funcs.query_var_val(db_session, meth_name, date_obs=original_los.info['date_string'],
                                                  instrument=instrument)
-        beta, y = lbcc.get_beta_y_theoretic_interp(theoretic_query, mu_array_2d=original_los.mu,
-                                                   mu_array_1d=mu_bin_centers)
+        beta, y = lbcc.get_beta_y_theoretic_continuous(theoretic_query, mu_array=original_los.mu)  
         corrected_los_data = beta * original_los.data + y
-        db_funcs.add_corrected_image(db_session, corrected_image=lbcc_data)
+
         if plot:
             Plotting.PlotImage(original_los, nfig=100 + inst_index, title="Original LOS Image for " + instrument)
             Plotting.PlotLBCCImage(lbcc_data=corrected_los_data, los_image=original_los, nfig=200 + inst_index,
@@ -112,26 +115,24 @@ and the generalized function can be found [here](https://github.com/predsci/CHD/
     * queries database for images (from EUV_Images table) in specified date range
 * 2.) <code>db_funcs.query_var_val</code>
     * queries database for variable values associated with specific image (from Var_Vals table)
-* 3.) <code>lbcc.get_beta_y_theoretic_interp</code>
+* 3.) <code>lbcc.get_beta_y_theoretic_continuous</code>
     * calculates beta and y arrays 
         * uses variable values from query in step two
         * uses mu array from original LOS image
-        * uses mu_bin_centers array to calculate beta and y then interpolate for 2D mu array
 * 4.) <code>corrected_los_data = beta * original_los.data + y</code>
-    * applies correction to image based off beta, y, and original data arrays
-* 5.) <code>db_funcs.add_corrected_image</code>
-    * adds Limb-Brightening Corrected data to database  
-* 6.) <code>Plotting.PlotImage</code> and <code>Plotting.PlotLBCCImage</code>
+    * applies correction to image based off beta, y, and original data arrays 
+* 5.) <code>Plotting.PlotImage</code> and <code>Plotting.PlotLBCCImage</code>
     * plots original and corrected images and difference between them   
     
 
-### Generate Plots of Beta and y Correction Coefficients
+### Generate Plots of Beta and y 
+This function queries the database for LBC fit parameters then generates plots of Beta and y over time.  
 The source code for this is found in the [CHD GitHub](https://github.com/predsci/CHD/blob/master/analysis/lbcc_analysis/LBCC_generate_theoretic_plots.py) 
 and the generalized function can be found [here](https://github.com/predsci/CHD/blob/master/analysis/lbcc_analysis/LBCC_theoretic_funcs.py).    
 
 
-    def generate_theoretic_plots(db_session, inst_list, plot_query_time_min, plot_number_of_weeks, image_out_path,
-                         year='2011', time_period='6 Month', plot_week=0, n_mu_bins=18):
+    def generate_theoretic_plots(db_session, inst_list, plot_query_time_min, plot_query_time_max, weekday, image_out_path,
+                             year='2011', time_period='6 Month', plot_week=0, n_mu_bins=18):
         """
         function to generate plots of beta/y over time and beta/y v. mu
         """

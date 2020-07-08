@@ -41,6 +41,11 @@ def save_histograms(db_session, hdf_data_dir, inst_list, hist_query_time_min, hi
     mu_bin_edges = np.array(range(n_mu_bins + 1), dtype="float") * 0.05 + 0.1
     image_intensity_bin_edges = np.linspace(0, 5, num=n_intensity_bins + 1, dtype='float')
 
+    # create LBC method
+    meth_name = 'LBCC Theoretic'
+    meth_desc = 'LBCC Theoretic Fit Method'
+    method_id = db_funcs.get_method_id(db_session, meth_name, meth_desc, var_names=None, var_descs=None, create=True)
+
     # loop over instrument
     for instrument in inst_list:
 
@@ -60,8 +65,8 @@ def save_histograms(db_session, hdf_data_dir, inst_list, hist_query_time_min, hi
             los_temp.get_coordinates(R0=R0)
             # perform 2D histogram on mu and image intensity
             temp_hist = los_temp.mu_hist(image_intensity_bin_edges, mu_bin_edges, lat_band=lat_band, log10=log10)
-            hist_lbcc = psi_d_types.create_lbcc_hist(hdf_path, row.image_id, mu_bin_edges, image_intensity_bin_edges,
-                                                lat_band, temp_hist)
+            hist_lbcc = psi_d_types.create_lbcc_hist(hdf_path, row.image_id, method_id[1], mu_bin_edges,
+                                                     image_intensity_bin_edges, lat_band, temp_hist)
 
             # add this histogram and meta data to database
             db_funcs.add_hist(db_session, hist_lbcc)
@@ -75,14 +80,15 @@ def save_histograms(db_session, hdf_data_dir, inst_list, hist_query_time_min, hi
 
 
 ###### STEP TWO: CALCULATE AND SAVE THEORETIC FIT PARAMETERS #######
-def calc_theoretic_fit(db_session, inst_list, calc_query_time_min, number_of_weeks=27, number_of_days=180, n_mu_bins=18,
-                       n_intensity_bins=200, lat_band=[-np.pi / 64., np.pi / 64.], create=False):
+def calc_theoretic_fit(db_session, inst_list, calc_query_time_min, calc_query_time_max, weekday=0, number_of_days=180,
+                       n_mu_bins=18, n_intensity_bins=200, lat_band=[-np.pi / 64., np.pi / 64.], create=False):
     """
     calculate and save (to database) theoretic LBC fit parameters
     @param db_session: connected database session to query histograms from and save fit parameters
     @param inst_list: list of instruments
     @param calc_query_time_min: start time for creation of moving average centers
-    @param number_of_weeks: number of weeks for querying/creation of moving average centers
+    @param calc_query_time_max: end time for creation of moving average centers
+    @param weekday: weekday for the moving average
     @param number_of_days: number of days for creation of moving width
     @param n_mu_bins: number mu bins
     @param n_intensity_bins: number intensity bins
@@ -92,16 +98,16 @@ def calc_theoretic_fit(db_session, inst_list, calc_query_time_min, number_of_wee
     """
     # start time
     start_time_tot = time.time()
-
-    # returns array of moving averages center dates, based off start date and number of weeks
-    moving_avg_centers = np.array(
-        [np.datetime64(str(calc_query_time_min)) + ii * np.timedelta64(1, 'W') for ii in range(number_of_weeks)])
-
-    # returns moving width based of number of days
-    moving_width = np.timedelta64(number_of_days, 'D')
-
+    # calculate moving averages
+    moving_avg_centers, moving_width = lbcc.moving_averages(calc_query_time_min, calc_query_time_max, weekday,
+                                                            number_of_days)
     optim_vals_theo = ["a1", "a2", "b1", "b2", "n", "log_alpha", "SSE", "optim_time", "optim_status"]
     results_theo = np.zeros((len(moving_avg_centers), len(inst_list), len(optim_vals_theo)))
+
+    # get method id
+    meth_name = 'LBCC Theoretic'
+    meth_desc = 'LBCC Theoretic Fit Method'
+    method_id = db_funcs.get_method_id(db_session, meth_name, meth_desc, var_names=None, var_descs=None, create=False)
 
     for date_index, center_date in enumerate(moving_avg_centers):
         print("Begin date " + str(center_date))
@@ -115,7 +121,8 @@ def calc_theoretic_fit(db_session, inst_list, calc_query_time_min, number_of_wee
 
             # query the histograms for time range based off moving average centers
             query_instrument = [instrument, ]
-            pd_hist = db_funcs.query_hist(db_session=db_session, n_mu_bins=n_mu_bins, n_intensity_bins=n_intensity_bins,
+            pd_hist = db_funcs.query_hist(db_session=db_session, meth_id=method_id[1], n_mu_bins=n_mu_bins,
+                                          n_intensity_bins=n_intensity_bins,
                                           lat_band=np.array(lat_band).tobytes(),
                                           time_min=np.datetime64(min_date).astype(datetime.datetime),
                                           time_max=np.datetime64(max_date).astype(datetime.datetime),
@@ -145,7 +152,7 @@ def calc_theoretic_fit(db_session, inst_list, calc_query_time_min, number_of_wee
             norm_hist[zero_row_index[0]] = summed_hist[zero_row_index[0]] / row_sums[zero_row_index[0]]
 
             # separate the reference bin from the fitted bins
-            hist_ref = norm_hist[-1, ]
+            hist_ref = norm_hist[-1,]
             hist_mat = norm_hist[:-1, ]
             mu_vec = mu_bin_centers[:-1]
 
@@ -183,8 +190,8 @@ def calc_theoretic_fit(db_session, inst_list, calc_query_time_min, number_of_wee
 
 
 ###### STEP THREE: APPLY CORRECTION AND PLOT IMAGES #######
-def apply_lbc_correction(db_session, hdf_data_dir, inst_list, lbc_query_time_min, lbc_query_time_max, n_mu_bins=18,
-                         R0=1.01, plot=False):
+def apply_lbc_correction(db_session, hdf_data_dir, inst_list, lbc_query_time_min, lbc_query_time_max,
+                         n_intensity_bins=200, R0=1.01, plot=False):
     """
     function to apply limb-brightening correction and plot images within a certain time frame
     @param db_session: connected database session to query theoretic fit parameters from
@@ -192,7 +199,7 @@ def apply_lbc_correction(db_session, hdf_data_dir, inst_list, lbc_query_time_min
     @param inst_list: list of instruments
     @param lbc_query_time_min: minimum query time for applying lbc fit
     @param lbc_query_time_max: maximum query time for applying lbc fit
-    @param n_mu_bins: number of mu bins
+    @param n_intensity_bins: number of intensity bins
     @param R0: radius
     @param plot: whether or not to plot images
     @return:
@@ -201,8 +208,9 @@ def apply_lbc_correction(db_session, hdf_data_dir, inst_list, lbc_query_time_min
     start_time_tot = time.time()
 
     meth_name = "LBCC Theoretic"
-    mu_bin_edges = np.array(range(n_mu_bins + 1), dtype="float") * 0.05 + 0.1
-    mu_bin_centers = (mu_bin_edges[1:] + mu_bin_edges[:-1]) / 2
+    db_sesh, meth_id, var_ids = db_funcs.get_method_id(db_session, meth_name, meth_desc=None, var_names=None,
+                                                       var_descs=None, create=False)
+    intensity_bin_edges = np.linspace(0, 5, num=n_intensity_bins + 1, dtype='float')
 
     ##### QUERY IMAGES ######
     for inst_index, instrument in enumerate(inst_list):
@@ -223,21 +231,12 @@ def apply_lbc_correction(db_session, hdf_data_dir, inst_list, lbc_query_time_min
             theoretic_query = db_funcs.query_var_val(db_session, meth_name, date_obs=original_los.info['date_string'],
                                                      instrument=instrument)
 
-            # get beta and y from theoretic fit
-            beta, y = lbcc.get_beta_y_theoretic_interp(theoretic_query, mu_array_2d=original_los.mu,
-                                                       mu_array_1d=mu_bin_centers)
+            beta, y = lbcc.get_beta_y_theoretic_continuous(theoretic_query, mu_array=original_los.mu)
 
             ###### APPLY LBC CORRECTION ######
             corrected_los_data = beta * original_los.data + y
 
-            ###### CREATE LBCC DATATYPE ######
-            lbcc_data = psi_d_types.create_lbcc_image(corrected_los_data, los_image=original_los,
-                                                      intensity_bin_edges=intensity_bin_edges)
-
-            ###### SAVE LBCC IMAGE TO DATABASE ######
-            db_funcs.add_corrected_image(db_session, corrected_image=lbcc_data)
-
-            ###### PLOT IMAGES #####
+            ##### PLOTTING ######
             if plot:
                 Plotting.PlotImage(original_los, nfig=100 + inst_index, title="Original LOS Image for " + instrument)
                 Plotting.PlotLBCCImage(lbcc_data=corrected_los_data, los_image=original_los, nfig=200 + inst_index,
@@ -254,15 +253,15 @@ def apply_lbc_correction(db_session, hdf_data_dir, inst_list, lbc_query_time_min
 
 
 ###### STEP FOUR: GENERATE PLOTS OF BETA AND Y ######
-def generate_theoretic_plots(db_session, inst_list, plot_query_time_min, plot_number_of_weeks, image_out_path,
-                             year='2011',
-                             time_period='6 Month', plot_week=0, n_mu_bins=18):
+def generate_theoretic_plots(db_session, inst_list, plot_query_time_min, plot_query_time_max, weekday, image_out_path,
+                             year='2011', time_period='6 Month', plot_week=0, n_mu_bins=18):
     """
     function to generate plot of theoretical beta and y over time and beta/y v. mu
     @param db_session: connected database session to query theoretic fit parameters from
     @param inst_list: list of instruments
     @param plot_query_time_min: minimum time to query fit parameters and create moving average centers
-    @param plot_number_of_weeks: number of weeks to query
+    @param plot_query_time_max: maximum time to query fit parameters and create moving average centers
+    @param weekday: day of the week to plot
     @param image_out_path: path to save plots to
     @param year: year
     @param time_period: time period of query
@@ -278,9 +277,9 @@ def generate_theoretic_plots(db_session, inst_list, plot_query_time_min, plot_nu
     mu_bin_centers = (mu_bin_array[1:] + mu_bin_array[:-1]) / 2
 
     # time arrays
-    # returns array of moving averages center dates, based off start date and number of weeks
-    moving_avg_centers = np.array(
-        [np.datetime64(str(plot_query_time_min)) + ii * np.timedelta64(1, 'W') for ii in range(plot_number_of_weeks)])
+    # returns array of moving averages center dates, based off start and end date
+    moving_avg_centers, moving_width = lbcc.moving_averages(plot_query_time_min, plot_query_time_max, weekday,
+                                                            number_of_days=None)
 
     # calc beta and y for a few sample mu-values
     sample_mu = [0.125, 0.325, 0.575, 0.875]
@@ -320,9 +319,8 @@ def generate_theoretic_plots(db_session, inst_list, plot_query_time_min, plot_nu
         plt.ylabel(r"$\beta$ " + instrument)
         plt.xlabel("Center Date")
         ax = plt.gca()
-        model_lines = []
-        model_lines.append(Line2D([0], [0], color="black", linestyle=linestyles[0], lw=2,
-                                  marker=marker_types[0]))
+        model_lines = [Line2D([0], [0], color="black", linestyle=linestyles[0], lw=2,
+                              marker=marker_types[0])]
         legend1 = plt.legend(mu_lines, [str(round(x, 3)) for x in sample_mu], loc='upper left', bbox_to_anchor=(1., 1.),
                              title=r"$\mu$ value")
         ax.legend(model_lines, ["theoretic"], loc='upper left',
@@ -348,9 +346,8 @@ def generate_theoretic_plots(db_session, inst_list, plot_query_time_min, plot_nu
         plt.ylabel(r"$y$ " + instrument)
         plt.xlabel("Center Date")
         ax = plt.gca()
-        model_lines = []
-        model_lines.append(Line2D([0], [0], color="black", linestyle=linestyles[0], lw=2,
-                                  marker=marker_types[0]))
+        model_lines = [Line2D([0], [0], color="black", linestyle=linestyles[0], lw=2,
+                              marker=marker_types[0])]
         legend1 = plt.legend(mu_lines, [str(round(x, 3)) for x in sample_mu], loc='upper left', bbox_to_anchor=(1., 1.),
                              title=r"$\mu$ value")
         ax.legend(model_lines, ["theoretic"], loc='upper left',
@@ -417,4 +414,5 @@ def generate_theoretic_plots(db_session, inst_list, plot_query_time_min, plot_nu
     end_time_tot = time.time()
     print("Theoretical plots of beta and y over time hvae been generated and saved.")
     print("Total elapsed time for plot creation: " + str(round(end_time_tot - start_time_tot, 3)) + " seconds.")
+
     return None
