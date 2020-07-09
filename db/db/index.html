@@ -452,24 +452,36 @@
 <p>The Image Pre-Processing Pipeline is built upon a database to store images, histograms, and fit parameter values. </p>
 <h2 id="updating-the-database">Updating the Database</h2>
 <p>The original database is now quite different than the database needed to query and save calculated parameters. In order to generate
-the necessary updates to run the code, do the following:<br />
-<em> install the python package Alembic in your python environment<br />
-<code>conda install -c conda-forge alembic</code><br />
-    * additional installation information can be found <a href="https://alembic.sqlalchemy.org/en/latest/front.html#installation">here</a><br />
-</em> in the (CHD) project folder, run the script to update the database  <br />
-<code>alembic upgrade head</code><br />
-    * this will run the latest updates to the database<br />
-<em> to return to the original database, run the downgrade script<br />
-<code>alembic downgrade base</code>
-    * this will return the database to it's original form<br />
-</em> to only run certain upgrades/downgrades 
-    * run a specific number of revisions (n is the number of revisions to either upgrade/downgrade)<br />
-    <code>alembic upgrade +n</code><br />
-    <code>alembic downgrade -n</code><br />
-    * run a specific upgrade/downgrade: scripts are found <a href="https://github.com/predsci/CHD/blob/master/alembic/versions">here</a><br />
-    <code>alembic upgrade "revision"</code><br />
-    <code>alembic downgrade "revision"</code><br />
-        * "revision" refers to the first 3+ identifying characters from the specific script  </p>
+the necessary updates to run the code, do the following:  </p>
+<ul>
+<li>install the python package Alembic in your python environment<br />
+<code>conda install -c conda-forge alembic</code>  <ul>
+<li>additional installation information can be found <a href="https://alembic.sqlalchemy.org/en/latest/front.html#installation">here</a>  </li>
+</ul>
+</li>
+<li>in the (CHD) project folder, run the script to update the database  <br />
+<code>alembic upgrade head</code>  <ul>
+<li>this will run the latest updates to the database  </li>
+</ul>
+</li>
+<li>to return to the original database, run the downgrade script<br />
+<code>alembic downgrade base</code><ul>
+<li>this will return the database to it's original form  </li>
+</ul>
+</li>
+<li>to only run certain upgrades/downgrades <ul>
+<li>run a specific number of revisions (n is the number of revisions to either upgrade/downgrade)<br />
+<code>alembic upgrade +n</code><br />
+<code>alembic downgrade -n</code>  </li>
+<li>run a specific upgrade/downgrade: scripts are found <a href="https://github.com/predsci/CHD/blob/master/alembic/versions">here</a><br />
+<code>alembic upgrade "revision"</code><br />
+<code>alembic downgrade "revision"</code>  <ul>
+<li>"revision" refers to the first 3+ identifying characters from the specific script  </li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
 <h2 id="database-schema">Database Schema</h2>
 <p><img alt="Database Schema" src="../../img/db_schema.png" /></p>
                 
