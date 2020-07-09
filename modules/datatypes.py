@@ -504,11 +504,11 @@ def create_lbcc_hist(h5_file, image_id, meth_id, mu_bin_edges, intensity_bin_edg
     # read the image and metadata
     x, y, z, data, chd_meta, sunpy_meta = psihdf.rdh5_meta(h5_file)
     # create the structure
-    hist = Hist(chd_meta, image_id=image_id, meth_id=meth_id, date_obs=chd_meta['date_string'],
-                instrument=chd_meta['instrument'],
-                wavelength=chd_meta['wavelength'], mu_bin_edges=mu_bin_edges, intensity_bin_edges=intensity_bin_edges,
-                lat_band=lat_band, hist=mu_hist)
-    return hist
+    date_format = "%Y-%m-%dT%H:%M:%S.%f"
+    hist_out = Hist(image_id, meth_id, datetime.datetime.strptime(chd_meta['date_string'], date_format),
+                chd_meta['instrument'], chd_meta['wavelength'], mu_bin_edges,
+                intensity_bin_edges, lat_band, hist=mu_hist)
+    return hist_out
 
 
 def create_iit_hist(lbcc_image, meth_id, intensity_bin_edges, lat_band, iit_hist):

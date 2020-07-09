@@ -34,7 +34,6 @@ def apply_lbc_correction(db_session, hdf_data_dir, instrument, image_row, n_mu_b
                                                        var_descs=None,
                                                        create=False)
     mu_bin_edges = np.array(range(n_mu_bins + 1), dtype="float") * 0.05 + 0.1
-    mu_bin_centers = (mu_bin_edges[1:] + mu_bin_edges[:-1]) / 2
     intensity_bin_edges = np.linspace(0, 5, num=n_intensity_bins + 1, dtype='float')
 
     ###### GET LOS IMAGES COORDINATES (DATA) #####
@@ -50,7 +49,9 @@ def apply_lbc_correction(db_session, hdf_data_dir, instrument, image_row, n_mu_b
                                              instrument=instrument)
 
     # get beta and y from theoretic fit
-    beta, y = lbcc.get_beta_y_theoretic_continuous(theoretic_query, mu_array=original_los.mu)
+    # THIS IS WHAT WE WANT TO USE: beta, y = lbcc.get_beta_y_theoretic_continuous(theoretic_query, mu_array=original_los.mu)
+    # TODO: THIS IS WHAT WORKS
+    beta, y = lbcc.get_beta_y_theoretic_interp(theoretic_query, original_los.mu, mu_bin_edges)
 
     ###### APPLY LBC CORRECTION ######
     corrected_data = beta * original_los.data + y
@@ -121,17 +122,14 @@ def create_histograms(db_session, inst_list, lbc_query_time_min, lbc_query_time_
 
 
 ##### STEP TWO: CALCULATE INTER-INSTRUMENT TRANSFORMATION COEFFICIENTS AND SAVE TO DATABASE ######
-def calc_iit_coefficients(db_session, inst_list, ref_inst, calc_query_time_min, number_of_weeks=27, number_of_days=180,
+def calc_iit_coefficients(db_session, inst_list, ref_inst, calc_query_time_min, calc_query_time_max, weekday=0, number_of_days=180,
                           n_intensity_bins=200, lat_band=[-np.pi / 64., np.pi / 64.], create=False):
     # start time
     start_time_tot = time.time()
 
     # returns array of moving averages center dates, based off start date and number of weeks
-    moving_avg_centers = np.array(
-        [np.datetime64(str(calc_query_time_min)) + ii * np.timedelta64(1, 'W') for ii in range(number_of_weeks)])
-
-    # returns moving width based of number of days
-    moving_width = np.timedelta64(number_of_days, 'D')
+    moving_avg_centers, moving_width = lbcc.moving_averages(calc_query_time_min, calc_query_time_max, weekday,
+                                                            number_of_days)
 
     # create IIT method
     meth_name = "IIT"
@@ -149,8 +147,10 @@ def calc_iit_coefficients(db_session, inst_list, ref_inst, calc_query_time_min, 
         max_date = center_date + moving_width / 2
 
         # create arrays for summed histograms and intensity bins
-        hist_array = np.zeros((len(inst_list), 2048 * 2048))  # TODO: check these dimensions
+        hist_array = np.zeros((len(inst_list), n_intensity_bins))  # TODO: check these dimensions
         intensity_bin_array = np.zeros((len(inst_list), n_intensity_bins))
+        #hist_ref = np.zeros(n_intensity_bins)
+        #hist_fit = np.zeros(n_intensity_bins)
 
         for inst_index, instrument in enumerate(inst_list):
             # query for IIT histograms
@@ -160,7 +160,7 @@ def calc_iit_coefficients(db_session, inst_list, ref_inst, calc_query_time_min, 
                                           time_min=np.datetime64(min_date).astype(datetime.datetime),
                                           time_max=np.datetime64(max_date).astype(datetime.datetime),
                                           instrument=query_instrument)
-            print(pd_hist)
+
             # convert the binary types back to arrays
             lat_band, intensity_bin_edges, mu_bin_edges, full_hist = psi_d_types.binary_to_hist(hist_binary=pd_hist,
                                                                                                 n_mu_bins=None,
@@ -180,7 +180,7 @@ def calc_iit_coefficients(db_session, inst_list, ref_inst, calc_query_time_min, 
 
         # use lbcc function to calculate alpha and x
         # TODO: going to have to do some loop or something to deal with the different instruments
-        for instrument, inst_index in enumerate(inst_list):
+        for inst_index, instrument in enumerate(inst_list):
             hist_ref = hist_array[inst_index, :]
             hist_fit = hist_array[ref_index, :]
             intensity_bin_edges = intensity_bin_array[inst_index, :]

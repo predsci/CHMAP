@@ -1,12 +1,8 @@
 """
 pipeline for inter-instrument transformation
 """
-import sys
-
-sys.path.append('/Users/tamarervin/Dropbox/work/CHD')
 
 import os
-import time
 import datetime
 import numpy as np
 import matplotlib.pyplot as plt

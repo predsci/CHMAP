@@ -24,7 +24,7 @@ hist_query_time_max = datetime.datetime(2012, 1, 1, 0, 0, 0)
 # TIME RANGE FOR FIT PARAMETER CALCULATION
 calc_query_time_min = datetime.datetime(2011, 4, 1, 0, 0, 0)
 calc_query_time_max = datetime.datetime(2011, 10, 1, 0, 0, 0)
-weekday_fit = 0  # start at 0 for Monday
+weekday_calc = 0  # start at 0 for Monday
 days = 180  # days for moving average
 
 # TIME RANGE FOR LBC CORRECTION AND IMAGE PLOTTING
@@ -65,6 +65,7 @@ time_period = "6 Month"  # used for plot file and title
 plot_week = 5  # index of week you want to plot
 image_out_path = os.path.join(App.APP_HOME, "test_data", "analysis/lbcc_functionals/")  # path to save plots to
 
+
 ###### --------- LIMB BRIGHTENING CORRECTIONS FUNCTIONS ------------ ######
 
 ####### STEP ONE: CREATE AND SAVE HISTOGRAMS #######
@@ -73,13 +74,13 @@ lbcc_funcs.save_histograms(db_session, hdf_data_dir, inst_list, hist_query_time_
                            R0=R0)
 
 ###### STEP TWO: CALCULATE AND SAVE THEORETIC FIT PARAMETERS #######
-lbcc_funcs.calc_theoretic_fit(db_session, inst_list, calc_query_time_min, calc_query_time_max, weekday=weekday_fit,
+lbcc_funcs.calc_theoretic_fit(db_session, inst_list, calc_query_time_min, calc_query_time_max, weekday=weekday_calc,
                               number_of_days=days, n_mu_bins=n_mu_bins, n_intensity_bins=n_intensity_bins,
                               lat_band=lat_band, create=create)
 
 ###### STEP THREE: APPLY CORRECTION AND PLOT IMAGES #######
 lbcc_funcs.apply_lbc_correction(db_session, hdf_data_dir, inst_list, lbc_query_time_min, lbc_query_time_max,
-                                n_intensity_bins=n_intensity_bins, R0=R0, plot=plot)
+                                R0=R0, plot=plot)
 
 ###### STEP FOUR: GENERATE PLOTS OF BETA AND Y ######
 lbcc_funcs.generate_theoretic_plots(db_session, inst_list, plot_query_time_min, plot_query_time_max,

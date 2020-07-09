@@ -191,7 +191,7 @@ def calc_theoretic_fit(db_session, inst_list, calc_query_time_min, calc_query_ti
 
 ###### STEP THREE: APPLY CORRECTION AND PLOT IMAGES #######
 def apply_lbc_correction(db_session, hdf_data_dir, inst_list, lbc_query_time_min, lbc_query_time_max,
-                         n_intensity_bins=200, R0=1.01, plot=False):
+                         R0=1.01, plot=False):
     """
     function to apply limb-brightening correction and plot images within a certain time frame
     @param db_session: connected database session to query theoretic fit parameters from
@@ -199,7 +199,6 @@ def apply_lbc_correction(db_session, hdf_data_dir, inst_list, lbc_query_time_min
     @param inst_list: list of instruments
     @param lbc_query_time_min: minimum query time for applying lbc fit
     @param lbc_query_time_max: maximum query time for applying lbc fit
-    @param n_intensity_bins: number of intensity bins
     @param R0: radius
     @param plot: whether or not to plot images
     @return:
@@ -207,10 +206,8 @@ def apply_lbc_correction(db_session, hdf_data_dir, inst_list, lbc_query_time_min
     # start time
     start_time_tot = time.time()
 
+    # method information
     meth_name = "LBCC Theoretic"
-    db_sesh, meth_id, var_ids = db_funcs.get_method_id(db_session, meth_name, meth_desc=None, var_names=None,
-                                                       var_descs=None, create=False)
-    intensity_bin_edges = np.linspace(0, 5, num=n_intensity_bins + 1, dtype='float')
 
     ##### QUERY IMAGES ######
     for inst_index, instrument in enumerate(inst_list):
@@ -230,7 +227,8 @@ def apply_lbc_correction(db_session, hdf_data_dir, inst_list, lbc_query_time_min
             original_los.get_coordinates(R0=R0)
             theoretic_query = db_funcs.query_var_val(db_session, meth_name, date_obs=original_los.info['date_string'],
                                                      instrument=instrument)
-
+            # TODO: this is the function that is not working correctly
+            # lbcc.get_beta_y_interp(theoretic_query, original_los.mu, mu_bin_edges) works with interpolation
             beta, y = lbcc.get_beta_y_theoretic_continuous(theoretic_query, mu_array=original_los.mu)
 
             ###### APPLY LBC CORRECTION ######
