@@ -454,22 +454,22 @@
 <p>The original database is now quite different than the database needed to query and save calculated parameters. In order to generate
 the necessary updates to run the code, do the following:  </p>
 <ul>
-<li>install the python package Alembic in your python environment<br />
+<li>1.) install the python package Alembic in your python environment<br />
 <code>conda install -c conda-forge alembic</code>  <ul>
 <li>additional installation information can be found <a href="https://alembic.sqlalchemy.org/en/latest/front.html#installation">here</a>  </li>
 </ul>
 </li>
-<li>in the (CHD) project folder, run the script to update the database  <br />
+<li>2.) in the (CHD) project folder, run the script to update the database  <br />
 <code>alembic upgrade head</code>  <ul>
 <li>this will run the latest updates to the database  </li>
 </ul>
 </li>
-<li>to return to the original database, run the downgrade script<br />
+<li>3.) to return to the original database, run the downgrade script<br />
 <code>alembic downgrade base</code><ul>
 <li>this will return the database to it's original form  </li>
 </ul>
 </li>
-<li>to only run certain upgrades/downgrades <ul>
+<li>4.) to only run certain upgrades/downgrades <ul>
 <li>run a specific number of revisions (n is the number of revisions to either upgrade/downgrade)<br />
 <code>alembic upgrade +n</code><br />
 <code>alembic downgrade -n</code>  </li>
