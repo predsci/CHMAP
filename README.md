@@ -17,7 +17,19 @@ Then run ./setup.sh: e.g.
 vi setup.conf
 ./setup.sh setup.conf
 
-This will create the settings/app.py file from settings/app.py.template
+This will create the settings/app.py file from settings/app.py.template 
 
+## Database Configuration
+The original database is now quite different than the database needed to query and save calculated parameters. In order to generate
+the necessary updates to run the code, do the following:  
+
+* 1.) install the python package Alembic in your python environment  
+<code>conda install -c conda-forge alembic</code>  
+    * additional installation information can be found [here](https://alembic.sqlalchemy.org/en/latest/front.html#installation)  
+* 2.) in the (CHD) project folder, run the script to update the database    
+<code>alembic upgrade head</code>  
+    * this will run the latest updates to the database 
+    * scripts are found [here](https://github.com/predsci/CHD/blob/master/alembic/versions)  
+    
 ## Documentation
 Documentation site is hosted by GitHub [here](https://predsci.github.io/CHD/).

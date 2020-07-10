@@ -230,13 +230,13 @@ def apply_lbc_correction(db_session, hdf_data_dir, inst_list, n_mu_bins, lbc_que
             original_los.get_coordinates(R0=R0)
             theoretic_query = db_funcs.query_var_val(db_session, meth_name, date_obs=original_los.info['date_string'],
                                                      instrument=instrument)
-            # TODO: this is the function that is not working correctly
-            beta, y = lbcc.get_beta_y_theoretic_interp(theoretic_query, original_los.mu,
-                                                       mu_bin_edges)  # works with interpolation
-            # beta, y = lbcc.get_beta_y_theoretic_continuous(theoretic_query, mu_array=original_los.mu)
 
-            ###### APPLY LBC CORRECTION ######
-            corrected_los_data = beta * original_los.data + y
+            ###### DETERMINE LBC CORRECTION (for valid mu values) ######
+            beta1d, y1d, mu_indices = lbcc.get_beta_y_theoretic_continuous_1d_indices(theoretic_query, mu_array=original_los.mu)
+
+            ###### APPLY LBC CORRECTION (log10 space) ######
+            corrected_los_data = np.copy(original_los.data)
+            corrected_los_data[mu_indices] = 10**(beta1d * np.log10(original_los.data[mu_indices]) + y1d)
 
             ##### PLOTTING ######
             if plot:

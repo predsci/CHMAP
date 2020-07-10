@@ -1,25 +1,11 @@
 # This file may be used to create an environment using:
 # $ conda create --name <env> --file <this file>
-sunpy
-drms
-sqlalchemy
-sqlalchemy-utils
-setuptools
-scipy
-sys
-signal
-subprocess
-argparse
-kiwisolver
 numpy
-jdcal
-cycler
-pyhdf
-netCDF4
-bottleneck
+scipy
 matplotlib
-python-dateutil
-pyparsing
-pytz
-six
+sunpy=1.1.2
+drms
+sqlalchemy-utils
+alembic
+pyhdf
 h5py
