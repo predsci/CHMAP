@@ -236,7 +236,7 @@ class LBCCImage(LosImage):
         # intensity_index = np.logical_and(np.log10(lbcc_data) >= intensity_min, np.log10(lbcc_data) <= intensity_max)
         # use_index = np.logical_and(intensity_index, lat_band_index)
 
-        use_data = self.data[lat_band_index]
+        use_data = self.lbcc_data[lat_band_index]
         if log10:
             use_data[use_data < 0.] = 0.
             use_data = np.log10(use_data)
@@ -253,7 +253,7 @@ class LBCCImage(LosImage):
         if self.lat is not None:
             lat_array = self.lat.tobytes()
         if self.data is not None:
-            lbcc_data = self.data.tobytes()
+            lbcc_data = self.lbcc_data.tobytes()
 
         return mu_array, lat_array, lbcc_data
 
@@ -269,7 +269,7 @@ def binary_to_lbcc(lbcc_image_binary):
     for index, row in lbcc_image_binary.iterrows():
         lat_array = np.frombuffer(row.lat, dtype=np.float)
         mu_array = np.frombuffer(row.mu, dtype=np.float)
-        lbcc_data = np.frombuffer(row.data, dtype=np.float)
+        lbcc_data = np.frombuffer(row.lbcc_data, dtype=np.float)
 
     return lat_array, mu_array, lbcc_data
 
@@ -511,7 +511,7 @@ def create_lbcc_hist(h5_file, image_id, meth_id, mu_bin_edges, intensity_bin_edg
     return hist_out
 
 
-def create_iit_hist(lbcc_image, meth_id, intensity_bin_edges, lat_band, iit_hist):
+def create_iit_hist(lbcc_image, meth_id, lat_band, iit_hist):
     """
     function to create IIT type histogram
     """
@@ -520,6 +520,7 @@ def create_iit_hist(lbcc_image, meth_id, intensity_bin_edges, lat_band, iit_hist
     date_obs = lbcc_image.date_obs
     instrument = lbcc_image.instrument
     wavelength = lbcc_image.wavelength
+    intensity_bin_edges = lbcc_image.intensity_bin_edges
 
     # create structure
     iit_hist = Hist(image_id=image_id, meth_id=meth_id, date_obs=date_obs, instrument=instrument, wavelength=wavelength,
@@ -557,7 +558,7 @@ def binary_to_hist(hist_binary, n_mu_bins, n_intensity_bins):
             lat_band = np.frombuffer(row.lat_band, dtype=np.float)
             mu_bin_array = np.frombuffer(row.mu_bin_edges, dtype=np.float)
             intensity_bin_array = np.frombuffer(row.intensity_bin_edges, dtype=np.float)
-        full_hist = np.full((n_mu_bins, n_intensity_bins, hist_binary.__len__()), 0, dtype=np.int32)
+        full_hist = np.full((n_mu_bins, n_intensity_bins, hist_binary.__len__()), 0, dtype=np.int64)
         hist_list = hist_binary['hist']
 
         for index in range(hist_list.size):
@@ -569,12 +570,12 @@ def binary_to_hist(hist_binary, n_mu_bins, n_intensity_bins):
             lat_band = np.frombuffer(row.lat_band, dtype=np.float)
             mu_bin_array = None
             intensity_bin_array = np.frombuffer(row.intensity_bin_edges, dtype=np.float)
-        full_hist = np.full((n_intensity_bins, hist_binary.__len__()), 0, dtype=np.int32)
+        full_hist = np.full((n_intensity_bins, hist_binary.__len__()), 0, dtype=np.int64)
         hist_list = hist_binary['hist']
 
         for index in range(hist_list.size):
-            buffer_hist = np.frombuffer(hist_list[index])
-            hist = np.ndarray(shape=n_intensity_bins, buffer=buffer_hist)
+            buffer_hist = np.frombuffer(hist_list[index], dtype=np.int)
+            hist = np.ndarray(shape=n_intensity_bins, dtype=np.int, buffer=buffer_hist)
             full_hist[:, index] = hist
 
     return lat_band, mu_bin_array, intensity_bin_array, full_hist

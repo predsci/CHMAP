@@ -29,6 +29,7 @@ This table stores information regarding the combination of images used to calcul
 
 __Columns:__  
 > *combo_id:* auto-incremented integer id associated with that specific combination of images (Primary Key, Integer)  
+> *meth_id:* auto-incremented integer id associated with the specific method (Foreign Key: Meth Defs, Integer)      
 > *n_images:* number of images in combination (Integer)  
 > *date_mean:* mean date of images in image combination (DateTime)  
 > *date_max:* maximum date of images in image combination (DateTime)  

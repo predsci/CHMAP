@@ -65,7 +65,7 @@ def apply_lbc_correction(db_session, hdf_data_dir, instrument, image_row, n_mu_b
 
 ##### STEP ONE: CREATE 1D HISTOGRAMS AND SAVE TO DATABASE ######
 def create_histograms(db_session, inst_list, lbc_query_time_min, lbc_query_time_max, hdf_data_dir, n_mu_bins=18,
-                      n_intensity_bins=200, lat_band=[-np.pi / 64., np.pi / 64.],
+                      n_intensity_bins=200, lat_band=[-np.pi / 2.4, np.pi / 2.4],
                       log10=True, R0=1.01):
     """
     create and save (to database) IIT-Histograms from LBC Data
@@ -83,9 +83,6 @@ def create_histograms(db_session, inst_list, lbc_query_time_min, lbc_query_time_
     """
     # start time
     start_time_tot = time.time()
-
-    # creates intensity bin arrays
-    intensity_bin_edges = np.linspace(0, 5, num=n_intensity_bins + 1, dtype='float')
 
     # create IIT method
     meth_name = "IIT"
@@ -107,7 +104,7 @@ def create_histograms(db_session, inst_list, lbc_query_time_min, lbc_query_time_
             hist = psi_d_types.LBCCImage.iit_hist(lbcc_data, lat_band, log10)
 
             # create IIT histogram datatype
-            iit_hist = psi_d_types.create_iit_hist(lbcc_data, method_id[1], intensity_bin_edges, lat_band, hist)
+            iit_hist = psi_d_types.create_iit_hist(lbcc_data, method_id[1], lat_band, hist)
 
             # add IIT histogram and meta data to database
             db_funcs.add_hist(db_session, iit_hist)
@@ -123,7 +120,7 @@ def create_histograms(db_session, inst_list, lbc_query_time_min, lbc_query_time_
 
 ##### STEP TWO: CALCULATE INTER-INSTRUMENT TRANSFORMATION COEFFICIENTS AND SAVE TO DATABASE ######
 def calc_iit_coefficients(db_session, inst_list, ref_inst, calc_query_time_min, calc_query_time_max, weekday=0, number_of_days=180,
-                          n_intensity_bins=200, lat_band=[-np.pi / 64., np.pi / 64.], create=False):
+                          n_intensity_bins=200, lat_band=[-np.pi / 2.4, np.pi / 2.4], create=False):
     # start time
     start_time_tot = time.time()
 
@@ -162,7 +159,7 @@ def calc_iit_coefficients(db_session, inst_list, ref_inst, calc_query_time_min, 
                                           instrument=query_instrument)
 
             # convert the binary types back to arrays
-            lat_band, intensity_bin_edges, mu_bin_edges, full_hist = psi_d_types.binary_to_hist(hist_binary=pd_hist,
+            lat_band, mu_bin_edges, intensity_bin_edges, full_hist = psi_d_types.binary_to_hist(hist_binary=pd_hist,
                                                                                                 n_mu_bins=None,
                                                                                                 n_intensity_bins=
                                                                                                 n_intensity_bins)
@@ -179,14 +176,36 @@ def calc_iit_coefficients(db_session, inst_list, ref_inst, calc_query_time_min, 
             intensity_bin_array[inst_index, :] = intensity_bin_edges
 
         # use lbcc function to calculate alpha and x
-        # TODO: going to have to do some loop or something to deal with the different instruments
+        # TODO: this calculation doesn't seem accurate
         for inst_index, instrument in enumerate(inst_list):
+            # get reference and fit histograms
             hist_ref = hist_array[inst_index, :]
             hist_fit = hist_array[ref_index, :]
             intensity_bin_edges = intensity_bin_array[inst_index, :]
+
+            # normalize
+            # not currently using this stuff
+            norm_hist = np.full(summed_hist.shape, 0.)
+            # but do not divide by zero
+            zero_row_index = np.where(summed_hist != 0)
+            norm_hist[zero_row_index[0]] = hist_ref[zero_row_index[0]] / summed_hist[zero_row_index[0]]
+
+            # normalize
+            ref_peak_index = np.argmax(hist_ref)
+            ref_peak_val = hist_ref[ref_peak_index]
+            # estimate correction coefs that match fit_peak to ref_peak
+            fit_peak_index = np.argmax(hist_fit)  # index of max value of hist_fit
+            fit_peak_val = hist_fit[fit_peak_index]  # max value of hist_fit
+            alpha_est = fit_peak_val / ref_peak_val
+
+            x_est = intensity_bin_edges[ref_peak_index] - alpha_est * intensity_bin_edges[fit_peak_index]
+            init_pars = np.asarray([alpha_est, x_est], dtype=np.float32)
+
+            # calculate alpha and x
             alpha_x_parameters = iit.optim_iit_linear(hist_ref, hist_fit, intensity_bin_edges,
-                                                      init_pars=np.asarray([1., 0.]))
-            db_funcs.store_iit_values(db_session, pd_hist, meth_name, meth_desc, alpha_x_parameters, create)
+                                                      init_pars=init_pars)
+            # save alpha and x to database
+            db_funcs.store_iit_values(db_session, pd_hist, meth_name, meth_desc, alpha_x_parameters.x, create)
 
     end_time_tot = time.time()
     print("Inter-instrument transformation fit parameters have been calculated and saved to the database.")
@@ -196,7 +215,8 @@ def calc_iit_coefficients(db_session, inst_list, ref_inst, calc_query_time_min, 
 
 
 ##### STEP THREE: APPLY TRANSFORMATION AND PLOT NEW IMAGES ######
-def apply_iit_correction(db_session, hdf_data_dir, iit_query_time_min, iit_query_time_max, inst_list, plot=False):
+def apply_iit_correction(db_session, hdf_data_dir, iit_query_time_min, iit_query_time_max, inst_list,
+                         n_mu_bins, n_intensity_bins, plot=False):
     # start time
     start_time_tot = time.time()
 
@@ -208,44 +228,36 @@ def apply_iit_correction(db_session, hdf_data_dir, iit_query_time_min, iit_query
 
         #### QUERY IMAGES ####
         query_instrument = [instrument, ]
-        lbcc_image_pd = db_funcs.query_corrected_images(db_session=db_session, time_min=iit_query_time_min,
-                                                        time_max=iit_query_time_max, instrument=query_instrument)
-        # transformation binary lbcc data back to array lbcc data
-        mu_array, lat_array, lbcc_data = psi_d_types.binary_to_lbcc(lbcc_image_pd)
+        image_pd = db_funcs.query_euv_images(db_session=db_session, time_min=iit_query_time_min,
+                                             time_max=iit_query_time_max, instrument=query_instrument)
+        # apply LBC
+        for index, row in image_pd.iterrows():
+            lbcc_data = apply_lbc_correction(db_session, hdf_data_dir, instrument, image_row=row,
+                                                       n_mu_bins=n_mu_bins,
+                                                       n_intensity_bins=n_intensity_bins, R0=R0)
 
-        ###### GET VARIABLE VALUES #####
-        for index, row in lbcc_image_pd.iterrows():
-            alpha, x = db_funcs.query_var_val(db_session, meth_name, date_obs=row.date_obs, instrument=instrument)
+            ###### GET VARIABLE VALUES #####
+            alpha, x = db_funcs.query_var_val(db_session, meth_name, date_obs=lbcc_data.date_obs, instrument=instrument)
 
             ##### APPLY IIT TRANSFORMATION ######
-            corrected_iit_data = alpha * lbcc_data[index] + x
+            corrected_iit_data = alpha * lbcc_data.lbcc_data + x
 
-            ##### ADD CORRECTED IIT DATA TO DATABASE ######
-            db_funcs.add_corrected_image(db_session, corrected_image=corrected_iit_data)
+            print("Processing image number", row.image_id, ".")
+            if row.fname_hdf == "":
+                print("Warning: Image # " + str(row.image_id) + " does not have an associated hdf file. Skipping")
+                continue
+            hdf_path = os.path.join(hdf_data_dir, row.fname_hdf)
+            original_los = psi_d_types.read_los_image(hdf_path)
+            original_los.get_coordinates(R0=1.01)
 
-        ##### PLOT IMAGES ######
-        # TODO: check this plotting - using the original LOS images
-        # TODO: if this works, make PlotCorrectedImage function
+        #### PLOTTING IMAGES ####
         if plot:
-            image_pd = db_funcs.query_EUV_images(db_session=db_session, time_min=iit_query_time_min,
-                                                 time_max=iit_query_time_min + datetime.timedelta(hours=3),
-                                                 instrument=query_instrument)
-            ###### GET LOS IMAGES COORDINATES (DATA) #####
-            for index, row in image_pd.iterrows():
-                print("Processing image number", row.image_id, ".")
-                if row.fname_hdf == "":
-                    print("Warning: Image # " + str(row.image_id) + " does not have an associated hdf file. Skipping")
-                    continue
-                hdf_path = os.path.join(hdf_data_dir, row.fname_hdf)
-                original_los = psi_d_types.read_los_image(hdf_path)
-                original_los.get_coordinates(R0=1.01)
-
-            Plotting.PlotImage(lbcc_data, nfig=100 + inst_index, title="Original LBCC Image for " + instrument)
-            Plotting.PlotLBCCImage(iit_data=corrected_iit_data, los_image=original_los, nfig=200 + inst_index,
+            Plotting.PlotLBCCImage(lbcc_data.lbcc_data, los_image=original_los, nfig=100 + inst_index,
+                                   title="Corrected LBCC Image for " + instrument)
+            Plotting.PlotLBCCImage(corrected_iit_data, los_image=original_los, nfig=200 + inst_index,
                                    title="Corrected IIT Image for " + instrument)
-            Plotting.PlotLBCCImage(lbcc_data=lbcc_data - corrected_iit_data, los_image=original_los,
+            Plotting.PlotLBCCImage(lbcc_data.lbcc_data - corrected_iit_data, los_image=original_los,
                                    nfig=300 + inst_index, title="Difference Plot for " + instrument)
-
     # end time
     end_time_tot = time.time()
     print("ITT has been applied and specified images plotted.")
@@ -256,7 +268,7 @@ def apply_iit_correction(db_session, hdf_data_dir, iit_query_time_min, iit_query
 
 ###### STEP FOUR: GENERATE NEW HISTOGRAM PLOTS ######
 def generate_iit_histograms(db_session, hist_query_min, hist_query_max, inst_list, n_intensity_bins=200,
-                            lat_band=[-np.pi / 64., np.pi / 64.]):
+                            lat_band=[-np.pi / 2.4, np.pi / 2.4]):
     ##### QUERY ORIGINAL HISTOGRAMS #####
     for inst_index, instrument in enumerate(inst_list):
         # query for IIT histograms

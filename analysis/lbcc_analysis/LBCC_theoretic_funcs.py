@@ -190,7 +190,7 @@ def calc_theoretic_fit(db_session, inst_list, calc_query_time_min, calc_query_ti
 
 
 ###### STEP THREE: APPLY CORRECTION AND PLOT IMAGES #######
-def apply_lbc_correction(db_session, hdf_data_dir, inst_list, lbc_query_time_min, lbc_query_time_max,
+def apply_lbc_correction(db_session, hdf_data_dir, inst_list, n_mu_bins, lbc_query_time_min, lbc_query_time_max,
                          R0=1.01, plot=False):
     """
     function to apply limb-brightening correction and plot images within a certain time frame
@@ -205,6 +205,9 @@ def apply_lbc_correction(db_session, hdf_data_dir, inst_list, lbc_query_time_min
     """
     # start time
     start_time_tot = time.time()
+
+    # mu bin edges - TODO: remove once no longer using interp
+    mu_bin_edges = np.array(range(n_mu_bins + 1), dtype="float") * 0.05 + 0.1
 
     # method information
     meth_name = "LBCC Theoretic"
@@ -228,19 +231,22 @@ def apply_lbc_correction(db_session, hdf_data_dir, inst_list, lbc_query_time_min
             theoretic_query = db_funcs.query_var_val(db_session, meth_name, date_obs=original_los.info['date_string'],
                                                      instrument=instrument)
             # TODO: this is the function that is not working correctly
-            # lbcc.get_beta_y_interp(theoretic_query, original_los.mu, mu_bin_edges) works with interpolation
-            beta, y = lbcc.get_beta_y_theoretic_continuous(theoretic_query, mu_array=original_los.mu)
+            beta, y = lbcc.get_beta_y_theoretic_interp(theoretic_query, original_los.mu,
+                                                       mu_bin_edges)  # works with interpolation
+            # beta, y = lbcc.get_beta_y_theoretic_continuous(theoretic_query, mu_array=original_los.mu)
 
             ###### APPLY LBC CORRECTION ######
             corrected_los_data = beta * original_los.data + y
 
             ##### PLOTTING ######
             if plot:
-                Plotting.PlotImage(original_los, nfig=100 + inst_index, title="Original LOS Image for " + instrument)
-                Plotting.PlotLBCCImage(lbcc_data=corrected_los_data, los_image=original_los, nfig=200 + inst_index,
-                                       title="Corrected LBCC Image for " + instrument)
+                Plotting.PlotImage(original_los, nfig=100 + inst_index * 10 + index, title="Original LOS Image for " +
+                                                                                           instrument)
+                Plotting.PlotLBCCImage(lbcc_data=corrected_los_data, los_image=original_los,
+                                       nfig=200 + inst_index * 10 + index, title="Corrected LBCC Image for " +
+                                                                                 instrument)
                 Plotting.PlotLBCCImage(lbcc_data=original_los.data - corrected_los_data, los_image=original_los,
-                                       nfig=300 + inst_index, title="Difference Plot for " + instrument)
+                                       nfig=300 + inst_index * 10 + index, title="Difference Plot for " + instrument)
     # end time
     end_time_tot = time.time()
     print("LBC has been applied and specified images plotted.")

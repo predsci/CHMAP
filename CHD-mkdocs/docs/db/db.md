@@ -1,5 +1,6 @@
 # Database Information
-The Image Pre-Processing Pipeline is built upon a database to store images, histograms, and fit parameter values. 
+The Image Pre-Processing Pipeline is built upon a [database](https://github.com/predsci/CHD/blob/master/modules/DB_classes)
+ to store images, histograms, and fit parameter values. 
 
 ## Updating the Database
 The original database is now quite different than the database needed to query and save calculated parameters. In order to generate
@@ -22,6 +23,9 @@ the necessary updates to run the code, do the following:
     <code>alembic upgrade "revision"</code>  
     <code>alembic downgrade "revision"</code>  
         * "revision" refers to the first 3+ identifying characters from the specific script  
+* 5.) to create new update scripts  
+    <code>alembic revision -m "revision name"</code>  
+    * edit this script with the upgrade/downgrade necessary
 
 
 ## Database Schema

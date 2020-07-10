@@ -82,6 +82,7 @@ class Image_Combos(Base):
     """
     __tablename__='image_combos'
     combo_id = Column(Integer, primary_key=True)
+    meth_id = Column(Integer, ForeignKey('meth_defs.meth_id'))
     n_images = Column(Integer)
     date_mean = Column(DateTime)
     date_max = Column(DateTime)

@@ -79,7 +79,7 @@ lbcc_funcs.calc_theoretic_fit(db_session, inst_list, calc_query_time_min, calc_q
                               lat_band=lat_band, create=create)
 
 ###### STEP THREE: APPLY CORRECTION AND PLOT IMAGES #######
-lbcc_funcs.apply_lbc_correction(db_session, hdf_data_dir, inst_list, lbc_query_time_min, lbc_query_time_max,
+lbcc_funcs.apply_lbc_correction(db_session, hdf_data_dir, inst_list, n_mu_bins, lbc_query_time_min, lbc_query_time_max,
                                 R0=R0, plot=plot)
 
 ###### STEP FOUR: GENERATE PLOTS OF BETA AND Y ######
