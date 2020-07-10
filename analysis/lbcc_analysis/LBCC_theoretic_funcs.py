@@ -38,7 +38,7 @@ def save_histograms(db_session, hdf_data_dir, inst_list, hist_query_time_min, hi
     start_time_tot = time.time()
 
     # creates mu bin & intensity bin arrays
-    mu_bin_edges = np.array(range(n_mu_bins + 1), dtype="float") * 0.05 + 0.1
+    mu_bin_edges = np.linspace(0.1, 1.0, n_mu_bins+1, dtype='float')
     image_intensity_bin_edges = np.linspace(0, 5, num=n_intensity_bins + 1, dtype='float')
 
     # create LBC method
@@ -117,7 +117,7 @@ def calc_theoretic_fit(db_session, inst_list, calc_query_time_min, calc_query_ti
         max_date = center_date + moving_width / 2
 
         for inst_index, instrument in enumerate(inst_list):
-            print("\nStarting calculations for " + instrument + "\n")
+            print("\nStarting calculations for " + instrument)
 
             # query the histograms for time range based off moving average centers
             query_instrument = [instrument, ]
@@ -206,8 +206,8 @@ def apply_lbc_correction(db_session, hdf_data_dir, inst_list, n_mu_bins, lbc_que
     # start time
     start_time_tot = time.time()
 
-    # mu bin edges - TODO: remove once no longer using interp
-    mu_bin_edges = np.array(range(n_mu_bins + 1), dtype="float") * 0.05 + 0.1
+    # mu bin edges
+    mu_bin_edges = np.linspace(0.1, 1.0, n_mu_bins+1, dtype='float')
 
     # method information
     meth_name = "LBCC Theoretic"
@@ -277,13 +277,12 @@ def generate_theoretic_plots(db_session, inst_list, plot_query_time_min, plot_qu
     start_time_tot = time.time()
 
     # create mu bin array
-    mu_bin_array = np.array(range(n_mu_bins + 1), dtype="float") * 0.05 + 0.1
+    mu_bin_array = np.linspace(0.1, 1.0, n_mu_bins+1, dtype='float')
     mu_bin_centers = (mu_bin_array[1:] + mu_bin_array[:-1]) / 2
 
     # time arrays
     # returns array of moving averages center dates, based off start and end date
-    moving_avg_centers, moving_width = lbcc.moving_averages(plot_query_time_min, plot_query_time_max, weekday,
-                                                            number_of_days=None)
+    moving_avg_centers, moving_width = lbcc.moving_averages(plot_query_time_min, plot_query_time_max, weekday)
 
     # calc beta and y for a few sample mu-values
     sample_mu = [0.125, 0.325, 0.575, 0.875]
