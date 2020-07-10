@@ -460,8 +460,7 @@ def get_beta_y_theoretic_based(x, mu):
 
 
 # SOMETHING WRONG WITH THE BETA/Y CALCULATION FROM GET_BETA_Y_THEORETIC_BASED ####
-def get_beta_y_theoretic_continuous(x, mu_array):
-
+def get_beta_y_theoretic_continuous_old(x, mu_array):
     # determine where mu is -9999
     mu = np.where(mu_array > 0, mu_array, 0.0001)
 
@@ -471,6 +470,33 @@ def get_beta_y_theoretic_continuous(x, mu_array):
     y = np.where(mu_array > 0, y, 0)
 
     return beta, y
+
+
+def get_beta_y_theoretic_continuous_1d_indices(x, mu_array, mu_limit=0.1):
+    """
+    Determine beta and y values as 1D arrays for a given mu array. Return them along
+      with their corresponding index locations for mu.
+
+    @param x: parameter values as list/list-like.
+    @param mu_array: values of mu (np array, any shape).
+    @return: beta1d: 1d array of valid beta values.
+    @return: y1d: 1d array of valid y values.
+    @return: mu_indexes: numpy.where output that will select "good" values from the mu_array.
+    """
+
+    # get mu index locations where mu is valid.
+    mu_indices = np.where(mu_array > 0)
+
+    # get a 1D array of the valid mu values
+    mu1d = mu_array[mu_indices]
+
+    # threshold mu to be equal to mu_limit when it is below mu_limit
+    mu1d = np.where(mu1d < mu_limit, mu_limit, mu1d)
+
+    # calculate beta and y as 1d arrays
+    beta1d, y1d = get_beta_y_theoretic_based(x, mu1d)
+
+    return beta1d, y1d, mu_indices
 
 
 def moving_averages(time_min, time_max, weekday, days=None):
