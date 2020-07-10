@@ -623,7 +623,7 @@ dependent upon their distance from disk center.  </p>
 <h2 id="theoretical-analysis-pipeline">Theoretical Analysis Pipeline</h2>
 <h3 id="compute-histograms-and-save-to-database">Compute Histograms and Save to Database</h3>
 <p>This function computes 2D Histograms from processed images for use in the LBC process. It then saves these computed histograms to the database.<br />
-The source code for this is found in the <a href="https://github.com/predsci/CHD/blob/master/analysis/lbcc_analysis/LBCC_create_mu-hist.py">CHD GitHub</a> 
+The source code and example usage for this is found in the <a href="https://github.com/predsci/CHD/blob/master/analysis/lbcc_analysis/LBCC_create_mu-hist.py">CHD GitHub</a> 
 and the generalized function can be found <a href="https://github.com/predsci/CHD/blob/master/analysis/lbcc_analysis/LBCC_theoretic_funcs.py">here</a>.  </p>
 <table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
  2
@@ -645,7 +645,7 @@ and the generalized function can be found <a href="https://github.com/predsci/CH
 <span class="err">        temp_hist = los_temp.mu_hist(image_intensity_bin_edges, mu_bin_edges, lat_band=lat_band, log10=log10)</span>
 <span class="err">        hist_lbcc = psi_d_types.create_lbcc_hist(hdf_path, row.image_id, method_id[1], mu_bin_edges,</span>
 <span class="err">                                                 image_intensity_bin_edges, lat_band, temp_hist)</span>
-<span class="err">        db_funcs.add_hist(hist_lbcc, db_session)</span>
+<span class="err">        db_funcs.add_hist(db_session, hist_lbcc)</span>
 </code></pre></div>
 </td></tr></table>
 
@@ -669,7 +669,7 @@ and the generalized function can be found <a href="https://github.com/predsci/CH
 </ul>
 <h3 id="calculate-and-save-theoretical-fit-parameters">Calculate and Save Theoretical Fit Parameters</h3>
 <p>This function queries histograms from the database then calculates LBC fit parameters which are then saved in the database.<br />
-The source code for this is found in the <a href="https://github.com/predsci/CHD/blob/master/analysis/lbcc_analysis/LBCC_beta-y_theoretical_analysis.py">CHD GitHub</a> 
+The source code and example usage for this is found in the <a href="https://github.com/predsci/CHD/blob/master/analysis/lbcc_analysis/LBCC_beta-y_theoretical_analysis.py">CHD GitHub</a> 
 and the generalized function can be found <a href="https://github.com/predsci/CHD/blob/master/analysis/lbcc_analysis/LBCC_theoretic_funcs.py">here</a>. </p>
 <table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
  2
@@ -715,7 +715,7 @@ and the generalized function can be found <a href="https://github.com/predsci/CH
 </ul>
 </li>
 <li>3.) <code>db_funcs.store_lbcc_values</code><ul>
-<li>save the six fit parameters to database using function store_lbcc_values from modules/DB_funs<ul>
+<li>save the six fit parameters to database using function <a href="https://github.com/predsci/CHD/blob/master/modules/DB_funs.py">store_lbcc_values</a><ul>
 <li>creates image combination combo_id of image_ids and dates in Images_Combos table</li>
 <li>creates association between each image_id and combo_id in Image_Combo_Assoc table</li>
 <li>creates new method “LBCC Theoretic” with an associated meth_id in Meth_Defs table</li>
@@ -728,7 +728,7 @@ and the generalized function can be found <a href="https://github.com/predsci/CH
 </ul>
 <h3 id="apply-limb-brightening-correction-and-plot-corrected-images">Apply Limb-Brightening Correction and Plot Corrected Images</h3>
 <p>This function queries the database for LBC fit parameters then applies them to specified images, plotting resulting images before and after the correction.<br />
-The source code for this is found in the <a href="https://github.com/predsci/CHD/blob/master/analysis/lbcc_analysis/LBCC_apply_fit.py">CHD GitHub</a> 
+The source code and example usage for this is found in the <a href="https://github.com/predsci/CHD/blob/master/analysis/lbcc_analysis/LBCC_apply_fit.py">CHD GitHub</a> 
 and the generalized function can be found <a href="https://github.com/predsci/CHD/blob/master/analysis/lbcc_analysis/LBCC_theoretic_funcs.py">here</a>. </p>
 <table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
  2
@@ -790,13 +790,13 @@ and the generalized function can be found <a href="https://github.com/predsci/CH
 </ul>
 </li>
 <li>5.) <code>Plotting.PlotImage</code> and <code>Plotting.PlotLBCCImage</code><ul>
-<li>plots original and corrected images and difference between them   </li>
+<li>plots original and corrected images, and difference between them   </li>
 </ul>
 </li>
 </ul>
 <h3 id="generate-plots-of-beta-and-y">Generate Plots of Beta and y</h3>
 <p>This function queries the database for LBC fit parameters then generates plots of Beta and y over time.<br />
-The source code for this is found in the <a href="https://github.com/predsci/CHD/blob/master/analysis/lbcc_analysis/LBCC_generate_theoretic_plots.py">CHD GitHub</a> 
+The source code and example usage for this is found in the <a href="https://github.com/predsci/CHD/blob/master/analysis/lbcc_analysis/LBCC_generate_theoretic_plots.py">CHD GitHub</a> 
 and the generalized function can be found <a href="https://github.com/predsci/CHD/blob/master/analysis/lbcc_analysis/LBCC_theoretic_funcs.py">here</a>.    </p>
 <table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
  2

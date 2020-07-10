@@ -523,7 +523,8 @@ The choice of which instrument to use as the "reference instrument" is an updata
 <h2 id="analysis-pipeline">Analysis Pipeline</h2>
 <h3 id="compute-histograms-and-save-to-database">Compute Histograms and Save to Database</h3>
 <p>This function applies the limb-brightening correction, calculates the associated IIT histogram, and saves these histograms to the database.<br />
-The generalized function can be found <a href="https://github.com/predsci/CHD/blob/master/analysis/iit_analysis/IIT_pipeline_funcs.py">here</a>.  </p>
+The source code and example usage for this is found in the <a href="https://github.com/predsci/CHD/blob/master/analysis/iit_analysis/IIT_create_hists.py">CHD GitHub</a>
+and the generalized function can be found <a href="https://github.com/predsci/CHD/blob/master/analysis/iit_analysis/IIT_pipeline_funcs.py">here</a>.  </p>
 <table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
  2
  3
@@ -578,13 +579,127 @@ The generalized function can be found <a href="https://github.com/predsci/CHD/bl
 </ul>
 <h3 id="calculate-and-save-correction-coefficients">Calculate and Save Correction Coefficients</h3>
 <p>This function queries the database for IIT histograms, calculates correction coefficients, and saves them to the database.<br />
-The generalized function can be found <a href="https://github.com/predsci/CHD/blob/master/analysis/iit_analysis/IIT_pipeline_funcs.py">here</a>.  </p>
+The source code and example usage for this is found in the <a href="https://github.com/predsci/CHD/blob/master/analysis/iit_analysis/IIT_calc_coefficients.py">CHD GitHub</a>
+and the generalized function can be found <a href="https://github.com/predsci/CHD/blob/master/analysis/iit_analysis/IIT_pipeline_funcs.py">here</a>.  </p>
+<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
+ 2
+ 3
+ 4
+ 5
+ 6
+ 7
+ 8
+ 9
+10
+11
+12
+13</pre></div></td><td class="code"><div class="codehilite"><pre><span></span><code><span class="err">    def calc_iit_coefficients(db_session, inst_list, ref_inst, calc_query_time_min, calc_query_time_max, weekday=0, number_of_days=180,</span>
+<span class="err">                      n_intensity_bins=200, lat_band=[-np.pi / 2.4, np.pi / 2.4], create=False):</span>
+<span class="err">                  &quot;&quot;&quot;</span>
+<span class="err">                  function to query IIT histograms, calculate IIT coefficients, and save to database</span>
+<span class="err">                  &quot;&quot;&quot;</span>
+<span class="err">                  pd_hist = db_funcs.query_hist(db_session=db_session, meth_id=method_id[1], n_intensity_bins=n_intensity_bins,</span>
+<span class="err">                                  lat_band=np.array(lat_band).tobytes(),</span>
+<span class="err">                                  time_min=np.datetime64(min_date).astype(datetime.datetime),</span>
+<span class="err">                                  time_max=np.datetime64(max_date).astype(datetime.datetime),</span>
+<span class="err">                                  instrument=query_instrument)</span>
+<span class="err">                  alpha_x_parameters = iit.optim_iit_linear(hist_ref, hist_fit, intensity_bin_edges,</span>
+<span class="err">                                          init_pars=init_pars)</span>
+<span class="err">                  db_funcs.store_iit_values(db_session, pd_hist, meth_name, meth_desc, alpha_x_parameters.x, create)</span>
+</code></pre></div>
+</td></tr></table>
+
+<ul>
+<li>1.) <code>db_funcs.query_hist</code><ul>
+<li>queries database for histograms (from Histogram table) in specified date range  </li>
+</ul>
+</li>
+<li>2.) <code>iit.optim_iit_linear</code><ul>
+<li>use linear optimization method to calculate fit parameters</li>
+</ul>
+</li>
+<li>3.) <code>db_funcs.store_iit_values</code><ul>
+<li>save the two fit coefficients to database using function <a href="https://github.com/predsci/CHD/blob/master/modules/DB_funs.py">store_iit_values</a><ul>
+<li>creates image combination combo_id of image_ids and dates in Images_Combos table</li>
+<li>creates association between each image_id and combo_id in Image_Combo_Assoc table</li>
+<li>creates new method “IIT” with an associated meth_id in Meth_Defs table</li>
+<li>creates new variable definitions "alpha and "x"" with an associated var_id in Var_Defs table</li>
+<li>store variable value as float in Var_Vals table with associated combo_id, meth_id, and var_id  </li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
 <h3 id="apply-inter-instrument-transformation-and-plot-new-images">Apply Inter-Instrument Transformation and Plot New Images</h3>
 <p>This function queries the database for IIT coefficients, applies the correction, and plots resulting images.<br />
-The generalized function can be found <a href="https://github.com/predsci/CHD/blob/master/analysis/iit_analysis/IIT_pipeline_funcs.py">here</a>.  </p>
+The source code and example usage for this is found in the <a href="https://github.com/predsci/CHD/blob/master/analysis/iit_analysis/IIT_apply_correction.py">CHD GitHub</a>
+and the generalized function can be found <a href="https://github.com/predsci/CHD/blob/master/analysis/iit_analysis/IIT_pipeline_funcs.py">here</a>.  </p>
+<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
+ 2
+ 3
+ 4
+ 5
+ 6
+ 7
+ 8
+ 9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19</pre></div></td><td class="code"><div class="codehilite"><pre><span></span><code><span class="err">    def apply_iit_correction(db_session, hdf_data_dir, iit_query_time_min, iit_query_time_max, inst_list, </span>
+<span class="err">                     n_mu_bins, n_intensity_bins, plot=False):</span>
+<span class="err">                 &quot;&quot;&quot;</span>
+<span class="err">                 function to query IIT correction coefficients, apply correction, and plot resulting images</span>
+<span class="err">                 &quot;&quot;&quot;</span>
+<span class="err">                image_pd = db_funcs.query_euv_images(db_session=db_session, time_min=iit_query_time_min,</span>
+<span class="err">                                     time_max=iit_query_time_max, instrument=query_instrument)</span>
+<span class="err">                lbcc_data = apply_lbc_correction(db_session, hdf_data_dir, instrument, image_row=row,</span>
+<span class="err">                                               n_mu_bins=n_mu_bins, n_intensity_bins=n_intensity_bins, R0=R0)                     </span>
+<span class="err">                alpha_x_parameters = db_funcs.query_var_val(db_session, meth_name, date_obs=lbcc_data.date_obs,</span>
+<span class="err">                                                instrument=instrument)                    </span>
+<span class="err">                corrected_iit_data = alpha * lbcc_data.lbcc_data + x</span>
+<span class="err">                if plot:</span>
+<span class="err">                    Plotting.PlotLBCCImage(lbcc_data.lbcc_data, los_image=original_los, nfig=100 + inst_index * 10 + index,</span>
+<span class="err">                                           title=&quot;Corrected LBCC Image for &quot; + instrument)</span>
+<span class="err">                    Plotting.PlotLBCCImage(corrected_iit_data, los_image=original_los, nfig=200 + inst_index * 10 + index,</span>
+<span class="err">                                           title=&quot;Corrected IIT Image for &quot; + instrument)</span>
+<span class="err">                    Plotting.PlotLBCCImage(lbcc_data.lbcc_data - corrected_iit_data, los_image=original_los,</span>
+<span class="err">                                           nfig=300 + inst_index * 10 + index, title=&quot;Difference Plot for &quot; + instrument)</span>
+</code></pre></div>
+</td></tr></table>
+
+<ul>
+<li>1.) <code>db_funcs.query_euv_images</code><ul>
+<li>queries database for images (from EUV_Images table) in specified date range  </li>
+</ul>
+</li>
+<li>2.)  <code>apply_lbc_correction</code>  <ul>
+<li>applies Limb-Brightening Correction to images and creates LBCCImage datatype  </li>
+</ul>
+</li>
+<li>3.) <code>db_funcs.query_var_val</code><ul>
+<li>queries database for variable values associated with specific image (from Var_Vals table)</li>
+</ul>
+</li>
+<li>4.) <code>corrected_iit_data = alpha * lbcc_data.lbcc_data + x</code><ul>
+<li>applies correction to image based off alpha, x, and limb-brightening corrected data arrays </li>
+</ul>
+</li>
+<li>5.) <code>Plotting.PlotLBCCImage</code><ul>
+<li>plots LBC images, IIT corrected images, and the difference between them                                </li>
+</ul>
+</li>
+</ul>
 <h3 id="generate-histogram-plots">Generate Histogram Plots</h3>
 <p>This function generates histogram plots comparing data from before and after the IIT correction.<br />
-The generalized function can be found <a href="https://github.com/predsci/CHD/blob/master/analysis/iit_analysis/IIT_pipeline_funcs.py">here</a>.  </p>
+The source code and example usage for this is found in the <a href="https://github.com/predsci/CHD/blob/master/analysis/iit_analysis/IIT_plot_hists.py">CHD GitHub</a>
+and the generalized function can be found <a href="https://github.com/predsci/CHD/blob/master/analysis/iit_analysis/IIT_pipeline_funcs.py">here</a>.  </p>
                 
               
               

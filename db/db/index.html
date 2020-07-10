@@ -449,7 +449,8 @@
                 
                 
                 <h1 id="database-information">Database Information</h1>
-<p>The Image Pre-Processing Pipeline is built upon a database to store images, histograms, and fit parameter values. </p>
+<p>The Image Pre-Processing Pipeline is built upon a <a href="https://github.com/predsci/CHD/blob/master/modules/DB_classes">database</a>
+ to store images, histograms, and fit parameter values. </p>
 <h2 id="updating-the-database">Updating the Database</h2>
 <p>The original database is now quite different than the database needed to query and save calculated parameters. In order to generate
 the necessary updates to run the code, do the following:  </p>
@@ -479,6 +480,11 @@ the necessary updates to run the code, do the following:  </p>
 <li>"revision" refers to the first 3+ identifying characters from the specific script  </li>
 </ul>
 </li>
+</ul>
+</li>
+<li>5.) to create new update scripts<br />
+    <code>alembic revision -m "revision name"</code>  <ul>
+<li>edit this script with the upgrade/downgrade necessary</li>
 </ul>
 </li>
 </ul>
