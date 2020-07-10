@@ -33,7 +33,7 @@ def apply_lbc_correction(db_session, hdf_data_dir, instrument, image_row, n_mu_b
     db_sesh, meth_id, var_ids = db_funcs.get_method_id(db_session, meth_name, meth_desc=None, var_names=None,
                                                        var_descs=None,
                                                        create=False)
-    mu_bin_edges = np.array(range(n_mu_bins + 1), dtype="float") * 0.05 + 0.1
+    mu_bin_edges = np.linspace(0.1, 1.0, n_mu_bins+1, dtype='float')
     intensity_bin_edges = np.linspace(0, 5, num=n_intensity_bins + 1, dtype='float')
 
     ###### GET LOS IMAGES COORDINATES (DATA) #####
@@ -281,7 +281,7 @@ def generate_iit_histograms(db_session, hist_query_min, hist_query_max, inst_lis
                                       time_max=hist_query_max,
                                       instrument=query_instrument)
         # convert the binary types back to arrays
-        lat_band, intensity_bin_edges, mu_bin_edges, full_hist = psi_d_types.binary_to_hist(pd_hist, n_mu_bins=None,
+        lat_band, mu_bin_edges, intensity_bin_edges, full_hist = psi_d_types.binary_to_hist(pd_hist, n_mu_bins=None,
                                                                                             n_intensity_bins=
                                                                                             n_intensity_bins)
 

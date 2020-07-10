@@ -2,7 +2,6 @@
 Example of LBC theoretic pipeline
 Calls functions from analysis/lbcc_analysis/lbcc_theoretic_funcs.py
 """
-
 import os
 import time
 import datetime
@@ -88,4 +87,7 @@ lbcc_funcs.generate_theoretic_plots(db_session, inst_list, plot_query_time_min, 
                                     time_period=time_period, plot_week=plot_week, n_mu_bins=n_mu_bins)
 
 end_time_tot = time.time()
-print("Total elapsed time for Limb-Brightening: " + str(round(end_time_tot - start_time_tot, 3)) + " seconds.")
+tot_time = end_time_tot - start_time_tot
+time_test = str(datetime.timedelta(minutes=tot_time))
+print("Total elapsed time for Limb-Brightening: " + time_test + " seconds.")
+

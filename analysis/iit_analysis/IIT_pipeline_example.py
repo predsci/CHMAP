@@ -1,7 +1,6 @@
 """
 Use the IIT pipeline functions to calculate the correction
 """
-
 import os
 import datetime
 import numpy as np
@@ -17,7 +16,7 @@ import analysis.iit_analysis.IIT_pipeline_funcs as iit_funcs
 ####### ------ UPDATABLE PARAMETERS ------ #########
 # TIME RANGE FOR LBC CORRECTION AND IMAGE PLOTTING
 lbc_query_time_min = datetime.datetime(2011, 4, 1, 0, 0, 0)
-lbc_query_time_max = datetime.datetime(2011, 4, 30, 0, 0, 0)
+lbc_query_time_max = datetime.datetime(2011, 10, 1, 0, 0, 0)
 
 # TIME RANGE FOR FIT PARAMETER CALCULATION
 calc_query_time_min = datetime.datetime(2011, 4, 1, 0, 0, 0)

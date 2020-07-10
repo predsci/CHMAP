@@ -1261,7 +1261,6 @@ def query_var_val(db_session, meth_name, date_obs, instrument):
 
     # query meth_defs for method id
     method_id_info = get_method_id(db_session, meth_name, meth_desc=None, var_names=None, var_descs=None, create=True)
-    print("Method id: ", method_id_info[1])
 
     # query for combo ids that correspond to instruments
     # determine image_ids that correspond to instrument
@@ -1274,11 +1273,10 @@ def query_var_val(db_session, meth_name, date_obs, instrument):
     # get combo_ids that are lesser and greater than time
     combo_query = return_closest_combo(db_session, Image_Combos, Image_Combos.date_mean, method_id_info[1],
                                        inst_combo_query, date_obs)
-    print('combo query', combo_query)
 
     # query var_defs for number of variables
     var_id = get_var_id(db_session, method_id_info[1], var_name=None, var_desc=None, create=False)
-    print("var_ids:", var_id)
+
     # create empty arrays
     var_vals = np.zeros((len(combo_query.combo_id), var_id[1].size))
     date_mean = np.zeros((len(combo_query.combo_id)))

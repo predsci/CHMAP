@@ -18,8 +18,8 @@ import modules.lbcc_funs as lbcc
 
 # TIME RANGE FOR FIT PARAMETER CALCULATION
 calc_query_time_min = datetime.datetime(2011, 4, 1, 0, 0, 0)
-calc_query_time_max = datetime.datetime(2011, 4, 30, 0, 0, 0)
-weekday = 0 # start at 0 for Monday
+calc_query_time_max = datetime.datetime(2011, 10, 1, 0, 0, 0)
+weekday = 0  # start at 0 for Monday
 number_of_days = 3
 
 # define instruments
@@ -70,7 +70,7 @@ for date_index, center_date in enumerate(moving_avg_centers):
 
     # create arrays for summed histograms and intensity bins
     hist_array = np.zeros((len(inst_list), n_intensity_bins))
-    intensity_bin_array = np.zeros((len(inst_list), n_intensity_bins+1))
+    intensity_bin_array = np.zeros((len(inst_list), n_intensity_bins + 1))
 
     for inst_index, instrument in enumerate(inst_list):
         # query for IIT histograms
@@ -104,7 +104,7 @@ for date_index, center_date in enumerate(moving_avg_centers):
         hist_ref = hist_array[inst_index, :]
         hist_fit = hist_array[ref_index, :]
         intensity_bin_edges = intensity_bin_array[inst_index, :]
-        ##
+
         # normalize
         # not currently using this stuff
         norm_hist = np.full(summed_hist.shape, 0.)
@@ -125,11 +125,13 @@ for date_index, center_date in enumerate(moving_avg_centers):
 
         # calculate alpha and x
         alpha_x_parameters = iit.optim_iit_linear(hist_ref, hist_fit, intensity_bin_edges,
-                                              init_pars=init_pars)
+                                                  init_pars=init_pars)
         # save alpha and x to database
         db_funcs.store_iit_values(db_session, pd_hist, meth_name, meth_desc, alpha_x_parameters.x, create)
 
 end_time_tot = time.time()
+tot_time = end_time_tot - start_time_tot
+time_tot = str(datetime.timedelta(minutes=tot_time))
+
 print("Inter-instrument transformation fit parameters have been calculated and saved to the database.")
-print("Total elapsed time for IIT fit parameter calculation: " +
-      str(round(end_time_tot - start_time_tot, 3)) + " seconds.")
+print("Total elapsed time for IIT fit parameter calculation: " + time_tot)
