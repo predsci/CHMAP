@@ -15,6 +15,7 @@ import modules.DB_funs as db_funcs
 import modules.datatypes as psi_d_types
 import modules.lbcc_funs as lbcc
 import modules.Plotting as Plotting
+import analysis.iit_analysis.IIT_pipeline_funcs as iit_funcs
 
 
 ####### STEP ONE: CREATE AND SAVE HISTOGRAMS #######
@@ -38,7 +39,7 @@ def save_histograms(db_session, hdf_data_dir, inst_list, hist_query_time_min, hi
     start_time_tot = time.time()
 
     # creates mu bin & intensity bin arrays
-    mu_bin_edges = np.linspace(0.1, 1.0, n_mu_bins+1, dtype='float')
+    mu_bin_edges = np.linspace(0.1, 1.0, n_mu_bins + 1, dtype='float')
     image_intensity_bin_edges = np.linspace(0, 5, num=n_intensity_bins + 1, dtype='float')
 
     # create LBC method
@@ -190,7 +191,7 @@ def calc_theoretic_fit(db_session, inst_list, calc_query_time_min, calc_query_ti
 
 
 ###### STEP THREE: APPLY CORRECTION AND PLOT IMAGES #######
-def apply_lbc_correction(db_session, hdf_data_dir, inst_list, n_mu_bins, lbc_query_time_min, lbc_query_time_max,
+def apply_lbc_correction(db_session, hdf_data_dir, inst_list, lbc_query_time_min, lbc_query_time_max,
                          R0=1.01, plot=False):
     """
     function to apply limb-brightening correction and plot images within a certain time frame
@@ -205,9 +206,6 @@ def apply_lbc_correction(db_session, hdf_data_dir, inst_list, n_mu_bins, lbc_que
     """
     # start time
     start_time_tot = time.time()
-
-    # mu bin edges
-    mu_bin_edges = np.linspace(0.1, 1.0, n_mu_bins+1, dtype='float')
 
     # method information
     meth_name = "LBCC Theoretic"
@@ -232,21 +230,24 @@ def apply_lbc_correction(db_session, hdf_data_dir, inst_list, n_mu_bins, lbc_que
                                                      instrument=instrument)
 
             ###### DETERMINE LBC CORRECTION (for valid mu values) ######
-            beta1d, y1d, mu_indices = lbcc.get_beta_y_theoretic_continuous_1d_indices(theoretic_query, mu_array=original_los.mu)
+            beta1d, y1d, mu_indices, use_indices = lbcc.get_beta_y_theoretic_continuous_1d_indices(theoretic_query,
+                                                                                                   los_image=original_los)
 
             ###### APPLY LBC CORRECTION (log10 space) ######
-            corrected_los_data = np.copy(original_los.data)
-            corrected_los_data[mu_indices] = 10**(beta1d * np.log10(original_los.data[mu_indices]) + y1d)
+            corrected_lbc_data = np.copy(original_los.data)
+            corrected_lbc_data[use_indices] = 10 ** (beta1d * np.log10(original_los.data[use_indices]) + y1d)
 
             ##### PLOTTING ######
             if plot:
                 Plotting.PlotImage(original_los, nfig=100 + inst_index * 10 + index, title="Original LOS Image for " +
                                                                                            instrument)
-                Plotting.PlotLBCCImage(lbcc_data=corrected_los_data, los_image=original_los,
-                                       nfig=200 + inst_index * 10 + index, title="Corrected LBCC Image for " +
-                                                                                 instrument)
-                Plotting.PlotLBCCImage(lbcc_data=original_los.data - corrected_los_data, los_image=original_los,
-                                       nfig=300 + inst_index * 10 + index, title="Difference Plot for " + instrument)
+                Plotting.PlotCorrectedImage(corrected_data=corrected_lbc_data, los_image=original_los,
+                                            nfig=200 + inst_index * 10 + index, title="Corrected LBCC Image for " +
+                                                                                      instrument)
+                Plotting.PlotCorrectedImage(corrected_data=original_los.data - corrected_lbc_data,
+                                            los_image=original_los,
+                                            nfig=300 + inst_index * 10 + index,
+                                            title="Difference Plot for " + instrument)
     # end time
     end_time_tot = time.time()
     print("LBC has been applied and specified images plotted.")
@@ -277,7 +278,7 @@ def generate_theoretic_plots(db_session, inst_list, plot_query_time_min, plot_qu
     start_time_tot = time.time()
 
     # create mu bin array
-    mu_bin_array = np.linspace(0.1, 1.0, n_mu_bins+1, dtype='float')
+    mu_bin_array = np.linspace(0.1, 1.0, n_mu_bins + 1, dtype='float')
     mu_bin_centers = (mu_bin_array[1:] + mu_bin_array[:-1]) / 2
 
     # time arrays
@@ -418,4 +419,76 @@ def generate_theoretic_plots(db_session, inst_list, plot_query_time_min, plot_qu
     print("Theoretical plots of beta and y over time hvae been generated and saved.")
     print("Total elapsed time for plot creation: " + str(round(end_time_tot - start_time_tot, 3)) + " seconds.")
 
+    return None
+
+
+###### STEP FIVE: GENERATE HISTOGRAM PLOTS ######
+def generate_histogram_plots(db_session, hdf_data_dir, inst_list, hist_plot_query_time_min, hist_plot_query_time_max,
+                             n_hist_plots=1, n_mu_bins=18, n_intensity_bins=200, lat_band=[-np.pi / 64., np.pi / 64.],
+                             log10=True, R0=1.01):
+    # start time
+    start_time_tot = time.time()
+
+    meth_name = 'LBCC Theoretic'
+    method_id = db_funcs.get_method_id(db_session, meth_name, meth_desc=None, var_names=None, var_descs=None,
+                                       create=False)
+
+    # mu bin edges and intensity bin edges
+    mu_bin_edges = np.linspace(0.1, 1.0, n_mu_bins + 1, dtype='float')
+    intensity_bin_edges = np.linspace(0, 5, num=n_intensity_bins + 1, dtype='float')
+
+    ### PLOT HISTOGRAMS ###
+    # query histograms
+    for instrument in inst_list:
+        query_instrument = [instrument, ]
+        pd_hist = db_funcs.query_hist(db_session=db_session, meth_id=method_id[1], n_mu_bins=n_mu_bins,
+                                      n_intensity_bins=n_intensity_bins,
+                                      lat_band=np.array(lat_band).tobytes(),
+                                      time_min=hist_plot_query_time_min,
+                                      time_max=hist_plot_query_time_max,
+                                      instrument=query_instrument)
+        # convert from binary to usable histogram type
+        lat_band, mu_bin_array, intensity_bin_array, full_hist = psi_d_types.binary_to_hist(pd_hist, n_mu_bins,
+                                                                                            n_intensity_bins)
+        #### PLOT ORIGINAL HISTOGRAMS ####
+        for plot_index in range(n_hist_plots):
+            # definitions
+            plot_hist = full_hist[:, :, plot_index]
+            date_obs = pd_hist.date_obs[plot_index]
+            figure = "Original Histogram Plot: "
+            # plot histogram
+            Plotting.Plot_LBCC_Hists(plot_hist, date_obs, instrument, intensity_bin_edges, mu_bin_edges, figure,
+                                     plot_index)
+
+            #### APPLY LBC CORRECTION ####
+            # query EUV images
+            query_instrument = [instrument, ]
+            image_pd = db_funcs.query_euv_images(db_session=db_session, time_min=hist_plot_query_time_min,
+                                                 time_max=hist_plot_query_time_max, instrument=query_instrument)
+            for index, row in image_pd.iterrows():
+                # apply LBC
+                original_los, lbcc_image, mu_indices, use_indices = iit_funcs.apply_lbc_correction(db_session,
+                                                                                                   hdf_data_dir,
+                                                                                                   instrument, row,
+                                                                                                   n_intensity_bins,
+                                                                                                   R0)
+                #### CREATE NEW HISTOGRAMS ####
+                # perform 2D histogram on mu and image intensity
+                hdf_path = os.path.join(hdf_data_dir, row.fname_hdf)
+                temp_hist = psi_d_types.LosImage.mu_hist(lbcc_image, intensity_bin_edges, mu_bin_edges,
+                                                         lat_band=lat_band,
+                                                         log10=log10)
+                hist_lbcc = psi_d_types.create_lbcc_hist(hdf_path, row.image_id, method_id[1], mu_bin_edges,
+                                                         intensity_bin_edges, lat_band, temp_hist)
+                #### PLOT NEW HISTOGRAMS ####
+                # definitions
+                date_obs = hist_lbcc.date_obs
+                plot_hist = hist_lbcc.hist
+                figure = "LBCC Histogram Plot: "
+                # plot histogram
+                Plotting.Plot_LBCC_Hists(plot_hist, date_obs, instrument, intensity_bin_edges, mu_bin_edges, figure,
+                                         plot_index)
+    end_time_tot = time.time()
+    print("Histogram plots of have been generated.")
+    print("Total elapsed time for plot creation: " + str(round(end_time_tot - start_time_tot, 3)) + " seconds.")
     return None

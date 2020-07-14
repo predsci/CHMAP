@@ -2,11 +2,11 @@
 Functions for Evaluation of Inter-Instrument Transformation Coefficients
 """
 
-
+import os
 import numpy as np
 import scipy.optimize as optim
 import modules.lbcc_funs as lbcc_funcs
-
+import modules.datatypes as psi_d_types
 
 def optim_iit_linear(hist_ref, hist_fit, bin_edges, init_pars=np.asarray([1., 0.])):
     """
@@ -23,7 +23,7 @@ def optim_iit_linear(hist_ref, hist_fit, bin_edges, init_pars=np.asarray([1., 0.
                                method="Nelder-Mead")
 
     if optim_out.status != 0:
-        print("Warning: Nelder-Mead optimization of IIT coefficients failed with status ", optim_out.status)
+        print("Warning: Nelder-Mead optimization of IIT coefficients failed with status", optim_out.status)
 
     return optim_out
 
@@ -49,3 +49,12 @@ def iit_hist(lbcc_data, los_image, intensity_bin_edges, lat_band=[-np.pi / 2.4, 
     hist_out, bin_edges = np.histogram(use_data, bins=intensity_bin_edges)
 
     return hist_out, use_data
+
+
+def apply_iit_correction(lbcc_image, use_indices, alpha, x, hdf_path, method_id, R0):
+    lbcc_data = lbcc_image.lbcc_data
+    corrected_iit_data = np.copy(lbcc_data)
+    corrected_iit_data[use_indices] = 10 ** (alpha * np.log10(lbcc_data[use_indices]) + x)
+    # create IIT datatype
+    iit_image = psi_d_types.create_iit_image(lbcc_image, corrected_iit_data, method_id, hdf_path)
+    psi_d_types.LosImage.get_coordinates(iit_image, R0=R0)

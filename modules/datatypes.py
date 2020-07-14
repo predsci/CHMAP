@@ -228,17 +228,15 @@ class LBCCImage(LosImage):
         """
         function to create iit histogram
         """
-
-        # first reduce to points greater than intensity-min and in lat-band
-        intensity_min = min(self.intensity_bin_edges)
-        intensity_max = max(self.intensity_bin_edges)
+        # indices within the latitude band and with valid mu
         lat_band_index = np.logical_and(self.lat <= max(lat_band), self.lat >= min(lat_band))
-        # intensity_index = np.logical_and(np.log10(lbcc_data) >= intensity_min, np.log10(lbcc_data) <= intensity_max)
-        # use_index = np.logical_and(intensity_index, lat_band_index)
+        mu_index = np.logical_and(self.mu > 0, self.mu <= self.mu.max())
+        use_index = np.logical_and(mu_index, lat_band_index)
 
-        use_data = self.lbcc_data[lat_band_index]
+        use_data = self.lbcc_data[use_index]
         if log10:
-            use_data[use_data < 0.] = 0.
+            # use_data[use_data < 0.] = 0.01
+            use_data = np.where(use_data > 0, use_data, 0.01)
             use_data = np.log10(use_data)
 
         # generate intensity histogram
@@ -259,7 +257,6 @@ class LBCCImage(LosImage):
 
 
 def create_lbcc_image(h5_file, corrected_data, image_id, meth_id, intensity_bin_edges):
-
     # create LBCC Image structure
     data = LBCCImage(h5_file, corrected_data, image_id, meth_id, intensity_bin_edges)
     return data
@@ -272,6 +269,50 @@ def binary_to_lbcc(lbcc_image_binary):
         lbcc_data = np.frombuffer(row.lbcc_data, dtype=np.float)
 
     return lat_array, mu_array, lbcc_data
+
+
+class IITImage(LBCCImage):
+    """
+    class to hold corrected IIT data
+    """
+
+    def __init__(self, lbcc_image, iit_corrected_data, meth_id, h5_file):
+        # LBCC inherited definitions
+        corrected_data = lbcc_image.lbcc_data
+        image_id = lbcc_image.image_id
+        intensity_bin_edges = lbcc_image.intensity_bin_edges
+        super().__init__(h5_file, corrected_data, image_id, meth_id, intensity_bin_edges)
+
+        # IIT specific stuff
+        self.iit_data = iit_corrected_data
+
+    def iit_hist(self, lat_band, log10=True):
+        """
+        function to create iit histogram
+        """
+
+        # first reduce to points greater than intensity-min and in lat-band
+        lat_band_index = np.logical_and(self.lat <= max(lat_band), self.lat >= min(lat_band))
+        mu_index = np.logical_and(self.mu > 0, self.mu <= self.mu.max())
+        use_index = np.logical_and(mu_index, lat_band_index)
+
+        use_data = self.iit_data[use_index]
+        if log10:
+            # use_data[use_data < 0.] = 0.01
+            use_data = np.where(use_data > 0, use_data, 0.01)
+            use_data = np.log10(use_data)
+
+        # generate intensity histogram
+        hist_out, bin_edges = np.histogram(use_data, bins=self.intensity_bin_edges)
+
+        # create iit_hist datatype
+        return hist_out
+
+
+def create_iit_image(lbcc_image, iit_corrected_data, meth_id, h5_file):
+    # create LBCC Image structure
+    data = IITImage(lbcc_image, iit_corrected_data, meth_id, h5_file)
+    return data
 
 
 class PsiMap:
@@ -506,8 +547,8 @@ def create_lbcc_hist(h5_file, image_id, meth_id, mu_bin_edges, intensity_bin_edg
     # create the structure
     date_format = "%Y-%m-%dT%H:%M:%S.%f"
     hist_out = Hist(image_id, meth_id, datetime.datetime.strptime(chd_meta['date_string'], date_format),
-                chd_meta['instrument'], chd_meta['wavelength'], mu_bin_edges,
-                intensity_bin_edges, lat_band, hist=mu_hist)
+                    chd_meta['instrument'], chd_meta['wavelength'], mu_bin_edges,
+                    intensity_bin_edges, lat_band, hist=mu_hist)
     return hist_out
 
 
@@ -579,4 +620,3 @@ def binary_to_hist(hist_binary, n_mu_bins, n_intensity_bins):
             full_hist[:, index] = hist
 
     return lat_band, mu_bin_array, intensity_bin_array, full_hist
-

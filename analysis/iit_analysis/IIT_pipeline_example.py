@@ -1,6 +1,7 @@
 """
 Use the IIT pipeline functions to calculate the correction
 """
+
 import os
 import datetime
 import numpy as np
@@ -14,24 +15,28 @@ import modules.lbcc_funs as lbcc
 import analysis.iit_analysis.IIT_pipeline_funcs as iit_funcs
 
 ####### ------ UPDATABLE PARAMETERS ------ #########
-# TIME RANGE FOR LBC CORRECTION AND IMAGE PLOTTING
-lbc_query_time_min = datetime.datetime(2011, 4, 1, 0, 0, 0)
-lbc_query_time_max = datetime.datetime(2011, 10, 1, 0, 0, 0)
+# TIME RANGE FOR LBC CORRECTION AND IIT HISTOGRAM CREATION
+lbc_query_time_min = datetime.datetime(2011, 1, 1, 0, 0, 0)
+lbc_query_time_max = datetime.datetime(2012, 1, 1, 0, 0, 0)
 
 # TIME RANGE FOR FIT PARAMETER CALCULATION
 calc_query_time_min = datetime.datetime(2011, 4, 1, 0, 0, 0)
 calc_query_time_max = datetime.datetime(2011, 10, 1, 0, 0, 0)
 weekday = 0  # start at 0 for Monday
-number_of_days = 3 # days for moving average
+number_of_days = 180  # days for moving average
 
 # TIME RANGE FOR IIT CORRECTION AND IMAGE PLOTTING
 iit_query_time_min = datetime.datetime(2011, 4, 1, 0, 0, 0)
 iit_query_time_max = datetime.datetime(2011, 4, 1, 6, 0, 0)
-plot = True # true if you want to plot resulting images
+plot = True  # true if you want to plot resulting images
+
+# TIME RANGE FOR HISTOGRAM CREATION
+hist_query_time_min = datetime.datetime(2011, 4, 1, 0, 0, 0)
+hist_query_time_max = datetime.datetime(2011, 4, 1, 3, 0, 0)
 
 # INSTRUMENTS
 inst_list = ["AIA", "EUVI-A", "EUVI-B"]
-ref_inst = "AIA" # reference instrument to fit histograms to
+ref_inst = "AIA"  # reference instrument to fit histograms to
 
 # declare map and binning parameters
 n_mu_bins = 18
@@ -52,15 +57,22 @@ use_db = "sqlite"
 sqlite_path = os.path.join(database_dir, sqlite_filename)
 db_session = init_db_conn(db_name=use_db, chd_base=db_class.Base, sqlite_path=sqlite_path)
 
-
 ##### ------ INTER INSTRUMENT TRANSFORMATION FUNCTIONS BELOW ------- ########
 
 ##### STEP ONE: CREATE 1D HISTOGRAMS AND SAVE TO DATABASE ######
 iit_funcs.create_histograms(db_session, inst_list, lbc_query_time_min, lbc_query_time_max, hdf_data_dir,
-                            n_mu_bins=n_mu_bins, n_intensity_bins=n_intensity_bins, lat_band=lat_band,
+                            n_intensity_bins=n_intensity_bins, lat_band=lat_band,
                             log10=log10, R0=R0)
 
-# ##### STEP TWO: CALCULATE INTER-INSTRUMENT TRANSFORMATION COEFFICIENTS ######
+###### STEP TWO: CALCULATE INTER-INSTRUMENT TRANSFORMATION COEFFICIENTS ######
 iit_funcs.calc_iit_coefficients(db_session, inst_list, ref_inst, calc_query_time_min, calc_query_time_max, weekday,
                                 number_of_days=number_of_days, n_intensity_bins=n_intensity_bins, lat_band=lat_band,
                                 create=create)
+
+##### STEP THREE: APPLY TRANSFORMATION AND PLOT NEW IMAGES ######
+iit_funcs.apply_iit_correction(db_session, hdf_data_dir, iit_query_time_min, iit_query_time_max, inst_list,
+                               n_intensity_bins=n_intensity_bins, R0=R0, plot=plot)
+
+###### STEP FOUR: GENERATE NEW HISTOGRAM PLOTS ######
+iit_funcs.generate_iit_histograms(db_session, hist_query_time_min, hist_query_time_max, inst_list, ref_inst,
+                                  n_intensity_bins=n_intensity_bins, lat_band=lat_band)

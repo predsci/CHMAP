@@ -2,6 +2,7 @@
 Example of LBC theoretic pipeline
 Calls functions from analysis/lbcc_analysis/lbcc_theoretic_funcs.py
 """
+
 import os
 import time
 import datetime
@@ -10,7 +11,6 @@ from settings.app import App
 import modules.DB_classes as db_class
 from modules.DB_funs import init_db_conn
 import analysis.lbcc_analysis.LBCC_theoretic_funcs as lbcc_funcs
-
 
 start_time_tot = time.time()
 
@@ -33,8 +33,13 @@ lbc_query_time_max = datetime.datetime(2011, 4, 1, 3, 0, 0)
 # TIME RANGE FOR BETA AND Y PLOT GENERATION
 plot_query_time_min = datetime.datetime(2011, 4, 1, 0, 0, 0)
 plot_query_time_max = datetime.datetime(2011, 10, 1, 0, 0, 0)
-weekday_plot = 0 # start at 0 for Monday
+weekday_plot = 0  # start at 0 for Monday
 plot = True  # true if you want images plotted
+
+# TIME RANGE FOR HISTOGRAM PLOTTING
+hist_plot_query_time_min = datetime.datetime(2011, 4, 1, 0, 0, 0)
+hist_plot_query_time_max = datetime.datetime(2011, 4, 1, 3, 0, 0)
+n_hist_plots = 1  # number of histograms to plot
 
 # INSTRUMENTS
 inst_list = ["AIA", "EUVI-A", "EUVI-B"]
@@ -64,7 +69,6 @@ time_period = "6 Month"  # used for plot file and title
 plot_week = 5  # index of week you want to plot
 image_out_path = os.path.join(App.APP_HOME, "test_data", "analysis/lbcc_functionals/")  # path to save plots to
 
-
 ###### --------- LIMB BRIGHTENING CORRECTIONS FUNCTIONS ------------ ######
 
 ####### STEP ONE: CREATE AND SAVE HISTOGRAMS #######
@@ -78,7 +82,7 @@ lbcc_funcs.calc_theoretic_fit(db_session, inst_list, calc_query_time_min, calc_q
                               lat_band=lat_band, create=create)
 
 ###### STEP THREE: APPLY CORRECTION AND PLOT IMAGES #######
-lbcc_funcs.apply_lbc_correction(db_session, hdf_data_dir, inst_list, n_mu_bins, lbc_query_time_min, lbc_query_time_max,
+lbcc_funcs.apply_lbc_correction(db_session, hdf_data_dir, inst_list, lbc_query_time_min, lbc_query_time_max,
                                 R0=R0, plot=plot)
 
 ###### STEP FOUR: GENERATE PLOTS OF BETA AND Y ######
@@ -86,8 +90,11 @@ lbcc_funcs.generate_theoretic_plots(db_session, inst_list, plot_query_time_min, 
                                     weekday=weekday_plot, image_out_path=image_out_path, year=year,
                                     time_period=time_period, plot_week=plot_week, n_mu_bins=n_mu_bins)
 
+###### STEP FIVE: GENERATE HISTOGRAM PLOTS ######
+lbcc_funcs.generate_histogram_plots(db_session, hdf_data_dir, inst_list, hist_plot_query_time_min,
+                                    hist_plot_query_time_max, n_hist_plots=n_hist_plots, n_mu_bins=n_mu_bins,
+                                    n_intensity_bins=n_intensity_bins, lat_band=lat_band, log10=log10, R0=R0)
 end_time_tot = time.time()
 tot_time = end_time_tot - start_time_tot
 time_test = str(datetime.timedelta(minutes=tot_time))
 print("Total elapsed time for Limb-Brightening: " + time_test + " seconds.")
-

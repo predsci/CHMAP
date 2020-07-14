@@ -1138,6 +1138,8 @@ def query_hist(db_session, meth_id, n_mu_bins=None, n_intensity_bins=None, lat_b
             query_out = pd.read_sql(db_session.query(Histogram).filter(Histogram.date_obs >= time_min,
                                                                        Histogram.date_obs <= time_max,
                                                                        Histogram.meth_id == meth_id,
+                                                                       Histogram.instrument.in_(
+                                                                           instrument),
                                                                        Histogram.n_intensity_bins == n_intensity_bins,
                                                                        Histogram.lat_band == lat_band
                                                                        ).statement,
@@ -1169,6 +1171,8 @@ def query_hist(db_session, meth_id, n_mu_bins=None, n_intensity_bins=None, lat_b
             query_out = pd.read_sql(db_session.query(Histogram).filter(Histogram.date_obs >= time_min,
                                                                        Histogram.date_obs <= time_max,
                                                                        Histogram.meth_id == meth_id,
+                                                                       Histogram.instrument.in_(
+                                                                           instrument),
                                                                        Histogram.wavelength.in_(
                                                                            wavelength),
                                                                        Histogram.n_intensity_bins == n_intensity_bins,
@@ -1260,16 +1264,14 @@ def query_var_val(db_session, meth_name, date_obs, instrument):
         date_obs = datetime.datetime.strptime(date_obs, "%Y-%m-%dT%H:%M:%S.%f")
 
     # query meth_defs for method id
-    method_id_info = get_method_id(db_session, meth_name, meth_desc=None, var_names=None, var_descs=None, create=True)
+    method_id_info = get_method_id(db_session, meth_name, meth_desc=None, var_names=None, var_descs=None, create=False)
 
-    # query for combo ids that correspond to instruments
+    ### QUERY EUV IMAGES/IMAGE COMBOS
     # determine image_ids that correspond to instrument
-    inst_image_query = pd.read_sql(db_session.query(EUV_Images).filter(EUV_Images.instrument == instrument).statement,
-                                   db_session.bind)
-    # get image_ids corresponding to these combo_ids
-    inst_combo_query = pd.read_sql(db_session.query(Image_Combo_Assoc.combo_id).filter(Image_Combo_Assoc.image_id.in_(
-        inst_image_query.image_id)).statement,
-                                   db_session.bind)
+    inst_combo_query = pd.read_sql(
+        db_session.query(Image_Combo_Assoc.combo_id).filter(Image_Combo_Assoc.image_id.in_(
+            db_session.query(EUV_Images.image_id).filter(EUV_Images.instrument == instrument))).statement,
+        db_session.bind)
     # get combo_ids that are lesser and greater than time
     combo_query = return_closest_combo(db_session, Image_Combos, Image_Combos.date_mean, method_id_info[1],
                                        inst_combo_query, date_obs)
@@ -1293,9 +1295,9 @@ def query_var_val(db_session, meth_name, date_obs, instrument):
         date_mean[i] = date_float
 
     # interpolate
-    var_val = np.zeros(6)
+    var_val = np.zeros(var_id[1].size)
     if len(combo_query.combo_id) > 1:
-        for i in range(6):
+        for i in range(var_id[1].size):
             interp_values = interpolate.interp1d(x=date_mean, y=var_vals[:, i])
             date_obs_fl = (date_obs - timeutc).total_seconds()
             var_val[i] = interp_values(date_obs_fl)

@@ -5,19 +5,19 @@ dependent upon their distance from disk center.
 
 ## Examples of Corrected Images
 ### AIA Images
-[Original AIA Image](../img/original_AIA.png) | [Corrected AIA Image](../img/corrected_AIA.png)
-- | - 
-![Original AIA Image](../img/original_AIA.png) | ![Corrected AIA Image](../img/corrected_AIA.png)  
+[Original AIA Image](../img/lbc/AIA_original.png) | [Corrected AIA Image](../img/lbc/AIA_corrected.png) |  [Difference AIA Image](../img/lbc/AIA_difference.png)
+- | - | -
+![Original AIA Image](../img/lbc/AIA_original.png) | ![Corrected AIA Image](../img/lbc/AIA_corrected.png) |  ![Difference AIA Image](../img/lbc/AIA_difference.png)  
 
 ### EUVI-A Images
-[Original STA Image](../img/original_STA.png) | [Corrected STA Image](../img/corrected_STA.png)
-- | - 
-![Original STA Image](../img/original_STA.png) | ![Corrected STA Image](../img/corrected_STA.png)  
+[Original STA Image](../img/lbc/STA_original.png) | [Corrected STA Image](../img/lbc/STA_corrected.png) |  [Difference STA Image](../img/lbc/STA_difference.png)
+- | - | -
+![Original STA Image](../img/lbc/STA_original.png) | ![Corrected STA Image](../img/lbc/STA_corrected.png)  |  ![Difference STA Image](../img/lbc/STA_difference.png) 
 
 ### EUVI-B Images
-[Original STB Image](../img/original_STB.png) | [Corrected STB Image](../img/corrected_STB.png)
-- | - 
-![Original STB Image](../img/original_STB.png) | ![Corrected STB Image](../img/corrected_STB.png)    
+[Original STB Image](../img/lbc/STB_original.png) | [Corrected STB Image](../img/lbc/STB_corrected.png) |  [Difference STB Image](../img/lbc/STB_difference.png)  
+- | - | -
+![Original STB Image](../img/lbc/STB_original.png) | ![Corrected STB Image](../img/lbc/STB_corrected.png)   |  ![Difference STB Image](../img/lbc/STB_difference.png) 
 
 ## Theoretical Analysis Pipeline
 
@@ -28,24 +28,24 @@ and the generalized function can be found [here](https://github.com/predsci/CHD/
 
     def save_histograms(db_session, hdf_data_dir, inst_list, hist_query_time_min, hist_query_time_max, n_mu_bins=18,
                         n_intensity_bins=200, lat_band=[-np.pi / 64., np.pi / 64.], log10=True, R0=1.01):
-            """
-            function to create and save histograms to database
-            """
-            query_pd = db_funcs.query_euv_images(db_session=db_session, time_min=hist_query_time_min,
-                                                 time_max=hist_query_time_max, instrument=query_instrument)
-            temp_hist = los_temp.mu_hist(image_intensity_bin_edges, mu_bin_edges, lat_band=lat_band, log10=log10)
-            hist_lbcc = psi_d_types.create_lbcc_hist(hdf_path, row.image_id, method_id[1], mu_bin_edges,
-                                                     image_intensity_bin_edges, lat_band, temp_hist)
-            db_funcs.add_hist(db_session, hist_lbcc)
+        """
+        function to create and save histograms to database
+        """
+        query_pd = db_funcs.query_euv_images(db_session=db_session, time_min=hist_query_time_min,
+                                             time_max=hist_query_time_max, instrument=query_instrument)
+        temp_hist = los_temp.mu_hist(image_intensity_bin_edges, mu_bin_edges, lat_band=lat_band, log10=log10)
+        hist_lbcc = psi_d_types.create_lbcc_hist(hdf_path, row.image_id, method_id[1], mu_bin_edges,
+                                                 image_intensity_bin_edges, lat_band, temp_hist)
+        db_funcs.add_hist(db_session, hist_lbcc)
     
  
-* 1.)  <code>db_funcs.query_euv_images</code>  
+* 1.) <code>db_funcs.query_euv_images</code>  
     * queries database for images (from EUV_Images table) in specified date range  
-* 2.)  <code>los_temp.mu_hist</code>  
+* 2.) <code>los_temp.mu_hist</code>  
     * creates histogram based on number of mu and intensity bins    
-* 3.)   <code>psi_d_types.create_hist</code>  
-    * converts histogram to lbcc_hist datatype  
-* 4.)  <code>db_funcs.add_hist</code>  
+* 3.) <code>psi_d_types.create_lbcc_hist</code>  
+    * create histogram datatype from lbcc histogram  
+* 4.) <code>db_funcs.add_hist</code>  
     * saves histograms to database (table Histogram) associating an image_id, meth_id, and basic information with histogram  
 
 
@@ -88,12 +88,12 @@ and the generalized function can be found [here](https://github.com/predsci/CHD/
 
 ### Apply Limb-Brightening Correction and Plot Corrected Images
 This function queries the database for LBC fit parameters then applies them to specified images, plotting resulting images before and after the correction.  
-The source code and example usage for this is found in the [CHD GitHub](https://github.com/predsci/CHD/blob/master/analysis/lbcc_analysis/LBCC_apply_fit.py) 
+The source code and example usage for this is found in the [CHD GitHub](https://github.com/predsci/CHD/blob/master/analysis/lbcc_analysis/LBCC_apply_correction.py) 
 and the generalized function can be found [here](https://github.com/predsci/CHD/blob/master/analysis/lbcc_analysis/LBCC_theoretic_funcs.py). 
 
 
     def apply_lbc_correction(db_session, hdf_data_dir, inst_list, lbc_query_time_min, lbc_query_time_max,
-                            n_intensity_bins=200, R0=1.01, plot=False):
+                         R0=1.01, plot=False):
         """
         function to apply limb-brightening correction and plot images within a certain time frame
         """ 
@@ -101,27 +101,27 @@ and the generalized function can be found [here](https://github.com/predsci/CHD/
                                              time_max=lbc_query_time_max, instrument=query_instrument) 
         theoretic_query = db_funcs.query_var_val(db_session, meth_name, date_obs=original_los.info['date_string'],
                                                  instrument=instrument)
-        beta, y = lbcc.get_beta_y_theoretic_continuous(theoretic_query, mu_array=original_los.mu)  
-        corrected_los_data = beta * original_los.data + y
-
+        beta1d, y1d, mu_indices, use_indices = lbcc.get_beta_y_theoretic_continuous_1d_indices(theoretic_query,
+                                                                                               los_image=original_los)
+        corrected_lbc_data[use_indices] = 10 ** (beta1d * np.log10(original_los.data[use_indices]) + y1d)
         if plot:
             Plotting.PlotImage(original_los, nfig=100 + inst_index, title="Original LOS Image for " + instrument)
-            Plotting.PlotLBCCImage(lbcc_data=corrected_los_data, los_image=original_los, nfig=200 + inst_index,
+            Plotting.PlotCorrectedImage(corrected_data=corrected_lbc_data, los_image=original_los, nfig=200 + inst_index,
                                    title="Corrected LBCC Image for " + instrument)
-            Plotting.PlotLBCCImage(lbcc_data=original_los.data - corrected_los_data, los_image=original_los,
+            Plotting.PlotCorrectedImage(corrected_data=original_los.data - corrected_lbc_data, los_image=original_los,
                                    nfig=300 + inst_index, title="Difference Plot for " + instrument)
                                                               
 * 1.) <code>db_funcs.query_euv_images</code>
     * queries database for images (from EUV_Images table) in specified date range
 * 2.) <code>db_funcs.query_var_val</code>
     * queries database for variable values associated with specific image (from Var_Vals table)
-* 3.) <code>lbcc.get_beta_y_theoretic_continuous</code>
-    * calculates beta and y arrays 
+* 3.) <code>lbcc.get_beta_y_theoretic_continuous_1d_indices</code>
+    * calculates 1d beta and y arrays for valid mu indices
         * uses variable values from query in step two
-        * uses mu array from original LOS image
-* 4.) <code>corrected_los_data = beta * original_los.data + y</code>
-    * applies correction to image based off beta, y, and original data arrays 
-* 5.) <code>Plotting.PlotImage</code> and <code>Plotting.PlotLBCCImage</code>
+        * uses original los image to determine indices for correction
+* 4.) <code>corrected_lbc_data[use_indices] = 10 ** (beta1d * np.log10(original_los.data[use_indices]) + y1d)</code>
+    * applies correction to image based off beta, y, and original data arrays  
+* 5.) <code>Plotting.PlotImage</code> and <code>Plotting.PlotCorrectedImage</code>
     * plots original and corrected images, and difference between them   
     
 
@@ -150,3 +150,38 @@ and the generalized function can be found [here](https://github.com/predsci/CHD/
 * 3.) <code>lbcc.get_beta_y_theoretic_based(theoretic_query[plot_week, :], mu)</code>
     * calculate beta and y correction coefficients for a specific week using theoretic fit parameters and mu values
     * used for plotting beta and y v. mu for a specific week
+
+
+### Generate Histogram Plots
+This function queries the database for histograms and LBC fit parameters then generates plots of histograms before and after the LBC correction.  
+The source code and example usage for this is found in the [CHD GitHub](https://github.com/predsci/CHD/blob/master/analysis/lbcc_analysis/LBCC_generate_histogram_plots.py) 
+and the generalized function can be found [here](https://github.com/predsci/CHD/blob/master/analysis/lbcc_analysis/LBCC_theoretic_funcs.py).    
+
+        def generate_histogram_plots(db_session, hdf_data_dir, inst_list, hist_plot_query_time_min, hist_plot_query_time_max,
+                             n_hist_plots=1, n_mu_bins=18, n_intensity_bins=200, lat_band=[-np.pi / 64., np.pi / 64.],
+                             log10=True):
+            """
+            function to generate plots of histograms before and after limb-brightening
+            """
+            pd_hist = db_funcs.query_hist(db_session=db_session, meth_id=method_id[1], n_mu_bins=n_mu_bins,
+                                      n_intensity_bins=n_intensity_bins, lat_band=np.array(lat_band).tobytes(),
+                                      time_min=hist_plot_query_time_min, time_max=hist_plot_query_time_max, instrument=query_instrument)
+            Plotting.Plot2d_Hist(plot_hist, date_obs, instrument, intensity_bin_edges, mu_bin_edges, figure,
+                                 plot_index)
+            original_los, lbcc_image, mu_indices, use_indices = iit_funcs.apply_lbc_correction(db_session, hdf_data_dir,
+                                                                                                 instrument, row, n_intensity_bins, R0)
+            hist_lbcc = psi_d_types.create_lbcc_hist(hdf_path, row.image_id, method_id[1], mu_bin_edges,
+                                                         intensity_bin_edges, lat_band, temp_hist)
+            Plotting.Plot_LBCC_Hists(plot_hist, date_obs, instrument, intensity_bin_edges, mu_bin_edges, figure,
+                                     plot_index)
+                                     
+* 1.) <code>db_funcs.query_hist</code>
+    * queries database for histograms (from Histogram table) in specified date range  
+* 2.) <code>Plotting.Plot2d_Hist</code>  
+    * plots 2D histogram with plot title and axes labels  
+* 3.) <code>iit_funcs.apply_lbc_correction</code>  
+    * applies Limb-Brightening Correction to images and creates LBCCImage datatype  
+* 4.) <code>psi_d_types.create_lbcc_hist</code>  
+    * create histogram datatype from lbcc histogram
+* 5.) <code>Plotting.Plot_LBCC_Hists</code>  
+    * plots original and LBC corrected 2D histograms  

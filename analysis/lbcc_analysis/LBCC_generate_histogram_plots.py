@@ -4,35 +4,38 @@ Allows you to plot one histogram or multiple starting from a specific index
 """
 
 import os
+import time
 import datetime
 import numpy as np
 import matplotlib.pyplot as plt
 from settings.app import App
 import modules.DB_classes as db_class
-from modules.DB_funs import init_db_conn, query_hist
+import modules.Plotting as Plotting
+from modules.DB_funs import init_db_conn, query_hist, get_method_id, query_euv_images
+import analysis.iit_analysis.IIT_pipeline_funcs as iit_funcs
 import modules.datatypes as psi_d_types
 
 # PARAMETERS TO UPDATE
 
 # time frame to query histograms
-query_time_min = datetime.datetime(2011, 1, 4, 0, 0, 0)
-query_time_max = datetime.datetime(2011, 1, 7, 0, 0, 0)
+hist_plot_query_time_min = datetime.datetime(2011, 4, 1, 0, 0, 0)
+hist_plot_query_time_max = datetime.datetime(2011, 4, 1, 3, 0, 0)
 # define instruments
 inst_list = ["AIA", "EUVI-A", "EUVI-B"]
 
 # number of histograms to plot
-# if plotting one histogram choose index to plot
-plot_index = 0  # 0 will plot first histogram in time frame
-# true if want to plot more than one histogram
-plot_plus = True
-# starts looping histograms from index zero
-n_hist_plots = 2
+n_hist_plots = 1
 
 # define number of bins
 n_mu_bins = 18
 n_intensity_bins = 200
+log10 = True
+R0 = 1.01
 lat_band = [- np.pi / 64., np.pi / 64.]
-# DATABASE PATHS
+
+# define database paths
+raw_data_dir = App.RAW_DATA_HOME
+hdf_data_dir = App.PROCESSED_DATA_HOME
 database_dir = App.DATABASE_HOME
 sqlite_filename = App.DATABASE_FNAME
 
@@ -41,83 +44,65 @@ use_db = "sqlite"
 sqlite_path = os.path.join(database_dir, sqlite_filename)
 db_session = init_db_conn(db_name=use_db, chd_base=db_class.Base, sqlite_path=sqlite_path)
 
-# declare map and binning parameters
-R0 = 1.01
-mu_bin_edges = np.array(range(n_mu_bins + 1), dtype="float") * 0.05 + 0.1
-image_intensity_bin_edges = np.linspace(0, 5, num=n_intensity_bins + 1, dtype='float')
-
 # ------------ NO NEED TO UPDATE ANYTHING BELOW  ------------- #
+# start time
+start_time_tot = time.time()
+
+meth_name = 'LBCC Theoretic'
+method_id = get_method_id(db_session, meth_name, meth_desc=None, var_names=None, var_descs=None, create=False)
+
+# mu bin edges and intensity bin edges
+mu_bin_edges = np.linspace(0.1, 1.0, n_mu_bins + 1, dtype='float')
+intensity_bin_edges = np.linspace(0, 5, num=n_intensity_bins + 1, dtype='float')
 
 ### PLOT HISTOGRAMS ###
 # query histograms
 for instrument in inst_list:
     query_instrument = [instrument, ]
-    pd_hist = query_hist(db_session=db_session, n_mu_bins=n_mu_bins, n_intensity_bins=n_intensity_bins,
-                         lat_band=np.array(lat_band).tobytes(), time_min=query_time_min, time_max=query_time_max,
+    pd_hist = query_hist(db_session=db_session, meth_id=method_id[1], n_mu_bins=n_mu_bins,
+                         n_intensity_bins=n_intensity_bins,
+                         lat_band=np.array(lat_band).tobytes(),
+                         time_min=hist_plot_query_time_min,
+                         time_max=hist_plot_query_time_max,
                          instrument=query_instrument)
     # convert from binary to usable histogram type
     lat_band, mu_bin_array, intensity_bin_array, full_hist = psi_d_types.binary_to_hist(pd_hist, n_mu_bins,
                                                                                         n_intensity_bins)
-
-    if plot_plus:
-        for plot_index in range(n_hist_plots):
-            plot_hist = full_hist[:, :, plot_index]
-            date_obs = pd_hist.date_obs[plot_index]
-
-            # # simple plot of raw histogram
-            plt.figure(instrument + " Plot: " + str(1 + 2 * plot_index))
-            # this will make the plot show up
-            plt.imshow(plot_hist, aspect="auto", interpolation='nearest', origin='low',
-                       extent=[image_intensity_bin_edges[0], image_intensity_bin_edges[-2] + 1., mu_bin_edges[0],
-                               mu_bin_edges[-1]])
-            plt.xlabel("Pixel intensities")
-            plt.ylabel("mu")
-            plt.title("Raw 2D Histogram Data for Histogram: \n" + "Instrument: " + instrument + " \n " + str(date_obs))
-
-            # # Normalize each mu bin
-            norm_hist = np.full(plot_hist.shape, 0.)
-            row_sums = plot_hist.sum(axis=1, keepdims=True)
-            # but do not divide by zero
-            zero_row_index = np.where(row_sums != 0)
-            norm_hist[zero_row_index[0]] = plot_hist[zero_row_index[0]] / row_sums[zero_row_index[0]]
-
-            # # simple plot of normed histogram
-            plt.figure(instrument + " Plot: " + str(2 + 2 * plot_index))
-            # this will make the plot show up
-            plt.imshow(norm_hist, aspect="auto", interpolation='nearest', origin='low',
-                       extent=[image_intensity_bin_edges[0], image_intensity_bin_edges[-1], mu_bin_edges[0],
-                               mu_bin_edges[-1]])
-            plt.xlabel("Pixel intensities")
-            plt.ylabel("mu")
-            plt.title(
-                "2D Histogram Data Normalized by mu Bin: \n" + "Instrument: " + instrument + " \n " + str(date_obs))
-
-    else:
-        # plot histogram at specific index
+    #### PLOT ORIGINAL HISTOGRAMS ####
+    for plot_index in range(n_hist_plots):
+        # definitions
         plot_hist = full_hist[:, :, plot_index]
         date_obs = pd_hist.date_obs[plot_index]
+        figure = "Original Histogram Plot: "
+        # plot histogram
+        Plotting.Plot_LBCC_Hists(plot_hist, date_obs, instrument, intensity_bin_edges, mu_bin_edges, figure, plot_index)
 
-        # # simple plot of raw histogram
-        plt.figure(instrument + " Plot: " + str(1 + 2 * plot_index))
-        plt.imshow(plot_hist, aspect="auto", interpolation='nearest', origin='low',
-                   extent=[image_intensity_bin_edges[0], image_intensity_bin_edges[-2] + 1., mu_bin_edges[0],
-                           mu_bin_edges[-1]])
-        plt.xlabel("Pixel intensities")
-        plt.ylabel("mu")
-        plt.title("Raw 2D Histogram Data for Histogram: \n" + "Instrument: " + instrument + " \n " + str(date_obs))
+        #### APPLY LBC CORRECTION ####
+        # query EUV images
+        query_instrument = [instrument, ]
+        image_pd = query_euv_images(db_session=db_session, time_min=hist_plot_query_time_min,
+                                    time_max=hist_plot_query_time_max, instrument=query_instrument)
+        for index, row in image_pd.iterrows():
+            # apply LBC
+            original_los, lbcc_image, mu_indices, use_indices = iit_funcs.apply_lbc_correction(db_session, hdf_data_dir,
+                                                                                               instrument, row,
+                                                                                               n_intensity_bins=n_intensity_bins, R0=R0)
+            #### CREATE NEW HISTOGRAMS ####
+            # perform 2D histogram on mu and image intensity
+            hdf_path = os.path.join(hdf_data_dir, row.fname_hdf)
+            temp_hist = psi_d_types.LosImage.mu_hist(lbcc_image, intensity_bin_edges, mu_bin_edges, lat_band=lat_band,
+                                                     log10=log10)
+            hist_lbcc = psi_d_types.create_lbcc_hist(hdf_path, row.image_id, method_id[1], mu_bin_edges,
+                                                     intensity_bin_edges, lat_band, temp_hist)
+            #### PLOT NEW HISTOGRAMS ####
+            # definitions
+            date_obs = hist_lbcc.date_obs
+            plot_hist = hist_lbcc.hist
+            figure = "LBCC Histogram Plot: "
+            # plot histogram
+            Plotting.Plot_LBCC_Hists(plot_hist, date_obs, instrument, intensity_bin_edges, mu_bin_edges, figure, plot_index)
 
-        # # Normalize each mu bin
-        norm_hist = np.full(plot_hist.shape, 0.)
-        row_sums = plot_hist.sum(axis=1, keepdims=True)
-        # but do not divide by zero
-        zero_row_index = np.where(row_sums != 0)
-        norm_hist[zero_row_index[0]] = plot_hist[zero_row_index[0]] / row_sums[zero_row_index[0]]
 
-        # # simple plot of normed histogram
-        plt.figure(instrument + " Plot: " + str(2 + 2 * plot_index))
-        plt.imshow(norm_hist, aspect="auto", interpolation='nearest', origin='low',
-                   extent=[image_intensity_bin_edges[0], image_intensity_bin_edges[-1], mu_bin_edges[0],
-                           mu_bin_edges[-1]])
-        plt.xlabel("Pixel intensities")
-        plt.ylabel("mu")
-        plt.title("2D Histogram Data Normalized by mu Bin: \n" + "Instrument: " + instrument + " \n " + str(date_obs))
+end_time_tot = time.time()
+print("Histogram plots of have been generated.")
+print("Total elapsed time for plot creation: " + str(round(end_time_tot - start_time_tot, 3)) + " seconds.")

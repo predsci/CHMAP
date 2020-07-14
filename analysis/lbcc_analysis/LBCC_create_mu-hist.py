@@ -3,6 +3,7 @@ construct mu-histogram and push to database for any time period
 """
 
 import os
+import time
 import datetime
 import numpy as np
 from settings.app import App
@@ -13,8 +14,8 @@ import modules.datatypes as psi_d_types
 ###### ------ PARAMETERS TO UPDATE -------- ########
 
 # TIME RANGE
-query_time_min = datetime.datetime(2011, 1, 1, 0, 0, 0)
-query_time_max = datetime.datetime(2012, 1, 1, 0, 0, 0)
+hist_query_time_min = datetime.datetime(2011, 1, 1, 0, 0, 0)
+hist_query_time_max = datetime.datetime(2012, 1, 1, 0, 0, 0)
 
 # define instruments
 inst_list = ["AIA", "EUVI-A", "EUVI-B"]
@@ -25,8 +26,6 @@ n_intensity_bins = 200
 
 # declare map and binning parameters
 R0 = 1.01
-mu_bin_edges = np.array(range(n_mu_bins + 1), dtype="float") * 0.05 + 0.1
-image_intensity_bin_edges = np.linspace(0, 5, num=n_intensity_bins + 1, dtype='float')
 log10 = True
 lat_band = [- np.pi / 64., np.pi / 64.]
 
@@ -43,6 +42,13 @@ db_session = init_db_conn(db_name=use_db, chd_base=db_class.Base, sqlite_path=sq
 
 # ------------ NO NEED TO UPDATE ANYTHING BELOW  ------------- #
 
+# start time
+start_time_tot = time.time()
+
+# creates mu bin & intensity bin arrays
+mu_bin_edges = np.linspace(0.1, 1.0, n_mu_bins + 1, dtype='float')
+image_intensity_bin_edges = np.linspace(0, 5, num=n_intensity_bins + 1, dtype='float')
+
 # create LBC method
 meth_name = 'LBCC Theoretic'
 meth_desc = 'LBCC Theoretic Fit Method'
@@ -53,8 +59,8 @@ for instrument in inst_list:
 
     # query EUV images
     query_instrument = [instrument, ]
-    query_pd = query_euv_images(db_session=db_session, time_min=query_time_min,
-                                         time_max=query_time_max, instrument=query_instrument)
+    query_pd = query_euv_images(db_session=db_session, time_min=hist_query_time_min,
+                                         time_max=hist_query_time_max, instrument=query_instrument)
 
     for index, row in query_pd.iterrows():
         print("Processing image number", row.image_id, ".")
@@ -75,6 +81,6 @@ for instrument in inst_list:
 
 db_session.close()
 
-
-
-
+end_time_tot = time.time()
+print("Histograms have been created and saved to the database.")
+print("Total elapsed time for histogram creation: " + str(round(end_time_tot - start_time_tot, 3)) + " seconds.")

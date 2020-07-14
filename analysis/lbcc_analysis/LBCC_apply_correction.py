@@ -16,8 +16,8 @@ import modules.Plotting as Plotting
 import modules.lbcc_funs as lbcc
 
 # define time range to query
-query_time_min = datetime.datetime(2011, 4, 1, 0, 0, 0)
-query_time_max = datetime.datetime(2011, 4, 1, 3, 0, 0)
+lbc_query_time_min = datetime.datetime(2011, 4, 1, 0, 0, 0)
+lbc_query_time_max = datetime.datetime(2011, 4, 1, 3, 0, 0)
 plot = True  # plot images
 
 # define instruments
@@ -42,17 +42,15 @@ db_session = init_db_conn(db_name=use_db, chd_base=db_class.Base, sqlite_path=sq
 # start time
 start_time_tot = time.time()
 
+# method information
 meth_name = "LBCC Theoretic"
-db_sesh, meth_id, var_ids = get_method_id(db_session, meth_name, meth_desc=None, var_names=None,
-                                          var_descs=None, create=False)
-intensity_bin_edges = np.linspace(0, 5, num=n_intensity_bins + 1, dtype='float')
 
 ##### QUERY IMAGES ######
 for inst_index, instrument in enumerate(inst_list):
 
     query_instrument = [instrument, ]
-    image_pd = query_euv_images(db_session=db_session, time_min=query_time_min,
-                                time_max=query_time_max, instrument=query_instrument)
+    image_pd = query_euv_images(db_session=db_session, time_min=lbc_query_time_min,
+                                time_max=lbc_query_time_max, instrument=query_instrument)
 
     ###### GET LOS IMAGES COORDINATES (DATA) #####
     for index, row in image_pd.iterrows():
@@ -66,18 +64,23 @@ for inst_index, instrument in enumerate(inst_list):
         theoretic_query = query_var_val(db_session, meth_name, date_obs=original_los.info['date_string'],
                                         instrument=instrument)
 
-        beta, y = lbcc.get_beta_y_theoretic_continuous(theoretic_query, mu_array=original_los.mu)
+        ###### DETERMINE LBC CORRECTION (for valid mu values) ######
+        beta1d, y1d, mu_indices, use_indices = lbcc.get_beta_y_theoretic_continuous_1d_indices(theoretic_query,
+                                                                                               los_image=original_los)
 
-        ###### APPLY LBC CORRECTION ######
-        corrected_los_data = beta * original_los.data + y
+        ###### APPLY LBC CORRECTION (log10 space) ######
+        corrected_lbc_data = np.copy(original_los.data)
+        corrected_lbc_data[use_indices] = 10 ** (beta1d * np.log10(original_los.data[use_indices]) + y1d)
 
         ##### PLOTTING ######
         if plot:
-            Plotting.PlotImage(original_los, nfig=100 + inst_index, title="Original LOS Image for " + instrument)
-            Plotting.PlotLBCCImage(lbcc_data=corrected_los_data, los_image=original_los, nfig=200 + inst_index,
-                                   title="Corrected LBCC Image for " + instrument)
-            Plotting.PlotLBCCImage(lbcc_data=original_los.data - corrected_los_data, los_image=original_los,
-                                   nfig=300 + inst_index, title="Difference Plot for " + instrument)
+            Plotting.PlotImage(original_los, nfig=100 + inst_index * 10 + index, title="Original LOS Image for " +
+                                                                                       instrument)
+            Plotting.PlotCorrectedImage(corrected_data=corrected_lbc_data, los_image=original_los,
+                                        nfig=200 + inst_index * 10 + index, title="Corrected LBCC Image for " +
+                                                                                  instrument)
+            Plotting.PlotCorrectedImage(corrected_data=original_los.data - corrected_lbc_data, los_image=original_los,
+                                        nfig=300 + inst_index * 10 + index, title="Difference Plot for " + instrument)
 # end time
 end_time_tot = time.time()
 print("LBC has been applied and specified images plotted.")

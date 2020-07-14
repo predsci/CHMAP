@@ -1,7 +1,6 @@
 """
 code for creation of IIT histograms and saving to database
 """
-
 import os
 import time
 import datetime
@@ -16,7 +15,7 @@ import analysis.iit_analysis.IIT_pipeline_funcs as iit_funcs
 ###### ------ UPDATEABLE PARAMETERS ------- #######
 # TIME RANGE FOR LBC CORRECTION AND HISTOGRAM CREATION
 lbc_query_time_min = datetime.datetime(2011, 4, 1, 0, 0, 0)
-lbc_query_time_max = datetime.datetime(2011, 4, 1, 6, 0, 0)
+lbc_query_time_max = datetime.datetime(2011, 4, 1, 3, 0, 0)
 
 # define instruments
 inst_list = ["AIA", "EUVI-A", "EUVI-B"]
@@ -55,9 +54,8 @@ for instrument in inst_list:
                                          time_max=lbc_query_time_max, instrument=query_instrument)
     # apply LBC
     for index, row in image_pd.iterrows():
-        lbcc_data = iit_funcs.apply_lbc_correction(db_session, hdf_data_dir, instrument, image_row=row,
-                                                   n_mu_bins=n_mu_bins,
-                                                   n_intensity_bins=n_intensity_bins, R0=R0)
+        lbcc_data, mu_indices = iit_funcs.apply_lbc_correction(db_session, hdf_data_dir, instrument, image_row=row,
+                                                               n_intensity_bins=n_intensity_bins, R0=R0)
 
         # calculate IIT histogram from LBC
         hist = psi_d_types.LBCCImage.iit_hist(lbcc_data, lat_band, log10)
