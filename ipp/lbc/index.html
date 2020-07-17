@@ -346,6 +346,19 @@
     Apply Limb-Brightening Correction and Plot Corrected Images
   </a>
   
+    <nav class="md-nav" aria-label="Apply Limb-Brightening Correction and Plot Corrected Images">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#apply-lbc" class="md-nav__link">
+    Apply LBC
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
         
           <li class="md-nav__item">
@@ -543,6 +556,19 @@
     Apply Limb-Brightening Correction and Plot Corrected Images
   </a>
   
+    <nav class="md-nav" aria-label="Apply Limb-Brightening Correction and Plot Corrected Images">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#apply-lbc" class="md-nav__link">
+    Apply LBC
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
         
           <li class="md-nav__item">
@@ -589,20 +615,22 @@
 The goal of LBC is to correct for brightening of structures that is 
 dependent upon their distance from disk center.  </p>
 <h2 id="examples-of-corrected-images">Examples of Corrected Images</h2>
+<p>These images of before and after applying LBC are from the different instruments on April 1, 2011. These can be enlarged by clicking
+image titles.</p>
 <h3 id="aia-images">AIA Images</h3>
 <table>
 <thead>
 <tr>
-<th><a href="../../img/lbc/AIA_original.png">Original AIA Image</a></th>
-<th><a href="../../img/lbc/AIA_corrected.png">Corrected AIA Image</a></th>
-<th><a href="../../img/lbc/AIA_difference.png">Difference AIA Image</a></th>
+<th align="center"><a href="../../img/lbc/AIA_original.png">Original AIA Image</a></th>
+<th align="center"><a href="../../img/lbc/AIA_corrected.png">Corrected AIA Image</a></th>
+<th align="center"><a href="../../img/lbc/AIA_difference.png">Difference AIA Image</a></th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td><img alt="Original AIA Image" src="../../img/lbc/AIA_original.png" /></td>
-<td><img alt="Corrected AIA Image" src="../../img/lbc/AIA_corrected.png" /></td>
-<td><img alt="Difference AIA Image" src="../../img/lbc/AIA_difference.png" /></td>
+<td align="center"><img alt="Original AIA Image" src="../../img/lbc/AIA_original.png" /></td>
+<td align="center"><img alt="Corrected AIA Image" src="../../img/lbc/AIA_corrected.png" /></td>
+<td align="center"><img alt="Difference AIA Image" src="../../img/lbc/AIA_difference.png" /></td>
 </tr>
 </tbody>
 </table>
@@ -610,16 +638,16 @@ dependent upon their distance from disk center.  </p>
 <table>
 <thead>
 <tr>
-<th><a href="../../img/lbc/STA_original.png">Original STA Image</a></th>
-<th><a href="../../img/lbc/STA_corrected.png">Corrected STA Image</a></th>
-<th><a href="../../img/lbc/STA_difference.png">Difference STA Image</a></th>
+<th align="center"><a href="../../img/lbc/STA_original.png">Original STA Image</a></th>
+<th align="center"><a href="../../img/lbc/STA_corrected.png">Corrected STA Image</a></th>
+<th align="center"><a href="../../img/lbc/STA_difference.png">Difference STA Image</a></th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td><img alt="Original STA Image" src="../../img/lbc/STA_original.png" /></td>
-<td><img alt="Corrected STA Image" src="../../img/lbc/STA_corrected.png" /></td>
-<td><img alt="Difference STA Image" src="../../img/lbc/STA_difference.png" /></td>
+<td align="center"><img alt="Original STA Image" src="../../img/lbc/STA_original.png" /></td>
+<td align="center"><img alt="Corrected STA Image" src="../../img/lbc/STA_corrected.png" /></td>
+<td align="center"><img alt="Difference STA Image" src="../../img/lbc/STA_difference.png" /></td>
 </tr>
 </tbody>
 </table>
@@ -627,16 +655,16 @@ dependent upon their distance from disk center.  </p>
 <table>
 <thead>
 <tr>
-<th><a href="../../img/lbc/STB_original.png">Original STB Image</a></th>
-<th><a href="../../img/lbc/STB_corrected.png">Corrected STB Image</a></th>
-<th><a href="../../img/lbc/STB_difference.png">Difference STB Image</a></th>
+<th align="center"><a href="../../img/lbc/STB_original.png">Original STB Image</a></th>
+<th align="center"><a href="../../img/lbc/STB_corrected.png">Corrected STB Image</a></th>
+<th align="center"><a href="../../img/lbc/STB_difference.png">Difference STB Image</a></th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td><img alt="Original STB Image" src="../../img/lbc/STB_original.png" /></td>
-<td><img alt="Corrected STB Image" src="../../img/lbc/STB_corrected.png" /></td>
-<td><img alt="Difference STB Image" src="../../img/lbc/STB_difference.png" /></td>
+<td align="center"><img alt="Original STB Image" src="../../img/lbc/STB_original.png" /></td>
+<td align="center"><img alt="Corrected STB Image" src="../../img/lbc/STB_corrected.png" /></td>
+<td align="center"><img alt="Difference STB Image" src="../../img/lbc/STB_difference.png" /></td>
 </tr>
 </tbody>
 </table>
@@ -655,17 +683,17 @@ and the generalized function can be found <a href="https://github.com/predsci/CH
  8
  9
 10
-11</pre></div></td><td class="code"><div class="codehilite"><pre><span></span><code><span class="err">def save_histograms(db_session, hdf_data_dir, inst_list, hist_query_time_min, hist_query_time_max, n_mu_bins=18,</span>
-<span class="err">                    n_intensity_bins=200, lat_band=[-np.pi / 64., np.pi / 64.], log10=True, R0=1.01):</span>
-<span class="err">    &quot;&quot;&quot;</span>
-<span class="err">    function to create and save histograms to database</span>
-<span class="err">    &quot;&quot;&quot;</span>
-<span class="err">    query_pd = db_funcs.query_euv_images(db_session=db_session, time_min=hist_query_time_min,</span>
-<span class="err">                                         time_max=hist_query_time_max, instrument=query_instrument)</span>
-<span class="err">    temp_hist = los_temp.mu_hist(image_intensity_bin_edges, mu_bin_edges, lat_band=lat_band, log10=log10)</span>
-<span class="err">    hist_lbcc = psi_d_types.create_lbcc_hist(hdf_path, row.image_id, method_id[1], mu_bin_edges,</span>
-<span class="err">                                             image_intensity_bin_edges, lat_band, temp_hist)</span>
-<span class="err">    db_funcs.add_hist(db_session, hist_lbcc)</span>
+11</pre></div></td><td class="code"><div class="codehilite"><pre><span></span><code><span class="k">def</span> <span class="nf">save_histograms</span><span class="p">(</span><span class="n">db_session</span><span class="p">,</span> <span class="n">hdf_data_dir</span><span class="p">,</span> <span class="n">inst_list</span><span class="p">,</span> <span class="n">hist_query_time_min</span><span class="p">,</span> <span class="n">hist_query_time_max</span><span class="p">,</span> <span class="n">n_mu_bins</span><span class="o">=</span><span class="mi">18</span><span class="p">,</span>
+                        <span class="n">n_intensity_bins</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span> <span class="n">lat_band</span><span class="o">=</span><span class="p">[</span><span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="mf">64.</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="mf">64.</span><span class="p">],</span> <span class="n">log10</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">R0</span><span class="o">=</span><span class="mf">1.01</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    function to create and save histograms to database</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">query_pd</span> <span class="o">=</span> <span class="n">db_funcs</span><span class="o">.</span><span class="n">query_euv_images</span><span class="p">(</span><span class="n">db_session</span><span class="o">=</span><span class="n">db_session</span><span class="p">,</span> <span class="n">time_min</span><span class="o">=</span><span class="n">hist_query_time_min</span><span class="p">,</span>
+                                         <span class="n">time_max</span><span class="o">=</span><span class="n">hist_query_time_max</span><span class="p">,</span> <span class="n">instrument</span><span class="o">=</span><span class="n">query_instrument</span><span class="p">)</span>
+    <span class="n">temp_hist</span> <span class="o">=</span> <span class="n">los_temp</span><span class="o">.</span><span class="n">mu_hist</span><span class="p">(</span><span class="n">image_intensity_bin_edges</span><span class="p">,</span> <span class="n">mu_bin_edges</span><span class="p">,</span> <span class="n">lat_band</span><span class="o">=</span><span class="n">lat_band</span><span class="p">,</span> <span class="n">log10</span><span class="o">=</span><span class="n">log10</span><span class="p">)</span>
+    <span class="n">hist_lbcc</span> <span class="o">=</span> <span class="n">psi_d_types</span><span class="o">.</span><span class="n">create_lbcc_hist</span><span class="p">(</span><span class="n">hdf_path</span><span class="p">,</span> <span class="n">row</span><span class="o">.</span><span class="n">image_id</span><span class="p">,</span> <span class="n">method_id</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">mu_bin_edges</span><span class="p">,</span>
+                                             <span class="n">image_intensity_bin_edges</span><span class="p">,</span> <span class="n">lat_band</span><span class="p">,</span> <span class="n">temp_hist</span><span class="p">)</span>
+    <span class="n">db_funcs</span><span class="o">.</span><span class="n">add_hist</span><span class="p">(</span><span class="n">db_session</span><span class="p">,</span> <span class="n">hist_lbcc</span><span class="p">)</span>
 </code></pre></div>
 </td></tr></table>
 
@@ -706,22 +734,22 @@ and the generalized function can be found <a href="https://github.com/predsci/CH
 13
 14
 15
-16</pre></div></td><td class="code"><div class="codehilite"><pre><span></span><code><span class="err">def calc_theoretic_fit(db_session, inst_list, calc_query_time_min, calc_query_time_max, weekday=0, number_of_days=180,</span>
-<span class="err">                   n_mu_bins=18, n_intensity_bins=200, lat_band=[-np.pi / 64., np.pi / 64.], create=False):</span>
-<span class="err">    &quot;&quot;&quot;</span>
-<span class="err">    function to calculate and save (to database) theoretic LBC fit parameters</span>
-<span class="err">    &quot;&quot;&quot;</span>
-<span class="err">    pd_hist = db_funcs.query_hist(db_session=db_session, meth_id=method_id[1], n_mu_bins=n_mu_bins,</span>
-<span class="err">                                      n_intensity_bins=n_intensity_bins,</span>
-<span class="err">                                      lat_band=np.array(lat_band).tobytes(),</span>
-<span class="err">                                      time_min=np.datetime64(min_date).astype(datetime.datetime),</span>
-<span class="err">                                      time_max=np.datetime64(max_date).astype(datetime.datetime),</span>
-<span class="err">                                      instrument=query_instrument)</span>
-<span class="err">    optim_out_theo = optim.minimize(lbcc.get_functional_sse, init_pars,</span>
-<span class="err">                                        args=(hist_ref, hist_mat, mu_vec, intensity_bin_array, model),</span>
-<span class="err">                                        method=&quot;BFGS&quot;)  </span>
-<span class="err">    db_funcs.store_lbcc_values(db_session, pd_hist, meth_name, meth_desc, var_name, var_desc, date_index,</span>
-<span class="err">                                   inst_index, optim_vals=optim_vals_theo[0:6], results=results_theo, create=True)</span>
+16</pre></div></td><td class="code"><div class="codehilite"><pre><span></span><code><span class="k">def</span> <span class="nf">calc_theoretic_fit</span><span class="p">(</span><span class="n">db_session</span><span class="p">,</span> <span class="n">inst_list</span><span class="p">,</span> <span class="n">calc_query_time_min</span><span class="p">,</span> <span class="n">calc_query_time_max</span><span class="p">,</span> <span class="n">weekday</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">number_of_days</span><span class="o">=</span><span class="mi">180</span><span class="p">,</span>
+                       <span class="n">n_mu_bins</span><span class="o">=</span><span class="mi">18</span><span class="p">,</span> <span class="n">n_intensity_bins</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span> <span class="n">lat_band</span><span class="o">=</span><span class="p">[</span><span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="mf">64.</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="mf">64.</span><span class="p">],</span> <span class="n">create</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    function to calculate and save (to database) theoretic LBC fit parameters</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">pd_hist</span> <span class="o">=</span> <span class="n">db_funcs</span><span class="o">.</span><span class="n">query_hist</span><span class="p">(</span><span class="n">db_session</span><span class="o">=</span><span class="n">db_session</span><span class="p">,</span> <span class="n">meth_id</span><span class="o">=</span><span class="n">method_id</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">n_mu_bins</span><span class="o">=</span><span class="n">n_mu_bins</span><span class="p">,</span>
+                                      <span class="n">n_intensity_bins</span><span class="o">=</span><span class="n">n_intensity_bins</span><span class="p">,</span>
+                                      <span class="n">lat_band</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">lat_band</span><span class="p">)</span><span class="o">.</span><span class="n">tobytes</span><span class="p">(),</span>
+                                      <span class="n">time_min</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">datetime64</span><span class="p">(</span><span class="n">min_date</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="p">),</span>
+                                      <span class="n">time_max</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">datetime64</span><span class="p">(</span><span class="n">max_date</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="p">),</span>
+                                      <span class="n">instrument</span><span class="o">=</span><span class="n">query_instrument</span><span class="p">)</span>
+    <span class="n">optim_out_theo</span> <span class="o">=</span> <span class="n">optim</span><span class="o">.</span><span class="n">minimize</span><span class="p">(</span><span class="n">lbcc</span><span class="o">.</span><span class="n">get_functional_sse</span><span class="p">,</span> <span class="n">init_pars</span><span class="p">,</span>
+                                        <span class="n">args</span><span class="o">=</span><span class="p">(</span><span class="n">hist_ref</span><span class="p">,</span> <span class="n">hist_mat</span><span class="p">,</span> <span class="n">mu_vec</span><span class="p">,</span> <span class="n">intensity_bin_array</span><span class="p">,</span> <span class="n">model</span><span class="p">),</span>
+                                        <span class="n">method</span><span class="o">=</span><span class="s2">&quot;BFGS&quot;</span><span class="p">)</span>  
+    <span class="n">db_funcs</span><span class="o">.</span><span class="n">store_lbcc_values</span><span class="p">(</span><span class="n">db_session</span><span class="p">,</span> <span class="n">pd_hist</span><span class="p">,</span> <span class="n">meth_name</span><span class="p">,</span> <span class="n">meth_desc</span><span class="p">,</span> <span class="n">var_name</span><span class="p">,</span> <span class="n">var_desc</span><span class="p">,</span> <span class="n">date_index</span><span class="p">,</span>
+                                   <span class="n">inst_index</span><span class="p">,</span> <span class="n">optim_vals</span><span class="o">=</span><span class="n">optim_vals_theo</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">6</span><span class="p">],</span> <span class="n">results</span><span class="o">=</span><span class="n">results_theo</span><span class="p">,</span> <span class="n">create</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> 
 </code></pre></div>
 </td></tr></table>
 
@@ -766,25 +794,23 @@ and the generalized function can be found <a href="https://github.com/predsci/CH
 14
 15
 16
-17
-18</pre></div></td><td class="code"><div class="codehilite"><pre><span></span><code><span class="n">def</span><span class="w"> </span><span class="n">apply_lbc_correction</span><span class="p">(</span><span class="n">db_session</span><span class="p">,</span><span class="w"> </span><span class="n">hdf_data_dir</span><span class="p">,</span><span class="w"> </span><span class="n">inst_list</span><span class="p">,</span><span class="w"> </span><span class="n">lbc_query_time_min</span><span class="p">,</span><span class="w"> </span><span class="n">lbc_query_time_max</span><span class="p">,</span><span class="w"></span>
-<span class="w">                     </span><span class="n">R0</span><span class="o">=</span><span class="mf">1.01</span><span class="p">,</span><span class="w"> </span><span class="n">plot</span><span class="o">=</span><span class="k">False</span><span class="p">)</span><span class="err">:</span><span class="w"></span>
-<span class="w">    </span><span class="ss">&quot;&quot;&quot;</span>
-<span class="ss">    function to apply limb-brightening correction and plot images within a certain time frame</span>
-<span class="ss">    &quot;&quot;&quot;</span><span class="w"> </span>
-<span class="w">    </span><span class="n">image_pd</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">db_funcs</span><span class="p">.</span><span class="n">query_euv_images</span><span class="p">(</span><span class="n">db_session</span><span class="o">=</span><span class="n">db_session</span><span class="p">,</span><span class="w"> </span><span class="n">time_min</span><span class="o">=</span><span class="n">lbc_query_time_min</span><span class="p">,</span><span class="w"></span>
-<span class="w">                                         </span><span class="n">time_max</span><span class="o">=</span><span class="n">lbc_query_time_max</span><span class="p">,</span><span class="w"> </span><span class="n">instrument</span><span class="o">=</span><span class="n">query_instrument</span><span class="p">)</span><span class="w"> </span>
-<span class="w">    </span><span class="n">theoretic_query</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">db_funcs</span><span class="p">.</span><span class="n">query_var_val</span><span class="p">(</span><span class="n">db_session</span><span class="p">,</span><span class="w"> </span><span class="n">meth_name</span><span class="p">,</span><span class="w"> </span><span class="n">date_obs</span><span class="o">=</span><span class="n">original_los</span><span class="p">.</span><span class="n">info</span><span class="o">[</span><span class="n">&#39;date_string&#39;</span><span class="o">]</span><span class="p">,</span><span class="w"></span>
-<span class="w">                                             </span><span class="n">instrument</span><span class="o">=</span><span class="n">instrument</span><span class="p">)</span><span class="w"></span>
-<span class="w">    </span><span class="n">beta1d</span><span class="p">,</span><span class="w"> </span><span class="n">y1d</span><span class="p">,</span><span class="w"> </span><span class="n">mu_indices</span><span class="p">,</span><span class="w"> </span><span class="n">use_indices</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">lbcc</span><span class="p">.</span><span class="n">get_beta_y_theoretic_continuous_1d_indices</span><span class="p">(</span><span class="n">theoretic_query</span><span class="p">,</span><span class="w"></span>
-<span class="w">                                                                                           </span><span class="n">los_image</span><span class="o">=</span><span class="n">original_los</span><span class="p">)</span><span class="w"></span>
-<span class="w">    </span><span class="n">corrected_lbc_data</span><span class="o">[</span><span class="n">use_indices</span><span class="o">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">10</span><span class="w"> </span><span class="o">**</span><span class="w"> </span><span class="p">(</span><span class="n">beta1d</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">np</span><span class="p">.</span><span class="nf">log10</span><span class="p">(</span><span class="n">original_los</span><span class="p">.</span><span class="k">data</span><span class="o">[</span><span class="n">use_indices</span><span class="o">]</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">y1d</span><span class="p">)</span><span class="w"></span>
-<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="nl">plot</span><span class="p">:</span><span class="w"></span>
-<span class="w">        </span><span class="n">Plotting</span><span class="p">.</span><span class="n">PlotImage</span><span class="p">(</span><span class="n">original_los</span><span class="p">,</span><span class="w"> </span><span class="n">nfig</span><span class="o">=</span><span class="mi">100</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">inst_index</span><span class="p">,</span><span class="w"> </span><span class="n">title</span><span class="o">=</span><span class="ss">&quot;Original LOS Image for &quot;</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">instrument</span><span class="p">)</span><span class="w"></span>
-<span class="w">        </span><span class="n">Plotting</span><span class="p">.</span><span class="n">PlotCorrectedImage</span><span class="p">(</span><span class="n">corrected_data</span><span class="o">=</span><span class="n">corrected_lbc_data</span><span class="p">,</span><span class="w"> </span><span class="n">los_image</span><span class="o">=</span><span class="n">original_los</span><span class="p">,</span><span class="w"> </span><span class="n">nfig</span><span class="o">=</span><span class="mi">200</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">inst_index</span><span class="p">,</span><span class="w"></span>
-<span class="w">                               </span><span class="n">title</span><span class="o">=</span><span class="ss">&quot;Corrected LBCC Image for &quot;</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">instrument</span><span class="p">)</span><span class="w"></span>
-<span class="w">        </span><span class="n">Plotting</span><span class="p">.</span><span class="n">PlotCorrectedImage</span><span class="p">(</span><span class="n">corrected_data</span><span class="o">=</span><span class="n">original_los</span><span class="p">.</span><span class="k">data</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">corrected_lbc_data</span><span class="p">,</span><span class="w"> </span><span class="n">los_image</span><span class="o">=</span><span class="n">original_los</span><span class="p">,</span><span class="w"></span>
-<span class="w">                               </span><span class="n">nfig</span><span class="o">=</span><span class="mi">300</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">inst_index</span><span class="p">,</span><span class="w"> </span><span class="n">title</span><span class="o">=</span><span class="ss">&quot;Difference Plot for &quot;</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">instrument</span><span class="p">)</span><span class="w"></span>
+17</pre></div></td><td class="code"><div class="codehilite"><pre><span></span><code><span class="k">def</span> <span class="nf">apply_lbc_correction</span><span class="p">(</span><span class="n">db_session</span><span class="p">,</span> <span class="n">hdf_data_dir</span><span class="p">,</span> <span class="n">inst_list</span><span class="p">,</span> <span class="n">lbc_query_time_min</span><span class="p">,</span> <span class="n">lbc_query_time_max</span><span class="p">,</span>
+                         <span class="n">n_intensity_bins</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span> <span class="n">R0</span><span class="o">=</span><span class="mf">1.01</span><span class="p">,</span> <span class="n">n_images_plot</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">plot</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    function to apply limb-brightening correction and plot images within a certain time frame</span>
+<span class="sd">    &quot;&quot;&quot;</span> 
+    <span class="n">image_pd</span> <span class="o">=</span> <span class="n">db_funcs</span><span class="o">.</span><span class="n">query_euv_images</span><span class="p">(</span><span class="n">db_session</span><span class="o">=</span><span class="n">db_session</span><span class="p">,</span> <span class="n">time_min</span><span class="o">=</span><span class="n">lbc_query_time_min</span><span class="p">,</span>
+                                         <span class="n">time_max</span><span class="o">=</span><span class="n">lbc_query_time_max</span><span class="p">,</span> <span class="n">instrument</span><span class="o">=</span><span class="n">query_instrument</span><span class="p">)</span> 
+    <span class="n">combo_query</span> <span class="o">=</span> <span class="n">db_funcs</span><span class="o">.</span><span class="n">query_inst_combo</span><span class="p">(</span><span class="n">db_session</span><span class="p">,</span> <span class="n">lbc_query_time_min</span><span class="p">,</span> <span class="n">lbc_query_time_max</span><span class="p">,</span> <span class="n">meth_name</span><span class="p">,</span>
+                                            <span class="n">instrument</span><span class="p">)</span>                                    
+    <span class="n">original_los</span><span class="p">,</span> <span class="n">lbcc_image</span><span class="p">,</span> <span class="n">mu_indices</span><span class="p">,</span> <span class="n">use_indices</span> <span class="o">=</span> <span class="n">apply_lbc</span><span class="p">(</span><span class="n">db_session</span><span class="p">,</span> <span class="n">hdf_data_dir</span><span class="p">,</span>
+                                            <span class="n">combo_query</span><span class="p">,</span> <span class="n">image_row</span><span class="o">=</span><span class="n">row</span><span class="p">,</span> <span class="n">n_intensity_bins</span><span class="o">=</span><span class="n">n_intensity_bins</span><span class="p">,</span> <span class="n">R0</span><span class="o">=</span><span class="n">R0</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">plot</span><span class="p">:</span>
+            <span class="n">Plotting</span><span class="o">.</span><span class="n">PlotImage</span><span class="p">(</span><span class="n">original_los</span><span class="p">,</span> <span class="n">nfig</span><span class="o">=</span><span class="mi">100</span> <span class="o">+</span> <span class="n">inst_index</span> <span class="o">*</span> <span class="mi">10</span> <span class="o">+</span> <span class="n">index</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="s2">&quot;Original LOS Image for &quot;</span> <span class="o">+</span> <span class="n">instrument</span><span class="p">)</span>
+            <span class="n">Plotting</span><span class="o">.</span><span class="n">PlotCorrectedImage</span><span class="p">(</span><span class="n">corrected_data</span><span class="o">=</span><span class="n">lbcc_image</span><span class="o">.</span><span class="n">lbcc_data</span><span class="p">,</span> <span class="n">los_image</span><span class="o">=</span><span class="n">original_los</span><span class="p">,</span>
+                                        <span class="n">nfig</span><span class="o">=</span><span class="mi">200</span> <span class="o">+</span> <span class="n">inst_index</span> <span class="o">*</span> <span class="mi">10</span> <span class="o">+</span> <span class="n">index</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="s2">&quot;Corrected LBCC Image for &quot;</span> <span class="o">+</span> <span class="n">instrument</span><span class="p">)</span>
+            <span class="n">Plotting</span><span class="o">.</span><span class="n">PlotCorrectedImage</span><span class="p">(</span><span class="n">corrected_data</span><span class="o">=</span><span class="n">original_los</span><span class="o">.</span><span class="n">data</span> <span class="o">-</span> <span class="n">lbcc_image</span><span class="o">.</span><span class="n">lbcc_data</span><span class="p">,</span> <span class="n">los_image</span><span class="o">=</span><span class="n">original_los</span><span class="p">,</span> 
+                                        <span class="n">nfig</span><span class="o">=</span><span class="mi">300</span> <span class="o">+</span> <span class="n">inst_index</span> <span class="o">*</span> <span class="mi">10</span> <span class="o">+</span> <span class="n">index</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="s2">&quot;Difference Plot for &quot;</span> <span class="o">+</span> <span class="n">instrument</span><span class="p">)</span>
 </code></pre></div>
 </td></tr></table>
 
@@ -793,11 +819,15 @@ and the generalized function can be found <a href="https://github.com/predsci/CH
 <li>queries database for images (from EUV_Images table) in specified date range</li>
 </ul>
 </li>
-<li>2.) <code>db_funcs.query_var_val</code><ul>
+<li>2.) <code>db_funcs.query_inst_combo</code><ul>
+<li>queries database for closest image combinations to date observed  </li>
+</ul>
+</li>
+<li>3.) <code>db_funcs.query_var_val</code><ul>
 <li>queries database for variable values associated with specific image (from Var_Vals table)</li>
 </ul>
 </li>
-<li>3.) <code>lbcc.get_beta_y_theoretic_continuous_1d_indices</code><ul>
+<li>4.) <code>lbcc.get_beta_y_theoretic_continuous_1d_indices</code><ul>
 <li>calculates 1d beta and y arrays for valid mu indices<ul>
 <li>uses variable values from query in step two</li>
 <li>uses original los image to determine indices for correction</li>
@@ -805,12 +835,77 @@ and the generalized function can be found <a href="https://github.com/predsci/CH
 </li>
 </ul>
 </li>
-<li>4.) <code>corrected_lbc_data[use_indices] = 10 ** (beta1d * np.log10(original_los.data[use_indices]) + y1d)</code><ul>
+<li>5.) <code>corrected_lbc_data[use_indices] = 10 ** (beta1d * np.log10(original_los.data[use_indices]) + y1d)</code><ul>
 <li>applies correction to image based off beta, y, and original data arrays  </li>
 </ul>
 </li>
-<li>5.) <code>Plotting.PlotImage</code> and <code>Plotting.PlotCorrectedImage</code><ul>
+<li>6.) <code>Plotting.PlotImage</code> and <code>Plotting.PlotCorrectedImage</code><ul>
 <li>plots original and corrected images, and difference between them   </li>
+</ul>
+</li>
+</ul>
+<h4 id="apply-lbc">Apply LBC</h4>
+<p>This is a sub-step that applies the Limb-Brightening Corrrection to individual image and returns the correct LBCC Image. 
+It is called during the <a href="./#apply-limb-brightening-correction-and-plot-corrected-images">third step</a> of Limb-Brightening.</p>
+<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
+ 2
+ 3
+ 4
+ 5
+ 6
+ 7
+ 8
+ 9
+10
+11
+12
+13
+14
+15</pre></div></td><td class="code"><div class="codehilite"><pre><span></span><code><span class="k">def</span> <span class="nf">apply_lbc</span><span class="p">(</span><span class="n">db_session</span><span class="p">,</span> <span class="n">hdf_data_dir</span><span class="p">,</span> <span class="n">inst_combo_query</span><span class="p">,</span> <span class="n">image_row</span><span class="p">,</span> <span class="n">n_intensity_bins</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span> <span class="n">R0</span><span class="o">=</span><span class="mf">1.01</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    function to apply LBC to a specific image, returns corrected image</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">db_sesh</span><span class="p">,</span> <span class="n">meth_id</span><span class="p">,</span> <span class="n">var_ids</span> <span class="o">=</span> <span class="n">db_funcs</span><span class="o">.</span><span class="n">get_method_id</span><span class="p">(</span><span class="n">db_session</span><span class="p">,</span> <span class="n">meth_name</span><span class="p">,</span> <span class="n">meth_desc</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">var_names</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                                           <span class="n">var_descs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">create</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="n">original_los</span> <span class="o">=</span> <span class="n">psi_d_types</span><span class="o">.</span><span class="n">read_los_image</span><span class="p">(</span><span class="n">hdf_path</span><span class="p">)</span>
+    <span class="n">theoretic_query</span> <span class="o">=</span> <span class="n">db_funcs</span><span class="o">.</span><span class="n">query_var_val</span><span class="p">(</span><span class="n">db_session</span><span class="p">,</span> <span class="n">meth_name</span><span class="p">,</span> <span class="n">date_obs</span><span class="o">=</span><span class="n">original_los</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;date_string&#39;</span><span class="p">],</span>
+                                 <span class="n">inst_combo_query</span><span class="o">=</span><span class="n">inst_combo_query</span><span class="p">)</span>
+    <span class="n">beta1d</span><span class="p">,</span> <span class="n">y1d</span><span class="p">,</span> <span class="n">mu_indices</span><span class="p">,</span> <span class="n">use_indices</span> <span class="o">=</span> <span class="n">lbcc</span><span class="o">.</span><span class="n">get_beta_y_theoretic_continuous_1d_indices</span><span class="p">(</span><span class="n">theoretic_query</span><span class="p">,</span>
+                                                                               <span class="n">los_image</span><span class="o">=</span><span class="n">original_los</span><span class="p">)</span>
+    <span class="n">corrected_lbc_data</span><span class="p">[</span><span class="n">use_indices</span><span class="p">]</span> <span class="o">=</span> <span class="mi">10</span> <span class="o">**</span> <span class="p">(</span><span class="n">beta1d</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="n">original_los</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">use_indices</span><span class="p">])</span> <span class="o">+</span> <span class="n">y1d</span><span class="p">)</span>
+    <span class="n">lbcc_image</span> <span class="o">=</span> <span class="n">psi_d_types</span><span class="o">.</span><span class="n">create_lbcc_image</span><span class="p">(</span><span class="n">hdf_path</span><span class="p">,</span> <span class="n">corrected_lbc_data</span><span class="p">,</span> <span class="n">image_id</span><span class="o">=</span><span class="n">image_row</span><span class="o">.</span><span class="n">image_id</span><span class="p">,</span>
+                                               <span class="n">meth_id</span><span class="o">=</span><span class="n">meth_id</span><span class="p">,</span> <span class="n">intensity_bin_edges</span><span class="o">=</span><span class="n">intensity_bin_edges</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">original_los</span><span class="p">,</span> <span class="n">lbcc_image</span><span class="p">,</span> <span class="n">mu_indices</span><span class="p">,</span> <span class="n">use_indices</span>
+</code></pre></div>
+</td></tr></table>
+
+<ul>
+<li>1.) <code>db_funcs.get_method_id</code><ul>
+<li>queries database for method id associated with method name</li>
+</ul>
+</li>
+<li>2.) <code>psi_d_types.read_los_image</code><ul>
+<li>reads in los image from database                                                                                             </li>
+</ul>
+</li>
+<li>3.) <code>db_funcs.query_var_val</code><ul>
+<li>queries database for variable values associated with specific image (from Var_Vals table)</li>
+</ul>
+</li>
+<li>4.) <code>lbcc.get_beta_y_theoretic_continuous_1d_indices</code><ul>
+<li>calculates 1d beta and y arrays for valid mu indices<ul>
+<li>uses variable values from query in step two</li>
+<li>uses original los image to determine indices for correction</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>5.) <code>corrected_lbc_data[use_indices] = 10 ** (beta1d * np.log10(original_los.data[use_indices]) + y1d)</code><ul>
+<li>applies correction to image based off beta, y, and original data arrays</li>
+</ul>
+</li>
+<li>6.) <code>psi_d_types.create_lbcc_image</code><ul>
+<li>create LBCC Image datatype from corrected LBC data</li>
 </ul>
 </li>
 </ul>
@@ -827,30 +922,38 @@ and the generalized function can be found <a href="https://github.com/predsci/CH
  7
  8
  9
-10</pre></div></td><td class="code"><div class="codehilite"><pre><span></span><code><span class="err">def generate_theoretic_plots(db_session, inst_list, plot_query_time_min, plot_query_time_max, weekday, image_out_path,</span>
-<span class="err">                         year=&#39;2011&#39;, time_period=&#39;6 Month&#39;, plot_week=0, n_mu_bins=18):</span>
-<span class="err">    &quot;&quot;&quot;</span>
-<span class="err">    function to generate plots of beta/y over time and beta/y v. mu</span>
-<span class="err">    &quot;&quot;&quot;</span>
-<span class="err">    theoretic_query[date_index, :] = db_funcs.query_var_val(db_session, meth_name,</span>
-<span class="err">                     date_obs=np.datetime64(center_date).astype(datetime.datetime), instrument=instrument)</span>
-<span class="err">    plot_beta[mu_index, date_index], plot_y[mu_index, date_index] = lbcc.get_beta_y_theoretic_based(</span>
-<span class="err">                    theoretic_query[date_index, :], mu)</span>
-<span class="err">    beta_y_v_mu[index, :] = lbcc.get_beta_y_theoretic_based(theoretic_query[plot_week, :], mu)</span>
+10
+11
+12</pre></div></td><td class="code"><div class="codehilite"><pre><span></span><code><span class="k">def</span> <span class="nf">generate_theoretic_plots</span><span class="p">(</span><span class="n">db_session</span><span class="p">,</span> <span class="n">inst_list</span><span class="p">,</span> <span class="n">plot_query_time_min</span><span class="p">,</span> <span class="n">plot_query_time_max</span><span class="p">,</span> <span class="n">weekday</span><span class="p">,</span> <span class="n">image_out_path</span><span class="p">,</span>
+                             <span class="n">year</span><span class="o">=</span><span class="s1">&#39;2011&#39;</span><span class="p">,</span> <span class="n">time_period</span><span class="o">=</span><span class="s1">&#39;6 Month&#39;</span><span class="p">,</span> <span class="n">plot_week</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">n_mu_bins</span><span class="o">=</span><span class="mi">18</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    function to generate plots of beta/y over time and beta/y v. mu</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">combo_query</span> <span class="o">=</span> <span class="n">db_funcs</span><span class="o">.</span><span class="n">query_inst_combo</span><span class="p">(</span><span class="n">db_session</span><span class="p">,</span> <span class="n">plot_query_time_min</span><span class="p">,</span> <span class="n">plot_query_time_max</span><span class="p">,</span> <span class="n">meth_name</span><span class="p">,</span>
+                                            <span class="n">instrument</span><span class="p">)</span>
+    <span class="n">theoretic_query</span><span class="p">[</span><span class="n">date_index</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">db_funcs</span><span class="o">.</span><span class="n">query_var_val</span><span class="p">(</span><span class="n">db_session</span><span class="p">,</span> <span class="n">meth_name</span><span class="p">,</span>
+                     <span class="n">date_obs</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">datetime64</span><span class="p">(</span><span class="n">center_date</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="p">),</span> <span class="n">inst_combo_query</span><span class="o">=</span><span class="n">inst_combo_query</span><span class="p">)</span>
+    <span class="n">plot_beta</span><span class="p">[</span><span class="n">mu_index</span><span class="p">,</span> <span class="n">date_index</span><span class="p">],</span> <span class="n">plot_y</span><span class="p">[</span><span class="n">mu_index</span><span class="p">,</span> <span class="n">date_index</span><span class="p">]</span> <span class="o">=</span> <span class="n">lbcc</span><span class="o">.</span><span class="n">get_beta_y_theoretic_based</span><span class="p">(</span>
+                    <span class="n">theoretic_query</span><span class="p">[</span><span class="n">date_index</span><span class="p">,</span> <span class="p">:],</span> <span class="n">mu</span><span class="p">)</span>
+    <span class="n">beta_y_v_mu</span><span class="p">[</span><span class="n">index</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">lbcc</span><span class="o">.</span><span class="n">get_beta_y_theoretic_based</span><span class="p">(</span><span class="n">theoretic_query</span><span class="p">[</span><span class="n">plot_week</span><span class="p">,</span> <span class="p">:],</span> <span class="n">mu</span><span class="p">)</span>  
 </code></pre></div>
 </td></tr></table>
 
 <ul>
-<li>1.) <code>db_funcs.query_var_val</code><ul>
+<li>1.) <code>db_funcs.query_inst_combo</code><ul>
+<li>queries database for closest image combinations to date observed  </li>
+</ul>
+</li>
+<li>2.) <code>db_funcs.query_var_val</code><ul>
 <li>query fit parameters from database</li>
 </ul>
 </li>
-<li>2.) <code>lbcc.get_beta_y_theoretic_based(theoretic_query[date_index, :], mu)</code><ul>
+<li>3.) <code>lbcc.get_beta_y_theoretic_based(theoretic_query[date_index, :], mu)</code><ul>
 <li>calculate beta and y correction coefficients over time using theoretic fit parameters and mu values</li>
 <li>used for plotting beta and y over time</li>
 </ul>
 </li>
-<li>3.) <code>lbcc.get_beta_y_theoretic_based(theoretic_query[plot_week, :], mu)</code><ul>
+<li>4.) <code>lbcc.get_beta_y_theoretic_based(theoretic_query[plot_week, :], mu)</code><ul>
 <li>calculate beta and y correction coefficients for a specific week using theoretic fit parameters and mu values</li>
 <li>used for plotting beta and y v. mu for a specific week</li>
 </ul>
@@ -873,26 +976,20 @@ and the generalized function can be found <a href="https://github.com/predsci/CH
 11
 12
 13
-14
-15
-16
-17</pre></div></td><td class="code"><div class="codehilite"><pre><span></span><code><span class="err">    def generate_histogram_plots(db_session, hdf_data_dir, inst_list, hist_plot_query_time_min, hist_plot_query_time_max,</span>
-<span class="err">                         n_hist_plots=1, n_mu_bins=18, n_intensity_bins=200, lat_band=[-np.pi / 64., np.pi / 64.],</span>
-<span class="err">                         log10=True):</span>
-<span class="err">        &quot;&quot;&quot;</span>
-<span class="err">        function to generate plots of histograms before and after limb-brightening</span>
-<span class="err">        &quot;&quot;&quot;</span>
-<span class="err">        pd_hist = db_funcs.query_hist(db_session=db_session, meth_id=method_id[1], n_mu_bins=n_mu_bins,</span>
-<span class="err">                                  n_intensity_bins=n_intensity_bins, lat_band=np.array(lat_band).tobytes(),</span>
-<span class="err">                                  time_min=hist_plot_query_time_min, time_max=hist_plot_query_time_max, instrument=query_instrument)</span>
-<span class="err">        Plotting.Plot2d_Hist(plot_hist, date_obs, instrument, intensity_bin_edges, mu_bin_edges, figure,</span>
-<span class="err">                             plot_index)</span>
-<span class="err">        original_los, lbcc_image, mu_indices, use_indices = iit_funcs.apply_lbc_correction(db_session, hdf_data_dir,</span>
-<span class="err">                                                                                             instrument, row, n_intensity_bins, R0)</span>
-<span class="err">        hist_lbcc = psi_d_types.create_lbcc_hist(hdf_path, row.image_id, method_id[1], mu_bin_edges,</span>
-<span class="err">                                                     intensity_bin_edges, lat_band, temp_hist)</span>
-<span class="err">        Plotting.Plot_LBCC_Hists(plot_hist, date_obs, instrument, intensity_bin_edges, mu_bin_edges, figure,</span>
-<span class="err">                                 plot_index)</span>
+14</pre></div></td><td class="code"><div class="codehilite"><pre><span></span><code><span class="k">def</span> <span class="nf">generate_histogram_plots</span><span class="p">(</span><span class="n">db_session</span><span class="p">,</span> <span class="n">hdf_data_dir</span><span class="p">,</span> <span class="n">inst_list</span><span class="p">,</span> <span class="n">hist_plot_query_time_min</span><span class="p">,</span> <span class="n">hist_plot_query_time_max</span><span class="p">,</span>
+                             <span class="n">n_hist_plots</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">n_mu_bins</span><span class="o">=</span><span class="mi">18</span><span class="p">,</span> <span class="n">n_intensity_bins</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span> <span class="n">lat_band</span><span class="o">=</span><span class="p">[</span><span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="mf">64.</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="mf">64.</span><span class="p">],</span>
+                             <span class="n">log10</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    function to generate plots of histograms before and after limb-brightening</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">pd_hist</span> <span class="o">=</span> <span class="n">db_funcs</span><span class="o">.</span><span class="n">query_hist</span><span class="p">(</span><span class="n">db_session</span><span class="o">=</span><span class="n">db_session</span><span class="p">,</span> <span class="n">meth_id</span><span class="o">=</span><span class="n">method_id</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">n_mu_bins</span><span class="o">=</span><span class="n">n_mu_bins</span><span class="p">,</span>
+                              <span class="n">n_intensity_bins</span><span class="o">=</span><span class="n">n_intensity_bins</span><span class="p">,</span> <span class="n">lat_band</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">lat_band</span><span class="p">)</span><span class="o">.</span><span class="n">tobytes</span><span class="p">(),</span>
+                              <span class="n">time_min</span><span class="o">=</span><span class="n">hist_plot_query_time_min</span><span class="p">,</span> <span class="n">time_max</span><span class="o">=</span><span class="n">hist_plot_query_time_max</span><span class="p">,</span> <span class="n">instrument</span><span class="o">=</span><span class="n">query_instrument</span><span class="p">)</span>
+    <span class="n">Plotting</span><span class="o">.</span><span class="n">Plot2d_Hist</span><span class="p">(</span><span class="n">plot_hist</span><span class="p">,</span> <span class="n">date_obs</span><span class="p">,</span> <span class="n">instrument</span><span class="p">,</span> <span class="n">intensity_bin_edges</span><span class="p">,</span> <span class="n">mu_bin_edges</span><span class="p">,</span> <span class="n">figure</span><span class="p">,</span> <span class="n">plot_index</span><span class="p">)</span>
+    <span class="n">original_los</span><span class="p">,</span> <span class="n">lbcc_image</span><span class="p">,</span> <span class="n">mu_indices</span><span class="p">,</span> <span class="n">use_indices</span> <span class="o">=</span> <span class="n">iit_funcs</span><span class="o">.</span><span class="n">apply_lbc_correction</span><span class="p">(</span><span class="n">db_session</span><span class="p">,</span> <span class="n">hdf_data_dir</span><span class="p">,</span>
+                                                                                         <span class="n">instrument</span><span class="p">,</span> <span class="n">row</span><span class="p">,</span> <span class="n">n_intensity_bins</span><span class="p">,</span> <span class="n">R0</span><span class="p">)</span>
+    <span class="n">hist_lbcc</span> <span class="o">=</span> <span class="n">psi_d_types</span><span class="o">.</span><span class="n">create_lbcc_hist</span><span class="p">(</span><span class="n">hdf_path</span><span class="p">,</span> <span class="n">row</span><span class="o">.</span><span class="n">image_id</span><span class="p">,</span> <span class="n">method_id</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">mu_bin_edges</span><span class="p">,</span> <span class="n">intensity_bin_edges</span><span class="p">,</span> <span class="n">lat_band</span><span class="p">,</span> <span class="n">temp_hist</span><span class="p">)</span>
+    <span class="n">Plotting</span><span class="o">.</span><span class="n">Plot_LBCC_Hists</span><span class="p">(</span><span class="n">plot_hist</span><span class="p">,</span> <span class="n">date_obs</span><span class="p">,</span> <span class="n">instrument</span><span class="p">,</span> <span class="n">intensity_bin_edges</span><span class="p">,</span> <span class="n">mu_bin_edges</span><span class="p">,</span> <span class="n">figure</span><span class="p">,</span> <span class="n">plot_index</span><span class="p">)</span>
 </code></pre></div>
 </td></tr></table>
 
