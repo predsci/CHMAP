@@ -189,52 +189,22 @@ def Plot_LBCC_Hists(plot_hist, date_obs, instrument, intensity_bin_edges, mu_bin
     return None
 
 
-def Plot_IIT_Hists(pd_hist, corrected_hist_list, full_hist, instrument, ref_inst, inst_index, ref_index,
-                intensity_bin_edges, color_list, linestyle_list):
+def Plot1d_Hist(norm_hist, instrument, inst_index, intensity_bin_edges, color_list, linestyle_list, figure,
+                xlabel, ylabel, title):
     """
-    plot histograms from before and after IIT correction
+    plot 1D IIT Histogram
     @return:
     """
-    #### ORIGINAL HISTOGRAM #####
-    # get index of instrument in histogram dataframe
-    hist_inst = pd_hist['instrument']
-    pd_inst_index = hist_inst[hist_inst == instrument].index
-    # get index of reference instrument in histogram dataframe
-    pd_ref_index = hist_inst[hist_inst == ref_inst].index
-    # define histograms
-    original_hist = full_hist[:, pd_inst_index]
-    ref_hist = full_hist[:, pd_ref_index]
-    # normalize histogram
-    norm_original_hist = original_hist / np.max(ref_hist)
-
     # plot original
-    plt.figure(100)
-    plt.plot(intensity_bin_edges[:-1], norm_original_hist, color=color_list[inst_index],
+    plt.figure(figure)
+    plt.plot(intensity_bin_edges[:-1], norm_hist, color=color_list[inst_index],
              linestyle=linestyle_list[inst_index], label=instrument)
     plt.xlim(0, np.max(intensity_bin_edges))
-    plt.ylim(0, 1.5)
-    plt.xlabel("Intensity (log10)")
-    plt.ylabel("H(I)")
-    plt.title("Original 1D IIT Histogram")
+    plt.ylim(0, 1)
+    plt.xlabel(xlabel)
+    plt.ylabel(ylabel)
+    plt.title(title)
     plt.show()
     plt.legend()
 
-    #### CORRECTED HISTOGRAM ####
-    # define histograms
-    corrected_hist = corrected_hist_list[:, inst_index]
-    ref_corrected_hist = corrected_hist_list[:, ref_index]
-    # normalize histogram
-    norm_corrected_hist = corrected_hist / np.max(ref_corrected_hist)
-
-    # plot corrected
-    plt.figure(200)
-    plt.plot(intensity_bin_edges[:-1], norm_corrected_hist, color=color_list[inst_index],
-             linestyle=linestyle_list[inst_index], label=instrument)
-    plt.xlim(0, np.max(intensity_bin_edges))
-    plt.ylim(0, 1.5)
-    plt.xlabel("Intensity (log10)")
-    plt.ylabel("H(I)")
-    plt.title("Corrected 1D IIT Histogram")
-    plt.show()
-    plt.legend()
     return None

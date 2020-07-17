@@ -7,18 +7,18 @@ import os
 import time
 import numpy as np
 import datetime
-
 from settings.app import App
-from modules.DB_funs import init_db_conn, query_euv_images, query_var_val, get_method_id
+from modules.DB_funs import init_db_conn, query_euv_images, query_var_val, get_method_id, query_inst_combo
 import modules.DB_classes as db_class
 import modules.datatypes as psi_d_types
 import modules.Plotting as Plotting
 import modules.lbcc_funs as lbcc
 
 # define time range to query
-lbc_query_time_min = datetime.datetime(2011, 4, 1, 0, 0, 0)
-lbc_query_time_max = datetime.datetime(2011, 4, 1, 3, 0, 0)
+lbc_query_time_min = datetime.datetime(2011, 5, 1, 0, 0, 0)
+lbc_query_time_max = datetime.datetime(2011, 5, 20, 0, 0, 0)
 plot = True  # plot images
+n_images_plot = 1  # number of images to plot
 
 # define instruments
 inst_list = ['AIA', "EUVI-A", "EUVI-B"]
@@ -51,9 +51,13 @@ for inst_index, instrument in enumerate(inst_list):
     query_instrument = [instrument, ]
     image_pd = query_euv_images(db_session=db_session, time_min=lbc_query_time_min,
                                 time_max=lbc_query_time_max, instrument=query_instrument)
+    # query correct image combos
+    combo_query = query_inst_combo(db_session, lbc_query_time_min, lbc_query_time_max, meth_name, instrument)
 
     ###### GET LOS IMAGES COORDINATES (DATA) #####
-    for index, row in image_pd.iterrows():
+    # apply LBC
+    for index in range(n_images_plot):
+        row = image_pd.iloc[index]
         print("Processing image number", row.image_id, ".")
         if row.fname_hdf == "":
             print("Warning: Image # " + str(row.image_id) + " does not have an associated hdf file. Skipping")
@@ -62,7 +66,7 @@ for inst_index, instrument in enumerate(inst_list):
         original_los = psi_d_types.read_los_image(hdf_path)
         original_los.get_coordinates(R0=R0)
         theoretic_query = query_var_val(db_session, meth_name, date_obs=original_los.info['date_string'],
-                                        instrument=instrument)
+                                        inst_combo_query=combo_query)
 
         ###### DETERMINE LBC CORRECTION (for valid mu values) ######
         beta1d, y1d, mu_indices, use_indices = lbcc.get_beta_y_theoretic_continuous_1d_indices(theoretic_query,

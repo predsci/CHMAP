@@ -501,7 +501,7 @@ def moving_averages(time_min, time_max, weekday, days=None):
     number_of_weeks = int((time_max - time_min).days / 7)
     # returns array of moving averages center dates, based off start date and number of weeks
     moving_avg_centers = np.array(
-        [np.datetime64(str(time_min)) + ii * np.timedelta64(1, 'W') for ii in range(number_of_weeks)])
+        [np.datetime64(str(time_min)) + ii * np.timedelta64(1, 'W') for ii in range(number_of_weeks+1)])
     # returns moving width based of number of days
     if days is not None:
         moving_width = np.timedelta64(days, 'D')

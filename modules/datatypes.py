@@ -180,6 +180,25 @@ class LosImage:
 
         return hist_out
 
+    def iit_hist(self, intensity_bin_edges, lat_band, log10=True):
+        """
+        function to create iit histogram
+        """
+        # indices within the latitude band and with valid mu
+        lat_band_index = np.logical_and(self.lat <= max(lat_band), self.lat >= min(lat_band))
+        mu_index = np.logical_and(self.mu > 0, self.mu <= self.mu.max())
+        use_index = np.logical_and(mu_index, lat_band_index)
+
+        use_data = self.data[use_index]
+        if log10:
+            use_data = np.where(use_data > 0, use_data, 0.01)
+            use_data = np.log10(use_data)
+
+        # generate intensity histogram
+        hist_out, bin_edges = np.histogram(use_data, bins=intensity_bin_edges)
+
+        return hist_out
+
 
 def read_los_image(h5_file):
     """
@@ -235,14 +254,12 @@ class LBCCImage(LosImage):
 
         use_data = self.lbcc_data[use_index]
         if log10:
-            # use_data[use_data < 0.] = 0.01
             use_data = np.where(use_data > 0, use_data, 0.01)
             use_data = np.log10(use_data)
 
         # generate intensity histogram
         hist_out, bin_edges = np.histogram(use_data, bins=self.intensity_bin_edges)
 
-        # create iit_hist datatype
         return hist_out
 
     def lbcc_to_binary(self):
@@ -305,7 +322,6 @@ class IITImage(LBCCImage):
         # generate intensity histogram
         hist_out, bin_edges = np.histogram(use_data, bins=self.intensity_bin_edges)
 
-        # create iit_hist datatype
         return hist_out
 
 

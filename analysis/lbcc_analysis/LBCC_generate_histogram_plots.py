@@ -11,7 +11,7 @@ import matplotlib.pyplot as plt
 from settings.app import App
 import modules.DB_classes as db_class
 import modules.Plotting as Plotting
-from modules.DB_funs import init_db_conn, query_hist, get_method_id, query_euv_images
+from modules.DB_funs import init_db_conn, query_hist, get_method_id, query_euv_images, query_inst_combo
 import analysis.iit_analysis.IIT_pipeline_funcs as iit_funcs
 import modules.datatypes as psi_d_types
 
@@ -68,6 +68,8 @@ for instrument in inst_list:
     # convert from binary to usable histogram type
     lat_band, mu_bin_array, intensity_bin_array, full_hist = psi_d_types.binary_to_hist(pd_hist, n_mu_bins,
                                                                                         n_intensity_bins)
+    # query correct image combos
+    combo_query = query_inst_combo(db_session, hist_plot_query_time_min, hist_plot_query_time_max, meth_name, instrument)
     #### PLOT ORIGINAL HISTOGRAMS ####
     for plot_index in range(n_hist_plots):
         # definitions
@@ -85,7 +87,7 @@ for instrument in inst_list:
         for index, row in image_pd.iterrows():
             # apply LBC
             original_los, lbcc_image, mu_indices, use_indices = iit_funcs.apply_lbc_correction(db_session, hdf_data_dir,
-                                                                                               instrument, row,
+                                                                                               combo_query, row,
                                                                                                n_intensity_bins=n_intensity_bins, R0=R0)
             #### CREATE NEW HISTOGRAMS ####
             # perform 2D histogram on mu and image intensity

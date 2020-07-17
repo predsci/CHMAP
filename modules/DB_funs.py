@@ -70,7 +70,8 @@ def init_db_conn(db_name, chd_base, sqlite_path=""):
 
 
 def query_euv_images(db_session, time_min=None, time_max=None, instrument=None, wavelength=None):
-    """User-friendly query function.  Allows user to avoid using SQLAlchemy or SQL
+    """
+    User-friendly query function.  Allows user to avoid using SQLAlchemy or SQL
     syntax.  Default behavior is to return the entire database.
     time_min, time_max - datetime objects that define the time interval to search.
     instrument - list of spacecraft to include (characters)
@@ -104,6 +105,48 @@ def query_euv_images(db_session, time_min=None, time_max=None, instrument=None, 
         else:
             query_out = pd.read_sql(db_session.query(EUV_Images).filter(EUV_Images.date_obs >= time_min,
                                                                         EUV_Images.date_obs <= time_max,
+                                                                        EUV_Images.instrument.in_(instrument),
+                                                                        EUV_Images.wavelength.in_(
+                                                                            wavelength)).statement,
+                                    db_session.bind)
+
+    return query_out
+
+
+def query_euv_images_rot(db_session, rot_min=None, rot_max=None, instrument=None, wavelength=None):
+    """
+    function to query euv_images by carrington rotation
+    @param db_session:
+    @param rot_min:
+    @param rot_max:
+    @param instrument:
+    @param wavelength:
+    @return:
+    """
+    if rot_min is None and rot_max is None:
+        # get entire DB
+        query_out = pd.read_sql(db_session.query(EUV_Images).statement, db_session.bind)
+    elif wavelength is None:
+        if instrument is None:
+            query_out = pd.read_sql(db_session.query(EUV_Images).filter(EUV_Images.cr_rot >= rot_min,
+                                                                        EUV_Images.cr_rot <= rot_max).statement,
+                                    db_session.bind)
+        else:
+            query_out = pd.read_sql(db_session.query(EUV_Images).filter(EUV_Images.cr_rot >= rot_min,
+                                                                        EUV_Images.cr_rot <= rot_max,
+                                                                        EUV_Images.instrument.in_(
+                                                                            instrument)).statement,
+                                    db_session.bind)
+    else:
+        if instrument is None:
+            query_out = pd.read_sql(db_session.query(EUV_Images).filter(EUV_Images.cr_rot >= rot_min,
+                                                                        EUV_Images.cr_rot <= rot_max,
+                                                                        EUV_Images.wavelength.in_(
+                                                                            wavelength)).statement,
+                                    db_session.bind)
+        else:
+            query_out = pd.read_sql(db_session.query(EUV_Images).filter(EUV_Images.cr_rot >= rot_min,
+                                                                        EUV_Images.cr_rot <= rot_max,
                                                                         EUV_Images.instrument.in_(instrument),
                                                                         EUV_Images.wavelength.in_(
                                                                             wavelength)).statement,
@@ -655,7 +698,7 @@ def get_var_id(db_session, meth_id, var_name=None, var_desc=None, create=False):
         var_id = add_var.var_id
     if not create and var_name is None:
         var_id = pd.read_sql(db_session.query(Var_Defs.var_id).filter(Var_Defs.meth_id == meth_id).statement,
-                               db_session.bind)
+                             db_session.bind)
     return db_session, var_id
 
 
@@ -960,8 +1003,9 @@ def add_map_dbase_record(db_session, psi_map, base_path=None, map_type=None):
 
     # Get image combo_id. Create if it doesn't already exist.
     image_ids = psi_map.image_info.image_id.to_list()
-    #TODO: THIS WILL NEED TO BE DEALT WITH - METHOD IDS
-    db_session, combo_id, combo_times = get_combo_id(db_session=db_session, meth_id=meth_ids, image_ids=image_ids, create=True)
+    # TODO: THIS WILL NEED TO BE DEALT WITH - METHOD IDS
+    db_session, combo_id, combo_times = get_combo_id(db_session=db_session, meth_id=meth_ids, image_ids=image_ids,
+                                                     create=True)
     psi_map.map_info.loc[0, "combo_id"] = combo_id
     psi_map.map_info.loc[0, "date_mean"] = combo_times['date_mean']
     psi_map.map_info.loc[0, "date_max"] = combo_times['date_max']
@@ -1104,7 +1148,8 @@ def pdseries_tohdf(pd_series):
     return f_name
 
 
-def query_hist(db_session, meth_id, n_mu_bins=None, n_intensity_bins=None, lat_band=[-np.pi / 64., np.pi / 64.], time_min=None,
+def query_hist(db_session, meth_id, n_mu_bins=None, n_intensity_bins=None, lat_band=[-np.pi / 64., np.pi / 64.],
+               time_min=None,
                time_max=None, instrument=None, wavelength=None):
     """
     query histogram based on time frame
@@ -1250,40 +1295,57 @@ def add_hist(db_session, histogram):
     return db_session
 
 
-def query_var_val(db_session, meth_name, date_obs, instrument):
+def query_inst_combo(db_session, query_time_min, query_time_max, meth_name, instrument):
+    """
+    query correct combination of image combos for certain instrument and method
+    """
+    method_id = get_method_id(db_session, meth_name, meth_desc=None, var_names=None, var_descs=None,
+                              create=True)
+    inst_combo_query = pd.read_sql(
+        db_session.query(Image_Combo_Assoc.combo_id).filter(Image_Combo_Assoc.image_id.in_(
+            db_session.query(EUV_Images.image_id).filter(EUV_Images.instrument == instrument))).statement,
+        db_session.bind)
+    combo_query = pd.read_sql(db_session.query(Image_Combos).filter(Image_Combos.date_mean <= query_time_max).
+                              filter(Image_Combos.date_mean >= query_time_min).filter(
+        Image_Combos.meth_id == method_id[1],
+        Image_Combos.combo_id.in_(inst_combo_query.combo_id)).statement,
+                              db_session.bind)
+
+    return combo_query
+
+
+def query_var_val(db_session, meth_name, date_obs, inst_combo_query):
     """
     query variable value corresponding to image
     @param db_session:
     @param meth_name:
     @param date_obs:
-    @param instrument:
+    @param inst_combo_query:
     @return:
     """
-
     if type(date_obs) == str:
         date_obs = datetime.datetime.strptime(date_obs, "%Y-%m-%dT%H:%M:%S.%f")
 
     # query meth_defs for method id
-    method_id_info = get_method_id(db_session, meth_name, meth_desc=None, var_names=None, var_descs=None, create=False)
-
-    ### QUERY EUV IMAGES/IMAGE COMBOS
-    # determine image_ids that correspond to instrument
-    inst_combo_query = pd.read_sql(
-        db_session.query(Image_Combo_Assoc.combo_id).filter(Image_Combo_Assoc.image_id.in_(
-            db_session.query(EUV_Images.image_id).filter(EUV_Images.instrument == instrument))).statement,
-        db_session.bind)
-    # get combo_ids that are lesser and greater than time
-    combo_query = return_closest_combo(db_session, Image_Combos, Image_Combos.date_mean, method_id_info[1],
-                                       inst_combo_query, date_obs)
-
-    # query var_defs for number of variables
+    method_id_info = get_method_id(db_session, meth_name, meth_desc=None, var_names=None, var_descs=None,
+                                            create=False)
+    # query var defs for variable id
     var_id = get_var_id(db_session, method_id_info[1], var_name=None, var_desc=None, create=False)
 
+    ### find correct combo id ###
+    if date_obs <= inst_combo_query.date_mean.iloc[0]:
+        correct_combo = inst_combo_query[(inst_combo_query['date_mean'] == str(inst_combo_query.date_mean.iloc[0]))]
+    elif date_obs >= inst_combo_query.date_mean.iloc[-1]:
+        correct_combo = inst_combo_query[(inst_combo_query['date_mean'] == str(inst_combo_query.date_mean.iloc[-1]))]
+    else:
+        correct_combo = inst_combo_query[(inst_combo_query['date_mean'] >= str(date_obs - datetime.timedelta(days=7))) & (
+                    inst_combo_query['date_mean'] <= str(date_obs + datetime.timedelta(days=7)))]
+
     # create empty arrays
-    var_vals = np.zeros((len(combo_query.combo_id), var_id[1].size))
-    date_mean = np.zeros((len(combo_query.combo_id)))
+    var_vals = np.zeros((len(correct_combo.combo_id), var_id[1].size))
+    date_mean = np.zeros((len(correct_combo.combo_id)))
     # query var_vals for variable values
-    for i, combo_id in enumerate(combo_query.combo_id):
+    for i, combo_id in enumerate(correct_combo.combo_id):
         # query variable values
         var_val_query = pd.read_sql(db_session.query(Var_Vals).filter(Var_Vals.meth_id == method_id_info[1],
                                                                       Var_Vals.combo_id == combo_id
@@ -1291,14 +1353,14 @@ def query_var_val(db_session, meth_name, date_obs, instrument):
                                     db_session.bind)
         var_vals[i, :] = var_val_query.var_val
         timeutc = datetime.datetime.utcfromtimestamp(0)
-        date_float = (combo_query.date_mean[i] - timeutc).total_seconds()
+        date_float = (correct_combo.date_mean.iloc[i] - timeutc).total_seconds()
         date_mean[i] = date_float
 
     # interpolate
     var_val = np.zeros(var_id[1].size)
-    if len(combo_query.combo_id) > 1:
+    if len(correct_combo.combo_id) > 1:
         for i in range(var_id[1].size):
-            interp_values = interpolate.interp1d(x=date_mean, y=var_vals[:, i])
+            interp_values = interpolate.interp1d(x=date_mean, y=var_vals[:, i], fill_value='extrapolate')
             date_obs_fl = (date_obs - timeutc).total_seconds()
             var_val[i] = interp_values(date_obs_fl)
     else:
@@ -1375,7 +1437,6 @@ def store_lbcc_values(db_session, pd_hist, meth_name, meth_desc, var_name, var_d
 
 
 def store_iit_values(db_session, pd_hist, meth_name, meth_desc, alpha_x_parameters, create=False):
-
     # create image combos in db table
     # get image_ids from queried histograms - same as ids in euv_images table
     image_ids = tuple(pd_hist['image_id'])

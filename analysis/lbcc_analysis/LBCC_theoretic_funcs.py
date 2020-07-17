@@ -15,7 +15,6 @@ import modules.DB_funs as db_funcs
 import modules.datatypes as psi_d_types
 import modules.lbcc_funs as lbcc
 import modules.Plotting as Plotting
-import analysis.iit_analysis.IIT_pipeline_funcs as iit_funcs
 
 
 ####### STEP ONE: CREATE AND SAVE HISTOGRAMS #######
@@ -192,7 +191,7 @@ def calc_theoretic_fit(db_session, inst_list, calc_query_time_min, calc_query_ti
 
 ###### STEP THREE: APPLY CORRECTION AND PLOT IMAGES #######
 def apply_lbc_correction(db_session, hdf_data_dir, inst_list, lbc_query_time_min, lbc_query_time_max,
-                         R0=1.01, plot=False):
+                         n_intensity_bins=200, R0=1.01, n_images_plot=1, plot=False):
     """
     function to apply limb-brightening correction and plot images within a certain time frame
     @param db_session: connected database session to query theoretic fit parameters from
@@ -200,6 +199,7 @@ def apply_lbc_correction(db_session, hdf_data_dir, inst_list, lbc_query_time_min
     @param inst_list: list of instruments
     @param lbc_query_time_min: minimum query time for applying lbc fit
     @param lbc_query_time_max: maximum query time for applying lbc fit
+    @param n_intensity_bins: number of intensity bins
     @param R0: radius
     @param plot: whether or not to plot images
     @return:
@@ -212,41 +212,27 @@ def apply_lbc_correction(db_session, hdf_data_dir, inst_list, lbc_query_time_min
 
     ##### QUERY IMAGES ######
     for inst_index, instrument in enumerate(inst_list):
-
         query_instrument = [instrument, ]
         image_pd = db_funcs.query_euv_images(db_session=db_session, time_min=lbc_query_time_min,
                                              time_max=lbc_query_time_max, instrument=query_instrument)
-
+        # query correct image combos
+        combo_query = db_funcs.query_inst_combo(db_session, lbc_query_time_min, lbc_query_time_max, meth_name,
+                                                instrument)
         ###### GET LOS IMAGES COORDINATES (DATA) #####
-        for index, row in image_pd.iterrows():
-            print("Processing image number", row.image_id, ".")
-            if row.fname_hdf == "":
-                print("Warning: Image # " + str(row.image_id) + " does not have an associated hdf file. Skipping")
-                continue
-            hdf_path = os.path.join(hdf_data_dir, row.fname_hdf)
-            original_los = psi_d_types.read_los_image(hdf_path)
-            original_los.get_coordinates(R0=R0)
-            theoretic_query = db_funcs.query_var_val(db_session, meth_name, date_obs=original_los.info['date_string'],
-                                                     instrument=instrument)
-
-            ###### DETERMINE LBC CORRECTION (for valid mu values) ######
-            beta1d, y1d, mu_indices, use_indices = lbcc.get_beta_y_theoretic_continuous_1d_indices(theoretic_query,
-                                                                                                   los_image=original_los)
-
-            ###### APPLY LBC CORRECTION (log10 space) ######
-            corrected_lbc_data = np.copy(original_los.data)
-            corrected_lbc_data[use_indices] = 10 ** (beta1d * np.log10(original_los.data[use_indices]) + y1d)
-
+        for index in range(n_images_plot):
+            row = image_pd.iloc[index]
+            original_los, lbcc_image, mu_indices, use_indices = apply_lbc(db_session, hdf_data_dir,
+                                                                          combo_query, image_row=row,
+                                                                          n_intensity_bins=n_intensity_bins, R0=R0)
             ##### PLOTTING ######
             if plot:
                 Plotting.PlotImage(original_los, nfig=100 + inst_index * 10 + index, title="Original LOS Image for " +
                                                                                            instrument)
-                Plotting.PlotCorrectedImage(corrected_data=corrected_lbc_data, los_image=original_los,
+                Plotting.PlotCorrectedImage(corrected_data=lbcc_image.lbcc_data, los_image=original_los,
                                             nfig=200 + inst_index * 10 + index, title="Corrected LBCC Image for " +
                                                                                       instrument)
-                Plotting.PlotCorrectedImage(corrected_data=original_los.data - corrected_lbc_data,
-                                            los_image=original_los,
-                                            nfig=300 + inst_index * 10 + index,
+                Plotting.PlotCorrectedImage(corrected_data=original_los.data - lbcc_image.lbcc_data,
+                                            los_image=original_los, nfig=300 + inst_index * 10 + index,
                                             title="Difference Plot for " + instrument)
     # end time
     end_time_tot = time.time()
@@ -255,6 +241,52 @@ def apply_lbc_correction(db_session, hdf_data_dir, inst_list, lbc_query_time_min
           + " seconds.")
 
     return None
+
+
+### FUNCTION TO APPLY LBC TO IMAGE ###
+def apply_lbc(db_session, hdf_data_dir, inst_combo_query, image_row, n_intensity_bins=200, R0=1.01):
+    """
+    function to apply limb-brightening correction to use for IIT
+    @param db_session: connected database session to query theoretic fit parameters from
+    @param hdf_data_dir: directory of processed images to plot original images
+    @param inst_combo_query: query results of combo ids corresponding with instrument
+    @param image_row: row in image query
+    @param n_intensity_bins: number of intensity bins
+    @param R0: radius
+    @return:
+    """
+
+    meth_name = "LBCC Theoretic"
+    db_sesh, meth_id, var_ids = db_funcs.get_method_id(db_session, meth_name, meth_desc=None, var_names=None,
+                                                       var_descs=None, create=False)
+    intensity_bin_edges = np.linspace(0, 5, num=n_intensity_bins + 1, dtype='float')
+
+    ###### GET LOS IMAGES COORDINATES (DATA) #####
+    print("Processing image number", image_row.image_id, ".")
+    if image_row.fname_hdf == "":
+        print("Warning: Image # " + str(image_row.image_id) + " does not have an associated hdf file. Skipping")
+        pass
+    hdf_path = os.path.join(hdf_data_dir, image_row.fname_hdf)
+    original_los = psi_d_types.read_los_image(hdf_path)
+    original_los.get_coordinates(R0=R0)
+    theoretic_query = db_funcs.query_var_val(db_session, meth_name, date_obs=original_los.info['date_string'],
+                                             inst_combo_query=inst_combo_query)
+
+    # get beta and y from theoretic fit
+    ###### DETERMINE LBC CORRECTION (for valid mu values) ######
+    beta1d, y1d, mu_indices, use_indices = lbcc.get_beta_y_theoretic_continuous_1d_indices(theoretic_query,
+                                                                                           los_image=original_los)
+
+    ###### APPLY LBC CORRECTION (log10 space) ######
+    corrected_lbc_data = np.copy(original_los.data)
+    corrected_lbc_data[use_indices] = 10 ** (beta1d * np.log10(original_los.data[use_indices]) + y1d)
+
+    ###### CREATE LBCC DATATYPE ######
+    lbcc_image = psi_d_types.create_lbcc_image(hdf_path, corrected_lbc_data, image_id=image_row.image_id,
+                                               meth_id=meth_id, intensity_bin_edges=intensity_bin_edges)
+    psi_d_types.LosImage.get_coordinates(lbcc_image, R0=R0)
+
+    return original_los, lbcc_image, mu_indices, use_indices
 
 
 ###### STEP FOUR: GENERATE PLOTS OF BETA AND Y ######
@@ -299,17 +331,20 @@ def generate_theoretic_plots(db_session, inst_list, plot_query_time_min, plot_qu
 
     for inst_index, instrument in enumerate(inst_list):
         print("Generating plots for " + instrument + ".")
-        # query theoretic parameters
-        theoretic_query = np.zeros((len(moving_avg_centers), 6))
+        # query correct image combos
+        combo_query = db_funcs.query_inst_combo(db_session, plot_query_time_min, plot_query_time_max, meth_name,
+                                                instrument)
         plot_beta = np.zeros((sample_mu.__len__(), moving_avg_centers.__len__()))
         plot_y = np.zeros((sample_mu.__len__(), moving_avg_centers.__len__()))
+        theoretic_query = np.zeros((len(moving_avg_centers), 6))
+
         for mu_index, mu in enumerate(sample_mu):
             for date_index, center_date in enumerate(moving_avg_centers):
                 # query for variable value
                 theoretic_query[date_index, :] = db_funcs.query_var_val(db_session, meth_name,
                                                                         date_obs=np.datetime64(center_date).astype(
                                                                             datetime.datetime),
-                                                                        instrument=instrument)
+                                                                        inst_combo_query=combo_query)
                 plot_beta[mu_index, date_index], plot_y[mu_index, date_index] = lbcc.get_beta_y_theoretic_based(
                     theoretic_query[date_index, :], mu)
         #### BETA AND Y AS FUNCTION OF TIME ####
@@ -450,6 +485,9 @@ def generate_histogram_plots(db_session, hdf_data_dir, inst_list, hist_plot_quer
         # convert from binary to usable histogram type
         lat_band, mu_bin_array, intensity_bin_array, full_hist = psi_d_types.binary_to_hist(pd_hist, n_mu_bins,
                                                                                             n_intensity_bins)
+        # query correct image combos
+        combo_query = db_funcs.query_inst_combo(db_session, hist_plot_query_time_min, hist_plot_query_time_max,
+                                                meth_name, instrument)
         #### PLOT ORIGINAL HISTOGRAMS ####
         for plot_index in range(n_hist_plots):
             # definitions
@@ -467,11 +505,8 @@ def generate_histogram_plots(db_session, hdf_data_dir, inst_list, hist_plot_quer
                                                  time_max=hist_plot_query_time_max, instrument=query_instrument)
             for index, row in image_pd.iterrows():
                 # apply LBC
-                original_los, lbcc_image, mu_indices, use_indices = iit_funcs.apply_lbc_correction(db_session,
-                                                                                                   hdf_data_dir,
-                                                                                                   instrument, row,
-                                                                                                   n_intensity_bins,
-                                                                                                   R0)
+                original_los, lbcc_image, mu_indices, use_indices = apply_lbc(db_session, hdf_data_dir, combo_query, row,
+                                                                             n_intensity_bins=n_intensity_bins, R0=R0)
                 #### CREATE NEW HISTOGRAMS ####
                 # perform 2D histogram on mu and image intensity
                 hdf_path = os.path.join(hdf_data_dir, row.fname_hdf)

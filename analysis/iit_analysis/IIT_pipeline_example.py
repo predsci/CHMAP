@@ -7,11 +7,7 @@ import datetime
 import numpy as np
 from settings.app import App
 from modules.DB_funs import init_db_conn
-import modules.DB_funs as db_funcs
-import modules.iit_funs as iit
 import modules.DB_classes as db_class
-import modules.datatypes as psi_d_types
-import modules.lbcc_funs as lbcc
 import analysis.iit_analysis.IIT_pipeline_funcs as iit_funcs
 
 ####### ------ UPDATABLE PARAMETERS ------ #########
@@ -27,12 +23,13 @@ number_of_days = 180  # days for moving average
 
 # TIME RANGE FOR IIT CORRECTION AND IMAGE PLOTTING
 iit_query_time_min = datetime.datetime(2011, 4, 1, 0, 0, 0)
-iit_query_time_max = datetime.datetime(2011, 4, 1, 6, 0, 0)
+iit_query_time_max = datetime.datetime(2011, 4, 10, 0, 0, 0)
 plot = True  # true if you want to plot resulting images
+n_images_plot = 1  # number of images to plot
 
 # TIME RANGE FOR HISTOGRAM CREATION
 hist_query_time_min = datetime.datetime(2011, 4, 1, 0, 0, 0)
-hist_query_time_max = datetime.datetime(2011, 4, 1, 3, 0, 0)
+hist_query_time_max = datetime.datetime(2011, 10, 1, 0, 0, 0)
 
 # INSTRUMENTS
 inst_list = ["AIA", "EUVI-A", "EUVI-B"]
@@ -61,18 +58,17 @@ db_session = init_db_conn(db_name=use_db, chd_base=db_class.Base, sqlite_path=sq
 
 ##### STEP ONE: CREATE 1D HISTOGRAMS AND SAVE TO DATABASE ######
 iit_funcs.create_histograms(db_session, inst_list, lbc_query_time_min, lbc_query_time_max, hdf_data_dir,
-                            n_intensity_bins=n_intensity_bins, lat_band=lat_band,
-                            log10=log10, R0=R0)
+                            n_intensity_bins=n_intensity_bins, lat_band=lat_band, log10=log10, R0=R0)
 
-###### STEP TWO: CALCULATE INTER-INSTRUMENT TRANSFORMATION COEFFICIENTS ######
-iit_funcs.calc_iit_coefficients(db_session, inst_list, ref_inst, calc_query_time_min, calc_query_time_max, weekday,
-                                number_of_days=number_of_days, n_intensity_bins=n_intensity_bins, lat_band=lat_band,
-                                create=create)
+##### STEP TWO: CALCULATE INTER-INSTRUMENT TRANSFORMATION COEFFICIENTS AND SAVE TO DATABASE ######
+iit_funcs.calc_iit_coefficients(db_session, inst_list, ref_inst, calc_query_time_min, calc_query_time_max,
+                                weekday=weekday, number_of_days=number_of_days, n_intensity_bins=n_intensity_bins,
+                                lat_band=lat_band, create=create)
 
 ##### STEP THREE: APPLY TRANSFORMATION AND PLOT NEW IMAGES ######
-iit_funcs.apply_iit_correction(db_session, hdf_data_dir, iit_query_time_min, iit_query_time_max, inst_list,
-                               n_intensity_bins=n_intensity_bins, R0=R0, plot=plot)
+iit_funcs.apply_iit_correction(db_session, hdf_data_dir, iit_query_time_min, iit_query_time_max, inst_list, ref_inst,
+                               n_intensity_bins=n_intensity_bins, R0=R0, n_images_plot=n_images_plot, plot=plot)
 
 ###### STEP FOUR: GENERATE NEW HISTOGRAM PLOTS ######
-iit_funcs.generate_iit_histograms(db_session, hist_query_time_min, hist_query_time_max, inst_list, ref_inst,
-                                  n_intensity_bins=n_intensity_bins, lat_band=lat_band)
+iit_funcs.plot_iit_histograms(db_session, hdf_data_dir, hist_query_time_min, hist_query_time_max, inst_list, ref_inst,
+                              n_intensity_bins=n_intensity_bins, lat_band=lat_band, R0=R0, log10=log10)

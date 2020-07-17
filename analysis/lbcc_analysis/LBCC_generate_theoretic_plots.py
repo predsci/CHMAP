@@ -14,7 +14,7 @@ from matplotlib import cm
 from matplotlib.lines import Line2D
 
 from settings.app import App
-from modules.DB_funs import init_db_conn, query_var_val
+from modules.DB_funs import init_db_conn, query_var_val, query_inst_combo
 import modules.DB_classes as db_class
 import modules.lbcc_funs as lbcc
 
@@ -23,10 +23,10 @@ inst_list = ['AIA', "EUVI-A", "EUVI-B"]
 
 # PLOT PARAMETERS
 n_mu_bins = 18
-year = "2011" # used for naming plot file
-time_period = "Theoretic-6Month(2)" # used for naming plot file
-title_time_period = "6 Month" # used for plot titles
-plot_week = 5 #index of week you want to plot
+year = "2011"  # used for naming plot file
+time_period = "Theoretic-6Month(2)"  # used for naming plot file
+title_time_period = "6 Month"  # used for plot titles
+plot_week = 5  # index of week you want to plot
 # path to save plots to
 image_out_path = os.path.join(App.APP_HOME, "test_data", "analysis/lbcc_functionals/")
 
@@ -77,15 +77,18 @@ for inst_index, instrument in enumerate(inst_list):
     print("Generating plots for " + instrument + ".")
     # query theoretic parameters
     theoretic_query = np.zeros((len(moving_avg_centers), 6))
+    # query correct image combos
+    combo_query = query_inst_combo(db_session, query_time_min, query_time_max, meth_name,
+                                   instrument)
     plot_beta = np.zeros((sample_mu.__len__(), moving_avg_centers.__len__()))
     plot_y = np.zeros((sample_mu.__len__(), moving_avg_centers.__len__()))
     for mu_index, mu in enumerate(sample_mu):
         for date_index, center_date in enumerate(moving_avg_centers):
             # query for variable value
             theoretic_query[date_index, :] = query_var_val(db_session, meth_name,
-                                                                    date_obs=np.datetime64(center_date).astype(
-                                                                        datetime.datetime),
-                                                                    instrument=instrument)
+                                                           date_obs=np.datetime64(center_date).astype(
+                                                               datetime.datetime),
+                                                           inst_combo_query=combo_query)
             plot_beta[mu_index, date_index], plot_y[mu_index, date_index] = lbcc.get_beta_y_theoretic_based(
                 theoretic_query[date_index, :], mu)
     #### BETA AND Y AS FUNCTION OF TIME ####
@@ -194,7 +197,3 @@ for inst_index, instrument in enumerate(inst_list):
 end_time_tot = time.time()
 print("Theoretical plots of beta and y over time hvae been generated and saved.")
 print("Total elapsed time for plot creation: " + str(round(end_time_tot - start_time_tot, 3)) + " seconds.")
-
-
-
-

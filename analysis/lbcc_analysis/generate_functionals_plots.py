@@ -188,7 +188,7 @@ for inst_index, instrument in enumerate(instruments):
 
     beta_y_v_mu = np.zeros((mu_bin_centers.shape[0], 2, 4))
     for index, mu in enumerate(mu_bin_centers):
-        beta_y_v_mu[index, :, 0] = cubic_query[plot_week] # TODO: check this - this definetely isn't right rn
+        beta_y_v_mu[index, :, 0] = cubic_query[plot_week]
         beta_y_v_mu[index, :, 1] = power_log_query[plot_week]
         beta_y_v_mu[index, :, 2] = theoretic_query[plot_week]
     beta_y_v_mu[:-1, :, 3] = mu_bin_query[plot_week]

@@ -28,13 +28,14 @@ days = 180  # days for moving average
 
 # TIME RANGE FOR LBC CORRECTION AND IMAGE PLOTTING
 lbc_query_time_min = datetime.datetime(2011, 4, 1, 0, 0, 0)
-lbc_query_time_max = datetime.datetime(2011, 4, 1, 3, 0, 0)
+lbc_query_time_max = datetime.datetime(2011, 4, 10, 0, 0, 0)
+n_images_plot = 1
+plot = True  # true if you want images plotted
 
 # TIME RANGE FOR BETA AND Y PLOT GENERATION
 plot_query_time_min = datetime.datetime(2011, 4, 1, 0, 0, 0)
 plot_query_time_max = datetime.datetime(2011, 10, 1, 0, 0, 0)
 weekday_plot = 0  # start at 0 for Monday
-plot = True  # true if you want images plotted
 
 # TIME RANGE FOR HISTOGRAM PLOTTING
 hist_plot_query_time_min = datetime.datetime(2011, 4, 1, 0, 0, 0)
@@ -72,9 +73,8 @@ image_out_path = os.path.join(App.APP_HOME, "test_data", "analysis/lbcc_function
 ###### --------- LIMB BRIGHTENING CORRECTIONS FUNCTIONS ------------ ######
 
 ####### STEP ONE: CREATE AND SAVE HISTOGRAMS #######
-lbcc_funcs.save_histograms(db_session, hdf_data_dir, inst_list, hist_query_time_min, hist_query_time_max,
-                           n_mu_bins=n_mu_bins, n_intensity_bins=n_intensity_bins, lat_band=lat_band, log10=log10,
-                           R0=R0)
+lbcc_funcs.save_histograms(db_session, hdf_data_dir, inst_list, hist_query_time_min, hist_query_time_max, n_mu_bins=18,
+                           n_intensity_bins=n_intensity_bins, lat_band=lat_band, log10=log10, R0=R0)
 
 ###### STEP TWO: CALCULATE AND SAVE THEORETIC FIT PARAMETERS #######
 lbcc_funcs.calc_theoretic_fit(db_session, inst_list, calc_query_time_min, calc_query_time_max, weekday=weekday_calc,
@@ -83,12 +83,12 @@ lbcc_funcs.calc_theoretic_fit(db_session, inst_list, calc_query_time_min, calc_q
 
 ###### STEP THREE: APPLY CORRECTION AND PLOT IMAGES #######
 lbcc_funcs.apply_lbc_correction(db_session, hdf_data_dir, inst_list, lbc_query_time_min, lbc_query_time_max,
-                                R0=R0, plot=plot)
+                                n_intensity_bins=n_intensity_bins, R0=R0, n_images_plot=n_images_plot, plot=plot)
 
 ###### STEP FOUR: GENERATE PLOTS OF BETA AND Y ######
 lbcc_funcs.generate_theoretic_plots(db_session, inst_list, plot_query_time_min, plot_query_time_max,
-                                    weekday=weekday_plot, image_out_path=image_out_path, year=year,
-                                    time_period=time_period, plot_week=plot_week, n_mu_bins=n_mu_bins)
+                                    weekday=weekday_plot, image_out_path=image_out_path,
+                                    year=year, time_period=time_period, plot_week=plot_week, n_mu_bins=n_mu_bins)
 
 ###### STEP FIVE: GENERATE HISTOGRAM PLOTS ######
 lbcc_funcs.generate_histogram_plots(db_session, hdf_data_dir, inst_list, hist_plot_query_time_min,
