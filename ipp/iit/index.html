@@ -668,22 +668,10 @@ be enlarged by clicking image titles.</p>
 </tbody>
 </table>
 <h2 id="examples-of-histograms">Examples of Histograms</h2>
-<table>
-<thead>
-<tr>
-<th align="center"><a href="../../img/iit/hist_original.png">Original Histogram</a></th>
-<th align="center"><a href="../../img/iit/hist_lbc_corrected.png">LBC Corrected Histogram</a></th>
-<th align="center"><a href="../../img/iit/hist_iit_corrected.png">IIT Corrected Histogram</a></th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td align="center"><img alt="Original Histogram" src="../../img/iit/hist_original.png" /></td>
-<td align="center"><img alt="LBC Corrected Histogram" src="../../img/iit/hist_lbc_corrected.png" /></td>
-<td align="center"><img alt="IIT Corrected Histogram" src="../../img/iit/hist_iit_corrected.png" /></td>
-</tr>
-</tbody>
-</table>
+<p>200 Intensity Bin Histograms before and after IIT Correction.
+<a href="../../img/iit/hist_lbc_corrected.png">LBC Corrected Histogram</a>  | <a href="../../img/iit/hist_iit_corrected.png">IIT Corrected Histogram</a>
+ :-: | :-:
+<img alt="LBC Corrected Histogram" src="../../img/iit/hist_lbc_corrected.png" />  | <img alt="IIT Corrected Histogram" src="../../img/iit/hist_iit_corrected.png" /></p>
 <h2 id="analysis-pipeline">Analysis Pipeline</h2>
 <h3 id="compute-histograms-and-save-to-database">Compute Histograms and Save to Database</h3>
 <p>This function applies the limb-brightening correction, calculates the associated IIT histogram, and saves these histograms to the database.<br />
@@ -774,7 +762,7 @@ and the generalized function can be found <a href="https://github.com/predsci/CH
                               <span class="n">time_max</span><span class="o">=</span><span class="n">calc_query_time_max</span> <span class="o">+</span> <span class="n">datetime</span><span class="o">.</span><span class="n">timedelta</span><span class="p">(</span><span class="n">days</span><span class="o">=</span><span class="n">number_of_days</span><span class="p">),</span> <span class="n">instrument</span><span class="o">=</span><span class="n">ref_instrument</span><span class="p">)</span>
       <span class="n">rot_images</span> <span class="o">=</span> <span class="n">db_funcs</span><span class="o">.</span><span class="n">query_euv_images_rot</span><span class="p">(</span><span class="n">db_session</span><span class="p">,</span> <span class="n">rot_min</span><span class="o">=</span><span class="n">rot_min</span><span class="p">,</span> <span class="n">rot_max</span><span class="o">=</span><span class="n">rot_max</span><span class="p">,</span>
                                                <span class="n">instrument</span><span class="o">=</span><span class="n">query_instrument</span><span class="p">)</span>
-      <span class="n">alpha_x_parameters</span> <span class="o">=</span> <span class="n">iit</span><span class="o">.</span><span class="n">optim_iit_linear</span><span class="p">(</span><span class="n">hist_ref</span><span class="p">,</span> <span class="n">hist_fit</span><span class="p">,</span> <span class="n">intensity_bin_edges</span><span class="p">,</span> <span class="n">init_pars</span><span class="o">=</span><span class="n">init_pars</span><span class="p">)</span>
+      <span class="n">alpha_x_parameters</span> <span class="o">=</span> <span class="n">iit</span><span class="o">.</span><span class="n">optim_iit_linear</span><span class="p">(</span><span class="n">norm_hist_ref</span><span class="p">,</span> <span class="n">norm_hist_fit</span><span class="p">,</span> <span class="n">intensity_bin_edges</span><span class="p">,</span> <span class="n">init_pars</span><span class="o">=</span><span class="n">init_pars</span><span class="p">)</span>
       <span class="n">db_funcs</span><span class="o">.</span><span class="n">store_iit_values</span><span class="p">(</span><span class="n">db_session</span><span class="p">,</span> <span class="n">pd_hist</span><span class="p">,</span> <span class="n">meth_name</span><span class="p">,</span> <span class="n">meth_desc</span><span class="p">,</span> <span class="n">alpha_x_parameters</span><span class="o">.</span><span class="n">x</span><span class="p">,</span> <span class="n">create</span><span class="p">)</span>
 </code></pre></div>
 </td></tr></table>
@@ -839,8 +827,7 @@ and the generalized function can be found <a href="https://github.com/predsci/CH
 20
 21
 22
-23
-24</pre></div></td><td class="code"><div class="codehilite"><pre><span></span><code><span class="k">def</span> <span class="nf">apply_iit_correction</span><span class="p">(</span><span class="n">db_session</span><span class="p">,</span> <span class="n">hdf_data_dir</span><span class="p">,</span> <span class="n">iit_query_time_min</span><span class="p">,</span> <span class="n">iit_query_time_max</span><span class="p">,</span> <span class="n">inst_list</span><span class="p">,</span> 
+23</pre></div></td><td class="code"><div class="codehilite"><pre><span></span><code><span class="k">def</span> <span class="nf">apply_iit_correction</span><span class="p">(</span><span class="n">db_session</span><span class="p">,</span> <span class="n">hdf_data_dir</span><span class="p">,</span> <span class="n">iit_query_time_min</span><span class="p">,</span> <span class="n">iit_query_time_max</span><span class="p">,</span> <span class="n">inst_list</span><span class="p">,</span> 
                  <span class="n">n_mu_bins</span><span class="p">,</span> <span class="n">n_intensity_bins</span><span class="p">,</span> <span class="n">n_images_plot</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">plot</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    function to query IIT correction coefficients, apply correction, and plot resulting images</span>
@@ -855,8 +842,7 @@ and the generalized function can be found <a href="https://github.com/predsci/CH
                                                 <span class="n">instrument</span><span class="p">)</span>
     <span class="n">original_los</span><span class="p">,</span> <span class="n">lbcc_image</span><span class="p">,</span> <span class="n">mu_indices</span><span class="p">,</span> <span class="n">use_indices</span> <span class="o">=</span> <span class="n">lbcc_funcs</span><span class="o">.</span><span class="n">apply_lbc</span><span class="p">(</span><span class="n">db_session</span><span class="p">,</span> <span class="n">hdf_data_dir</span><span class="p">,</span> <span class="n">combo_query_lbc</span><span class="p">,</span>
                                                 <span class="n">image_row</span><span class="o">=</span><span class="n">row</span><span class="p">,</span> <span class="n">n_intensity_bins</span><span class="o">=</span><span class="n">n_intensity_bins</span><span class="p">,</span> <span class="n">R0</span><span class="o">=</span><span class="n">R0</span><span class="p">)</span>
-    <span class="n">lbcc_image</span><span class="p">,</span> <span class="n">iit_image</span><span class="p">,</span> <span class="n">use_indices</span> <span class="o">=</span> <span class="n">apply_iit</span><span class="p">(</span><span class="n">db_session</span><span class="p">,</span> <span class="n">hdf_data_dir</span><span class="p">,</span> <span class="n">combo_query_iit</span><span class="p">,</span> <span class="n">lbcc_image</span><span class="p">,</span>
-                                                <span class="n">use_indices</span><span class="p">,</span> <span class="n">image_row</span><span class="o">=</span><span class="n">row</span><span class="p">,</span> <span class="n">R0</span><span class="o">=</span><span class="n">R0</span><span class="p">)</span>                
+    <span class="n">lbcc_image</span><span class="p">,</span> <span class="n">iit_image</span><span class="p">,</span> <span class="n">use_indices</span> <span class="o">=</span> <span class="n">apply_iit</span><span class="p">(</span><span class="n">db_session</span><span class="p">,</span> <span class="n">hdf_data_dir</span><span class="p">,</span> <span class="n">combo_query_iit</span><span class="p">,</span> <span class="n">lbcc_image</span><span class="p">,</span> <span class="n">use_indices</span><span class="p">,</span> <span class="n">image_row</span><span class="o">=</span><span class="n">row</span><span class="p">,</span> <span class="n">R0</span><span class="o">=</span><span class="n">R0</span><span class="p">)</span>            
     <span class="k">if</span> <span class="n">plot</span><span class="p">:</span>
         <span class="n">Plotting</span><span class="o">.</span><span class="n">PlotCorrectedImage</span><span class="p">(</span><span class="n">lbcc_data</span><span class="p">,</span> <span class="n">los_image</span><span class="o">=</span><span class="n">original_los</span><span class="p">,</span> <span class="n">nfig</span><span class="o">=</span><span class="mi">100</span> <span class="o">+</span> <span class="n">inst_index</span> <span class="o">*</span> <span class="mi">10</span> <span class="o">+</span> <span class="n">index</span><span class="p">,</span>
                             <span class="n">title</span><span class="o">=</span><span class="s2">&quot;Corrected LBCC Image for &quot;</span> <span class="o">+</span> <span class="n">instrument</span><span class="p">)</span>
@@ -910,7 +896,7 @@ It is called during the <a href="./#apply-inter-instrument-transformation-and-pl
 10
 11
 12
-13</pre></div></td><td class="code"><div class="codehilite"><pre><span></span><code><span class="k">def</span> <span class="nf">apply_iit</span><span class="p">(</span><span class="n">db_session</span><span class="p">,</span> <span class="n">hdf_data_dir</span><span class="p">,</span> <span class="n">inst_combo_query</span><span class="p">,</span> <span class="n">lbcc_image</span><span class="p">,</span> <span class="n">use_indices</span><span class="p">,</span> <span class="n">image_row</span><span class="p">,</span> <span class="n">R0</span><span class="o">=</span><span class="mf">1.01</span><span class="p">):</span>
+13</pre></div></td><td class="code"><div class="codehilite"><pre><span></span><code><span class="k">def</span> <span class="nf">apply_iit</span><span class="p">(</span><span class="n">db_session</span><span class="p">,</span> <span class="n">hdf_data_dir</span><span class="p">,</span> <span class="n">inst_combo_query</span><span class="p">,</span> <span class="n">lbcc_image</span><span class="p">,</span> <span class="n">image_row</span><span class="p">,</span> <span class="n">R0</span><span class="o">=</span><span class="mf">1.01</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    function to apply IIT to a specific image, returns corrected image</span>
 <span class="sd">    &quot;&quot;&quot;</span>
