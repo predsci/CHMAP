@@ -21,10 +21,11 @@ be enlarged by clicking image titles.
 ![Original STB Image](../img/iit/STB_original.png) | ![Corrected STB Image](../img/iit/STB_corrected.png)   |  ![Difference STB Image](../img/iit/STB_difference.png) 
 
 ## Examples of Histograms
-200 Intensity Bin Histograms before and after IIT Correction..
-[LBC Corrected Histogram](../img/iit/hist_lbc_corrected.png)  | [IIT Corrected Histogram](../img/iit/hist_iit_corrected.png)
- :-: | :-:
-![LBC Corrected Histogram](../img/iit/hist_lbc_corrected.png)  | ![IIT Corrected Histogram](../img/iit/hist_iit_corrected.png)
+200 Intensity Bin Histograms before and after IIT Correction.  
+
+[LBC Corrected Histogram](../img/iit/hist_lbc_corrected.png) | [IIT Corrected Histogram](../img/iit/hist_iit_corrected.png)  
+:-: | :-:
+![LBC Corrected Histogram](../img/iit/hist_lbc_corrected.png) | ![IIT Corrected Histogram](../img/iit/hist_iit_corrected.png)  
 
 
 ## Analysis Pipeline
