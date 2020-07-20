@@ -200,7 +200,7 @@ def Plot1d_Hist(norm_hist, instrument, inst_index, intensity_bin_edges, color_li
     plt.plot(intensity_bin_edges[:-1], norm_hist, color=color_list[inst_index],
              linestyle=linestyle_list[inst_index], label=instrument)
     plt.xlim(0, np.max(intensity_bin_edges))
-    plt.ylim(0, 1)
+    plt.ylim(0, 0.050)
     plt.xlabel(xlabel)
     plt.ylabel(ylabel)
     plt.title(title)

@@ -47,6 +47,17 @@ db_session = init_db_conn(db_name=use_db, chd_base=db_class.Base, sqlite_path=sq
 # start time
 start_time = time.time()
 
+#### GET REFERENCE INFO FOR LATER USE ####
+# get index number of reference instrument
+ref_index = inst_list.index(ref_inst)
+# query euv images to get carrington rotation range
+ref_instrument = [ref_inst, ]
+euv_images = db_funcs.query_euv_images(db_session, time_min=hist_query_time_min, time_max=hist_query_time_max,
+                                       instrument=ref_instrument)
+# get min and max carrington rotation
+rot_max = euv_images.cr_rot.max()
+rot_min = euv_images.cr_rot.min()
+
 # method information
 meth_name = "IIT"
 ref_index = inst_list.index(ref_inst)
@@ -68,10 +79,21 @@ original_hist_list = np.full(full_lbc_hist.shape, 0, dtype=np.int64)
 corrected_hist_list = np.full(full_lbc_hist.shape, 0, dtype=np.int64)
 for inst_index, instrument in enumerate(inst_list):
     print("Applying corrections for", instrument)
-    # query EUV images
+    #### QUERY IMAGES ####
     query_instrument = [instrument, ]
-    image_pd = db_funcs.query_euv_images(db_session=db_session, time_min=hist_query_time_min,
-                                         time_max=hist_query_time_max, instrument=query_instrument)
+    rot_images = db_funcs.query_euv_images_rot(db_session, rot_min=rot_min, rot_max=rot_max,
+                                               instrument=query_instrument)
+    image_pd = rot_images.sort_values(by=['cr_rot'])
+    # get time minimum and maximum for instrument
+    inst_time_min = rot_images.date_obs.min()
+    inst_time_max = rot_images.date_obs.max()
+    # query correct image combos
+    lbc_meth_name = "LBCC Theoretic"
+    combo_query_lbc = db_funcs.query_inst_combo(db_session, inst_time_min, inst_time_max, lbc_meth_name,
+                                                instrument)
+    iit_meth_name = "IIT"
+    combo_query_iit = db_funcs.query_inst_combo(db_session, inst_time_min, inst_time_max, iit_meth_name,
+                                                instrument)
     # query correct image combos
     combo_query_lbc = db_funcs.query_inst_combo(db_session, hist_query_time_min, hist_query_time_max,
                                                 meth_name="LBCC Theoretic", instrument=instrument)
@@ -123,18 +145,23 @@ for inst_index, instrument in enumerate(inst_list):
     original_hist = original_hist_list[:, pd_inst_index].sum(axis=1)
     ref_hist = original_hist_list[:, pd_ref_index].sum(axis=1)
     # normalize histogram
-    norm_original_hist = original_hist / np.max(ref_hist)
+    norm_original_hist = np.full(original_hist.shape, 0.00)
+    row_sums = original_hist.sum(axis=0, keepdims=True)
+    norm_original_hist = original_hist / row_sums
 
     # plot original
-    Plotting.Plot1d_Hist(norm_original_hist, instrument, inst_index, intensity_bin_edges, color_list, linestyle_list, figure=100,
-                xlabel="Intensity (log10)", ylabel="H(I)", title="Histogram: Original Image")
+    Plotting.Plot1d_Hist(norm_original_hist, instrument, inst_index, intensity_bin_edges, color_list, linestyle_list,
+                        figure=100, xlabel="Intensity (log10)", ylabel="H(I)", title="Histogram: Original LOS Data")
 
     #### LBCC HISTOGRAM #####
     # define histograms
     lbc_hist = full_lbc_hist[:, pd_inst_index].sum(axis=1)
     ref_lbc_hist = full_lbc_hist[:, pd_ref_index].sum(axis=1)
     # normalize histogram
-    norm_lbc_hist = lbc_hist / np.max(ref_lbc_hist)
+    norm_lbc_hist = np.full(lbc_hist.shape, 0.)
+    lbc_sums = lbc_hist.sum(axis=0, keepdims=True)
+    # but do not divide by zero
+    norm_lbc_hist = lbc_hist / lbc_sums
 
     # plot lbcc
     Plotting.Plot1d_Hist(norm_lbc_hist, instrument, inst_index, intensity_bin_edges, color_list, linestyle_list,
@@ -145,11 +172,14 @@ for inst_index, instrument in enumerate(inst_list):
     corrected_hist = corrected_hist_list[:, pd_inst_index].sum(axis=1)
     ref_corrected_hist = corrected_hist_list[:, pd_ref_index].sum(axis=1)
     # normalize histogram
-    norm_corrected_hist = corrected_hist / np.max(ref_corrected_hist)
+    norm_corrected_hist = np.full(corrected_hist.shape, 0.)
+    iit_sums = corrected_hist.sum(axis=0, keepdims=True)
+    norm_corrected_hist = corrected_hist / iit_sums
 
     # plot corrected
     Plotting.Plot1d_Hist(norm_corrected_hist, instrument, inst_index, intensity_bin_edges, color_list, linestyle_list,
                          figure=300, xlabel="Intensity (log10)", ylabel="H(I)", title="Histogram: Post IIT")
+
 
 # end time
 end_time = time.time()

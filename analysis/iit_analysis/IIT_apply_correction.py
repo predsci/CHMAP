@@ -86,8 +86,8 @@ for inst_index, instrument in enumerate(inst_list):
                                                                                  n_intensity_bins=n_intensity_bins,
                                                                                  R0=R0)
         #### APPLY IIT CORRECTION ####
-        lbcc_image, iit_image, use_indices = iit_funcs.apply_iit(db_session, hdf_data_dir, combo_query_iit, lbcc_image,
-                                                                 use_indices, image_row=row, R0=R0)
+        lbcc_image, iit_image, use_indices = iit_funcs.apply_iit(db_session, hdf_data_dir, combo_query_iit,
+                                                                 lbcc_image, use_indices, image_row=row, R0=R0)
 
         if plot:
             lbcc_data = lbcc_image.lbcc_data

@@ -107,8 +107,7 @@ def calc_iit_coefficients(db_session, inst_list, ref_inst, calc_query_time_min, 
     # convert binary to histogram data
     lat_band, mu_bin_edges, intensity_bin_edges, ref_full_hist = psi_d_types.binary_to_hist(hist_binary=ref_hist_pd,
                                                                                             n_mu_bins=None,
-                                                                                            n_intensity_bins=
-                                                                                            n_intensity_bins)
+                                                                                            n_intensity_bins=n_intensity_bins)
 
     for inst_index, instrument in enumerate(inst_list):
         # check if this is the reference instrument
@@ -148,10 +147,7 @@ def calc_iit_coefficients(db_session, inst_list, ref_inst, calc_query_time_min, 
                                                instrument=query_instrument)
             # convert binary to histogram data
             lat_band, mu_bin_edges, intensity_bin_edges, inst_full_hist = psi_d_types.binary_to_hist(
-                hist_binary=inst_hist_pd,
-                n_mu_bins=None,
-                n_intensity_bins=
-                n_intensity_bins)
+                hist_binary=inst_hist_pd, n_mu_bins=None, n_intensity_bins=n_intensity_bins)
             # loops through moving average centers
             for date_index, center_date in enumerate(moving_avg_centers):
                 print("Starting calculations for", instrument, ":", center_date)
@@ -179,18 +175,28 @@ def calc_iit_coefficients(db_session, inst_list, ref_inst, calc_query_time_min, 
                 hist_fit = inst_hist_use.sum(axis=1)
                 hist_ref = ref_hist_use.sum(axis=1)
 
+                # normalize fit histogram
+                norm_hist_fit = np.zeros(hist_fit.shape)
+                fit_sums = hist_fit.sum(axis=0, keepdims=True)
+                norm_hist_fit = hist_fit / fit_sums
+
+                # normalize reference histogram
+                norm_hist_ref = np.zeros(hist_ref.shape)
+                ref_sums = hist_ref.sum(axis=0, keepdims=True)
+                norm_hist_ref = hist_ref / ref_sums
+
                 # get reference/fit peaks
-                ref_peak_index = np.argmax(hist_ref)  # index of max value of hist_ref
-                ref_peak_val = hist_ref[ref_peak_index]  # max value of hist_ref
-                fit_peak_index = np.argmax(hist_fit)  # index of max value of hist_fit
-                fit_peak_val = hist_fit[fit_peak_index]  # max value of hist_fit
+                ref_peak_index = np.argmax(norm_hist_ref)  # index of max value of hist_ref
+                ref_peak_val = norm_hist_ref[ref_peak_index]  # max value of hist_ref
+                fit_peak_index = np.argmax(norm_hist_fit)  # index of max value of hist_fit
+                fit_peak_val = norm_hist_fit[fit_peak_index]  # max value of hist_fit
                 # estimate correction coefficients that match fit_peak to ref_peak
                 alpha_est = fit_peak_val / ref_peak_val
                 x_est = intensity_bin_edges[ref_peak_index] - alpha_est * intensity_bin_edges[fit_peak_index]
-                init_pars = np.asarray([alpha_est, x_est], dtype=np.float32)
+                init_pars = np.asarray([alpha_est, x_est], dtype=np.float64)
 
                 # calculate alpha and x
-                alpha_x_parameters = iit.optim_iit_linear(hist_ref, hist_fit, intensity_bin_edges,
+                alpha_x_parameters = iit.optim_iit_linear(norm_hist_ref, norm_hist_fit, intensity_bin_edges,
                                                           init_pars=init_pars)
                 # save alpha and x to database
                 db_funcs.store_iit_values(db_session, inst_pd_use, meth_name, meth_desc,
@@ -213,8 +219,6 @@ def apply_iit_correction(db_session, hdf_data_dir, iit_query_time_min, iit_query
     start_time = time.time()
 
     #### GET REFERENCE INFO FOR LATER USE ####
-    # get index number of reference instrument
-    ref_index = inst_list.index(ref_inst)
     # query euv images to get carrington rotation range
     ref_instrument = [ref_inst, ]
     euv_images = db_funcs.query_euv_images(db_session, time_min=iit_query_time_min, time_max=iit_query_time_max,
@@ -249,7 +253,7 @@ def apply_iit_correction(db_session, hdf_data_dir, iit_query_time_min, iit_query
                                                                                      n_intensity_bins=n_intensity_bins,
                                                                                      R0=R0)
             #### APPLY IIT CORRECTION ####
-            lbcc_image, iit_image, use_indices = iit_funcs.apply_iit(db_session, hdf_data_dir, combo_query_iit,
+            lbcc_image, iit_image, use_indices = apply_iit(db_session, hdf_data_dir, combo_query_iit,
                                                                      lbcc_image, use_indices, image_row=row, R0=R0)
 
             if plot:
@@ -263,7 +267,7 @@ def apply_iit_correction(db_session, hdf_data_dir, iit_query_time_min, iit_query
                                             nfig=200 + inst_index * 10 + index,
                                             title="Corrected IIT Image for " + instrument)
                 # plot difference
-                Plotting.PlotCorrectedImage(lbcc_data - corrected_iit_data, los_image=original_los,
+                Plotting.PlotCorrectedImage(corrected_iit_data - lbcc_data, los_image=original_los,
                                             nfig=300 + inst_index * 10 + index,
                                             title="Difference Plot for " + instrument)
 
@@ -305,9 +309,19 @@ def plot_iit_histograms(db_session, hdf_data_dir, hist_query_time_min, hist_quer
     # start time
     start_time = time.time()
 
+    #### GET REFERENCE INFO FOR LATER USE ####
+    # get index number of reference instrument
+    ref_index = inst_list.index(ref_inst)
+    # query euv images to get carrington rotation range
+    ref_instrument = [ref_inst, ]
+    euv_images = db_funcs.query_euv_images(db_session, time_min=hist_query_time_min, time_max=hist_query_time_max,
+                                           instrument=ref_instrument)
+    # get min and max carrington rotation
+    rot_max = euv_images.cr_rot.max()
+    rot_min = euv_images.cr_rot.min()
+
     # method information
     meth_name = "IIT"
-    ref_index = inst_list.index(ref_inst)
     method_id = db_funcs.get_method_id(db_session, meth_name, meth_desc=None, var_names=None, var_descs=None,
                                        create=False)
 
@@ -328,16 +342,28 @@ def plot_iit_histograms(db_session, hdf_data_dir, hist_query_time_min, hist_quer
     corrected_hist_list = np.full(full_lbc_hist.shape, 0, dtype=np.int64)
     for inst_index, instrument in enumerate(inst_list):
         print("Applying corrections for", instrument)
-        # query EUV images
+        #### QUERY IMAGES ####
         query_instrument = [instrument, ]
-        image_pd = db_funcs.query_euv_images(db_session=db_session, time_min=hist_query_time_min,
-                                             time_max=hist_query_time_max, instrument=query_instrument)
+        rot_images = db_funcs.query_euv_images_rot(db_session, rot_min=rot_min, rot_max=rot_max,
+                                                   instrument=query_instrument)
+        image_pd = rot_images.sort_values(by=['cr_rot'])
+        # get time minimum and maximum for instrument
+        inst_time_min = rot_images.date_obs.min()
+        inst_time_max = rot_images.date_obs.max()
+        # query correct image combos
+        lbc_meth_name = "LBCC Theoretic"
+        combo_query_lbc = db_funcs.query_inst_combo(db_session, inst_time_min, inst_time_max, lbc_meth_name,
+                                                    instrument)
+        iit_meth_name = "IIT"
+        combo_query_iit = db_funcs.query_inst_combo(db_session, inst_time_min, inst_time_max, iit_meth_name,
+                                                    instrument)
         # query correct image combos
         combo_query_lbc = db_funcs.query_inst_combo(db_session, hist_query_time_min, hist_query_time_max,
                                                     meth_name="LBCC Theoretic", instrument=instrument)
         # query correct image combos
         combo_query_iit = db_funcs.query_inst_combo(db_session, hist_query_time_min, hist_query_time_max,
-                                                    meth_name="IIT", instrument=instrument)
+                                                    meth_name="IIT",
+                                                    instrument=instrument)
         for index, row in image_pd.iterrows():
             # apply LBC
             original_los, lbcc_image, mu_indices, use_indices = lbcc_funcs.apply_lbc(db_session, hdf_data_dir,
@@ -354,8 +380,9 @@ def plot_iit_histograms(db_session, hdf_data_dir, hist_query_time_min, hist_quer
 
             #### CORRECTED DATA ####
             # apply IIT correction
-            lbcc_image, iit_image, use_indices = apply_iit(db_session, hdf_data_dir, combo_query_iit,
-                                                           lbcc_image, use_indices, image_row=row, R0=R0)
+            lbcc_image, iit_image, use_indices = iit_funcs.apply_iit(db_session, hdf_data_dir, combo_query_iit,
+                                                                     lbcc_image,
+                                                                     use_indices, image_row=row, R0=R0)
 
             #### CREATE CORRECTED IIT HISTOGRAM #####
             # calculate IIT histogram from LBC
@@ -375,41 +402,41 @@ def plot_iit_histograms(db_session, hdf_data_dir, hist_query_time_min, hist_quer
         # get index of instrument in histogram dataframe
         hist_inst = pd_lbc_hist_srt['instrument']
         pd_inst_index = hist_inst[hist_inst == instrument].index
-        # get index of reference instrument in histogram dataframe
-        pd_ref_index = hist_inst[hist_inst == ref_inst].index
 
         #### ORIGINAL HISTOGRAM #####
-        # define histograms
+        # define histogram
         original_hist = original_hist_list[:, pd_inst_index].sum(axis=1)
-        ref_hist = original_hist_list[:, pd_ref_index].sum(axis=1)
         # normalize histogram
-        norm_original_hist = original_hist / np.max(ref_hist)
+        row_sums = original_hist.sum(axis=0, keepdims=True)
+        norm_original_hist = original_hist / row_sums
 
         # plot original
         Plotting.Plot1d_Hist(norm_original_hist, instrument, inst_index, intensity_bin_edges, color_list,
-                             linestyle_list, figure=100, xlabel="Intensity (log10)", ylabel="H(I)",
-                             title="Histogram: Original Image")
+                             linestyle_list,
+                             figure=100, xlabel="Intensity (log10)", ylabel="H(I)",
+                             title="Histogram: Original LOS Data")
 
         #### LBCC HISTOGRAM #####
-        # define histograms
+        # define histogram
         lbc_hist = full_lbc_hist[:, pd_inst_index].sum(axis=1)
-        ref_lbc_hist = full_lbc_hist[:, pd_ref_index].sum(axis=1)
         # normalize histogram
-        norm_lbc_hist = lbc_hist / np.max(ref_lbc_hist)
+        lbc_sums = lbc_hist.sum(axis=0, keepdims=True)
+        norm_lbc_hist = lbc_hist / lbc_sums
 
         # plot lbcc
         Plotting.Plot1d_Hist(norm_lbc_hist, instrument, inst_index, intensity_bin_edges, color_list, linestyle_list,
                              figure=200, xlabel="Intensity (log10)", ylabel="H(I)", title="Histogram: Post LBCC")
 
         #### CORRECTED HISTOGRAM ####
-        # define histograms
+        # define histogram
         corrected_hist = corrected_hist_list[:, pd_inst_index].sum(axis=1)
-        ref_corrected_hist = corrected_hist_list[:, pd_ref_index].sum(axis=1)
         # normalize histogram
-        norm_corrected_hist = corrected_hist / np.max(ref_corrected_hist)
+        iit_sums = corrected_hist.sum(axis=0, keepdims=True)
+        norm_corrected_hist = corrected_hist / iit_sums
 
         # plot corrected
-        Plotting.Plot1d_Hist(norm_corrected_hist, instrument, inst_index, intensity_bin_edges, color_list, linestyle_list,
+        Plotting.Plot1d_Hist(norm_corrected_hist, instrument, inst_index, intensity_bin_edges, color_list,
+                             linestyle_list,
                              figure=300, xlabel="Intensity (log10)", ylabel="H(I)", title="Histogram: Post IIT")
 
     # end time

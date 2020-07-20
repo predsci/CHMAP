@@ -74,9 +74,7 @@ ref_hist_pd = db_funcs.query_hist(db_session=db_session, meth_id=method_id[1],
 
 # convert binary to histogram data
 lat_band, mu_bin_edges, intensity_bin_edges, ref_full_hist = psi_d_types.binary_to_hist(hist_binary=ref_hist_pd,
-                                                                                        n_mu_bins=None,
-                                                                                        n_intensity_bins=
-                                                                                        n_intensity_bins)
+                                   n_mu_bins=None, n_intensity_bins=n_intensity_bins)
 
 for inst_index, instrument in enumerate(inst_list):
     # check if this is the reference instrument
@@ -116,10 +114,7 @@ for inst_index, instrument in enumerate(inst_list):
                                            instrument=query_instrument)
         # convert binary to histogram data
         lat_band, mu_bin_edges, intensity_bin_edges, inst_full_hist = psi_d_types.binary_to_hist(
-            hist_binary=inst_hist_pd,
-            n_mu_bins=None,
-            n_intensity_bins=
-            n_intensity_bins)
+            hist_binary=inst_hist_pd, n_mu_bins=None, n_intensity_bins= n_intensity_bins)
         # loops through moving average centers
         for date_index, center_date in enumerate(moving_avg_centers):
             print("Starting calculations for", instrument, ":", center_date)
@@ -147,18 +142,28 @@ for inst_index, instrument in enumerate(inst_list):
             hist_fit = inst_hist_use.sum(axis=1)
             hist_ref = ref_hist_use.sum(axis=1)
 
+            # normalize fit histogram
+            norm_hist_fit = np.zeros(hist_fit.shape)
+            fit_sums = hist_fit.sum(axis=0, keepdims=True)
+            norm_hist_fit = hist_fit / fit_sums
+
+            # normalize reference histogram
+            norm_hist_ref = np.zeros(hist_ref.shape)
+            ref_sums = hist_ref.sum(axis=0, keepdims=True)
+            norm_hist_ref = hist_ref / ref_sums
+
             # get reference/fit peaks
-            ref_peak_index = np.argmax(hist_ref)  # index of max value of hist_ref
-            ref_peak_val = hist_ref[ref_peak_index]  # max value of hist_ref
-            fit_peak_index = np.argmax(hist_fit)  # index of max value of hist_fit
-            fit_peak_val = hist_fit[fit_peak_index]  # max value of hist_fit
+            ref_peak_index = np.argmax(norm_hist_ref)  # index of max value of hist_ref
+            ref_peak_val = norm_hist_ref[ref_peak_index]  # max value of hist_ref
+            fit_peak_index = np.argmax(norm_hist_fit)  # index of max value of hist_fit
+            fit_peak_val = norm_hist_fit[fit_peak_index]  # max value of hist_fit
             # estimate correction coefficients that match fit_peak to ref_peak
             alpha_est = fit_peak_val / ref_peak_val
             x_est = intensity_bin_edges[ref_peak_index] - alpha_est * intensity_bin_edges[fit_peak_index]
-            init_pars = np.asarray([alpha_est, x_est], dtype=np.float32)
+            init_pars = np.asarray([alpha_est, x_est], dtype=np.float64)
 
             # calculate alpha and x
-            alpha_x_parameters = iit.optim_iit_linear(hist_ref, hist_fit, intensity_bin_edges,
+            alpha_x_parameters = iit.optim_iit_linear(norm_hist_ref, norm_hist_fit, intensity_bin_edges,
                                                       init_pars=init_pars)
             # save alpha and x to database
             db_funcs.store_iit_values(db_session, inst_pd_use, meth_name, meth_desc,

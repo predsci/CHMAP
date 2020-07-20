@@ -21,9 +21,10 @@ be enlarged by clicking image titles.
 ![Original STB Image](../img/iit/STB_original.png) | ![Corrected STB Image](../img/iit/STB_corrected.png)   |  ![Difference STB Image](../img/iit/STB_difference.png) 
 
 ## Examples of Histograms
-[Original Histogram](../img/iit/hist_original.png) | [LBC Corrected Histogram](../img/iit/hist_lbc_corrected.png)  | [IIT Corrected Histogram](../img/iit/hist_iit_corrected.png)
-:-: | :-: | :-:
-![Original Histogram](../img/iit/hist_original.png) | ![LBC Corrected Histogram](../img/iit/hist_lbc_corrected.png)  | ![IIT Corrected Histogram](../img/iit/hist_iit_corrected.png)
+200 Intensity Bin Histograms before and after IIT Correction..
+[LBC Corrected Histogram](../img/iit/hist_lbc_corrected.png)  | [IIT Corrected Histogram](../img/iit/hist_iit_corrected.png)
+ :-: | :-:
+![LBC Corrected Histogram](../img/iit/hist_lbc_corrected.png)  | ![IIT Corrected Histogram](../img/iit/hist_iit_corrected.png)
 
 
 ## Analysis Pipeline
@@ -84,7 +85,7 @@ def calc_iit_coefficients(db_session, inst_list, ref_inst, calc_query_time_min, 
                               time_max=calc_query_time_max + datetime.timedelta(days=number_of_days), instrument=ref_instrument)
       rot_images = db_funcs.query_euv_images_rot(db_session, rot_min=rot_min, rot_max=rot_max,
                                                instrument=query_instrument)
-      alpha_x_parameters = iit.optim_iit_linear(hist_ref, hist_fit, intensity_bin_edges, init_pars=init_pars)
+      alpha_x_parameters = iit.optim_iit_linear(norm_hist_ref, norm_hist_fit, intensity_bin_edges, init_pars=init_pars)
       db_funcs.store_iit_values(db_session, pd_hist, meth_name, meth_desc, alpha_x_parameters.x, create)
 
 ```
@@ -132,8 +133,7 @@ def apply_iit_correction(db_session, hdf_data_dir, iit_query_time_min, iit_query
                                                 instrument)
     original_los, lbcc_image, mu_indices, use_indices = lbcc_funcs.apply_lbc(db_session, hdf_data_dir, combo_query_lbc,
                                                 image_row=row, n_intensity_bins=n_intensity_bins, R0=R0)
-    lbcc_image, iit_image, use_indices = apply_iit(db_session, hdf_data_dir, combo_query_iit, lbcc_image,
-                                                use_indices, image_row=row, R0=R0)                
+    lbcc_image, iit_image, use_indices = apply_iit(db_session, hdf_data_dir, combo_query_iit, lbcc_image, use_indices, image_row=row, R0=R0)            
     if plot:
         Plotting.PlotCorrectedImage(lbcc_data, los_image=original_los, nfig=100 + inst_index * 10 + index,
                             title="Corrected LBCC Image for " + instrument)
@@ -165,7 +165,7 @@ This is a sub-step that applies the Inter-Instrument Transformation Correction t
 It is called during the [third step](../ipp/iit.md#apply-inter-instrument-transformation-and-plot-new-images) of Inter-Instrument Transformation.
 
 ```python
-def apply_iit(db_session, hdf_data_dir, inst_combo_query, lbcc_image, use_indices, image_row, R0=1.01):
+def apply_iit(db_session, hdf_data_dir, inst_combo_query, lbcc_image, image_row, R0=1.01):
     """
     function to apply IIT to a specific image, returns corrected image
     """

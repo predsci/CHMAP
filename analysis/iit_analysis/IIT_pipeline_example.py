@@ -23,7 +23,7 @@ number_of_days = 180  # days for moving average
 
 # TIME RANGE FOR IIT CORRECTION AND IMAGE PLOTTING
 iit_query_time_min = datetime.datetime(2011, 4, 1, 0, 0, 0)
-iit_query_time_max = datetime.datetime(2011, 4, 10, 0, 0, 0)
+iit_query_time_max = datetime.datetime(2011, 10, 1, 0, 0, 0)
 plot = True  # true if you want to plot resulting images
 n_images_plot = 1  # number of images to plot
 
