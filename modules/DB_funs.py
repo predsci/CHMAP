@@ -470,7 +470,7 @@ def add_euv_map(db_session, psi_map, base_path=None, map_type=None):
 
             # Loop over psi_map.method_info rows and insert variable values
             for index, var_row in psi_map.method_info.iterrows():
-                add_var_val = Var_Vals(map_id=map_id, combo_id=combo_id, meth_id=var_row.meth_id,
+                add_var_val = Var_Vals_Map(map_id=map_id, combo_id=combo_id, meth_id=var_row.meth_id,
                                        var_id=var_row.var_id, var_val=var_row.var_val)
                 db_session.add(add_var_val)
 
@@ -1004,7 +1004,7 @@ def add_map_dbase_record(db_session, psi_map, base_path=None, map_type=None):
     # Get image combo_id. Create if it doesn't already exist.
     image_ids = psi_map.image_info.image_id.to_list()
     # TODO: THIS WILL NEED TO BE DEALT WITH - METHOD IDS
-    db_session, combo_id, combo_times = get_combo_id(db_session=db_session, meth_id=meth_ids, image_ids=image_ids,
+    db_session, combo_id, combo_times = get_combo_id(db_session=db_session, meth_id=meth_ids[0], image_ids=image_ids,
                                                      create=True)
     psi_map.map_info.loc[0, "combo_id"] = combo_id
     psi_map.map_info.loc[0, "date_mean"] = combo_times['date_mean']
@@ -1457,10 +1457,10 @@ def store_iit_values(db_session, pd_hist, meth_name, meth_desc, alpha_x_paramete
         # create variable definitions
         if i == 0:
             var_name = "alpha"
-            var_desc = "IIT correction coefficient: alpha"
+            var_desc = "IIT scale factor"
         elif i == 1:
             var_name = "x"
-            var_desc = "IIT correction coefficient: x"
+            var_desc = "IIT offset"
 
         ##### store values #####
         # add method to db

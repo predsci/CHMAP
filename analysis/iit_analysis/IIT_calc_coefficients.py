@@ -1,7 +1,7 @@
 """
 code to calculate IIT correction coefficients and save to database
 """
-
+sys.path.append("CHD")
 import os
 import time
 import datetime
@@ -109,8 +109,8 @@ for inst_index, instrument in enumerate(inst_list):
         inst_hist_pd = db_funcs.query_hist(db_session=db_session, meth_id=method_id[1],
                                            n_intensity_bins=n_intensity_bins,
                                            lat_band=np.array(lat_band).tobytes(),
-                                           time_min=inst_time_min,
-                                           time_max=inst_time_max,
+                                           time_min=inst_time_min - datetime.timedelta(days=number_of_days),
+                                           time_max=inst_time_max + datetime.timedelta(days=number_of_days),
                                            instrument=query_instrument)
         # convert binary to histogram data
         lat_band, mu_bin_edges, intensity_bin_edges, inst_full_hist = psi_d_types.binary_to_hist(

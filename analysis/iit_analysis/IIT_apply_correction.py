@@ -1,7 +1,7 @@
 """
 code to apply IIT correction and plot resulting images
 """
-
+sys.path.append("CHD")
 import os
 import datetime
 import time
