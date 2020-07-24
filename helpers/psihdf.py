@@ -155,25 +155,28 @@ def wrh5_fullmap(h5_filename, x, y, z, f, method_info=None, image_info=None, map
     for i in range(0, ndims):
         if i == 0:
             dim = h5file.create_dataset("dim1", data=x)
-            h5file['Data'].dims.create_scale(dim, 'dim1')
+            # h5file['Data'].dims.create_scale(dim, 'dim1')
+            dim.make_scale('dim1')
             h5file['Data'].dims[0].attach_scale(dim)
             h5file['Data'].dims[0].label = 'dim1'
         elif i == 1:
             dim = h5file.create_dataset("dim2", data=y)
-            h5file['Data'].dims.create_scale(dim, 'dim2')
+            #h5file['Data'].dims.create_scale(dim, 'dim2')
+            dim.make_scale('dim2')
             h5file['Data'].dims[1].attach_scale(dim)
             h5file['Data'].dims[1].label = 'dim2'
         elif i == 2:
             dim = h5file.create_dataset("dim3", data=z)
-            h5file['Data'].dims.create_scale(dim, 'dim3')
+            #h5file['Data'].dims.create_scale(dim, 'dim3')
+            dim.make_scale('dim3')
             h5file['Data'].dims[2].attach_scale(dim)
             h5file['Data'].dims[2].label = 'dim3'
 
     # Save secondary data arrays
     if mu is not None:
-        h5file.create_dataset("mu", data=mu)
+        h5file.create_dataset("mu", data=mu, dtype='f8')
     if origin_image is not None:
-        h5file.create_dataset("origin_image", data=origin_image)
+        h5file.create_dataset("origin_image", data=origin_image, dtype='i4')
 
     # Convert the metadata to a json string, save it as an "attribute"
     if method_info is not None:
@@ -218,13 +221,13 @@ def rdh5_fullmap(h5_filename):
     # Get the scales if they exist:
     for i in range(0, ndims):
         if i == 0:
-            if (len(h5file['Data'].dims[0].keys()) != 0):
+            if len(h5file['Data'].dims[0].keys()) != 0:
                 x = h5file['Data'].dims[0][0]
         elif i == 1:
-            if (len(h5file['Data'].dims[1].keys()) != 0):
+            if len(h5file['Data'].dims[1].keys()) != 0:
                 y = h5file['Data'].dims[1][0]
         elif i == 2:
-            if (len(h5file['Data'].dims[2].keys()) != 0):
+            if len(h5file['Data'].dims[2].keys()) != 0:
                 z = h5file['Data'].dims[2][0]
 
     x = np.array(x)
@@ -234,11 +237,13 @@ def rdh5_fullmap(h5_filename):
 
     # load secondary data
     if 'mu' in h5file.keys():
-        mu = h5file['mu']
+        # mu = h5file['mu']
+        mu = h5file.get('mu')[:]
     else:
         mu = None
     if 'origin_image' in h5file.keys():
-        origin_image = h5file['origin_image']
+        # origin_image = h5file['origin_image']
+        origin_image = h5file.get('origin_image')[:]
     else:
         origin_image = None
 

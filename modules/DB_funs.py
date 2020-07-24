@@ -65,7 +65,7 @@ def init_db_conn(db_name, chd_base, sqlite_path=""):
     session = sessionmaker(bind=engine)
     # open session/connection to DB
     db = session()
-    print("Connection successful")
+    print("Connection successful\n")
     return db
 
 
@@ -451,8 +451,14 @@ def add_euv_map(db_session, psi_map, base_path=None, map_type=None):
             # if filename is not specified, auto-generate using map_id
             if fname is None or np.isnan(fname):
                 # generate filename
+                if len(psi_map.map_info) == 1:
+                    inst = psi_map.image_info.instrument[0]
+                else:
+                    inst = None
                 subdir, temp_fname = misc_helpers.construct_map_path_and_fname(base_path, psi_map.map_info.date_mean[0],
-                                                                               map_id, map_type, 'h5', mkdir=True)
+                                                                               map_id, map_type, 'h5',
+                                                                               inst=inst,
+                                                                               mkdir=True)
                 h5_filename = os.path.join(subdir, temp_fname)
                 rel_file_path = h5_filename.replace(base_path, "")
                 # record file path in map object
@@ -471,17 +477,17 @@ def add_euv_map(db_session, psi_map, base_path=None, map_type=None):
             # Loop over psi_map.method_info rows and insert variable values
             for index, var_row in psi_map.method_info.iterrows():
                 add_var_val = Var_Vals_Map(map_id=map_id, combo_id=combo_id, meth_id=var_row.meth_id,
-                                       var_id=var_row.var_id, var_val=var_row.var_val)
+                                           var_id=var_row.var_id, var_val=var_row.var_val)
                 db_session.add(add_var_val)
 
             # now commit EUV_Map update and Var_Vals update simultaneously
             db_session.commit()
             exit_status = 0  # New map record created
-            print("PsiMap object written to: " + h5_filename + "\nDatabase record created with map_id: " + map_id)
+            print("PsiMap object written to:", h5_filename, "\nDatabase record created with map_id:", map_id, "\n")
         else:
             exit_status = 1
-            print("This map already exists in the database with map_id: " + map_matches.map_id +
-                  ".\n No file written. No EUV_Maps record added.")
+            print("This map already exists in the database with map_id:", map_matches.map_id[0],
+                  "\nNo file written. No EUV_Maps record added.\n")
 
     return db_session, exit_status, psi_map
 
@@ -788,7 +794,7 @@ def query_euv_maps(db_session, mean_time_range=None, extrema_time_range=None, n_
     :param db_session: SQLAlchemy database session.  Used for database connection and structure info.
     :param mean_time_range: Two element list of datetime values. Returns maps with mean_time in the range.
     :param extrema_time_range: Two element list of datetime values. Returns maps with min/max ranges that intersect
-    extremea_time_range.
+    extrema_time_range.
     :param n_images: An integer value. Returns maps made from n_images number of images.
     :param image_ids: A list of one or more integers.  Returns maps that include all images in image_ids.
     :param methods: A list of one or more character strings.  Returns maps that include all methods in 'methods'.
@@ -825,7 +831,7 @@ def query_euv_maps(db_session, mean_time_range=None, extrema_time_range=None, n_
 
     if n_images is not None:
         # AND combo must have Image_Combos.n_images IN(n_images)
-        combo_query = combo_query.filter_by(Image_Combos.n_images.in_(n_images))
+        combo_query = combo_query.filter(Image_Combos.n_images == n_images)
 
     if image_ids is not None:
         # AND filter by combos that contain image_ids
@@ -886,11 +892,6 @@ def query_euv_maps(db_session, mean_time_range=None, extrema_time_range=None, n_
     # return Var_Vals_Map joined with var_defs. they are not directly connected tables, so use explicit join syntax
     var_query = db_session.query(Var_Vals_Map, Var_Defs).join(Var_Defs, Var_Vals_Map.var_id == Var_Defs.var_id
                                                               ).filter(Var_Vals_Map.map_id.in_(map_info.map_id))
-    joint_query = var_query.join(Meth_Defs)
-    joint_query = db_session.query(Meth_Defs, Var_Defs, Var_Vals_Map).join(Var_Defs).join(Var_Vals_Map,
-                                                                                          Var_Defs).filter(
-        Var_Vals_Map.map_id.in_(map_info.map_id)
-    )
     joint_query = db_session.query(Meth_Defs, Var_Defs, Var_Vals_Map).filter(
         Meth_Defs.meth_id == Var_Defs.meth_id).filter(
         Var_Defs.var_id == Var_Vals_Map.var_id).filter(Var_Vals_Map.map_id.in_(map_info.map_id))
@@ -901,26 +902,28 @@ def query_euv_maps(db_session, mean_time_range=None, extrema_time_range=None, n_
     # also get method info
     # method_info = pd.read_sql(db_session.query(Meth_Defs).statement, db_session.bind)
 
-    # This doesn't make sense.  We want a dataframe detailing each map record
     # Then divide results up into a list of Map objects
-    # map_list = [datatypes.PsiMap()]*len(map_info)
-    # for index, map_series in map_info.iterrows():
-    #     # map_info
-    #     map_list[index].append_map_info(map_series)
-    #     # image_info
-    #     combo_id = map_series.combo_id
-    #     image_ids = image_assoc.image_id[image_assoc.combo_id==combo_id]
-    #     images_slice = image_info.loc[image_info.image_id.isin(image_ids)]
-    #     map_list[index].append_image_info(images_slice)
-    #     # var_info
-    #     var_slice = var_info.loc[var_info.map_id==map_series.map_id]
-    #     map_list[index].append_var_info(var_slice)
-    #     # method info
-    #     map_list[index].append_method_info(method_info.loc[method_info.meth_id==map_series.meth_id])
-    #
-    # return map_list
+    map_list = [datatypes.PsiMap()] * len(map_info)
+    map_data_dir = App.MAP_FILE_HOME
+    for index, map_series in map_info.iterrows():
+        print("Reading in map with map id:", map_series.map_id)
+        hdf_path = map_data_dir + map_series.fname
+        map = datatypes.read_psi_map(hdf_path)
+        # map_info
+        map_list[index] = map
+        map_list[index].append_map_info(map_series)
+        #     # image_info
+        combo_id = map_series.combo_id
+        image_ids = image_assoc.image_id[image_assoc.combo_id == combo_id]
+        images_slice = image_info.loc[image_info.image_id.isin(image_ids)]
+        map_list[index].append_image_info(images_slice)
+        #     # var_info
+        #var_slice = var_query.loc[var_query.map_id == map_series.map_id]
+        #map_list[index].append_var_info(var_slice)
+        #     # method info
+        map_list[index].append_method_info(method_info.loc[method_info.meth_id == map_series.meth_id])
 
-    return map_info, image_info, method_info
+    return map_info, image_info, method_info, map_list
 
 
 def create_map_input_object(new_map, fname, image_df, var_vals, method_name, time_of_compute=None):
@@ -1003,6 +1006,7 @@ def add_map_dbase_record(db_session, psi_map, base_path=None, map_type=None):
 
     # Get image combo_id. Create if it doesn't already exist.
     image_ids = psi_map.image_info.image_id.to_list()
+    image_ids= tuple(image_ids)
     # TODO: THIS WILL NEED TO BE DEALT WITH - METHOD IDS
     db_session, combo_id, combo_times = get_combo_id(db_session=db_session, meth_id=meth_ids[0], image_ids=image_ids,
                                                      create=True)
@@ -1301,6 +1305,7 @@ def query_inst_combo(db_session, query_time_min, query_time_max, meth_name, inst
     """
     method_id = get_method_id(db_session, meth_name, meth_desc=None, var_names=None, var_descs=None,
                               create=True)
+
     inst_combo_query = pd.read_sql(
         db_session.query(Image_Combo_Assoc.combo_id).filter(Image_Combo_Assoc.image_id.in_(
             db_session.query(EUV_Images.image_id).filter(EUV_Images.instrument == instrument))).statement,
@@ -1328,7 +1333,7 @@ def query_var_val(db_session, meth_name, date_obs, inst_combo_query):
 
     # query meth_defs for method id
     method_id_info = get_method_id(db_session, meth_name, meth_desc=None, var_names=None, var_descs=None,
-                                            create=False)
+                                   create=False)
     # query var defs for variable id
     var_id = get_var_id(db_session, method_id_info[1], var_name=None, var_desc=None, create=False)
 
@@ -1338,7 +1343,8 @@ def query_var_val(db_session, meth_name, date_obs, inst_combo_query):
     elif date_obs >= inst_combo_query.date_mean.iloc[-1]:
         correct_combo = inst_combo_query[(inst_combo_query['date_mean'] == str(inst_combo_query.date_mean.iloc[-1]))]
     else:
-        correct_combo = inst_combo_query[(inst_combo_query['date_mean'] >= str(date_obs - datetime.timedelta(days=7))) & (
+        correct_combo = inst_combo_query[
+            (inst_combo_query['date_mean'] >= str(date_obs - datetime.timedelta(days=7))) & (
                     inst_combo_query['date_mean'] <= str(date_obs + datetime.timedelta(days=7)))]
 
     # create empty arrays

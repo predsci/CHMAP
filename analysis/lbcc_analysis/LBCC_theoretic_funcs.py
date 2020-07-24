@@ -221,6 +221,7 @@ def apply_lbc_correction(db_session, hdf_data_dir, inst_list, lbc_query_time_min
         ###### GET LOS IMAGES COORDINATES (DATA) #####
         for index in range(n_images_plot):
             row = image_pd.iloc[index]
+            print("Processing image number", row.image_id, "for LB Correction.")
             original_los, lbcc_image, mu_indices, use_indices = apply_lbc(db_session, hdf_data_dir,
                                                                           combo_query, image_row=row,
                                                                           n_intensity_bins=n_intensity_bins, R0=R0)
@@ -262,7 +263,6 @@ def apply_lbc(db_session, hdf_data_dir, inst_combo_query, image_row, n_intensity
     intensity_bin_edges = np.linspace(0, 5, num=n_intensity_bins + 1, dtype='float')
 
     ###### GET LOS IMAGES COORDINATES (DATA) #####
-    print("Processing image number", image_row.image_id, ".")
     if image_row.fname_hdf == "":
         print("Warning: Image # " + str(image_row.image_id) + " does not have an associated hdf file. Skipping")
         pass

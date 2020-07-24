@@ -58,7 +58,7 @@ def download_url(url, fpath, overwrite=False, verbose=True):
         return exit_flag
 
 
-def construct_path_and_fname(base_dir, dtime, prefix, postfix, extension, mkdir=True):
+def construct_path_and_fname(base_dir, dtime, prefix, postfix, extension, inst=None, mkdir=True):
     """
     Quick function to build a subdirectory path and filename for saving/reading data
     - This parses a builtin datetime object to get the time strings used to build the info
@@ -88,7 +88,10 @@ def construct_path_and_fname(base_dir, dtime, prefix, postfix, extension, mkdir=
             os.makedirs(sub_dir)
 
     # build the filename
-    fname = prefix + '_' + YYYY + MM + DD + 'T' + HH + NN + SS + '_' + postfix + '.' + extension
+    if inst is not None:
+        fname = prefix + '_' + inst + "_" + YYYY + MM + DD + 'T' + HH + NN + SS + '_' + postfix + '.' + extension
+    else:
+        fname = prefix + '_' + YYYY + MM + DD + 'T' + HH + NN + SS + '_' + postfix + '.' + extension
 
     return sub_dir, fname
 
@@ -230,7 +233,7 @@ def carrington_rotation_number_relative(time, lon):
     return cr_now
 
 
-def construct_map_path_and_fname(base_dir, dtime, map_id, map_type, extension, mkdir=True):
+def construct_map_path_and_fname(base_dir, dtime, map_id, map_type, extension, inst=None, mkdir=True):
     """
     Wrapper to adapt construct_path_and_fname() for map files.
     - it returns the subdirectory path and filename
@@ -248,8 +251,8 @@ def construct_map_path_and_fname(base_dir, dtime, map_id, map_type, extension, m
         # check if the subdirectory exists
         if not os.path.isdir(maptype_base_dir):
             os.makedirs(maptype_base_dir)
-
-    sub_dir, fname = construct_path_and_fname(maptype_base_dir, dtime, prefix, postfix, extension, mkdir=mkdir)
+    sub_dir, fname = construct_path_and_fname(maptype_base_dir, dtime, prefix, postfix, extension, inst=inst,
+                                              mkdir=mkdir)
 
     return sub_dir, fname
 

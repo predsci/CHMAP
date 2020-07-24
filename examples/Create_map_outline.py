@@ -9,9 +9,6 @@ Working sketch of how we will combine some images into a map:
     6. Combine Maps
     7. Save to DB
 """
-import sys
-# path to modules and settings folders
-sys.path.append('/Users/tamarervin/work/chd')
 
 import os
 import datetime

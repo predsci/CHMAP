@@ -5,33 +5,30 @@ output: array of corrected images
 """
 
 import time
+import datetime
 import modules.DB_funs as db_funcs
 import analysis.lbcc_analysis.LBCC_theoretic_funcs as lbcc_funcs
 import analysis.iit_analysis.IIT_pipeline_funcs as iit_funcs
 
 
-####### ------ CORRECTION FUNCTION BELOW ------ #########
-def correct_euv_images(db_session, query_time_min, query_time_max, image_pd, inst_list, hdf_data_dir, n_intensity_bins, R0):
+####### ------ FULL CORRECTION FUNCTION  ------ #########
+def correct_euv_images(db_session, query_time_min, query_time_max, image_pd, inst_list, hdf_data_dir, n_intensity_bins,
+                       R0):
     """
     function to take in dataframe of LOS images and return corrected images list
-    @param db_session:
-    @param query_time_min:
-    @param query_time_max:
-    @param inst_list:
-    @param hdf_data_dir:
-    @param n_intensity_bins:
-    @param R0:
-    @return:
     """
     # start time
     start_time = time.time()
     corrected_images = []
-    ##### QUERY IMAGES ######
+    ##### QUERY CORRECTION COMBOS ######
     for inst_index, instrument in enumerate(inst_list):
+        print("Starting corrections for", instrument, "images.")
         # query correct image combos
-        lbc_combo_query = db_funcs.query_inst_combo(db_session, query_time_min, query_time_max,
+        time_min = query_time_min - datetime.timedelta(days=7)
+        time_max = query_time_max + datetime.timedelta(days=7)
+        lbc_combo_query = db_funcs.query_inst_combo(db_session, time_min, time_max,
                                                     meth_name='LBCC Theoretic', instrument=instrument)
-        iit_combo_query = db_funcs.query_inst_combo(db_session, query_time_min, query_time_max, meth_name='IIT',
+        iit_combo_query = db_funcs.query_inst_combo(db_session, time_min, time_max, meth_name='IIT',
                                                     instrument=instrument)
 
         # create dataframe for instrument

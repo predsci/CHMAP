@@ -102,8 +102,8 @@ class LosImage:
 
     def interp_to_map(self, R0=1.0, map_x=None, map_y=None, no_data_val=-9999., image_num=None):
 
-        print("\nConverting " + self.info['instrument'] + "-" + str(self.info['wavelength']) + " image from " +
-              self.info['date_string'] + " to a map.")
+        print("Converting " + self.info['instrument'] + "-" + str(self.info['wavelength']) + " image from " +
+              self.info['date_string'] + " to a map.\n")
 
         if map_x is None and map_y is None:
             # Generate map grid based on number of image pixels vertically within R0
@@ -342,7 +342,7 @@ class PsiMap:
         3. reading a map hdf file ---needs to be created---
     """
 
-    def __init__(self, data, x, y, mu=None, origin_image=None, no_data_val=-9999.0):
+    def __init__(self, data=None, x=None, y=None, mu=None, origin_image=None, no_data_val=-9999.0):
         """
         Class to hold the standard information for a PSI map image
     for the CHD package.
@@ -358,43 +358,48 @@ class PsiMap:
         Initialization also uses database definitions to generate empty dataframes
         for metadata: method_info, image_info, map_info, and var_info
         """
-        # --- Initialize empty dataframes based on Table schema ---
-        # create the data tags (all pandas dataframes?)
-        self.image_info = init_df_from_declarative_base(db.EUV_Images)
-        # map_info will be a combination of Image_Combos and EUV_Maps
-        image_columns = []
-        for column in db.Image_Combos.__table__.columns:
-            image_columns.append(column.key)
-        map_columns = []
-        for column in db.EUV_Maps.__table__.columns:
-            map_columns.append(column.key)
-        df_cols = set().union(image_columns, map_columns)
-        self.map_info = pd.DataFrame(data=None, columns=df_cols)
-        # method_info is a combination of Var_Defs and Meth_Defs
-        meth_columns = []
-        for column in db.Meth_Defs.__table__.columns:
-            meth_columns.append(column.key)
-        defs_columns = []
-        for column in db.Var_Defs.__table__.columns:
-            defs_columns.append(column.key)
-        df_cols = set().union(meth_columns, defs_columns)
-        self.method_info = pd.DataFrame(data=None, columns=df_cols)
+        ### initialize class to create map list
+        # TODO: this was added - remove all the data, x, y = None stuff if crashes
+        if data is None:
+            self.data = self.x = self.y = ()
+        else:
+            # --- Initialize empty dataframes based on Table schema ---
+            # create the data tags (all pandas dataframes?)
+            self.image_info = init_df_from_declarative_base(db.EUV_Images)
+            # map_info will be a combination of Image_Combos and EUV_Maps
+            image_columns = []
+            for column in db.Image_Combos.__table__.columns:
+                image_columns.append(column.key)
+            map_columns = []
+            for column in db.EUV_Maps.__table__.columns:
+                map_columns.append(column.key)
+            df_cols = set().union(image_columns, map_columns)
+            self.map_info = pd.DataFrame(data=None, columns=df_cols)
+            # method_info is a combination of Var_Defs and Meth_Defs
+            meth_columns = []
+            for column in db.Meth_Defs.__table__.columns:
+                meth_columns.append(column.key)
+            defs_columns = []
+            for column in db.Var_Defs.__table__.columns:
+                defs_columns.append(column.key)
+            df_cols = set().union(meth_columns, defs_columns)
+            self.method_info = pd.DataFrame(data=None, columns=df_cols)
 
-        # Type cast data arrays
-        self.data = data.astype(DTypes.MAP_DATA)
-        self.x = x.astype(DTypes.MAP_AXES)
-        self.y = y.astype(DTypes.MAP_AXES)
-        if mu is not None:
-            self.mu = mu.astype(DTypes.MAP_MU)
-        else:
-            # create placeholder
-            self.mu = None
-        self.no_data_val = no_data_val
-        if origin_image is not None:
-            self.origin_image = origin_image.astype(DTypes.MAP_ORIGIN_IMAGE)
-        else:
-            # create placeholder
-            self.origin_image = None
+            # Type cast data arrays
+            self.data = data.astype(DTypes.MAP_DATA)
+            self.x = x.astype(DTypes.MAP_AXES)
+            self.y = y.astype(DTypes.MAP_AXES)
+            if mu is not None:
+                self.mu = mu.astype(DTypes.MAP_MU)
+            else:
+                # create placeholder
+                self.mu = None
+            self.no_data_val = no_data_val
+            if origin_image is not None:
+                self.origin_image = origin_image.astype(DTypes.MAP_ORIGIN_IMAGE)
+            else:
+                # create placeholder
+                self.origin_image = None
 
     def append_map_info(self, map_df):
         """

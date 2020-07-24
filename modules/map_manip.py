@@ -1,4 +1,3 @@
-
 """
 Functions to manipulate and combine maps
 """
@@ -7,6 +6,7 @@ import numpy as np
 
 import modules.datatypes as psi_d_types
 from settings.info import DTypes
+
 
 def combine_maps(map_list, mu_cutoff=0.0, del_mu=None):
     """
@@ -27,10 +27,10 @@ def combine_maps(map_list, mu_cutoff=0.0, del_mu=None):
         return map_list[0]
 
     # check that all maps have the same x and y grids
-    same_grid = all(map_list[0].x==map_list[1].x) and all(map_list[0].y==map_list[1].y)
+    same_grid = all(map_list[0].x == map_list[1].x) and all(map_list[0].y == map_list[1].y)
     if nmaps > 2:
-        for ii in range(1, nmaps-1):
-            same_temp = all(map_list[ii].x==map_list[ii+1].x) and all(map_list[ii].y==map_list[ii+1].y)
+        for ii in range(1, nmaps - 1):
+            same_temp = all(map_list[ii].x == map_list[ii + 1].x) and all(map_list[ii].y == map_list[ii + 1].y)
             same_grid = same_grid & same_temp
             if not same_grid:
                 break
@@ -58,7 +58,7 @@ def combine_maps(map_list, mu_cutoff=0.0, del_mu=None):
 
         if del_mu is not None:
             max_mu = mu_array.max(axis=2)
-            good_index = np.ndarray(shape=mat_size + (nmaps, ), dtype=bool)
+            good_index = np.ndarray(shape=mat_size + (nmaps,), dtype=bool)
             for ii in range(nmaps):
                 good_index[:, :, ii] = mu_array[:, :, ii] > (max_mu - del_mu)
             # make poor mu pixels unuseable to merge
