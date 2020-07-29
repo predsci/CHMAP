@@ -19,6 +19,10 @@ nav:
       - Database Basics: db/db.md
       - Database for LBC: db/lbc.md
       - Database for IIT: db/iit.md
+  - Coronal Hole Detection:
+      - Fortran to Python: chd/f2py.md
+      - CH Detection: chd/chd.md
+      - Mapping: chd/map.md
 
 # theme
 theme:

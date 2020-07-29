@@ -225,11 +225,9 @@ class LBCCImage(LosImage):
     Class that holds limb-brightening corrected data
     """
 
-    def __init__(self, h5_file, corrected_data, image_id, meth_id, intensity_bin_edges):
+    def __init__(self, los_image, lbcc_data, image_id, meth_id, intensity_bin_edges):
 
-        los_image = read_los_image(h5_file)
-        x, y, z, data, chd_meta, sunpy_meta = psihdf.rdh5_meta(h5_file)
-        super().__init__(data, x, y, chd_meta, sunpy_meta)
+        super().__init__(los_image.data, los_image.x, los_image.y, los_image.info)
         date_format = "%Y-%m-%dT%H:%M:%S.%f"
         self.date_obs = datetime.datetime.strptime(los_image.info['date_string'], date_format)
         self.instrument = los_image.info['instrument']
@@ -237,7 +235,7 @@ class LBCCImage(LosImage):
         self.distance = los_image.info['distance']
 
         # definitions
-        self.lbcc_data = corrected_data
+        self.lbcc_data = lbcc_data
         self.image_id = image_id
         self.meth_id = meth_id
         self.n_intensity_bins = len(intensity_bin_edges) - 1
@@ -273,9 +271,9 @@ class LBCCImage(LosImage):
         return mu_array, lat_array, lbcc_data
 
 
-def create_lbcc_image(h5_file, corrected_data, image_id, meth_id, intensity_bin_edges):
+def create_lbcc_image(los_image, corrected_data, image_id, meth_id, intensity_bin_edges):
     # create LBCC Image structure
-    data = LBCCImage(h5_file, corrected_data, image_id, meth_id, intensity_bin_edges)
+    data = LBCCImage(los_image, corrected_data, image_id, meth_id, intensity_bin_edges)
     return data
 
 
@@ -293,41 +291,34 @@ class IITImage(LBCCImage):
     class to hold corrected IIT data
     """
 
-    def __init__(self, lbcc_image, iit_corrected_data, meth_id, h5_file):
+    def __init__(self, los_image, lbcc_image, iit_corrected_data, meth_id):
         # LBCC inherited definitions
         corrected_data = lbcc_image.lbcc_data
         image_id = lbcc_image.image_id
         intensity_bin_edges = lbcc_image.intensity_bin_edges
-        super().__init__(h5_file, corrected_data, image_id, meth_id, intensity_bin_edges)
+        super().__init__(los_image, corrected_data, image_id, meth_id, intensity_bin_edges)
 
         # IIT specific stuff
         self.iit_data = iit_corrected_data
 
-    def iit_hist(self, lat_band, log10=True):
-        """
-        function to create iit histogram
-        """
 
-        # first reduce to points greater than intensity-min and in lat-band
-        lat_band_index = np.logical_and(self.lat <= max(lat_band), self.lat >= min(lat_band))
-        mu_index = np.logical_and(self.mu > 0, self.mu <= self.mu.max())
-        use_index = np.logical_and(mu_index, lat_band_index)
-
-        use_data = self.iit_data[use_index]
-        if log10:
-            # use_data[use_data < 0.] = 0.01
-            use_data = np.where(use_data > 0, use_data, 0.01)
-            use_data = np.log10(use_data)
-
-        # generate intensity histogram
-        hist_out, bin_edges = np.histogram(use_data, bins=self.intensity_bin_edges)
-
-        return hist_out
-
-
-def create_iit_image(lbcc_image, iit_corrected_data, meth_id, h5_file):
+def create_iit_image(los_image, lbcc_image, iit_corrected_data, meth_id):
     # create LBCC Image structure
-    data = IITImage(lbcc_image, iit_corrected_data, meth_id, h5_file)
+    data = IITImage(los_image, lbcc_image, iit_corrected_data, meth_id)
+    return data
+
+
+class CHDImage(LosImage):
+    """
+    class to hold CHD data
+    """
+    def __init__(self, los_image, chd_data):
+        super().__init__(los_image.data, los_image.x, los_image.y, los_image.info)
+        self.data = chd_data
+
+
+def create_chd_image(los_image, chd_data):
+    data = CHDImage(los_image, chd_data)
     return data
 
 
@@ -359,7 +350,6 @@ class PsiMap:
         for metadata: method_info, image_info, map_info, and var_info
         """
         ### initialize class to create map list
-        # TODO: this was added - remove all the data, x, y = None stuff if crashes
         if data is None:
             self.data = self.x = self.y = ()
         else:

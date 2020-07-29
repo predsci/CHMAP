@@ -12,7 +12,6 @@ outline to create combination EUV maps
 6. Save to DB
 """
 
-sys.path.append("CHD")
 import modules.DB_classes as db_class
 import modules.DB_funs as db_funcs
 from modules.map_manip import combine_maps

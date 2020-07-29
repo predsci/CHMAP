@@ -254,8 +254,8 @@ def apply_iit_correction(db_session, hdf_data_dir, iit_query_time_min, iit_query
                                                                                      n_intensity_bins=n_intensity_bins,
                                                                                      R0=R0)
             #### APPLY IIT CORRECTION ####
-            lbcc_image, iit_image, use_indices = apply_iit(db_session, hdf_data_dir, combo_query_iit,
-                                                                     lbcc_image, use_indices, image_row=row, R0=R0)
+            lbcc_image, iit_image, use_indices = apply_iit(db_session, combo_query_iit,
+                                                           lbcc_image, use_indices, original_los, R0=R0)
 
             if plot:
                 lbcc_data = lbcc_image.lbcc_data
@@ -282,7 +282,7 @@ def apply_iit_correction(db_session, hdf_data_dir, iit_query_time_min, iit_query
 
 
 ###### APPLY IIT ######
-def apply_iit(db_session, hdf_data_dir, inst_combo_query, lbcc_image, use_indices, image_row, R0=1.01):
+def apply_iit(db_session, inst_combo_query, lbcc_image, use_indices, los_image, R0=1.01):
     ###### GET VARIABLE VALUES #####
     meth_name = "IIT"
     method_id_info = db_funcs.get_method_id(db_session, meth_name, meth_desc=None, var_names=None,
@@ -297,8 +297,7 @@ def apply_iit(db_session, hdf_data_dir, inst_combo_query, lbcc_image, use_indice
     corrected_iit_data = np.copy(lbcc_data)
     corrected_iit_data[use_indices] = 10 ** (alpha * np.log10(lbcc_data[use_indices]) + x)
     # create IIT datatype
-    hdf_path = os.path.join(hdf_data_dir, image_row.fname_hdf)
-    iit_image = psi_d_types.create_iit_image(lbcc_image, corrected_iit_data, method_id_info[1], hdf_path)
+    iit_image = psi_d_types.create_iit_image(los_image, lbcc_image, corrected_iit_data, method_id_info[0])
     psi_d_types.LosImage.get_coordinates(iit_image, R0=R0)
 
     return lbcc_image, iit_image, use_indices

@@ -78,16 +78,19 @@ def PlotCorrectedImage(corrected_data, los_image, nfig=None, title=None):
     return None
 
 
-def PlotMap(map_plot, nfig=None, title=None):
+def PlotMap(map_plot, nfig=None, title=None, map_type=None):
     """
     Super simple plotting routine for PsiMap objects.
     imshow() should be replaced with pcolormesh() for generalizing to non-uniform rectilinear grids
     OR use Ron's Plot2D from PSI's 'tools'
     """
     # set color palette and normalization (improve by using Ron's colormap setup)
-    norm = mpl.colors.LogNorm()
-    norm = mpl.colors.LogNorm(vmin=1.0, vmax=np.nanmax(map_plot.data))
-    im_cmap = plt.get_cmap('sohoeit195')
+    if map_type == "CHD":
+        norm = mpl.colors.LogNorm(vmin=0.01, vmax=np.nanmax(map_plot.data))
+        im_cmap = plt.get_cmap('twilight_shifted')
+    else:
+        norm = mpl.colors.LogNorm(vmin=1.0, vmax=np.nanmax(map_plot.data))
+        im_cmap = plt.get_cmap('sohoeit195')
 
     # plot the initial image
     if nfig is None:
@@ -120,7 +123,7 @@ def PlotMap(map_plot, nfig=None, title=None):
 def Plot2D_Data(data, nfig=None, xlabel=None, ylabel=None, title=None):
     # data = data /data.max()
     # normalize by log10
-    norm = mpl.colors.LogNorm(vmin=1.0, vmax=data.max(), clip=True)
+    norm = mpl.colors.LogNorm(vmin=0.001, vmax=data.max(), clip=True)
 
     plot_arr = data
     plot_arr[plot_arr < .001] = .001
