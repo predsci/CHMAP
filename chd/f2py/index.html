@@ -19,7 +19,7 @@
     
     
       
-        <title>PSF Deconvolution - Coronal Hole Detection Project</title>
+        <title>Fortran to Python - Coronal Hole Detection Project</title>
       
     
     
@@ -62,7 +62,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#psf-deconvolution" class="md-skip">
+        <a href="#creating-wrapper-function-for-ezseg-algorithm" class="md-skip">
           Skip to content
         </a>
       
@@ -89,7 +89,7 @@
           </span>
           <span class="md-header-nav__topic md-ellipsis">
             
-              PSF Deconvolution
+              Fortran to Python
             
           </span>
         </div>
@@ -210,12 +210,10 @@
       
       
 
-  
 
-
-  <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+  <li class="md-nav__item md-nav__item--nested">
     
-      <input class="md-nav__toggle md-toggle" data-md-toggle="nav-3" type="checkbox" id="nav-3" checked>
+      <input class="md-nav__toggle md-toggle" data-md-toggle="nav-3" type="checkbox" id="nav-3">
     
     <label class="md-nav__link" for="nav-3">
       Image Pre-Processing
@@ -237,20 +235,11 @@
           
           
 
-  
 
-
-  <li class="md-nav__item md-nav__item--active">
-    
-    <input class="md-nav__toggle md-toggle" data-md-toggle="toc" type="checkbox" id="__toc">
-    
-      
-    
-    
-    <a href="./" title="PSF Deconvolution" class="md-nav__link md-nav__link--active">
+  <li class="md-nav__item">
+    <a href="../../ipp/psf/" title="PSF Deconvolution" class="md-nav__link">
       PSF Deconvolution
     </a>
-    
   </li>
 
         
@@ -260,7 +249,7 @@
 
 
   <li class="md-nav__item">
-    <a href="../lbc/" title="Limb-Brightening Correction" class="md-nav__link">
+    <a href="../../ipp/lbc/" title="Limb-Brightening Correction" class="md-nav__link">
       Limb-Brightening Correction
     </a>
   </li>
@@ -272,7 +261,7 @@
 
 
   <li class="md-nav__item">
-    <a href="../iit/" title="Inter-Instrument Transformation" class="md-nav__link">
+    <a href="../../ipp/iit/" title="Inter-Instrument Transformation" class="md-nav__link">
       Inter-Instrument Transformation
     </a>
   </li>
@@ -353,10 +342,12 @@
       
       
 
+  
 
-  <li class="md-nav__item md-nav__item--nested">
+
+  <li class="md-nav__item md-nav__item--active md-nav__item--nested">
     
-      <input class="md-nav__toggle md-toggle" data-md-toggle="nav-5" type="checkbox" id="nav-5">
+      <input class="md-nav__toggle md-toggle" data-md-toggle="nav-5" type="checkbox" id="nav-5" checked>
     
     <label class="md-nav__link" for="nav-5">
       Coronal Hole Detection
@@ -378,11 +369,49 @@
           
           
 
+  
 
-  <li class="md-nav__item">
-    <a href="../../chd/f2py/" title="Fortran to Python" class="md-nav__link">
+
+  <li class="md-nav__item md-nav__item--active">
+    
+    <input class="md-nav__toggle md-toggle" data-md-toggle="toc" type="checkbox" id="__toc">
+    
+    
+      <label class="md-nav__link md-nav__link--active" for="__toc">
+        Fortran to Python
+        <span class="md-nav__icon md-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 9h14V7H3v2m0 4h14v-2H3v2m0 4h14v-2H3v2m16 0h2v-2h-2v2m0-10v2h2V7h-2m0 6h2v-2h-2v2z"/></svg>
+        </span>
+      </label>
+    
+    <a href="./" title="Fortran to Python" class="md-nav__link md-nav__link--active">
       Fortran to Python
     </a>
+    
+      
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"/></svg>
+      </span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#creating-wrapper-function-for-ezseg-algorithm" class="md-nav__link">
+    Creating Wrapper Function for Ezseg Algorithm
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+    
   </li>
 
         
@@ -392,7 +421,7 @@
 
 
   <li class="md-nav__item">
-    <a href="../../chd/chd/" title="CH Detection" class="md-nav__link">
+    <a href="../chd/" title="CH Detection" class="md-nav__link">
       CH Detection
     </a>
   </li>
@@ -404,7 +433,7 @@
 
 
   <li class="md-nav__item">
-    <a href="../../chd/map/" title="Mapping" class="md-nav__link">
+    <a href="../map/" title="Mapping" class="md-nav__link">
       Mapping
     </a>
   </li>
@@ -429,8 +458,23 @@
 <nav class="md-nav md-nav--secondary" aria-label="Table of contents">
   
   
-    
   
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"/></svg>
+      </span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#creating-wrapper-function-for-ezseg-algorithm" class="md-nav__link">
+    Creating Wrapper Function for Ezseg Algorithm
+  </a>
+  
+</li>
+      
+    </ul>
   
 </nav>
                   </div>
@@ -442,7 +486,7 @@
             <article class="md-content__inner md-typeset">
               
                 
-                  <a href="https://github.com/predsci/CHD/blob/master/CHD-mkdocs/docs/ipp/psf.md" title="Edit this page" class="md-content__button md-icon">
+                  <a href="https://github.com/predsci/CHD/blob/master/CHD-mkdocs/docs/chd/f2py.md" title="Edit this page" class="md-content__button md-icon">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20.71 7.04c.39-.39.39-1.04 0-1.41l-2.34-2.34c-.37-.39-1.02-.39-1.41 0l-1.84 1.83 3.75 3.75M3 17.25V21h3.75L17.81 9.93l-3.75-3.75L3 17.25z"/></svg>
                   </a>
                 
@@ -450,8 +494,27 @@
                   
                 
                 
-                <h1 id="psf-deconvolution">PSF Deconvolution</h1>
-<p>Page regarding PSF deconvolution. </p>
+                  <h1>Fortran to Python</h1>
+                
+                <h2 id="creating-wrapper-function-for-ezseg-algorithm">Creating Wrapper Function for Ezseg Algorithm</h2>
+<p>How to create a wrapper function for Fortran code:  </p>
+<blockquote>
+<p>more information can be found <a href="https://numpy.org/devdocs/f2py/f2py.getting-started.html#the-smart-way">here</a>  </p>
+</blockquote>
+<ul>
+<li>1.) <code>python -m numpy.f2py ezseg.f -m ezsegwrapper -h ezseg.pyf</code>   <ul>
+<li>creates <code>ezseg.pyf</code> file with ezsegwrapper function </li>
+</ul>
+</li>
+<li>2.) <code>cp ezseg.pyf ezsegwrapper.pyf</code>  <ul>
+<li>copy file and update to be python compatible  </li>
+</ul>
+</li>
+<li>3.) <code>python -m numpy.f2py -c ezsegwrapper.pyf ezseg.f</code>  <ul>
+<li>creates shared module <code>ezsegwrapper.so</code></li>
+</ul>
+</li>
+</ul>
                 
               
               
@@ -470,7 +533,7 @@
     <div class="md-footer-nav">
       <nav class="md-footer-nav__inner md-grid" aria-label="Footer">
         
-          <a href="../../about/" title="About the Project" class="md-footer-nav__link md-footer-nav__link--prev" rel="prev">
+          <a href="../../db/iit/" title="Database for IIT" class="md-footer-nav__link md-footer-nav__link--prev" rel="prev">
             <div class="md-footer-nav__button md-icon">
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"/></svg>
             </div>
@@ -479,19 +542,19 @@
                 <span class="md-footer-nav__direction">
                   Previous
                 </span>
-                About the Project
+                Database for IIT
               </div>
             </div>
           </a>
         
         
-          <a href="../lbc/" title="Limb-Brightening Correction" class="md-footer-nav__link md-footer-nav__link--next" rel="next">
+          <a href="../chd/" title="CH Detection" class="md-footer-nav__link md-footer-nav__link--next" rel="next">
             <div class="md-footer-nav__title">
               <div class="md-ellipsis">
                 <span class="md-footer-nav__direction">
                   Next
                 </span>
-                Limb-Brightening Correction
+                CH Detection
               </div>
             </div>
             <div class="md-footer-nav__button md-icon">

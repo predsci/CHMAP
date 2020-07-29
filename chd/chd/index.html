@@ -19,7 +19,7 @@
     
     
       
-        <title>PSF Deconvolution - Coronal Hole Detection Project</title>
+        <title>CH Detection - Coronal Hole Detection Project</title>
       
     
     
@@ -62,7 +62,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#psf-deconvolution" class="md-skip">
+        <a href="#coronal-hole-detection" class="md-skip">
           Skip to content
         </a>
       
@@ -89,7 +89,7 @@
           </span>
           <span class="md-header-nav__topic md-ellipsis">
             
-              PSF Deconvolution
+              CH Detection
             
           </span>
         </div>
@@ -210,12 +210,10 @@
       
       
 
-  
 
-
-  <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+  <li class="md-nav__item md-nav__item--nested">
     
-      <input class="md-nav__toggle md-toggle" data-md-toggle="nav-3" type="checkbox" id="nav-3" checked>
+      <input class="md-nav__toggle md-toggle" data-md-toggle="nav-3" type="checkbox" id="nav-3">
     
     <label class="md-nav__link" for="nav-3">
       Image Pre-Processing
@@ -237,20 +235,11 @@
           
           
 
-  
 
-
-  <li class="md-nav__item md-nav__item--active">
-    
-    <input class="md-nav__toggle md-toggle" data-md-toggle="toc" type="checkbox" id="__toc">
-    
-      
-    
-    
-    <a href="./" title="PSF Deconvolution" class="md-nav__link md-nav__link--active">
+  <li class="md-nav__item">
+    <a href="../../ipp/psf/" title="PSF Deconvolution" class="md-nav__link">
       PSF Deconvolution
     </a>
-    
   </li>
 
         
@@ -260,7 +249,7 @@
 
 
   <li class="md-nav__item">
-    <a href="../lbc/" title="Limb-Brightening Correction" class="md-nav__link">
+    <a href="../../ipp/lbc/" title="Limb-Brightening Correction" class="md-nav__link">
       Limb-Brightening Correction
     </a>
   </li>
@@ -272,7 +261,7 @@
 
 
   <li class="md-nav__item">
-    <a href="../iit/" title="Inter-Instrument Transformation" class="md-nav__link">
+    <a href="../../ipp/iit/" title="Inter-Instrument Transformation" class="md-nav__link">
       Inter-Instrument Transformation
     </a>
   </li>
@@ -353,10 +342,12 @@
       
       
 
+  
 
-  <li class="md-nav__item md-nav__item--nested">
+
+  <li class="md-nav__item md-nav__item--active md-nav__item--nested">
     
-      <input class="md-nav__toggle md-toggle" data-md-toggle="nav-5" type="checkbox" id="nav-5">
+      <input class="md-nav__toggle md-toggle" data-md-toggle="nav-5" type="checkbox" id="nav-5" checked>
     
     <label class="md-nav__link" for="nav-5">
       Coronal Hole Detection
@@ -380,7 +371,7 @@
 
 
   <li class="md-nav__item">
-    <a href="../../chd/f2py/" title="Fortran to Python" class="md-nav__link">
+    <a href="../f2py/" title="Fortran to Python" class="md-nav__link">
       Fortran to Python
     </a>
   </li>
@@ -390,11 +381,80 @@
           
           
 
+  
 
-  <li class="md-nav__item">
-    <a href="../../chd/chd/" title="CH Detection" class="md-nav__link">
+
+  <li class="md-nav__item md-nav__item--active">
+    
+    <input class="md-nav__toggle md-toggle" data-md-toggle="toc" type="checkbox" id="__toc">
+    
+      
+    
+    
+      <label class="md-nav__link md-nav__link--active" for="__toc">
+        CH Detection
+        <span class="md-nav__icon md-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 9h14V7H3v2m0 4h14v-2H3v2m0 4h14v-2H3v2m16 0h2v-2h-2v2m0-10v2h2V7h-2m0 6h2v-2h-2v2z"/></svg>
+        </span>
+      </label>
+    
+    <a href="./" title="CH Detection" class="md-nav__link md-nav__link--active">
       CH Detection
     </a>
+    
+      
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"/></svg>
+      </span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#example-maps" class="md-nav__link">
+    Example Maps
+  </a>
+  
+    <nav class="md-nav" aria-label="Example Maps">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#original-euv-map" class="md-nav__link">
+    Original EUV Map
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#chd-map" class="md-nav__link">
+    CHD Map
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#combined-euvchd-map" class="md-nav__link">
+    Combined EUV/CHD Map
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+    
   </li>
 
         
@@ -404,7 +464,7 @@
 
 
   <li class="md-nav__item">
-    <a href="../../chd/map/" title="Mapping" class="md-nav__link">
+    <a href="../map/" title="Mapping" class="md-nav__link">
       Mapping
     </a>
   </li>
@@ -432,6 +492,50 @@
     
   
   
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"/></svg>
+      </span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#example-maps" class="md-nav__link">
+    Example Maps
+  </a>
+  
+    <nav class="md-nav" aria-label="Example Maps">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#original-euv-map" class="md-nav__link">
+    Original EUV Map
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#chd-map" class="md-nav__link">
+    CHD Map
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#combined-euvchd-map" class="md-nav__link">
+    Combined EUV/CHD Map
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
 </nav>
                   </div>
                 </div>
@@ -442,7 +546,7 @@
             <article class="md-content__inner md-typeset">
               
                 
-                  <a href="https://github.com/predsci/CHD/blob/master/CHD-mkdocs/docs/ipp/psf.md" title="Edit this page" class="md-content__button md-icon">
+                  <a href="https://github.com/predsci/CHD/blob/master/CHD-mkdocs/docs/chd/chd.md" title="Edit this page" class="md-content__button md-icon">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20.71 7.04c.39-.39.39-1.04 0-1.41l-2.34-2.34c-.37-.39-1.02-.39-1.41 0l-1.84 1.83 3.75 3.75M3 17.25V21h3.75L17.81 9.93l-3.75-3.75L3 17.25z"/></svg>
                   </a>
                 
@@ -450,8 +554,15 @@
                   
                 
                 
-                <h1 id="psf-deconvolution">PSF Deconvolution</h1>
-<p>Page regarding PSF deconvolution. </p>
+                <h1 id="coronal-hole-detection">Coronal Hole Detection</h1>
+<h2 id="example-maps">Example Maps</h2>
+<p>Example minimum intensity merge maps for February 3, 2011.  </p>
+<h3 id="original-euv-map"><a href="../../img/chd/EUV_map.png">Original EUV Map</a></h3>
+<p><img alt="Original EUV Map" src="../../img/chd/EUV_map.png" />   </p>
+<h3 id="chd-map"><a href="../../img/chd/CHD_map.png">CHD Map</a></h3>
+<p><img alt="CHD Map" src="../../img/chd/CHD_map.png" />  </p>
+<h3 id="combined-euvchd-map"><a href="../../img/chd/EUV_CHD_map.png">Combined EUV/CHD Map</a></h3>
+<p><img alt="Combined EUV/CHD Map" src="../../img/chd/EUV_CHD_map.png" />  </p>
                 
               
               
@@ -470,7 +581,7 @@
     <div class="md-footer-nav">
       <nav class="md-footer-nav__inner md-grid" aria-label="Footer">
         
-          <a href="../../about/" title="About the Project" class="md-footer-nav__link md-footer-nav__link--prev" rel="prev">
+          <a href="../f2py/" title="Fortran to Python" class="md-footer-nav__link md-footer-nav__link--prev" rel="prev">
             <div class="md-footer-nav__button md-icon">
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"/></svg>
             </div>
@@ -479,19 +590,19 @@
                 <span class="md-footer-nav__direction">
                   Previous
                 </span>
-                About the Project
+                Fortran to Python
               </div>
             </div>
           </a>
         
         
-          <a href="../lbc/" title="Limb-Brightening Correction" class="md-footer-nav__link md-footer-nav__link--next" rel="next">
+          <a href="../map/" title="Mapping" class="md-footer-nav__link md-footer-nav__link--next" rel="next">
             <div class="md-footer-nav__title">
               <div class="md-ellipsis">
                 <span class="md-footer-nav__direction">
                   Next
                 </span>
-                Limb-Brightening Correction
+                Mapping
               </div>
             </div>
             <div class="md-footer-nav__button md-icon">
