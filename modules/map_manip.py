@@ -8,7 +8,7 @@ import modules.datatypes as psi_d_types
 from settings.info import DTypes
 
 
-def combine_maps(map_list, mu_cutoff=0.0, del_mu=None):
+def combine_maps(map_list, chd_map_list=None, mu_cutoff=0.0, del_mu=None):
     """
     Take a list of Psi_Map objects and do minimum intensity merge to a single map.  When mu_cutoff
     is 0.0 and del_mu is None, this reverts to a simple minimum intensity merge.
@@ -46,10 +46,18 @@ def combine_maps(map_list, mu_cutoff=0.0, del_mu=None):
         mu_array = np.ndarray(shape=mat_size + (nmaps,), dtype=DTypes.MAP_MU)
         data_array = np.ndarray(shape=mat_size + (nmaps,), dtype=DTypes.MAP_DATA)
         image_array = np.ndarray(shape=mat_size + (nmaps,), dtype=DTypes.MAP_ORIGIN_IMAGE)
-        for ii in range(nmaps):
-            mu_array[:, :, ii] = map_list[ii].mu
-            data_array[:, :, ii] = map_list[ii].data
-            image_array[:, :, ii] = map_list[ii].origin_image
+        if chd_map_list is not None:
+            chd_array = np.ndarray(shape=mat_size + (nmaps,), dtype=DTypes.MAP_DATA)
+            for ii in range(nmaps):
+                mu_array[:, :, ii] = map_list[ii].mu
+                data_array[:, :, ii] = map_list[ii].data
+                chd_array[:, :, ii] = chd_map_list[ii].data
+                image_array[:, :, ii] = map_list[ii].origin_image
+        else:
+            for ii in range(nmaps):
+                mu_array[:, :, ii] = map_list[ii].mu
+                data_array[:, :, ii] = map_list[ii].data
+                image_array[:, :, ii] = map_list[ii].origin_image
 
         keep_mu = np.ndarray(shape=mat_size)
         keep_data = np.ndarray(shape=mat_size)
@@ -89,9 +97,14 @@ def combine_maps(map_list, mu_cutoff=0.0, del_mu=None):
         keep_mu = mu_array[row_index, col_index, map_index]
         keep_data = data_array[row_index, col_index, map_index]
         keep_imag = image_array[row_index, col_index, map_index]
-
+        if chd_map_list is not None:
+            keep_chd = chd_array[row_index, col_index, map_index]
+            chd_map = psi_d_types.PsiMap(keep_chd, map_list[0].x, map_list[0].y, mu=keep_mu,
+                                         origin_image=keep_imag, no_data_val=map_list[0].no_data_val)
+        else:
+            chd_map = None
         # Generate new map object
-        map_out = psi_d_types.PsiMap(keep_data, map_list[0].x, map_list[0].y, mu=keep_mu,
+        euv_map = psi_d_types.PsiMap(keep_data, map_list[0].x, map_list[0].y, mu=keep_mu,
                                      origin_image=keep_imag, no_data_val=map_list[0].no_data_val)
         # need to also record merge parameters
         # map_out.mthod_par = {'mu_cutoff': mu_cutoff, 'del_mu': del_mu}
@@ -100,4 +113,4 @@ def combine_maps(map_list, mu_cutoff=0.0, del_mu=None):
         raise ValueError("'map_list' maps have different grids. This is not yet supported in " +
                          "map_manip.combine_maps()")
 
-    return map_out
+    return euv_map, chd_map

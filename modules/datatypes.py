@@ -13,7 +13,7 @@ import numpy as np
 import pandas as pd
 import sunpy.map
 import sunpy.util.metadata
-from modules.coord_manip import interp_los_image_to_map, image_grid_to_CR
+from modules.coord_manip import interp_los_image_to_map, image_grid_to_CR, interp_los_image_to_map2
 from settings.info import DTypes
 
 
@@ -129,6 +129,52 @@ class LosImage:
 
         # Do interpolation
         interp_result = interp_los_image_to_map(self, R0, map_x, map_y, no_data_val=no_data_val)
+
+        origin_image = np.full(interp_result.data.shape, 0, dtype=DTypes.MAP_ORIGIN_IMAGE)
+        # if image number is entered, record in appropriate pixels
+        if image_num is not None:
+            origin_image[interp_result.data > no_data_val] = image_num
+
+        # Partially populate a map object with grid and data info
+        map_out = PsiMap(interp_result.data, interp_result.x, interp_result.y,
+                         mu=interp_result.mu_mat, origin_image=origin_image, no_data_val=no_data_val)
+
+        # construct map_info df to record basic map info
+        map_info_df = pd.DataFrame(data=[[1, datetime.datetime.now()], ],
+                                   columns=["n_images", "time_of_compute"])
+        map_out.append_map_info(map_info_df)
+
+        return map_out
+
+    def interp_to_map2(self, R0=1.0, map_x=None, map_y=None, no_data_val=-9999., image_num=None):
+
+        print("Converting " + self.info['instrument'] + "-" + str(self.info['wavelength']) + " image from " +
+              self.info['date_string'] + " to a map.\n")
+
+        if map_x is None and map_y is None:
+            # Generate map grid based on number of image pixels vertically within R0
+            # map parameters (assumed)
+            y_range = [-1, 1]
+            x_range = [0, 2 * np.pi]
+
+            # observer parameters (from image)
+            cr_lat = self.info['cr_lat']
+            cr_lon = self.info['cr_lon']
+
+            # determine number of pixels in map y-grid
+            map_nycoord = sum(abs(self.y) < R0)
+            del_y = (y_range[1] - y_range[0]) / (map_nycoord - 1)
+            # how to define pixels? square in sin-lat v phi or lat v phi?
+            # del_x = del_y*np.pi/2
+            del_x = del_y
+            map_nxcoord = (np.floor((x_range[1] - x_range[0]) / del_x) + 1).astype(int)
+
+            # generate map x,y grids. y grid centered on equator, x referenced from lon=0
+            map_y = np.linspace(y_range[0], y_range[1], map_nycoord, dtype=DTypes.MAP_AXES)
+            map_x = np.linspace(x_range[0], x_range[1], map_nxcoord, dtype=DTypes.MAP_AXES)
+
+        # Do interpolation
+        interp_result = interp_los_image_to_map2(self, R0, map_x, map_y, no_data_val=no_data_val)
 
         origin_image = np.full(interp_result.data.shape, 0, dtype=DTypes.MAP_ORIGIN_IMAGE)
         # if image number is entered, record in appropriate pixels
