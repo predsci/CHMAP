@@ -17,12 +17,12 @@ start_time_tot = time.time()
 ###### ------ PARAMETERS TO UPDATE -------- ########
 
 # TIME RANGE FOR HISTOGRAM CALCULATION
-hist_query_time_min = datetime.datetime(2011, 1, 1, 0, 0, 0)
-hist_query_time_max = datetime.datetime(2012, 1, 1, 0, 0, 0)
+hist_query_time_min = datetime.datetime(2012, 1, 1, 0, 0, 0)
+hist_query_time_max = datetime.datetime(2013, 1, 1, 0, 0, 0)
 
 # TIME RANGE FOR FIT PARAMETER CALCULATION
-calc_query_time_min = datetime.datetime(2011, 4, 1, 0, 0, 0)
-calc_query_time_max = datetime.datetime(2011, 10, 1, 0, 0, 0)
+calc_query_time_min = datetime.datetime(2011, 10, 1, 0, 0, 0)
+calc_query_time_max = datetime.datetime(2012, 4, 1, 0, 0, 0)
 weekday_calc = 0  # start at 0 for Monday
 days = 180  # days for moving average
 
@@ -80,6 +80,11 @@ lbcc_funcs.save_histograms(db_session, hdf_data_dir, inst_list, hist_query_time_
 lbcc_funcs.calc_theoretic_fit(db_session, inst_list, calc_query_time_min, calc_query_time_max, weekday=weekday_calc,
                               number_of_days=days, n_mu_bins=n_mu_bins, n_intensity_bins=n_intensity_bins,
                               lat_band=lat_band, create=create)
+
+end_time_tot = time.time()
+tot_time = end_time_tot - start_time_tot
+time_test = str(datetime.timedelta(minutes=tot_time))
+print("Total elapsed time for Limb-Brightening: " + time_test + " seconds.")
 
 ###### STEP THREE: APPLY CORRECTION AND PLOT IMAGES #######
 lbcc_funcs.apply_lbc_correction(db_session, hdf_data_dir, inst_list, lbc_query_time_min, lbc_query_time_max,

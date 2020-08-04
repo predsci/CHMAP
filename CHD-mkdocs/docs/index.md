@@ -6,9 +6,9 @@ For Python files visit the [CHD Git repository](https://github.com/predsci/CHD).
 
 * Data Collection
 * Image Pre-Processing:
-    * [PSF Deconvolution](/ipp/psf/)
-    * [Limb-Brightening Correction](/ipp/lbc/)
-    * [Inter-Instrument Transformation](/ipp/iit/)
+    * [PSF Deconvolution](CHD/ipp/psf/)
+    * [Limb-Brightening Correction](CHD/ipp/lbc/)
+    * [Inter-Instrument Transformation](CHD/ipp/iit/)
 * Coronal Hole Detection
 * Mapping
 

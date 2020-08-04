@@ -1,5 +1,5 @@
 # Database for Inter-Instrument Transformation
-For the Inter-Instrument Transformation. The database is used to query EUV Images and LBC Fit Parameters to apply the correction.
+For the Inter-Instrument Transformation, the database is used to query EUV Images and LBC Fit Parameters to apply the correction.
 1D Intensity Histograms are created and stored in the database. After calculation, fit parameters are stored in the database
 then queried to apply the IIT Correction.  
 
@@ -13,7 +13,7 @@ of Inter-Instrument Transformation Correction.
 __Columns:__  
 > *hist_id:* auto-incremented integer id associated with the histogram (Primary Key, Integer)  
 > *image_id:* integer id associated with image (Foreign Key: EUV Images, Integer)  
-> *meth_id:* auto-incremented integer id associated with the specific method (Foreign Key: Meth Defs, Integer)     
+> *meth_id:* auto-incremented integer id associated with the specific method (Foreign Key: Method Defs, Integer)     
 > *date_obs:* time of image observation (DateTime)  
 > *wavelength:* observation wavelength (Integer)  
 > *n_mu_bins:* number of mu bins (Integer)  
@@ -29,7 +29,7 @@ This table stores information regarding the combination of images used to calcul
 
 __Columns:__  
 > *combo_id:* auto-incremented integer id associated with that specific combination of images (Primary Key, Integer)  
-> *meth_id:* auto-incremented integer id associated with the specific method (Foreign Key: Meth Defs, Integer)      
+> *meth_id:* auto-incremented integer id associated with the specific method (Foreign Key: Method Defs, Integer)      
 > *n_images:* number of images in combination (Integer)  
 > *date_mean:* mean date of images in image combination (DateTime)  
 > *date_max:* maximum date of images in image combination (DateTime)  
@@ -44,7 +44,7 @@ __Columns:__
 > *image_id:* integer id associated with image (Primary Key, Foreign Key: EUV Images, Integer)   
 
 
-### Meth Defs
+### Method Defs
 This table stores information about a correction method and an associated integer method id. 
 
 __Columns:__  
@@ -58,7 +58,7 @@ This table stores information about a variable and an associated integer variabl
 
 __Columns:__  
 > *var_id:* auto-incremented integer id associated with the specific variable (Primary Key, Integer)  
-> *meth_id:* auto-incremented integer id associated with the specific method (Foreign Key: Meth Defs, Integer)  
+> *meth_id:* auto-incremented integer id associated with the specific method (Foreign Key: Method Defs, Integer)  
 > *var_name:* variable name (String)    
 > *var_description:* description of variable (String)  
 
@@ -72,6 +72,6 @@ and during the creation of histogram plots ([IIT Step Four](../ipp/iit.md#genera
 __Columns:__
 > *combo_id:* auto-incremented integer id associated with that specific combination of images 
     (Primary Key, Foreign Key: Image Combos, Integer)    
-> *meth_id:* auto-incremented integer id associated with the specific method (Foreign Key: Meth Defs, Integer)  
+> *meth_id:* auto-incremented integer id associated with the specific method (Foreign Key: Method Defs, Integer)  
 > *var_id:* auto-incremented integer id associated with the specific variable (Primary Key, Foreign Key: Var Defs, Integer)  
 > *var_val:* variable value (Float)

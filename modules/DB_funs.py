@@ -457,8 +457,7 @@ def add_euv_map(db_session, psi_map, base_path=None, map_type=None):
                     inst = None
                 subdir, temp_fname = misc_helpers.construct_map_path_and_fname(base_path, psi_map.map_info.date_mean[0],
                                                                                map_id, map_type, 'h5',
-                                                                               inst=inst,
-                                                                               mkdir=True)
+                                                                               inst=inst, mkdir=True)
                 h5_filename = os.path.join(subdir, temp_fname)
                 rel_file_path = h5_filename.replace(base_path, "")
                 # record file path in map object
@@ -628,8 +627,9 @@ def get_method_id(db_session, meth_name, meth_desc=None, var_names=None, var_des
     """
 
     # Query DB for existing method
-    existing_meth = pd.read_sql(db_session.query(Meth_Defs.meth_id).filter(Meth_Defs.meth_name == meth_name).statement,
-                                db_session.bind)
+    existing_meth = pd.read_sql(
+        db_session.query(Method_Defs.meth_id).filter(Method_Defs.meth_name == meth_name).statement,
+        db_session.bind)
 
     if len(existing_meth.meth_id) == 0:
         meth_exists = False
@@ -650,7 +650,7 @@ def get_method_id(db_session, meth_name, meth_desc=None, var_names=None, var_des
 
     if create and not meth_exists:
         # create method record
-        add_method = Meth_Defs(meth_name=meth_name, meth_description=meth_desc)
+        add_method = Method_Defs(meth_name=meth_name, meth_description=meth_desc)
         db_session.add(add_method)
         # push change to DB and return meth_id
         db_session.flush()
@@ -713,7 +713,7 @@ def get_var_val(db_session, combo_id, meth_id, var_id, var_val=None, create=Fals
     Query for variable value by combo_id and var_id
     @param db_session: db_session that connects to the database.
     @param combo_id: combo_id from image_combos table
-    @param meth_id: meth_id from meth_defs table
+    @param meth_id: meth_id from method_defs table
     @param var_id: var_id from var_defs table
     @param var_val: float variable value
     @param create: If var_val does not exist, create it.
@@ -852,7 +852,7 @@ def query_euv_maps(db_session, mean_time_range=None, extrema_time_range=None, n_
     # method query
     if methods is not None:
         # filter method_id by method names in 'methods' input
-        method_ids_query = db_session.query(Meth_Defs.meth_id).filter(Meth_Defs.meth_name.in_(methods))
+        method_ids_query = db_session.query(Method_Defs.meth_id).filter(Method_Defs.meth_name.in_(methods))
         # find method combos containing methods
         method_combo_query = db_session.query(Method_Combo_Assoc.meth_combo_id).filter(Method_Combo_Assoc.meth_id.in_(
             method_ids_query
@@ -874,7 +874,7 @@ def query_euv_maps(db_session, mean_time_range=None, extrema_time_range=None, n_
 
     # Need three output tables from SQL
     # 1. map_info: euv_maps joined with image_combos
-    # 2. method_info: Var_Vals_Map joined with meth_defs and var_defs
+    # 2. method_info: Var_Vals_Map joined with method_defs and var_defs
     # 3. image_info: euv_images joined with Image_Combo_Assoc
 
     # return map_info table using a join
@@ -892,15 +892,15 @@ def query_euv_maps(db_session, mean_time_range=None, extrema_time_range=None, n_
     # return Var_Vals_Map joined with var_defs. they are not directly connected tables, so use explicit join syntax
     var_query = db_session.query(Var_Vals_Map, Var_Defs).join(Var_Defs, Var_Vals_Map.var_id == Var_Defs.var_id
                                                               ).filter(Var_Vals_Map.map_id.in_(map_info.map_id))
-    joint_query = db_session.query(Meth_Defs, Var_Defs, Var_Vals_Map).filter(
-        Meth_Defs.meth_id == Var_Defs.meth_id).filter(
+    joint_query = db_session.query(Method_Defs, Var_Defs, Var_Vals_Map).filter(
+        Method_Defs.meth_id == Var_Defs.meth_id).filter(
         Var_Defs.var_id == Var_Vals_Map.var_id).filter(Var_Vals_Map.map_id.in_(map_info.map_id))
     method_info = pd.read_sql(joint_query.statement, db_session.bind)
     # remove duplicate var_id columns
     method_info = method_info.T.groupby(level=0).first().T
 
     # also get method info
-    # method_info = pd.read_sql(db_session.query(Meth_Defs).statement, db_session.bind)
+    # method_info = pd.read_sql(db_session.query(Method_Defs).statement, db_session.bind)
 
     # Then divide results up into a list of Map objects
     map_list = [datatypes.PsiMap()] * len(map_info)
@@ -918,8 +918,8 @@ def query_euv_maps(db_session, mean_time_range=None, extrema_time_range=None, n_
         images_slice = image_info.loc[image_info.image_id.isin(image_ids)]
         map_list[index].append_image_info(images_slice)
         #     # var_info
-        #var_slice = var_query.loc[var_query.map_id == map_series.map_id]
-        #map_list[index].append_var_info(var_slice)
+        # var_slice = var_query.loc[var_query.map_id == map_series.map_id]
+        # map_list[index].append_var_info(var_slice)
         #     # method info
         map_list[index].append_method_info(method_info.loc[method_info.meth_id == map_series.meth_id])
 
@@ -935,7 +935,7 @@ def create_map_input_object(new_map, fname, image_df, var_vals, method_name, tim
     :param time_of_compute: Datetime when the map was made
     :param image_df: DataFrame with columns 'image_id' describing the constituent images
     :param var_vals: DataFrame with columns 'var_name' and 'var_val' describing variable values
-    :param method_name: Name of method used.  Must match meth_defs.meth_name column in DB
+    :param method_name: Name of method used.  Must match method_defs.meth_name column in DB
     :return: The partially filled Map object needed to create a new map record in the DB
     """
 
@@ -971,24 +971,23 @@ def add_map_dbase_record(db_session, psi_map, base_path=None, map_type=None):
     :return:
     """
 
-    # generate dataframe of unique methods
-    # methods_df = psi_map.method_info.loc[:, ~psi_map.method_info.columns.isin(("var_val", "var_name",
-    #                                                                            "var_description", "var_id"))]
-    # methods_df = methods_df.drop_duplicates()
-    methods_df = psi_map.method_info.drop_duplicates(subset="meth_name")
-
+    # generate dataframe of unique variables
+    methods_df = psi_map.method_info.drop_duplicates(subset="var_name")
+    methods_df_cp = methods_df.copy()
     # extract/create method_id(s)
     for index, row in methods_df.iterrows():
         if row.meth_id is None or np.isnan(row.meth_id):
             var_index = psi_map.method_info.meth_name == row.meth_name
             temp_var_names = psi_map.method_info.var_name[var_index].to_list()
+            temp_var_names = list(dict.fromkeys(temp_var_names))
             temp_var_descs = psi_map.method_info.var_description[var_index].to_list()
+            temp_var_descs = list(dict.fromkeys(temp_var_descs))
             # if method_id is not passed in map object, query method id from existing methods table. Create if new
             db_session, temp_meth_id, temp_var_ids = get_method_id(db_session, row.meth_name,
-                                                                   meth_desc=row.meth_description,
-                                                                   var_names=temp_var_names,
-                                                                   var_descs=temp_var_descs, create=True)
-            methods_df.loc[index, 'meth_id'] = temp_meth_id
+                                                                            meth_desc=row.meth_description,
+                                                                            var_names=temp_var_names,
+                                                                            var_descs=temp_var_descs, create=True)
+            methods_df_cp.loc[index, 'meth_id'] = temp_meth_id
             if temp_var_ids is not None:
                 psi_map.method_info.loc[var_index, 'var_id'] = temp_var_ids
             # add method id back to psi_map.method_info
@@ -1000,16 +999,16 @@ def add_map_dbase_record(db_session, psi_map, base_path=None, map_type=None):
             pass
 
     # Get method combo_id. Create if it doesn't already exist
-    meth_ids = methods_df.meth_id.to_list()
+    meth_ids = methods_df_cp.meth_id.to_list()
+    meth_ids = list(dict.fromkeys(meth_ids))
     db_session, meth_combo_id = get_method_combo_id(db_session, meth_ids, create=True)
     psi_map.map_info.loc[0, "meth_combo_id"] = meth_combo_id
 
     # Get image combo_id. Create if it doesn't already exist.
     image_ids = psi_map.image_info.image_id.to_list()
-    image_ids= tuple(image_ids)
-    # TODO: THIS WILL NEED TO BE DEALT WITH - METHOD IDS
-    db_session, combo_id, combo_times = get_combo_id(db_session=db_session, meth_id=meth_ids[0], image_ids=image_ids,
-                                                     create=True)
+    image_ids = tuple(image_ids)
+    db_session, combo_id, combo_times = get_combo_id(db_session=db_session, meth_id=meth_ids[0],
+                                                              image_ids=image_ids, create=True)
     psi_map.map_info.loc[0, "combo_id"] = combo_id
     psi_map.map_info.loc[0, "date_mean"] = combo_times['date_mean']
     psi_map.map_info.loc[0, "date_max"] = combo_times['date_max']
@@ -1019,8 +1018,10 @@ def add_map_dbase_record(db_session, psi_map, base_path=None, map_type=None):
         db_session, exit_flag = add_combo_image_assoc(db_session=db_session, combo_id=combo_id, image_id=image)
 
     # Add EUV_map record (and accompanying variable values), and write to file
-    db_session, exit_status, psi_map = add_euv_map(db_session=db_session, psi_map=psi_map, base_path=base_path,
-                                                   map_type=map_type)
+    psi_map.method_info = psi_map.method_info.drop_duplicates('var_name')
+    db_session, exit_status, psi_map = add_euv_map(db_session=db_session, psi_map=psi_map,
+                                                            base_path=base_path,
+                                                            map_type=map_type)
 
     return db_session, psi_map
 
@@ -1331,7 +1332,7 @@ def query_var_val(db_session, meth_name, date_obs, inst_combo_query):
     if type(date_obs) == str:
         date_obs = datetime.datetime.strptime(date_obs, "%Y-%m-%dT%H:%M:%S.%f")
 
-    # query meth_defs for method id
+    # query method_defs for method id
     method_id_info = get_method_id(db_session, meth_name, meth_desc=None, var_names=None, var_descs=None,
                                    create=False)
     # query var defs for variable id
@@ -1480,6 +1481,20 @@ def store_iit_values(db_session, pd_hist, meth_name, meth_desc, alpha_x_paramete
         get_var_val(db_session, combo_id, method_id, var_id, var_val, create=create)
 
     return db_session
+
+
+def generate_methdf(query_pd):
+    meth_columns = []
+    for column in Method_Defs.__table__.columns:
+        meth_columns.append(column.key)
+    defs_columns = []
+    for column in Var_Defs.__table__.columns:
+        defs_columns.append(column.key)
+    df_cols = set().union(meth_columns, defs_columns, ("var_val",))
+    methods_template = pd.DataFrame(data=None, columns=df_cols)
+    # generate a list of methods dataframes
+    methods_list = [methods_template] * query_pd.__len__()
+    return methods_list
 
 
 #### NOT CURRENTLY USED ####

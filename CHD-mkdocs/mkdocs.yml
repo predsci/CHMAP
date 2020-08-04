@@ -15,14 +15,18 @@ nav:
       - PSF Deconvolution: ipp/psf.md
       - Limb-Brightening Correction: ipp/lbc.md
       - Inter-Instrument Transformation: ipp/iit.md
+  - Coronal Hole Detection:
+      - Fortran to Python: chd/f2py.md
+      - CH Detection: chd/chd.md
+  - Mapping:
+      - Mapping Pipeline: map/map.md
+      - Interpolation: map/int.md
+      - Combining Maps: map/cmb.md
   - Database:
       - Database Basics: db/db.md
       - Database for LBC: db/lbc.md
       - Database for IIT: db/iit.md
-  - Coronal Hole Detection:
-      - Fortran to Python: chd/f2py.md
-      - CH Detection: chd/chd.md
-      - Mapping: chd/map.md
+      - Database for CHD Mapping: db/map.md
 
 # theme
 theme:

@@ -45,6 +45,11 @@ pytz
 six
 h5py
 
+alembic
+astropy
+astropy_healpix
+
+
 For simplicity, run the included script:
 
   install_conda_packages.sh

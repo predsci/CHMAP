@@ -34,15 +34,16 @@ class LosImage:
         visualizing or interacting with the data.
     """
 
-    def __init__(self, data, x, y, chd_meta, sunpy_meta=None):
+    def __init__(self, data=None, x=None, y=None, chd_meta=None, sunpy_meta=None):
 
-        # create the data tags
-        self.data = data.astype(DTypes.LOS_DATA)
-        self.x = x.astype(DTypes.LOS_AXES)
-        self.y = y.astype(DTypes.LOS_AXES)
+        if data is not None:
+            # create the data tags
+            self.data = data.astype(DTypes.LOS_DATA)
+            self.x = x.astype(DTypes.LOS_AXES)
+            self.y = y.astype(DTypes.LOS_AXES)
 
-        # add the info dictionary
-        self.info = chd_meta
+            # add the info dictionary
+            self.info = chd_meta
 
         # if sunpy_meta is supplied try to create a sunpy map
         if sunpy_meta != None:
@@ -103,7 +104,7 @@ class LosImage:
     def interp_to_map(self, R0=1.0, map_x=None, map_y=None, no_data_val=-9999., image_num=None):
 
         print("Converting " + self.info['instrument'] + "-" + str(self.info['wavelength']) + " image from " +
-              self.info['date_string'] + " to a map.\n")
+              self.info['date_string'] + " to a map.")
 
         if map_x is None and map_y is None:
             # Generate map grid based on number of image pixels vertically within R0
@@ -319,8 +320,8 @@ class LBCCImage(LosImage):
 
 def create_lbcc_image(los_image, corrected_data, image_id, meth_id, intensity_bin_edges):
     # create LBCC Image structure
-    data = LBCCImage(los_image, corrected_data, image_id, meth_id, intensity_bin_edges)
-    return data
+    lbcc = LBCCImage(los_image, corrected_data, image_id, meth_id, intensity_bin_edges)
+    return lbcc
 
 
 def binary_to_lbcc(lbcc_image_binary):
@@ -350,22 +351,25 @@ class IITImage(LBCCImage):
 
 def create_iit_image(los_image, lbcc_image, iit_corrected_data, meth_id):
     # create LBCC Image structure
-    data = IITImage(los_image, lbcc_image, iit_corrected_data, meth_id)
-    return data
+    iit = IITImage(los_image, lbcc_image, iit_corrected_data, meth_id)
+    return iit
 
 
 class CHDImage(LosImage):
     """
     class to hold CHD data
     """
-    def __init__(self, los_image, chd_data):
-        super().__init__(los_image.data, los_image.x, los_image.y, los_image.info)
-        self.data = chd_data
+    def __init__(self, los_image=None, chd_data=None):
+        if los_image is None and chd_data is None:
+            super().__init__(data=None)
+        else:
+            super().__init__(los_image.data, los_image.x, los_image.y, los_image.info)
+            self.data = chd_data
 
 
-def create_chd_image(los_image, chd_data):
-    data = CHDImage(los_image, chd_data)
-    return data
+def create_chd_image(los_image=None, chd_data=None):
+    chd = CHDImage(los_image, chd_data)
+    return chd
 
 
 class PsiMap:
@@ -411,9 +415,9 @@ class PsiMap:
                 map_columns.append(column.key)
             df_cols = set().union(image_columns, map_columns)
             self.map_info = pd.DataFrame(data=None, columns=df_cols)
-            # method_info is a combination of Var_Defs and Meth_Defs
+            # method_info is a combination of Var_Defs and Method_Defs
             meth_columns = []
-            for column in db.Meth_Defs.__table__.columns:
+            for column in db.Method_Defs.__table__.columns:
                 meth_columns.append(column.key)
             defs_columns = []
             for column in db.Var_Defs.__table__.columns:

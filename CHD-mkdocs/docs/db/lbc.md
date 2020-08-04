@@ -29,7 +29,7 @@ The histograms are created in [Step One](../ipp/lbc.md#compute-histograms-and-sa
 __Columns:__  
 > *hist_id:* auto-incremented integer id associated with the histogram (Primary Key, Integer)  
 > *image_id:* integer id associated with image (Foreign Key: EUV Images, Integer)    
-> *meth_id:* auto-incremented integer id associated with the specific method (Foreign Key: Meth Defs, Integer)  
+> *meth_id:* auto-incremented integer id associated with the specific method (Foreign Key: Method Defs, Integer)  
 > *date_obs:* time of image observation (DateTime)  
 > *wavelength:* observation wavelength (Integer)  
 > *n_mu_bins:* number of mu bins (Integer)  
@@ -44,7 +44,7 @@ This table stores information regarding the combination of images used to calcul
 
 __Columns:__  
 > *combo_id:* auto-incremented integer id associated with that specific combination of images (Primary Key, Integer)  
-> *meth_id:* auto-incremented integer id associated with the specific method (Foreign Key: Meth Defs, Integer)     
+> *meth_id:* auto-incremented integer id associated with the specific method (Foreign Key: Method Defs, Integer)     
 > *n_images:* number of images in combination (Integer)  
 > *date_mean:* mean date of images in image combination (DateTime)  
 > *date_max:* maximum date of images in image combination (DateTime)  
@@ -59,7 +59,7 @@ __Columns:__
 > *image_id:* integer id associated with image (Primary Key, Foreign Key: EUV Images, Integer)   
 
 
-### Meth Defs
+### Method Defs
 This table stores information about a correction method and an associated integer method id. 
 
 __Columns:__  
@@ -73,7 +73,7 @@ This table stores information about a variable and an associated integer variabl
 
 __Columns:__  
 > *var_id:* auto-incremented integer id associated with the specific variable (Primary Key, Integer)  
-> *meth_id:* auto-incremented integer id associated with the specific method (Foreign Key: Meth Defs, Integer)  
+> *meth_id:* auto-incremented integer id associated with the specific method (Foreign Key: Method Defs, Integer)  
 > *var_name:* variable name (String)    
 > *var_description:* description of variable (String)  
 
@@ -87,7 +87,7 @@ and during the creation of beta and y plots ([LBC Step Four](../ipp/lbc.md#gener
 __Columns:__
 > *combo_id:* auto-incremented integer id associated with that specific combination of images 
     (Primary Key, Foreign Key: Image Combos, Integer)    
-> *meth_id:* auto-incremented integer id associated with the specific method (Foreign Key: Meth Defs, Integer)  
+> *meth_id:* auto-incremented integer id associated with the specific method (Foreign Key: Method Defs, Integer)  
 > *var_id:* auto-incremented integer id associated with the specific variable (Primary Key, Foreign Key: Var Defs, Integer)  
 > *var_val:* variable value (Float)  
 

@@ -82,7 +82,7 @@ class Image_Combos(Base):
     """
     __tablename__='image_combos'
     combo_id = Column(Integer, primary_key=True)
-    meth_id = Column(Integer, ForeignKey('meth_defs.meth_id'))
+    meth_id = Column(Integer, ForeignKey('method_defs.meth_id'))
     n_images = Column(Integer)
     date_mean = Column(DateTime)
     date_max = Column(DateTime)
@@ -112,22 +112,22 @@ class Var_Vals_Map(Base):
     __tablename__='var_vals_map'
     map_id = Column(Integer, ForeignKey('euv_maps.map_id'), primary_key=True)
     combo_id = Column(Integer, ForeignKey('image_combos.combo_id'), primary_key=True)
-    meth_id = Column(Integer, ForeignKey('meth_defs.meth_id'))
+    meth_id = Column(Integer, ForeignKey('method_defs.meth_id'))
     var_id = Column(Integer, ForeignKey('var_defs.var_id'), primary_key=True)
     var_val = Column(Float)
     __table_args__ = (Index('var_val_index', "map_id", "combo_id", "var_id", "meth_id", unique=True),
                       Index('var_val_index2', "meth_id", "var_id"), Index('var_val_index3', "var_id"))
 
     var_info = relationship("Var_Defs")
-    meth_info = relationship("Meth_Defs")
+    meth_info = relationship("Method_Defs")
     combo_info = relationship("Image_Combos")
 
 
-class Meth_Defs(Base):
+class Method_Defs(Base):
     """
     Definitions for image-combining methods
     """
-    __tablename__ = 'meth_defs'
+    __tablename__ = 'method_defs'
     meth_id = Column(Integer, primary_key=True, autoincrement=True)
     meth_name = Column(String(25))
     meth_description = Column(String(1000))
@@ -140,7 +140,7 @@ class Var_Defs(Base):
     """
     __tablename__ = 'var_defs'
     var_id = Column(Integer, primary_key=True, autoincrement=True)
-    meth_id = Column(Integer, ForeignKey('meth_defs.meth_id'))
+    meth_id = Column(Integer, ForeignKey('method_defs.meth_id'))
     var_name = Column(String(25))
     var_description = Column(String(1000))
 
@@ -150,7 +150,7 @@ class Var_Defs(Base):
 #     Table defines which variables can be associated with which methods
 #     """
 #     __tablename__ = 'meth_var_assoc'
-#     meth_id = Column(Integer, ForeignKey('meth_defs.meth_id'), primary_key=True)
+#     meth_id = Column(Integer, ForeignKey('method_defs.meth_id'), primary_key=True)
 #     var_id = Column(Integer, ForeignKey('var_defs.var_id'), primary_key=True)
 #
 #     var_info = relationship("Var_Defs")
@@ -172,9 +172,9 @@ class Method_Combo_Assoc(Base):
     """
     __tablename__ = 'method_combo_assoc'
     meth_combo_id = Column(Integer, ForeignKey('method_combos.meth_combo_id'), primary_key=True)
-    meth_id = Column(Integer, ForeignKey('meth_defs.meth_id'), primary_key=True)
+    meth_id = Column(Integer, ForeignKey('method_defs.meth_id'), primary_key=True)
 
-    method_info = relationship("Meth_Defs")
+    method_info = relationship("Method_Defs")
 
 
 class Var_Vals(Base):
@@ -184,12 +184,12 @@ class Var_Vals(Base):
     """
     __tablename__ = 'var_vals'
     combo_id = Column(Integer, ForeignKey('image_combos.combo_id'), primary_key=True)
-    meth_id = Column(Integer, ForeignKey('meth_defs.meth_id'))
+    meth_id = Column(Integer, ForeignKey('method_defs.meth_id'))
     var_id = Column(Integer, ForeignKey('var_defs.var_id'), primary_key=True)
     var_val = Column(Float)
 
     var_info = relationship("Var_Defs")
-    meth_info = relationship("Meth_Defs")
+    meth_info = relationship("Method_Defs")
     combo_info = relationship("Image_Combos")
 
 
@@ -200,7 +200,7 @@ class Histogram(Base):
     __tablename__ = 'histogram'
     hist_id = Column(Integer, primary_key=True)
     image_id = Column(Integer, ForeignKey('euv_images.image_id'))
-    meth_id = Column(Integer, ForeignKey('meth_defs.meth_id'))
+    meth_id = Column(Integer, ForeignKey('method_defs.meth_id'))
     date_obs = Column(DateTime)
     instrument = Column(String(10))
     wavelength = Column(Integer)
@@ -212,4 +212,3 @@ class Histogram(Base):
     hist = Column(LargeBinary)
 
     __table_args__ = (Index('lbcc_index', "date_obs", "instrument", "wavelength"),)
-

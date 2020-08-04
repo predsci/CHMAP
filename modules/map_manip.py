@@ -13,6 +13,7 @@ def combine_maps(map_list, chd_map_list=None, mu_cutoff=0.0, del_mu=None):
     Take a list of Psi_Map objects and do minimum intensity merge to a single map.  When mu_cutoff
     is 0.0 and del_mu is None, this reverts to a simple minimum intensity merge.
     :param map_list: List of Psi_Map objects
+    :param chd_map_list: List of Psi_Map objects of CHD data
     :param mu_cutoff: data points/pixels with a mu less than mu_cutoff will be discarded before
     merging.
     :param del_mu: For a given data point/pixel of the map first find the maximum mu from map_list.
@@ -59,33 +60,20 @@ def combine_maps(map_list, chd_map_list=None, mu_cutoff=0.0, del_mu=None):
                 data_array[:, :, ii] = map_list[ii].data
                 image_array[:, :, ii] = map_list[ii].origin_image
 
-        keep_mu = np.ndarray(shape=mat_size)
-        keep_data = np.ndarray(shape=mat_size)
-        keep_imag = np.ndarray(shape=mat_size, dtype=int)
         float_info = np.finfo(map_list[0].data.dtype)
-
         if del_mu is not None:
             max_mu = mu_array.max(axis=2)
             good_index = np.ndarray(shape=mat_size + (nmaps,), dtype=bool)
             for ii in range(nmaps):
                 good_index[:, :, ii] = mu_array[:, :, ii] > (max_mu - del_mu)
-            # make poor mu pixels unuseable to merge
+            # make poor mu pixels unusable to merge
             data_array[np.logical_not(good_index)] = float_info.max
-            # make no_data_vals unuseable to merge
+            # make no_data_vals unusable to merge
             data_array[data_array == map_list[0].no_data_val] = float_info.max
             # find minimum intensity of remaining pixels
             map_index = np.argmin(data_array, axis=2)
-
-            # for ii in range(mat_size[0]):
-            #     for jj in range(mat_size[1]):
-            #         good_index = mu_array[ii, jj, :] > (max_mu[ii, jj] - del_mu)
-            #         arg_min    = data_array[ii, jj, good_index].argmin()
-            #         map_index  = good_index.nonzero()[0][arg_min]
-            #         keep_mu[ii, jj] = mu_array[ii, jj, map_index]
-            #         keep_data[ii, jj] = data_array[ii, jj, map_index]
-            #         keep_imag[ii, jj] = image_array[ii, jj, map_index]
         else:
-            # make no_data_vals unuseable to merge
+            # make no_data_vals unusable to merge
             data_array[data_array == map_list[0].no_data_val] = float_info.max
             # find minimum intensity of remaining pixels
             map_index = np.argmin(data_array, axis=2)
@@ -96,18 +84,16 @@ def combine_maps(map_list, chd_map_list=None, mu_cutoff=0.0, del_mu=None):
         col_index, row_index = np.meshgrid(range(mat_size[1]), range(mat_size[0]))
         keep_mu = mu_array[row_index, col_index, map_index]
         keep_data = data_array[row_index, col_index, map_index]
-        keep_imag = image_array[row_index, col_index, map_index]
+        keep_image = image_array[row_index, col_index, map_index]
         if chd_map_list is not None:
             keep_chd = chd_array[row_index, col_index, map_index]
             chd_map = psi_d_types.PsiMap(keep_chd, map_list[0].x, map_list[0].y, mu=keep_mu,
-                                         origin_image=keep_imag, no_data_val=map_list[0].no_data_val)
+                                         origin_image=keep_image, no_data_val=map_list[0].no_data_val)
         else:
             chd_map = None
         # Generate new map object
         euv_map = psi_d_types.PsiMap(keep_data, map_list[0].x, map_list[0].y, mu=keep_mu,
-                                     origin_image=keep_imag, no_data_val=map_list[0].no_data_val)
-        # need to also record merge parameters
-        # map_out.mthod_par = {'mu_cutoff': mu_cutoff, 'del_mu': del_mu}
+                                     origin_image=keep_image, no_data_val=map_list[0].no_data_val)
 
     else:
         raise ValueError("'map_list' maps have different grids. This is not yet supported in " +
