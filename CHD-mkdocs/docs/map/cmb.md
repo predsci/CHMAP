@@ -6,6 +6,7 @@ create the original EUV maps. This method ensures that resulting maps are more c
 value to limit limb data distortion. In merging regions of overlap, we use data with a mu value greater than the cutoff value.
 In areas without overlap, any data available is used (mu cutoff of 0).  
 
+##Combine Maps Function
 The combine maps function can be found [here](https://github.com/predsci/CHD/blob/master/modules/map_manip.py).  
 ```python
 def combine_maps(map_list, chd_map_list=None, mu_cutoff=0.0, del_mu=None):

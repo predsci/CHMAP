@@ -73,19 +73,19 @@ query_pd = db_funcs.query_euv_images(db_session=db_session, time_min=query_time_
 methods_list = db_funcs.generate_methdf(query_pd)
 
 #### STEP TWO: APPLY PRE-PROCESSING CORRECTIONS ####
-# 1.) get instrument combos
-lbc_combo_query, iit_combo_query = chd_funcs.get_inst_combos(db_session, inst_list, query_time_max, query_time_min)
+# 1.) get dates
+moving_avg_centers = chd_funcs.get_dates(time_min=query_time_min, time_max=query_time_max, map_freq=map_freq)
 
-# 2.) get dates
-moving_avg_centers = chd_funcs.get_dates(query_time_min, query_time_max, map_freq)
+# 2.) get instrument combos
+lbc_combo_query, iit_combo_query = chd_funcs.get_inst_combos(db_session, inst_list, time_min=query_time_min,
+                                                             time_max=query_time_max)
 
 # 3.) loop through center dates
 for date_ind, center in enumerate(moving_avg_centers):
-    image_pd, los_list, iit_list, use_indices, ref_alpha, ref_x = chd_funcs.apply_ipp(db_session, center, query_pd,
+    image_pd, los_list, iit_list, use_indices, methods_list, ref_alpha, ref_x = chd_funcs.apply_ipp(db_session, center, query_pd,
                                                                                       inst_list,
                                                                                       hdf_data_dir, lbc_combo_query,
                                                                                       iit_combo_query, methods_list,
-                                                                                      map_freq,
                                                                                       n_intensity_bins, R0)
     #### STEP THREE: CORONAL HOLE DETECTION ####
     if los_list[0] is not None:
