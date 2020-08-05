@@ -62,7 +62,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#mapping" class="md-skip">
+        <a href="#mapping-pipeline" class="md-skip">
           Skip to content
         </a>
       
@@ -394,9 +394,77 @@
     <ul class="md-nav__list" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#mapping-pipeline" class="md-nav__link">
-    Mapping Pipeline
+  <a href="#mapping-pipeline-functions" class="md-nav__link">
+    Mapping Pipeline Functions
   </a>
+  
+    <nav class="md-nav" aria-label="Mapping Pipeline Functions">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#select-images" class="md-nav__link">
+    Select Images
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#apply-pre-processing-corrections" class="md-nav__link">
+    Apply Pre-Processing Corrections
+  </a>
+  
+    <nav class="md-nav" aria-label="Apply Pre-Processing Corrections">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#dates-for-processing" class="md-nav__link">
+    Dates for Processing
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#query-for-image-combos" class="md-nav__link">
+    Query for Image Combos
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#apply-image-corrections" class="md-nav__link">
+    Apply Image Corrections
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#coronal-hole-detection" class="md-nav__link">
+    Coronal Hole Detection
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#single-maps" class="md-nav__link">
+    Single Maps
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#combine-maps" class="md-nav__link">
+    Combine Maps
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -540,9 +608,77 @@
     <ul class="md-nav__list" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#mapping-pipeline" class="md-nav__link">
-    Mapping Pipeline
+  <a href="#mapping-pipeline-functions" class="md-nav__link">
+    Mapping Pipeline Functions
   </a>
+  
+    <nav class="md-nav" aria-label="Mapping Pipeline Functions">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#select-images" class="md-nav__link">
+    Select Images
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#apply-pre-processing-corrections" class="md-nav__link">
+    Apply Pre-Processing Corrections
+  </a>
+  
+    <nav class="md-nav" aria-label="Apply Pre-Processing Corrections">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#dates-for-processing" class="md-nav__link">
+    Dates for Processing
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#query-for-image-combos" class="md-nav__link">
+    Query for Image Combos
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#apply-image-corrections" class="md-nav__link">
+    Apply Image Corrections
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#coronal-hole-detection" class="md-nav__link">
+    Coronal Hole Detection
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#single-maps" class="md-nav__link">
+    Single Maps
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#combine-maps" class="md-nav__link">
+    Combine Maps
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -566,9 +702,352 @@
                   
                 
                 
-                <h1 id="mapping">Mapping</h1>
-<p>page about how the mapping stuff works and pipeline example</p>
-<h2 id="mapping-pipeline">Mapping Pipeline</h2>
+                <h1 id="mapping-pipeline">Mapping Pipeline</h1>
+<p>After the calculation of the image pre-processing parameters (LBC and IIT), the mapping process undergoes five main steps
+through which EUV Images are converted to EUV and CHD Maps.  </p>
+<ul>
+<li>1.) <a href="#select-images">Selecting Images</a></li>
+<li>2.) <a href="#apply-pre-processing-corrections">Apply Pre-Processing Corrections</a><ul>
+<li>a.) <a href="#dates-for-processing">generate moving average dates</a></li>
+<li>b.) <a href="#query-for-image-combos">query for image combos associated with dates</a></li>
+<li>c.) <a href="#apply-image-corrections">apply LBC</a></li>
+<li>d.) <a href="#apply-image-corrections">apply IIT</a></li>
+</ul>
+</li>
+<li>3.) <a href="#coronal-hole-detection">Coronal Hole Detection</a></li>
+<li>4.) <a href="#single-maps">Create Single Instrument Maps</a></li>
+<li>5.) <a href="#combine-maps">Combine Maps and Save to the Database</a></li>
+</ul>
+<h2 id="mapping-pipeline-functions">Mapping Pipeline Functions</h2>
+<h3 id="select-images">Select Images</h3>
+<p>The first step in map creation is querying the database for all EUV Images in the relevant time frame and creating a methods
+dataframe. These functions are database functions and the full code can be found 
+<a href="https://github.com/predsci/CHD/blob/master/modules/DB_funs.py">here</a>.  </p>
+<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre>1
+2</pre></div></td><td class="code"><div class="codehilite"><pre><span></span><code><span class="n">query_pd</span> <span class="o">=</span> <span class="n">db_funcs</span><span class="o">.</span><span class="n">query_euv_images</span><span class="p">(</span><span class="n">db_session</span><span class="o">=</span><span class="n">db_session</span><span class="p">,</span> <span class="n">time_min</span><span class="o">=</span><span class="n">query_time_min</span><span class="p">,</span> <span class="n">time_max</span><span class="o">=</span><span class="n">query_time_max</span><span class="p">)</span>
+<span class="n">methods_list</span> <span class="o">=</span> <span class="n">db_funcs</span><span class="o">.</span><span class="n">generate_methdf</span><span class="p">(</span><span class="n">query_pd</span><span class="p">)</span>
+</code></pre></div>
+</td></tr></table>
+
+<ul>
+<li>1.) <code>db_funcs.query_euv_images</code>  <ul>
+<li>queries the database for EUV Images between time_min and time_max  </li>
+</ul>
+</li>
+<li>2.) <code>db_funcs.generate_methdf</code>  <ul>
+<li>generates an empty pandas dataframe to later store method information<ul>
+<li>columns hold associated method and variable information  </li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h3 id="apply-pre-processing-corrections">Apply Pre-Processing Corrections</h3>
+<p>Limb-Brightening and Inter-Instrument Transformation Corrections are applied to images. Due to memory and storage issues,
+the rest of the mapping pipeline is applied to images based off date to limit the amount of data stored in memory.  </p>
+<h4 id="dates-for-processing">Dates for Processing</h4>
+<p>This <a href="https://github.com/predsci/CHD/blob/master/analysis/chd_analysis/CHD_pipeline_funcs.py">function</a> 
+creates an array of moving average dates which are looped through to apply corrections.  </p>
+<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre>1
+2
+3
+4
+5
+6
+7</pre></div></td><td class="code"><div class="codehilite"><pre><span></span><code><span class="k">def</span> <span class="nf">get_dates</span><span class="p">(</span><span class="n">query_time_min</span><span class="p">,</span> <span class="n">query_time_max</span><span class="p">,</span> <span class="n">map_freq</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    function to create moving average dates based on hourly frequency of map creation</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">map_frequency</span> <span class="o">=</span> <span class="nb">int</span><span class="p">((</span><span class="n">query_time_max</span> <span class="o">-</span> <span class="n">query_time_min</span><span class="p">)</span><span class="o">.</span><span class="n">seconds</span> <span class="o">/</span> <span class="mi">3600</span> <span class="o">/</span> <span class="n">map_freq</span><span class="p">)</span>
+    <span class="n">moving_avg_centers</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">np</span><span class="o">.</span><span class="n">datetime64</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">query_time_min</span><span class="p">))</span> <span class="o">+</span> <span class="n">ii</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">timedelta64</span><span class="p">(</span><span class="n">map_freq</span><span class="p">,</span> <span class="s1">&#39;h&#39;</span><span class="p">)</span> <span class="k">for</span> <span class="n">ii</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">map_frequency</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)])</span>
+    <span class="k">return</span> <span class="n">moving_avg_centers</span> 
+</code></pre></div>
+</td></tr></table>
+
+<ul>
+<li>1.) <code>int((query_time_max - query_time_min).seconds / 3600 / map_freq)</code><ul>
+<li>convert the map_freq integer to hours  </li>
+</ul>
+</li>
+<li>2.) <code>np.array(...)</code><ul>
+<li>create moving average centers array based upon map frequency </li>
+</ul>
+</li>
+</ul>
+<h4 id="query-for-image-combos">Query for Image Combos</h4>
+<p>This <a href="https://github.com/predsci/CHD/blob/master/analysis/chd_analysis/CHD_pipeline_funcs.py">function</a> creates lists of 
+combo queries for each instrument. It returns lists for LBC and IIT combo queries.  </p>
+<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
+ 2
+ 3
+ 4
+ 5
+ 6
+ 7
+ 8
+ 9
+10</pre></div></td><td class="code"><div class="codehilite"><pre><span></span><code><span class="k">def</span> <span class="nf">get_inst_combos</span><span class="p">(</span><span class="n">db_session</span><span class="p">,</span> <span class="n">inst_list</span><span class="p">,</span> <span class="n">time_min</span><span class="p">,</span> <span class="n">time_max</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    function to create instrument based lists of combo queries for image pre-processing</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">for</span> <span class="n">inst_index</span><span class="p">,</span> <span class="n">instrument</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">inst_list</span><span class="p">):</span>
+        <span class="n">lbc_combo</span> <span class="o">=</span> <span class="n">db_funcs</span><span class="o">.</span><span class="n">query_inst_combo</span><span class="p">(</span><span class="n">db_session</span><span class="p">,</span> <span class="n">time_min</span> <span class="o">-</span> <span class="n">datetime</span><span class="o">.</span><span class="n">timedelta</span><span class="p">(</span><span class="n">days</span><span class="o">=</span><span class="mi">180</span><span class="p">),</span> <span class="n">time_max</span> <span class="o">+</span> <span class="n">datetime</span><span class="o">.</span><span class="n">timedelta</span><span class="p">(</span><span class="n">days</span><span class="o">=</span><span class="mi">180</span><span class="p">),</span> <span class="n">meth_name</span><span class="o">=</span><span class="s1">&#39;LBCC&#39;</span><span class="p">,</span> <span class="n">instrument</span><span class="o">=</span><span class="n">instrument</span><span class="p">)</span>
+        <span class="n">iit_combo</span> <span class="o">=</span> <span class="n">db_funcs</span><span class="o">.</span><span class="n">query_inst_combo</span><span class="p">(</span><span class="n">db_session</span><span class="p">,</span> <span class="n">time_min</span> <span class="o">-</span> <span class="n">datetime</span><span class="o">.</span><span class="n">timedelta</span><span class="p">(</span><span class="n">days</span><span class="o">=</span><span class="mi">180</span><span class="p">),</span> <span class="n">time_max</span> <span class="o">+</span> <span class="n">datetime</span><span class="o">.</span><span class="n">timedelta</span><span class="p">(</span><span class="n">days</span><span class="o">=</span><span class="mi">180</span><span class="p">),</span> <span class="n">meth_name</span><span class="o">=</span><span class="s1">&#39;IIT&#39;</span><span class="p">,</span> <span class="n">instrument</span><span class="o">=</span><span class="n">instrument</span><span class="p">)</span>
+        <span class="n">lbc_combo_query</span><span class="p">[</span><span class="n">inst_index</span><span class="p">]</span> <span class="o">=</span> <span class="n">lbc_combo</span>
+        <span class="n">iit_combo_query</span><span class="p">[</span><span class="n">inst_index</span><span class="p">]</span> <span class="o">=</span> <span class="n">iit_combo</span>
+    <span class="k">return</span> <span class="n">lbc_combo_query</span><span class="p">,</span> <span class="n">iit_combo_query</span>
+</code></pre></div>
+</td></tr></table>
+
+<ul>
+<li>1.) <code>db_funcs.query_inst_combo</code>  <ul>
+<li>queries database for image combinations for specific instrument within the 180 day range </li>
+<li>does this for both the LBC and IIT methods  </li>
+</ul>
+</li>
+<li>2.) <code>lbc_combo_query[inst_index] = lbc_combo</code><ul>
+<li>add the combo query to the combo query list at the inst_index </li>
+<li>does this for both the LBC and IIT methods  </li>
+</ul>
+</li>
+</ul>
+<h4 id="apply-image-corrections">Apply Image Corrections</h4>
+<p>This <a href="https://github.com/predsci/CHD/blob/master/analysis/chd_analysis/CHD_pipeline_funcs.py">function</a> applies the image 
+pre-processing corrections to images of the center date in question. It returns a list of processed IIT Images and reference
+values for Coronal Hole Detection.  </p>
+<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
+ 2
+ 3
+ 4
+ 5
+ 6
+ 7
+ 8
+ 9
+10
+11
+12
+13
+14
+15
+16</pre></div></td><td class="code"><div class="codehilite"><pre><span></span><code><span class="k">def</span> <span class="nf">apply_ipp</span><span class="p">(</span><span class="n">db_session</span><span class="p">,</span> <span class="n">center_date</span><span class="p">,</span> <span class="n">query_pd</span><span class="p">,</span> <span class="n">inst_list</span><span class="p">,</span> <span class="n">hdf_data_dir</span><span class="p">,</span> <span class="n">lbc_combo_query</span><span class="p">,</span>
+              <span class="n">iit_combo_query</span><span class="p">,</span> <span class="n">methods_list</span><span class="p">,</span> <span class="n">n_intensity_bins</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span> <span class="n">R0</span><span class="o">=</span><span class="mf">1.01</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    function to apply image pre-processing (limb-brightening, inter-instrument transformation) corrections </span>
+<span class="sd">    to EUV images for creation of maps</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">ref_alpha</span><span class="p">,</span> <span class="n">ref_x</span> <span class="o">=</span> <span class="n">db_funcs</span><span class="o">.</span><span class="n">query_var_val</span><span class="p">(</span><span class="n">db_session</span><span class="p">,</span> <span class="n">meth_name</span><span class="o">=</span><span class="s1">&#39;IIT&#39;</span><span class="p">,</span> <span class="n">date_obs</span><span class="o">=</span><span class="n">date_time</span><span class="p">,</span> <span class="n">inst_combo_query</span><span class="o">=</span><span class="n">iit_combo_query</span><span class="p">[</span><span class="n">sta_ind</span><span class="p">])</span>    
+    <span class="k">for</span> <span class="n">inst_ind</span><span class="p">,</span> <span class="n">instrument</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">inst_list</span><span class="p">):</span>
+        <span class="n">los_list</span><span class="p">[</span><span class="n">inst_ind</span><span class="p">],</span> <span class="n">lbcc_image</span><span class="p">,</span> <span class="n">mu_indices</span><span class="p">,</span> <span class="n">use_ind</span><span class="p">,</span> <span class="n">theoretic_query</span> <span class="o">=</span> <span class="n">lbcc_funcs</span><span class="o">.</span><span class="n">apply_lbc</span><span class="p">(</span><span class="n">db_session</span><span class="p">,</span>
+                            <span class="n">hdf_data_dir</span><span class="p">,</span> <span class="n">lbc_combo_query</span><span class="p">[</span><span class="n">inst_ind</span><span class="p">],</span> <span class="n">image_row</span><span class="o">=</span><span class="n">image_row</span><span class="p">,</span> <span class="n">n_intensity_bins</span><span class="o">=</span><span class="n">n_intensity_bins</span><span class="p">,</span> <span class="n">R0</span><span class="o">=</span><span class="n">R0</span><span class="p">)</span>
+        <span class="n">lbcc_image</span><span class="p">,</span> <span class="n">iit_list</span><span class="p">[</span><span class="n">inst_ind</span><span class="p">],</span> <span class="n">use_indices</span><span class="p">[</span><span class="n">inst_ind</span><span class="p">],</span> <span class="n">alpha</span><span class="p">,</span> <span class="n">x</span> <span class="o">=</span> <span class="n">iit_funcs</span><span class="o">.</span><span class="n">apply_iit</span><span class="p">(</span><span class="n">db_session</span><span class="p">,</span> <span class="n">iit_combo_query</span><span class="p">[</span><span class="n">inst_ind</span><span class="p">],</span>
+                            <span class="n">lbcc_image</span><span class="p">,</span> <span class="n">use_ind</span><span class="p">,</span> <span class="n">los_list</span><span class="p">[</span><span class="n">inst_ind</span><span class="p">],</span> <span class="n">R0</span><span class="o">=</span><span class="n">R0</span><span class="p">)</span>
+        <span class="n">ipp_method</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;meth_name&#39;</span><span class="p">:</span> <span class="p">(</span><span class="s2">&quot;LBCC&quot;</span><span class="p">,</span> <span class="s2">&quot;IIT&quot;</span><span class="p">),</span> <span class="s1">&#39;meth_description&#39;</span><span class="p">:[</span><span class="s2">&quot;LBCC Theoretic Fit Method&quot;</span><span class="p">,</span> <span class="s2">&quot;IIT Fit Method&quot;</span><span class="p">]</span> <span class="p">,</span> <span class="s1">&#39;var_name&#39;</span><span class="p">:</span> <span class="p">(</span><span class="s2">&quot;LBCC&quot;</span><span class="p">,</span> <span class="s2">&quot;IIT&quot;</span><span class="p">),</span> <span class="s1">&#39;var_description&#39;</span><span class="p">:</span> <span class="p">(</span><span class="s2">&quot; &quot;</span><span class="p">,</span> <span class="s2">&quot; &quot;</span><span class="p">)}</span>
+        <span class="n">methods_list</span><span class="p">[</span><span class="n">inst_ind</span><span class="p">]</span> <span class="o">=</span> <span class="n">methods_list</span><span class="p">[</span><span class="n">inst_ind</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">ipp_method</span><span class="p">),</span> <span class="n">sort</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">image_pd</span><span class="p">,</span> <span class="n">los_list</span><span class="p">,</span> <span class="n">iit_list</span><span class="p">,</span> <span class="n">use_indices</span><span class="p">,</span> <span class="n">methods_list</span><span class="p">,</span> <span class="n">ref_alpha</span><span class="p">,</span> <span class="n">ref_x</span>
+</code></pre></div>
+</td></tr></table>
+
+<ul>
+<li>1.) <code>db_funcs.query_var_val</code><ul>
+<li>this is a database function to <a href="https://github.com/predsci/CHD/blob/master/modules/DB_funs.py">query variable values</a></li>
+<li>ref_alpha and ref_x are the IIT values for the STA Image at this date; these values are used to calculate
+threshold values for CH Detection  </li>
+</ul>
+</li>
+<li>2.) <code>lbcc_funcs.apply_lbc</code>  <ul>
+<li>applies <a href="../../ipp/lbc/#apply-lbc">Limb-Brightening Correction</a> 
+to images and creates LBCCImage datatype </li>
+</ul>
+</li>
+<li>3.) <code>iit_funcs.apply_iit</code>  <ul>
+<li>applies <a href="../../ipp/iit/#apply-iit">Inter-Instrument Transformation Correction</a> 
+to images and creates IITImage datatype which is added to the iit_list  </li>
+</ul>
+</li>
+<li>4.) <code>methods_list[inst_ind].append</code><ul>
+<li>add the LBC and IIT Correction methods to the methods dataframe  </li>
+</ul>
+</li>
+</ul>
+<h3 id="coronal-hole-detection">Coronal Hole Detection</h3>
+<p>This <a href="https://github.com/predsci/CHD/blob/master/analysis/chd_analysis/CHD_pipeline_funcs.py">function</a> 
+applies the Fortran Coronal Hole Detection algorithm and returns a list of CHD Images for mapping.  </p>
+<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
+ 2
+ 3
+ 4
+ 5
+ 6
+ 7
+ 8
+ 9
+10
+11</pre></div></td><td class="code"><div class="codehilite"><pre><span></span><code><span class="k">def</span> <span class="nf">chd</span><span class="p">(</span><span class="n">iit_list</span><span class="p">,</span> <span class="n">los_list</span><span class="p">,</span> <span class="n">use_indices</span><span class="p">,</span> <span class="n">inst_list</span><span class="p">,</span> <span class="n">thresh1</span><span class="p">,</span> <span class="n">thresh2</span><span class="p">,</span> <span class="n">ref_alpha</span><span class="p">,</span> <span class="n">ref_x</span><span class="p">,</span> <span class="n">nc</span><span class="p">,</span> <span class="n">iters</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    function to apply CHD algorithm and create list of CHD Images from a list of IIT Images</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">for</span> <span class="n">inst_ind</span><span class="p">,</span> <span class="n">instrument</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">inst_list</span><span class="p">):</span>
+        <span class="n">t1</span> <span class="o">=</span> <span class="n">thresh1</span> <span class="o">*</span> <span class="n">ref_alpha</span> <span class="o">+</span> <span class="n">ref_x</span>
+        <span class="n">t2</span> <span class="o">=</span> <span class="n">thresh2</span> <span class="o">*</span> <span class="n">ref_alpha</span> <span class="o">+</span> <span class="n">ref_x</span>
+        <span class="n">ezseg_output</span><span class="p">,</span> <span class="n">iters_used</span> <span class="o">=</span> <span class="n">ezsegwrapper</span><span class="o">.</span><span class="n">ezseg</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="n">image_data</span><span class="p">),</span> <span class="n">use_chd</span><span class="p">,</span> <span class="n">nx</span><span class="p">,</span> <span class="n">ny</span><span class="p">,</span> <span class="n">t1</span><span class="p">,</span> <span class="n">t2</span><span class="p">,</span> <span class="n">nc</span><span class="p">,</span> <span class="n">iters</span><span class="p">)</span>
+        <span class="n">chd_image_list</span><span class="p">[</span><span class="n">inst_ind</span><span class="p">]</span> <span class="o">=</span> <span class="n">datatypes</span><span class="o">.</span><span class="n">create_chd_image</span><span class="p">(</span><span class="n">los_list</span><span class="p">[</span><span class="n">inst_ind</span><span class="p">],</span> <span class="n">chd_result</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">chd_image_list</span>
+</code></pre></div>
+</td></tr></table>
+
+<ul>
+<li>1.) <code>t1 = thresh1 * ref_alpha + ref_x</code><ul>
+<li>re-calculate threshold 1 and 2 values based off the EUVI-A IIT values </li>
+</ul>
+</li>
+<li>2.) <code>ezsegwrapper.ezseg</code><ul>
+<li>call the python wrapper function for the <a href="../../chd/chd/#algorithm">CH Detection algorithm</a></li>
+</ul>
+</li>
+<li>3.) <code>datatypes.create_chd_image</code><ul>
+<li>create CHD Image datatype and add to the CHD Image list for mapping  </li>
+</ul>
+</li>
+</ul>
+<h3 id="single-maps">Single Maps</h3>
+<p>This <a href="https://github.com/predsci/CHD/blob/master/analysis/chd_analysis/CHD_pipeline_funcs.py">function</a> creates single 
+instrument maps from both IIT Images and CHD Images. This mapping is done through linear interpolation onto a Carrington map.</p>
+<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
+ 2
+ 3
+ 4
+ 5
+ 6
+ 7
+ 8
+ 9
+10
+11
+12
+13
+14
+15
+16</pre></div></td><td class="code"><div class="codehilite"><pre><span></span><code><span class="k">def</span> <span class="nf">create_singles_maps</span><span class="p">(</span><span class="n">inst_list</span><span class="p">,</span> <span class="n">image_pd</span><span class="p">,</span> <span class="n">iit_list</span><span class="p">,</span> <span class="n">chd_image_list</span><span class="p">,</span> <span class="n">methods_list</span><span class="p">,</span> <span class="n">map_x</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">map_y</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">R0</span><span class="o">=</span><span class="mf">1.01</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    function to map single instrument images to a Carrington map</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">for</span> <span class="n">inst_ind</span><span class="p">,</span> <span class="n">instrument</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">inst_list</span><span class="p">):</span>
+        <span class="n">map_list</span><span class="p">[</span><span class="n">inst_ind</span><span class="p">]</span> <span class="o">=</span> <span class="n">iit_list</span><span class="p">[</span><span class="n">inst_ind</span><span class="p">]</span><span class="o">.</span><span class="n">interp_to_map</span><span class="p">(</span><span class="n">R0</span><span class="o">=</span><span class="n">R0</span><span class="p">,</span> <span class="n">map_x</span><span class="o">=</span><span class="n">map_x</span><span class="p">,</span> <span class="n">map_y</span><span class="o">=</span><span class="n">map_y</span><span class="p">,</span>
+                                                              <span class="n">image_num</span><span class="o">=</span><span class="n">image_row</span><span class="o">.</span><span class="n">image_id</span><span class="p">)</span>
+        <span class="n">chd_map_list</span><span class="p">[</span><span class="n">inst_ind</span><span class="p">]</span> <span class="o">=</span> <span class="n">chd_image_list</span><span class="p">[</span><span class="n">inst_ind</span><span class="p">]</span><span class="o">.</span><span class="n">interp_to_map</span><span class="p">(</span><span class="n">R0</span><span class="o">=</span><span class="n">R0</span><span class="p">,</span> <span class="n">map_x</span><span class="o">=</span><span class="n">map_x</span><span class="p">,</span> <span class="n">map_y</span><span class="o">=</span><span class="n">map_y</span><span class="p">,</span>
+                                                              <span class="n">image_num</span><span class="o">=</span><span class="n">image_row</span><span class="o">.</span><span class="n">image_id</span><span class="p">)</span>
+        <span class="n">interp_method</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;meth_name&#39;</span><span class="p">:</span> <span class="p">(</span><span class="s2">&quot;Im2Map_Lin_Interp_1&quot;</span><span class="p">,),</span> <span class="s1">&#39;meth_description&#39;</span><span class="p">:[</span><span class="s2">&quot;Use SciPy.RegularGridInterpolator() to linearly interpolate from an Image to a Map&quot;</span><span class="p">]</span> <span class="o">*</span> <span class="mi">1</span><span class="p">,</span>
+                         <span class="s1">&#39;var_name&#39;</span><span class="p">:</span> <span class="p">(</span><span class="s2">&quot;R0&quot;</span><span class="p">,),</span> <span class="s1">&#39;var_description&#39;</span><span class="p">:</span> <span class="p">(</span><span class="s2">&quot;Solar radii&quot;</span><span class="p">,),</span> <span class="s1">&#39;var_val&#39;</span><span class="p">:</span> <span class="p">(</span><span class="n">R0</span><span class="p">,)}</span>
+        <span class="n">methods_list</span><span class="p">[</span><span class="n">inst_ind</span><span class="p">]</span> <span class="o">=</span> <span class="n">methods_list</span><span class="p">[</span><span class="n">inst_ind</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">interp_method</span><span class="p">),</span> <span class="n">sort</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="n">map_list</span><span class="p">[</span><span class="n">inst_ind</span><span class="p">]</span><span class="o">.</span><span class="n">append_method_info</span><span class="p">(</span><span class="n">methods_list</span><span class="p">[</span><span class="n">inst_ind</span><span class="p">])</span>
+        <span class="n">chd_map_list</span><span class="p">[</span><span class="n">inst_ind</span><span class="p">]</span><span class="o">.</span><span class="n">append_method_info</span><span class="p">(</span><span class="n">methods_list</span><span class="p">[</span><span class="n">inst_ind</span><span class="p">])</span>
+
+    <span class="k">return</span> <span class="n">map_list</span><span class="p">,</span> <span class="n">chd_map_list</span><span class="p">,</span> <span class="n">methods_list</span><span class="p">,</span> <span class="n">image_info</span><span class="p">,</span> <span class="n">map_info</span>
+</code></pre></div>
+</td></tr></table>
+
+<ul>
+<li>1.) <code>iit_list[inst_ind].interp_to_map, chd_image_list[inst_ind].interp_to_map</code>  <ul>
+<li>interpolate IIT corrected, CHD image to Carrington map using linear <a href="../int/">interpolation</a></li>
+</ul>
+</li>
+<li>2.) <code>methods_list[inst_ind].append</code><ul>
+<li>append linear interpolation mapping method to the methods list</li>
+</ul>
+</li>
+<li>3.) <code>map_list[inst_ind].append_method_info, chd_map_list[inst_ind].append_method_info</code><ul>
+<li>append method information to the both the EUV and CHD map lists</li>
+</ul>
+</li>
+</ul>
+<h3 id="combine-maps">Combine Maps</h3>
+<p>This <a href="https://github.com/predsci/CHD/blob/master/analysis/chd_analysis/CHD_pipeline_funcs.py">function</a> creates combined 
+EUV and CHD maps from individual instruments maps. Then saves method, map parameter values, and maps to the database. Maps
+are combined using a Minimum Intensity Merge.</p>
+<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
+ 2
+ 3
+ 4
+ 5
+ 6
+ 7
+ 8
+ 9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26</pre></div></td><td class="code"><div class="codehilite"><pre><span></span><code><span class="k">def</span> <span class="nf">create_combined_maps</span><span class="p">(</span><span class="n">db_session</span><span class="p">,</span> <span class="n">map_data_dir</span><span class="p">,</span> <span class="n">map_list</span><span class="p">,</span> <span class="n">chd_map_list</span><span class="p">,</span> <span class="n">methods_list</span><span class="p">,</span>
+                         <span class="n">image_info</span><span class="p">,</span> <span class="n">map_info</span><span class="p">,</span> <span class="n">del_mu</span><span class="p">,</span> <span class="n">mu_cutoff</span><span class="o">=</span><span class="mf">0.0</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    function to create combined EUV and CHD maps and save to database with associated method information</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">euv_combined</span><span class="p">,</span> <span class="n">chd_combined</span> <span class="o">=</span> <span class="n">combine_maps</span><span class="p">(</span><span class="n">map_list</span><span class="p">,</span> <span class="n">chd_map_list</span><span class="p">,</span> <span class="n">del_mu</span><span class="o">=</span><span class="n">del_mu</span><span class="p">)</span>
+    <span class="n">combined_method</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;meth_name&#39;</span><span class="p">:</span> <span class="p">(</span><span class="s2">&quot;Min-Int-Merge_1&quot;</span><span class="p">,</span> <span class="s2">&quot;Min-Int-Merge_1&quot;</span><span class="p">),</span> <span class="s1">&#39;meth_description&#39;</span><span class="p">:[</span><span class="s2">&quot;Minimum intensity merge version 1&quot;</span><span class="p">]</span> <span class="o">*</span> <span class="mi">2</span><span class="p">,</span>
+                       <span class="s1">&#39;var_name&#39;</span><span class="p">:</span> <span class="p">(</span><span class="s2">&quot;mu_cutoff&quot;</span><span class="p">,</span> <span class="s2">&quot;del_mu&quot;</span><span class="p">),</span> <span class="s1">&#39;var_description&#39;</span><span class="p">:</span> <span class="p">(</span><span class="s2">&quot;lower mu cutoff value&quot;</span><span class="p">,</span> <span class="s2">&quot;max acceptable mu range&quot;</span><span class="p">),</span> <span class="s1">&#39;var_val&#39;</span><span class="p">:</span> <span class="p">(</span><span class="n">mu_cutoff</span><span class="p">,</span> <span class="n">del_mu</span><span class="p">)}</span>
+    <span class="n">euv_combined</span><span class="o">.</span><span class="n">append_method_info</span><span class="p">(</span><span class="n">methods_list</span><span class="p">)</span>
+    <span class="n">euv_combined</span><span class="o">.</span><span class="n">append_method_info</span><span class="p">(</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">combined_method</span><span class="p">))</span>
+    <span class="n">euv_combined</span><span class="o">.</span><span class="n">append_image_info</span><span class="p">(</span><span class="n">image_info</span><span class="p">)</span>
+    <span class="n">euv_combined</span><span class="o">.</span><span class="n">append_map_info</span><span class="p">(</span><span class="n">map_info</span><span class="p">)</span>
+    <span class="n">chd_combined</span><span class="o">.</span><span class="n">append_method_info</span><span class="p">(</span><span class="n">methods_list</span><span class="p">)</span>
+    <span class="n">chd_combined</span><span class="o">.</span><span class="n">append_method_info</span><span class="p">(</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">combined_method</span><span class="p">))</span>
+    <span class="n">chd_combined</span><span class="o">.</span><span class="n">append_image_info</span><span class="p">(</span><span class="n">image_info</span><span class="p">)</span>
+    <span class="n">chd_combined</span><span class="o">.</span><span class="n">append_map_info</span><span class="p">(</span><span class="n">map_info</span><span class="p">)</span>
+    <span class="n">Plotting</span><span class="o">.</span><span class="n">PlotMap</span><span class="p">(</span><span class="n">euv_combined</span><span class="p">,</span> <span class="n">nfig</span><span class="o">=</span><span class="s2">&quot;EUV Combined map for: &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">euv_combined</span><span class="o">.</span><span class="n">image_info</span><span class="o">.</span><span class="n">date_obs</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> 
+                <span class="n">title</span><span class="o">=</span><span class="s2">&quot;Minimum Intensity Merge Map</span><span class="se">\n</span><span class="s2">Date: &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">euv_combined</span><span class="o">.</span><span class="n">image_info</span><span class="o">.</span><span class="n">date_obs</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span>
+    <span class="n">Plotting</span><span class="o">.</span><span class="n">PlotMap</span><span class="p">(</span><span class="n">euv_combined</span><span class="p">,</span> <span class="n">nfig</span><span class="o">=</span><span class="s2">&quot;EUV/CHD Combined map for: &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">euv_combined</span><span class="o">.</span><span class="n">image_info</span><span class="o">.</span><span class="n">date_obs</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> 
+                <span class="n">title</span><span class="o">=</span><span class="s2">&quot;Minimum Intensity EUV/CHD Merge Map</span><span class="se">\n</span><span class="s2">Date: &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">euv_combined</span><span class="o">.</span><span class="n">image_info</span><span class="o">.</span><span class="n">date_obs</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span>
+    <span class="n">Plotting</span><span class="o">.</span><span class="n">PlotMap</span><span class="p">(</span><span class="n">chd_combined</span><span class="p">,</span> <span class="n">nfig</span><span class="o">=</span><span class="s2">&quot;EUV/CHD Combined map for: &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">chd_combined</span><span class="o">.</span><span class="n">image_info</span><span class="o">.</span><span class="n">date_obs</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> 
+                <span class="n">title</span><span class="o">=</span><span class="s2">&quot;Minimum Intensity EUV/CHD Merge Map</span><span class="se">\n</span><span class="s2">Date: &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">chd_combined</span><span class="o">.</span><span class="n">image_info</span><span class="o">.</span><span class="n">date_obs</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="n">map_type</span><span class="o">=</span><span class="s1">&#39;CHD&#39;</span><span class="p">)</span>
+    <span class="n">euv_combined</span><span class="o">.</span><span class="n">write_to_file</span><span class="p">(</span><span class="n">map_data_dir</span><span class="p">,</span> <span class="n">map_type</span><span class="o">=</span><span class="s1">&#39;synoptic_euv&#39;</span><span class="p">,</span> <span class="n">filename</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">db_session</span><span class="o">=</span><span class="n">db_session</span><span class="p">)</span>
+    <span class="n">chd_combined</span><span class="o">.</span><span class="n">write_to_file</span><span class="p">(</span><span class="n">map_data_dir</span><span class="p">,</span> <span class="n">map_type</span><span class="o">=</span><span class="s1">&#39;synoptic_chd&#39;</span><span class="p">,</span> <span class="n">filename</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">db_session</span><span class="o">=</span><span class="n">db_session</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">euv_combined</span><span class="p">,</span> <span class="n">chd_combined</span>
+</code></pre></div>
+</td></tr></table>
+
+<ul>
+<li>1.) <code>combine_maps</code><ul>
+<li><a href="../cmb/#combine-maps-function">function</a> that combines EUV and CHD maps using a minimum intensity merge </li>
+</ul>
+</li>
+<li>2.) <code>euv_combined.append_method_info, euv_combined.append_image_info, euv_combined.append_map_info</code><ul>
+<li>append methods list and combination method information to the both the EUV and CHD combined maps</li>
+<li>appends image and map info to combined maps, used for database storage</li>
+</ul>
+</li>
+<li>3.) <code>Plotting.PlotMap</code><ul>
+<li>plot the combined EUV and CHD maps</li>
+</ul>
+</li>
+<li>4.) <code>euv_combined.write_to_file, chd_combined.write_to_file</code><ul>
+<li>PSI Map <a href="https://github.com/predsci/CHD/blob/master/modules/datatypes.py">function</a> that writes the map to file 
+and saves to the database using function <a href="https://github.com/predsci/CHD/blob/master/modules/datatypes.py">add_map_dbase_record</a><ul>
+<li>generates filename for map based off base path and map type</li>
+<li>creates method combination of LBC, IIT, Interpolation, and Minimum Intensity Merge</li>
+<li>creates Image Combination associated with each method</li>
+<li>stores map variable values (R0, mu_cutoff, del_mu) in database Var Vals Map table</li>
+<li>stores map information and filename in EUV Maps table</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
                 
               
               
