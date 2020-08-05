@@ -48,7 +48,7 @@ db_session = init_db_conn(db_name=use_db, chd_base=db_class.Base, sqlite_path=sq
 # start time
 start_time_tot = time.time()
 
-meth_name = 'LBCC Theoretic'
+meth_name = 'LBCC'
 method_id = get_method_id(db_session, meth_name, meth_desc=None, var_names=None, var_descs=None, create=False)
 
 # mu bin edges and intensity bin edges

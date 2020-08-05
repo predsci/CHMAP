@@ -6,8 +6,7 @@ functions to create EUV/CHD maps and save to the database
     b. Inter-Instrument Transformation
 3. Coronal Hole Detection
 4. Convert to Map
-5. Combine Maps
-6. Save to DB
+5. Combine Maps and Save to DB
 """
 import time
 import pandas as pd
@@ -35,20 +34,21 @@ import analysis.iit_analysis.IIT_pipeline_funcs as iit_funcs
 # get instrument combos
 def get_inst_combos(db_session, inst_list, query_time_max, query_time_min):
     start = time.time()
+    print("Querying Combo IDs from the database.")
     # query for combo ids within date range
     lbc_combo_query = []
     iit_combo_query = []
     for inst_index, instrument in enumerate(inst_list):
         lbc_combo = db_funcs.query_inst_combo(db_session, query_time_min - datetime.timedelta(days=180),
                                               query_time_max + datetime.timedelta(days=180),
-                                              meth_name='LBCC Theoretic', instrument=instrument)
+                                              meth_name='LBCC', instrument=instrument)
         iit_combo = db_funcs.query_inst_combo(db_session, query_time_min - datetime.timedelta(days=180),
                                               query_time_max + datetime.timedelta(days=180), meth_name='IIT',
                                               instrument=instrument)
         lbc_combo_query.append(lbc_combo)
         iit_combo_query.append(iit_combo)
     end = time.time()
-    print("Combo IDs have been queried from the database in", end-start, "seconds.")
+    print("Combo IDs have been queried from the database in", end - start, "seconds.")
     return lbc_combo_query, iit_combo_query
 
 
@@ -61,8 +61,8 @@ def get_dates(query_time_min, query_time_max, map_freq):
 
 
 # 3.) apply IIP
-def apply_ipp(db_session, center_date, query_pd, map_freq, inst_list, hdf_data_dir, lbc_combo_query,
-              iit_combo_query, n_intensity_bins, R0):
+def apply_ipp(db_session, center_date, query_pd, inst_list, hdf_data_dir, lbc_combo_query,
+              iit_combo_query, methods_list, map_freq=2, n_intensity_bins=200, R0=1.01):
     start = time.time()
     # create image lists
     image_pd = [None] * len(inst_list)
@@ -74,13 +74,13 @@ def apply_ipp(db_session, center_date, query_pd, map_freq, inst_list, hdf_data_d
     date_time = np.datetime64(center_date).astype(datetime.datetime)
     # alpha, x for threshold
     sta_ind = inst_list.index('EUVI-A')
-    alpha, x = db_funcs.query_var_val(db_session, meth_name='IIT', date_obs=date_time,
+    ref_alpha, ref_x = db_funcs.query_var_val(db_session, meth_name='IIT', date_obs=date_time,
                                       inst_combo_query=iit_combo_query[sta_ind])
     # create dataframe for date
     hist_date = query_pd['date_obs']
     date_pd = query_pd[
-        (hist_date >= np.datetime64(date_time - datetime.timedelta(hours=map_freq / 2))) &
-        (hist_date <= np.datetime64(date_time + datetime.timedelta(hours=map_freq / 2)))]
+        (hist_date >= np.datetime64(date_time - datetime.timedelta(minutes=10))) &
+        (hist_date <= np.datetime64(date_time + datetime.timedelta(minutes=10)))]
     if len(date_pd) == 0:
         print("No Images to Process for this date.")
     else:
@@ -91,25 +91,43 @@ def apply_ipp(db_session, center_date, query_pd, map_freq, inst_list, hdf_data_d
             image_row = image_pd[inst_ind].iloc[0]
             print("Processing image number", image_row.image_id, "for LBC and IIT Corrections.")
             # apply LBC
-            los_list[inst_ind], lbcc_image, mu_indices, use_ind = lbcc_funcs.apply_lbc(db_session, hdf_data_dir,
+            los_list[inst_ind], lbcc_image, mu_indices, use_ind, theoretic_query = lbcc_funcs.apply_lbc(db_session, hdf_data_dir,
                                                                                        lbc_combo_query[inst_ind],
                                                                                        image_row=image_row,
                                                                                        n_intensity_bins=n_intensity_bins,
                                                                                        R0=R0)
+            # generate a record of the method and variable values used for LBC
+           #  lbc_method = {'meth_name': ("LBCC", "LBCC", "LBCC", "LBCC", "LBCC", "LBCC"), 'meth_description':
+            #                 ["LBCC Theoretic Fit Method"] * 6, 'var_name': ("TheoVar0", "TheoVar1", "TheoVar2", "TheoVar3", "TheoVar4", "TheoVar5"),
+            #                           'var_description': ("Theoretic fit parameter at index 0", "Theoretic fit parameter at index 1", "Theoretic fit parameter at index 2",
+            #                                               "Theoretic fit parameter at index 3", "Theoretic fit parameter at index 4", "Theoretic fit parameter at index 5"),
+            #                           'var_val': (theoretic_query[0], theoretic_query[1], theoretic_query[2], theoretic_query[3],
+            #                                       theoretic_query[4], theoretic_query[5])}
+            lbc_method = {'meth_name': ("LBCC",), 'meth_description':
+                             ["LBCC Theoretic Fit Method"] * 1, 'var_name': ("LBCC",), 'var_description': (" ",)}
+            # add to the methods dataframe for this map
+            methods_list[inst_ind] = methods_list[inst_ind].append(pd.DataFrame(data=lbc_method), sort=False)
             # apply IIT
-            lbcc_image, iit_list[inst_ind], use_indices[inst_ind] = iit_funcs.apply_iit(db_session,
+            lbcc_image, iit_list[inst_ind], use_indices[inst_ind], alpha, x = iit_funcs.apply_iit(db_session,
                                                                                         iit_combo_query[inst_ind],
                                                                                         lbcc_image, use_ind,
                                                                                         los_list[inst_ind], R0=R0)
+            # iit_method = {'meth_name': ("IIT", "IIT"), 'meth_description': ["IIT Fit Method"] * 2, 'var_name': (
+            # "alpha", "x"), 'var_description': ("IIT correction coefficient: alpha", "IIT correction coefficient:
+            # x"), 'var_val': (alpha, x)}
+            iit_method = {'meth_name': ("IIT",), 'meth_description':
+                             ["IIT Fit Method"] * 1, 'var_name': ("IIT",), 'var_description': (" ",)}
+            # add to the methods dataframe for this map
+            methods_list[inst_ind] = methods_list[inst_ind].append(pd.DataFrame(data=iit_method), sort=False)
         end = time.time()
         print("Image Pre-Processing Corrections (Limb-Brightening and Inter-Instrument Transformation) have been "
               "applied "
-              " in", end-start, "seconds.")
-    return image_pd, los_list, iit_list, use_indices, alpha, x
+              " in", end - start, "seconds.")
+    return image_pd, los_list, iit_list, use_indices, ref_alpha, ref_x
 
 
 #### STEP THREE: CORONAL HOLE DETECTION ####
-def chd(iit_list, los_list, use_indices, inst_list, thresh1, thresh2, alpha, x, nc, iters):
+def chd(iit_list, los_list, use_indices, inst_list, thresh1, thresh2, ref_alpha, ref_x, nc, iters):
     start = time.time()
     chd_image_list = [datatypes.CHDImage()] * len(inst_list)
     for inst_ind, instrument in enumerate(inst_list):
@@ -118,15 +136,15 @@ def chd(iit_list, los_list, use_indices, inst_list, thresh1, thresh2, alpha, x, 
         use_chd = np.where(use_chd == 1, use_chd, -9999)
         nx = iit_list[inst_ind].x.size
         ny = iit_list[inst_ind].y.size
-        t1 = thresh1 * alpha + x
-        t2 = thresh2 * alpha + x
+        t1 = thresh1 * ref_alpha + ref_x
+        t2 = thresh2 * ref_alpha + ref_x
         ezseg_output, iters_used = ezsegwrapper.ezseg(np.log10(image_data), use_chd, nx, ny, t1, t2, nc, iters)
         chd_result = np.logical_and(ezseg_output == 0, use_chd == 1)
         chd_result = chd_result.astype(int)
         chd_image_list[inst_ind] = datatypes.create_chd_image(los_list[inst_ind], chd_result)
         chd_image_list[inst_ind].get_coordinates()
     end = time.time()
-    print("Coronal Hole Detection algorithm implemented in", end-start, "seconds.")
+    print("Coronal Hole Detection algorithm implemented in", end - start, "seconds.")
     return chd_image_list
 
 
@@ -156,7 +174,7 @@ def create_singles_maps(inst_list, image_pd, iit_list, chd_image_list, methods_l
         # generate a record of the method and variable values used for interpolation
         interp_method = {'meth_name': ("Im2Map_Lin_Interp_1",), 'meth_description':
             ["Use SciPy.RegularGridInterpolator() to linearly interpolate from an Image to a Map"] * 1,
-                      'var_name': ("R0",), 'var_description': ("Solar radii",), 'var_val': (R0,)}
+                         'var_name': ("R0",), 'var_description': ("Solar radii",), 'var_val': (R0,)}
         # add to the methods dataframe for this map
         methods_list[inst_ind] = methods_list[inst_ind].append(pd.DataFrame(data=interp_method), sort=False)
 
@@ -164,7 +182,7 @@ def create_singles_maps(inst_list, image_pd, iit_list, chd_image_list, methods_l
         map_list[inst_ind].append_method_info(methods_list[inst_ind])
         chd_map_list[inst_ind].append_method_info(methods_list[inst_ind])
     end = time.time()
-    print("Images interpolated to maps in", end-start, "seconds.")
+    print("Images interpolated to maps in", end - start, "seconds.")
     return map_list, chd_map_list, methods_list, image_info, map_info
 
 
@@ -202,10 +220,9 @@ def create_combined_maps(db_session, map_data_dir, map_list, chd_map_list, metho
                      map_type='CHD')
 
     # save EUV and CHD maps to database
-    euv_combined.write_to_file(map_data_dir, map_type='synoptic_euv', filename=None, db_session=db_session)
-    chd_combined.write_to_file(map_data_dir, map_type='synoptic_chd', filename=None, db_session=db_session)
+    #euv_combined.write_to_file(map_data_dir, map_type='synoptic_euv', filename=None, db_session=db_session)
+    #chd_combined.write_to_file(map_data_dir, map_type='synoptic_chd', filename=None, db_session=db_session)
     # end time
     end = time.time()
     print("Combined EUV and CHD Maps created and saved to the database in", end - start, "seconds.")
     return euv_combined, chd_combined
-

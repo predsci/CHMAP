@@ -137,12 +137,12 @@ for date_ind, center in enumerate(moving_avg_centers):
             print("Processing image number", row.image_id, "for LBC and IIT Corrections.")
             # apply LBC
             start=time.time()
-            original_los, lbcc_image, mu_indices, use_indices = lbcc_funcs.apply_lbc(db_session, hdf_data_dir,
+            original_los, lbcc_image, mu_indices, use_indices, theoretic_query = lbcc_funcs.apply_lbc(db_session, hdf_data_dir,
                                                                                      lbc_combo_query[inst_ind], image_row=row,
                                                                                      n_intensity_bins=n_intensity_bins,
                                                                                      R0=R0)
             # apply IIT
-            lbcc_image, iit_image, use_indices = iit_funcs.apply_iit(db_session, iit_combo_query[inst_ind],
+            lbcc_image, iit_image, use_indices, alpha, x  = iit_funcs.apply_iit(db_session, iit_combo_query[inst_ind],
                                                                      lbcc_image, use_indices, original_los, R0=R0)
             end=time.time()
             # print("IPP time:", end-start, "seconds.")

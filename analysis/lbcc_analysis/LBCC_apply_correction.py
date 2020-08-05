@@ -43,7 +43,7 @@ db_session = init_db_conn(db_name=use_db, chd_base=db_class.Base, sqlite_path=sq
 start_time_tot = time.time()
 
 # method information
-meth_name = "LBCC Theoretic"
+meth_name = "LBCC"
 
 ##### QUERY IMAGES ######
 for inst_index, instrument in enumerate(inst_list):

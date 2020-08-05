@@ -55,11 +55,11 @@ for instrument in inst_list:
     image_pd = db_funcs.query_euv_images(db_session=db_session, time_min=lbc_query_time_min,
                                          time_max=lbc_query_time_max, instrument=query_instrument)
     # query correct image combos
-    combo_query = db_funcs.query_inst_combo(db_session, lbc_query_time_min, lbc_query_time_max, meth_name="LBCC Theoretic",
+    combo_query = db_funcs.query_inst_combo(db_session, lbc_query_time_min, lbc_query_time_max, meth_name="LBCC",
                                             instrument=instrument)
     # apply LBC
     for index, row in image_pd.iterrows():
-        original_los, lbcc_image, mu_indices, use_indices = lbcc_funcs.apply_lbc(db_session, hdf_data_dir,
+        original_los, lbcc_image, mu_indices, use_indices, theoretic_query = lbcc_funcs.apply_lbc(db_session, hdf_data_dir,
                                                                                  combo_query,
                                                                                  image_row=row,
                                                                                  n_intensity_bins=n_intensity_bins,

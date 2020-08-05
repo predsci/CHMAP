@@ -50,7 +50,7 @@ mu_bin_edges = np.linspace(0.1, 1.0, n_mu_bins + 1, dtype='float')
 image_intensity_bin_edges = np.linspace(0, 5, num=n_intensity_bins + 1, dtype='float')
 
 # create LBC method
-meth_name = 'LBCC Theoretic'
+meth_name = 'LBCC'
 meth_desc = 'LBCC Theoretic Fit Method'
 method_id = get_method_id(db_session, meth_name, meth_desc, var_names=None, var_descs=None, create=True)
 

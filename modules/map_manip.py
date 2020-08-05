@@ -17,7 +17,6 @@ def combine_maps(map_list, chd_map_list=None, mu_cutoff=0.0, del_mu=None):
     :param mu_cutoff: data points/pixels with a mu less than mu_cutoff will be discarded before
     merging.
     :param del_mu: For a given data point/pixel of the map first find the maximum mu from map_list.
-    Pixels with mu < max_mu-mu_cutoff are discarded before merge.
     :return: Psi_Map object resulting from merge.
     """
     # determine number of maps. if only one, do nothing

@@ -71,7 +71,7 @@ color_dist = np.linspace(0., 1., n_mu)
 
 linestyles = ['dashed']
 marker_types = ['None']
-meth_name = 'LBCC Theoretic'
+meth_name = 'LBCC'
 
 for inst_index, instrument in enumerate(inst_list):
     print("Generating plots for " + instrument + ".")

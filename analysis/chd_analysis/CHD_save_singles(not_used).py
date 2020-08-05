@@ -99,12 +99,12 @@ for inst_index, instrument in enumerate(inst_list):
     for index, row in instrument_pd.iterrows():
         print("Processing image number", row.image_id, "for LBC and IIT Corrections.")
         # apply LBC
-        original_los, lbcc_image, mu_indices, use_indices = lbcc_funcs.apply_lbc(db_session, hdf_data_dir,
+        original_los, lbcc_image, mu_indices, use_indices, theoretic_query = lbcc_funcs.apply_lbc(db_session, hdf_data_dir,
                                                                                  lbc_combo_query, image_row=row,
                                                                                  n_intensity_bins=n_intensity_bins,
                                                                                  R0=R0)
         # apply IIT
-        lbcc_image, iit_image, use_indices = iit_funcs.apply_iit(db_session, hdf_data_dir, iit_combo_query,
+        lbcc_image, iit_image, use_indices, alpha, x = iit_funcs.apply_iit(db_session, hdf_data_dir, iit_combo_query,
                                                                  lbcc_image, use_indices, image_row=row, R0=R0)
 
         # Store Coronal Hole Map with data map? or as separate map-object?

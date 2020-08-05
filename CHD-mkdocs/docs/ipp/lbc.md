@@ -154,7 +154,7 @@ def apply_lbc(db_session, hdf_data_dir, inst_combo_query, image_row, n_intensity
     corrected_lbc_data[use_indices] = 10 ** (beta1d * np.log10(original_los.data[use_indices]) + y1d)
     lbcc_image = psi_d_types.create_lbcc_image(hdf_path, corrected_lbc_data, image_id=image_row.image_id,
                                                meth_id=meth_id, intensity_bin_edges=intensity_bin_edges)
-    return original_los, lbcc_image, mu_indices, use_indices
+    return original_los, lbcc_image, mu_indices, use_indices, theoretic_query
 
 ```                                                                                                                      
 

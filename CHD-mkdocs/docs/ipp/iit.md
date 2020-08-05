@@ -45,7 +45,7 @@ def create_histograms(db_session, inst_list, lbc_query_time_min, lbc_query_time_
                                      time_max=lbc_query_time_max, instrument=query_instrument)
     combo_query = db_funcs.query_inst_combo(db_session, lbc_query_time_min, lbc_query_time_max,
                                       meth_name="LBCC Theoretic", instrument=instrument)
-    original_los, lbcc_image, mu_indices, use_indices = lbcc_funcs.apply_lbc(db_session, hdf_data_dir, combo_query,
+    original_los, lbcc_image, mu_indices, use_indices, theoretic_query = lbcc_funcs.apply_lbc(db_session, hdf_data_dir, combo_query,
                                        image_row=row, n_intensity_bins=n_intensity_bins, R0=R0)
     hist = psi_d_types.LBCCImage.iit_hist(lbcc_image, lat_band, log10)
     iit_hist = psi_d_types.create_iit_hist(lbcc_image, method_id[1], lat_band, hist)
@@ -132,9 +132,9 @@ def apply_iit_correction(db_session, hdf_data_dir, iit_query_time_min, iit_query
                                                 instrument)
     combo_query_iit = db_funcs.query_inst_combo(db_session, iit_query_time_min, iit_query_time_max, iit_meth_name,
                                                 instrument)
-    original_los, lbcc_image, mu_indices, use_indices = lbcc_funcs.apply_lbc(db_session, hdf_data_dir, combo_query_lbc,
+    original_los, lbcc_image, mu_indices, use_indices, theoretic_query = lbcc_funcs.apply_lbc(db_session, hdf_data_dir, combo_query_lbc,
                                                 image_row=row, n_intensity_bins=n_intensity_bins, R0=R0)
-    lbcc_image, iit_image, use_indices = apply_iit(db_session, hdf_data_dir, combo_query_iit, lbcc_image, use_indices, image_row=row, R0=R0)            
+    lbcc_image, iit_image, use_indices, alpha, x = apply_iit(db_session, hdf_data_dir, combo_query_iit, lbcc_image, use_indices, image_row=row, R0=R0)            
     if plot:
         Plotting.PlotCorrectedImage(lbcc_data, los_image=original_los, nfig=100 + inst_index * 10 + index,
                             title="Corrected LBCC Image for " + instrument)
@@ -178,7 +178,7 @@ def apply_iit(db_session, hdf_data_dir, inst_combo_query, lbcc_image, image_row,
     corrected_iit_data[use_indices] = 10 ** (alpha * np.log10(lbcc_data[use_indices]) + x)
     iit_image = psi_d_types.create_iit_image(lbcc_image, corrected_iit_data, method_id_info[1], hdf_path)
 
-    return lbcc_image, iit_image, use_indices  
+    return lbcc_image, iit_image, use_indices, alpha, x   
 ```
                                               
  
@@ -212,10 +212,10 @@ def plot_iit_histograms(db_session, hdf_data_dir, hist_query_time_min, hist_quer
     combo_query_iit = db_funcs.query_inst_combo(db_session, hist_query_time_min, hist_query_time_max, meth_name="IIT", instrument=instrument)
     image_pd = db_funcs.query_euv_images(db_session=db_session, time_min=hist_query_time_min,
                               time_max=hist_query_time_max, instrument=query_instrument)
-    original_los, lbcc_image, mu_indices, use_indices = lbcc_funcs.apply_lbc(db_session, hdf_data_dir, combo_query_lbc,
+    original_los, lbcc_image, mu_indices, use_indices, theoretic_query = lbcc_funcs.apply_lbc(db_session, hdf_data_dir, combo_query_lbc,
                               image_row=row, n_intensity_bins=n_intensity_bins, R0=R0)
     original_los_hist = psi_d_types.LosImage.iit_hist(original_los, intensity_bin_edges, lat_band, log10)
-    lbcc_image, iit_image, use_indices = apply_iit(db_session, hdf_data_dir, combo_query_iit, lbcc_image, use_indices, image_row=row, R0=R0)
+    lbcc_image, iit_image, use_indices, alpha, x = apply_iit(db_session, hdf_data_dir, combo_query_iit, lbcc_image, use_indices, image_row=row, R0=R0)
     hist_iit = psi_d_types.IITImage.iit_hist(iit_image, lat_band, log10)
     Plotting.Plot1d_Hist(norm_original_hist, instrument, inst_index, intensity_bin_edges, color_list,
                      linestyle_list, figure=100, xlabel="Intensity (log10)", ylabel="H(I)", title="Histogram: Original Image")

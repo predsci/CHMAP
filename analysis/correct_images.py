@@ -37,12 +37,12 @@ def correct_euv_images(db_session, query_time_min, query_time_max, image_pd, ins
 
         for index, row in instrument_pd.iterrows():
             # apply LBC
-            original_los, lbcc_image, mu_indices, use_indices = lbcc_funcs.apply_lbc(db_session, hdf_data_dir,
+            original_los, lbcc_image, mu_indices, use_indices, theoretic_query = lbcc_funcs.apply_lbc(db_session, hdf_data_dir,
                                                                                      lbc_combo_query, image_row=row,
                                                                                      n_intensity_bins=n_intensity_bins,
                                                                                      R0=R0)
             # apply IIT
-            lbcc_image, iit_image, use_indices = iit_funcs.apply_iit(db_session, hdf_data_dir, iit_combo_query,
+            lbcc_image, iit_image, use_indices, alpha, x = iit_funcs.apply_iit(db_session, hdf_data_dir, iit_combo_query,
                                                                      lbcc_image, use_indices, image_row=row, R0=R0)
             corrected_images.append(iit_image)
 

@@ -158,7 +158,13 @@ def interp_los_image_to_map(image_in, R0, map_x, map_y, no_data_val=-9999.):
     # only interpolate points on the front half of the sphere
     interp_index = image_z > 0
 
-    interp_vec = interpolate2D_regular2irregular(image_in.x, image_in.y, image_in.data, image_x[interp_index],
+    if type(image_in) is psi_dt.IITImage:
+        im_data = image_in.iit_data
+    elif type(image_in) is psi_dt.LBCCImage:
+        im_data = image_in.lbcc_data
+    else:
+        im_data = image_in.data
+    interp_vec = interpolate2D_regular2irregular(image_in.x, image_in.y, im_data, image_x[interp_index],
                                                  image_y[interp_index])
     interp_result_vec[interp_index] = interp_vec
     # reformat result to matrix form

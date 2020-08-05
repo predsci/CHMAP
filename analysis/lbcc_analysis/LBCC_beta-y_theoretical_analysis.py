@@ -51,7 +51,7 @@ optim_vals_theo = ["a1", "a2", "b1", "b2", "n", "log_alpha", "SSE", "optim_time"
 results_theo = np.zeros((len(moving_avg_centers), len(inst_list), len(optim_vals_theo)))
 
 # get method id
-meth_name = 'LBCC Theoretic'
+meth_name = 'LBCC'
 meth_desc = 'LBCC Theoretic Fit Method'
 method_id = get_method_id(db_session, meth_name, meth_desc, var_names=None, var_descs=None, create=False)
 
@@ -120,7 +120,7 @@ for date_index, center_date in enumerate(moving_avg_centers):
         results_theo[date_index, inst_index, 7] = round(end_time - start_time, 3)
         results_theo[date_index, inst_index, 8] = optim_out_theo.status
 
-        meth_name = 'LBCC Theoretic'
+        meth_name = 'LBCC'
         meth_desc = 'LBCC Theoretic Fit Method'
         var_name = "TheoVar"
         var_desc = "Theoretic fit parameter at index "

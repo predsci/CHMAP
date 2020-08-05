@@ -88,21 +88,14 @@ for inst_index, instrument in enumerate(inst_list):
     inst_time_min = rot_images.date_obs.min()
     inst_time_max = rot_images.date_obs.max()
     # query correct image combos
-    lbc_meth_name = "LBCC Theoretic"
-    combo_query_lbc = db_funcs.query_inst_combo(db_session, inst_time_min, inst_time_max, lbc_meth_name,
-                                                instrument)
-    iit_meth_name = "IIT"
-    combo_query_iit = db_funcs.query_inst_combo(db_session, inst_time_min, inst_time_max, iit_meth_name,
-                                                instrument)
-    # query correct image combos
     combo_query_lbc = db_funcs.query_inst_combo(db_session, hist_query_time_min, hist_query_time_max,
-                                                meth_name="LBCC Theoretic", instrument=instrument)
+                                                meth_name="LBCC", instrument=instrument)
     # query correct image combos
     combo_query_iit = db_funcs.query_inst_combo(db_session, hist_query_time_min, hist_query_time_max, meth_name="IIT",
                                                 instrument=instrument)
     for index, row in image_pd.iterrows():
         # apply LBC
-        original_los, lbcc_image, mu_indices, use_indices = lbcc_funcs.apply_lbc(db_session, hdf_data_dir,
+        original_los, lbcc_image, mu_indices, use_indices, theoretic_query = lbcc_funcs.apply_lbc(db_session, hdf_data_dir,
                                                                                  combo_query_lbc,
                                                                                  image_row=row,
                                                                                  n_intensity_bins=n_intensity_bins,
@@ -116,7 +109,7 @@ for inst_index, instrument in enumerate(inst_list):
 
         #### CORRECTED DATA ####
         # apply IIT correction
-        lbcc_image, iit_image, use_indices = iit_funcs.apply_iit(db_session, hdf_data_dir, combo_query_iit, lbcc_image,
+        lbcc_image, iit_image, use_indices, alpha, x = iit_funcs.apply_iit(db_session, hdf_data_dir, combo_query_iit, lbcc_image,
                                                        use_indices, image_row=row, R0=R0)
 
         #### CREATE CORRECTED IIT HISTOGRAM #####

@@ -475,9 +475,10 @@ def add_euv_map(db_session, psi_map, base_path=None, map_type=None):
 
             # Loop over psi_map.method_info rows and insert variable values
             for index, var_row in psi_map.method_info.iterrows():
-                add_var_val = Var_Vals_Map(map_id=map_id, combo_id=combo_id, meth_id=var_row.meth_id,
-                                           var_id=var_row.var_id, var_val=var_row.var_val)
-                db_session.add(add_var_val)
+                if not np.isnan(var_row.var_val):
+                    add_var_val = Var_Vals_Map(map_id=map_id, combo_id=combo_id, meth_id=var_row.meth_id,
+                                               var_id=var_row.var_id, var_val=var_row.var_val)
+                    db_session.add(add_var_val)
 
             # now commit EUV_Map update and Var_Vals update simultaneously
             db_session.commit()
@@ -970,9 +971,9 @@ def add_map_dbase_record(db_session, psi_map, base_path=None, map_type=None):
     :param map_type:
     :return:
     """
-
-    # generate dataframe of unique variables
-    methods_df = psi_map.method_info.drop_duplicates(subset="var_name")
+    # generate method dataframes
+    psi_map.method_info = psi_map.method_info.drop_duplicates(subset="var_name").copy()
+    methods_df = psi_map.method_info.drop_duplicates(subset="meth_name")
     methods_df_cp = methods_df.copy()
     # extract/create method_id(s)
     for index, row in methods_df.iterrows():
@@ -983,6 +984,9 @@ def add_map_dbase_record(db_session, psi_map, base_path=None, map_type=None):
             temp_var_descs = psi_map.method_info.var_description[var_index].to_list()
             temp_var_descs = list(dict.fromkeys(temp_var_descs))
             # if method_id is not passed in map object, query method id from existing methods table. Create if new
+            if np.isnan(row.var_val):
+                temp_var_names = None
+                temp_var_descs = None
             db_session, temp_meth_id, temp_var_ids = get_method_id(db_session, row.meth_name,
                                                                             meth_desc=row.meth_description,
                                                                             var_names=temp_var_names,
@@ -1007,18 +1011,17 @@ def add_map_dbase_record(db_session, psi_map, base_path=None, map_type=None):
     # Get image combo_id. Create if it doesn't already exist.
     image_ids = psi_map.image_info.image_id.to_list()
     image_ids = tuple(image_ids)
-    db_session, combo_id, combo_times = get_combo_id(db_session=db_session, meth_id=meth_ids[0],
-                                                              image_ids=image_ids, create=True)
-    psi_map.map_info.loc[0, "combo_id"] = combo_id
-    psi_map.map_info.loc[0, "date_mean"] = combo_times['date_mean']
-    psi_map.map_info.loc[0, "date_max"] = combo_times['date_max']
-    psi_map.map_info.loc[0, "date_min"] = combo_times['date_min']
-    # add combo-image associations
-    for image in image_ids:
-        db_session, exit_flag = add_combo_image_assoc(db_session=db_session, combo_id=combo_id, image_id=image)
-
-    # Add EUV_map record (and accompanying variable values), and write to file
-    psi_map.method_info = psi_map.method_info.drop_duplicates('var_name')
+    for ind, meth_id in enumerate(meth_ids):
+        db_session, combo_id, combo_times = get_combo_id(db_session=db_session, meth_id=meth_id,
+                                                                  image_ids=image_ids, create=True)
+        psi_map.map_info.loc[ind, "combo_id"] = combo_id
+        psi_map.map_info.loc[ind, "date_mean"] = combo_times['date_mean']
+        psi_map.map_info.loc[ind, "date_max"] = combo_times['date_max']
+        psi_map.map_info.loc[ind, "date_min"] = combo_times['date_min']
+        # add combo-image associations
+        for image in image_ids:
+            db_session, exit_flag = add_combo_image_assoc(db_session=db_session, combo_id=combo_id,
+                                                                   image_id=image)
     db_session, exit_status, psi_map = add_euv_map(db_session=db_session, psi_map=psi_map,
                                                             base_path=base_path,
                                                             map_type=map_type)
@@ -1339,14 +1342,14 @@ def query_var_val(db_session, meth_name, date_obs, inst_combo_query):
     var_id = get_var_id(db_session, method_id_info[1], var_name=None, var_desc=None, create=False)
 
     ### find correct combo id ###
-    if date_obs <= inst_combo_query.date_mean.iloc[0]:
-        correct_combo = inst_combo_query[(inst_combo_query['date_mean'] == str(inst_combo_query.date_mean.iloc[0]))]
-    elif date_obs >= inst_combo_query.date_mean.iloc[-1]:
-        correct_combo = inst_combo_query[(inst_combo_query['date_mean'] == str(inst_combo_query.date_mean.iloc[-1]))]
-    else:
-        correct_combo = inst_combo_query[
-            (inst_combo_query['date_mean'] >= str(date_obs - datetime.timedelta(days=7))) & (
-                    inst_combo_query['date_mean'] <= str(date_obs + datetime.timedelta(days=7)))]
+    #if date_obs <= inst_combo_query.date_mean.iloc[0]:
+       # correct_combo = inst_combo_query[(inst_combo_query['date_mean'] == str(inst_combo_query.date_mean.iloc[0]))]
+    #elif date_obs >= inst_combo_query.date_mean.iloc[-1]:
+        #correct_combo = inst_combo_query[(inst_combo_query['date_mean'] == str(inst_combo_query.date_mean.iloc[-1]))]
+    #else:
+    correct_combo = inst_combo_query[
+        (inst_combo_query['date_mean'] >= str(date_obs - datetime.timedelta(days=7))) & (
+                inst_combo_query['date_mean'] <= str(date_obs + datetime.timedelta(days=7)))]
 
     # create empty arrays
     var_vals = np.zeros((len(correct_combo.combo_id), var_id[1].size))
@@ -1358,10 +1361,13 @@ def query_var_val(db_session, meth_name, date_obs, inst_combo_query):
                                                                       Var_Vals.combo_id == combo_id
                                                                       ).statement,
                                     db_session.bind)
-        var_vals[i, :] = var_val_query.var_val
-        timeutc = datetime.datetime.utcfromtimestamp(0)
-        date_float = (correct_combo.date_mean.iloc[i] - timeutc).total_seconds()
-        date_mean[i] = date_float
+        if var_val_query.size == 0:
+            var_vals[i, :] = np.nan * var_id[1].size
+        else:
+            var_vals[i, :] = var_val_query.var_val
+            timeutc = datetime.datetime.utcfromtimestamp(0)
+            date_float = (correct_combo.date_mean.iloc[i] - timeutc).total_seconds()
+            date_mean[i] = date_float
 
     # interpolate
     var_val = np.zeros(var_id[1].size)

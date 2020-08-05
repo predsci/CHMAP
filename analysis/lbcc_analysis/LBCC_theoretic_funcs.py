@@ -42,7 +42,7 @@ def save_histograms(db_session, hdf_data_dir, inst_list, hist_query_time_min, hi
     image_intensity_bin_edges = np.linspace(0, 5, num=n_intensity_bins + 1, dtype='float')
 
     # create LBC method
-    meth_name = 'LBCC Theoretic'
+    meth_name = 'LBCC '
     meth_desc = 'LBCC Theoretic Fit Method'
     method_id = db_funcs.get_method_id(db_session, meth_name, meth_desc, var_names=None, var_descs=None, create=True)
 
@@ -105,7 +105,7 @@ def calc_theoretic_fit(db_session, inst_list, calc_query_time_min, calc_query_ti
     results_theo = np.zeros((len(moving_avg_centers), len(inst_list), len(optim_vals_theo)))
 
     # get method id
-    meth_name = 'LBCC Theoretic'
+    meth_name = 'LBCC'
     meth_desc = 'LBCC Theoretic Fit Method'
     method_id = db_funcs.get_method_id(db_session, meth_name, meth_desc, var_names=None, var_descs=None, create=False)
 
@@ -174,7 +174,7 @@ def calc_theoretic_fit(db_session, inst_list, calc_query_time_min, calc_query_ti
             results_theo[date_index, inst_index, 7] = round(end_time - start_time, 3)
             results_theo[date_index, inst_index, 8] = optim_out_theo.status
 
-            meth_name = 'LBCC Theoretic'
+            meth_name = 'LBCC'
             meth_desc = 'LBCC Theoretic Fit Method'
             var_name = "TheoVar"
             var_desc = "Theoretic fit parameter at index "
@@ -208,7 +208,7 @@ def apply_lbc_correction(db_session, hdf_data_dir, inst_list, lbc_query_time_min
     start_time_tot = time.time()
 
     # method information
-    meth_name = "LBCC Theoretic"
+    meth_name = "LBCC"
 
     ##### QUERY IMAGES ######
     for inst_index, instrument in enumerate(inst_list):
@@ -222,7 +222,7 @@ def apply_lbc_correction(db_session, hdf_data_dir, inst_list, lbc_query_time_min
         for index in range(n_images_plot):
             row = image_pd.iloc[index]
             print("Processing image number", row.image_id, "for LB Correction.")
-            original_los, lbcc_image, mu_indices, use_indices = apply_lbc(db_session, hdf_data_dir,
+            original_los, lbcc_image, mu_indices, use_indices, theoretic_query = apply_lbc(db_session, hdf_data_dir,
                                                                           combo_query, image_row=row,
                                                                           n_intensity_bins=n_intensity_bins, R0=R0)
             ##### PLOTTING ######
@@ -257,7 +257,7 @@ def apply_lbc(db_session, hdf_data_dir, inst_combo_query, image_row, n_intensity
     @return:
     """
 
-    meth_name = "LBCC Theoretic"
+    meth_name = "LBCC"
     db_sesh, meth_id, var_ids = db_funcs.get_method_id(db_session, meth_name, meth_desc=None, var_names=None,
                                                        var_descs=None, create=False)
     intensity_bin_edges = np.linspace(0, 5, num=n_intensity_bins + 1, dtype='float')
@@ -286,7 +286,7 @@ def apply_lbc(db_session, hdf_data_dir, inst_combo_query, image_row, n_intensity
                                                meth_id=meth_id, intensity_bin_edges=intensity_bin_edges)
     psi_d_types.LosImage.get_coordinates(lbcc_image, R0=R0)
 
-    return original_los, lbcc_image, mu_indices, use_indices
+    return original_los, lbcc_image, mu_indices, use_indices, theoretic_query
 
 
 ###### STEP FOUR: GENERATE PLOTS OF BETA AND Y ######
@@ -327,7 +327,7 @@ def generate_theoretic_plots(db_session, inst_list, plot_query_time_min, plot_qu
 
     linestyles = ['dashed']
     marker_types = ['None']
-    meth_name = 'LBCC Theoretic'
+    meth_name = 'LBCC'
 
     for inst_index, instrument in enumerate(inst_list):
         print("Generating plots for " + instrument + ".")
@@ -464,7 +464,7 @@ def generate_histogram_plots(db_session, hdf_data_dir, inst_list, hist_plot_quer
     # start time
     start_time_tot = time.time()
 
-    meth_name = 'LBCC Theoretic'
+    meth_name = 'LBCC'
     method_id = db_funcs.get_method_id(db_session, meth_name, meth_desc=None, var_names=None, var_descs=None,
                                        create=False)
 
@@ -505,7 +505,8 @@ def generate_histogram_plots(db_session, hdf_data_dir, inst_list, hist_plot_quer
                                                  time_max=hist_plot_query_time_max, instrument=query_instrument)
             for index, row in image_pd.iterrows():
                 # apply LBC
-                original_los, lbcc_image, mu_indices, use_indices = apply_lbc(db_session, hdf_data_dir, combo_query, row,
+                original_los, lbcc_image, mu_indices, use_indices, theoretic_query = apply_lbc(db_session, hdf_data_dir,
+                                                                                               combo_query, row,
                                                                              n_intensity_bins=n_intensity_bins, R0=R0)
                 #### CREATE NEW HISTOGRAMS ####
                 # perform 2D histogram on mu and image intensity

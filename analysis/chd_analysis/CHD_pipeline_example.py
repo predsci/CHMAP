@@ -7,8 +7,7 @@ outline to create combination EUV maps
     b. Inter-Instrument Transformation
 3. Coronal Hole Detection
 4. Convert to Map
-5. Combine Maps
-6. Save to DB
+5. Combine Maps and Save to DB
 """
 
 import os
@@ -22,8 +21,8 @@ import analysis.chd_analysis.CHD_pipeline_funcs as chd_funcs
 
 # -------- parameters --------- #
 # TIME RANGE FOR QUERYING
-query_time_min = datetime.datetime(2011, 4, 12, 0, 0, 0)
-query_time_max = datetime.datetime(2011, 4, 12, 3, 0, 0)
+query_time_min = datetime.datetime(2011, 10, 1, 4, 0, 0)
+query_time_max = datetime.datetime(2011, 10, 1, 8, 0, 0)
 map_freq = 2  # number of hours
 
 # INITIALIZE DATABASE CONNECTION
@@ -82,14 +81,16 @@ moving_avg_centers = chd_funcs.get_dates(query_time_min, query_time_max, map_fre
 
 # 3.) loop through center dates
 for date_ind, center in enumerate(moving_avg_centers):
-    image_pd, los_list, iit_list, use_indices, alpha, x = chd_funcs.apply_ipp(db_session, center, query_pd, map_freq,
-                                                                              inst_list,
-                                                                              hdf_data_dir, lbc_combo_query,
-                                                                              iit_combo_query, n_intensity_bins, R0)
+    image_pd, los_list, iit_list, use_indices, ref_alpha, ref_x = chd_funcs.apply_ipp(db_session, center, query_pd,
+                                                                                      inst_list,
+                                                                                      hdf_data_dir, lbc_combo_query,
+                                                                                      iit_combo_query, methods_list,
+                                                                                      map_freq,
+                                                                                      n_intensity_bins, R0)
     #### STEP THREE: CORONAL HOLE DETECTION ####
     if los_list[0] is not None:
-        chd_image_list = chd_funcs.chd(iit_list, los_list, use_indices, inst_list, thresh1, thresh2, alpha, x, nc,
-                                       iters)
+        chd_image_list = chd_funcs.chd(iit_list, los_list, use_indices, inst_list, thresh1, thresh2, ref_alpha, ref_x,
+                                       nc, iters)
         #### STEP FOUR: CONVERT TO MAP ####
         map_list, chd_map_list, methods_list, image_info, map_info = chd_funcs.create_singles_maps(inst_list, image_pd,
                                                                                                    iit_list,
@@ -98,6 +99,5 @@ for date_ind, center in enumerate(moving_avg_centers):
                                                                                                    map_y, R0)
         #### STEP FIVE: CREATE COMBINED MAPS AND SAVE TO DB ####
         euv_combined, chd_combined = chd_funcs.create_combined_maps(db_session, map_data_dir, map_list, chd_map_list,
-                                                                    methods_list, image_info, map_info, del_mu,
-                                                                    mu_cutoff)
-
+                                                                    methods_list,
+                                                                    image_info, map_info, del_mu, mu_cutoff)
