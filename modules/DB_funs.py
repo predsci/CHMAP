@@ -399,7 +399,8 @@ def add_euv_map(db_session, psi_map, base_path=None, map_type=None):
 
     time_of_compute = psi_map.map_info.loc[0, 'time_of_compute'].to_pydatetime()
     fname = psi_map.map_info.loc[0, 'fname']
-    combo_id = psi_map.map_info.loc[0, 'combo_id'].__int__()
+    # combo_id = psi_map.map_info.loc[0, 'combo_id'].__int__()
+    combo_id = psi_map.map_info.loc[len(psi_map.map_info) - 1, 'combo_id'].__int__()
     meth_combo_id = psi_map.map_info.loc[0, 'meth_combo_id'].__int__()
 
     if fname is not None:
@@ -455,7 +456,8 @@ def add_euv_map(db_session, psi_map, base_path=None, map_type=None):
                     inst = psi_map.image_info.instrument[0]
                 else:
                     inst = None
-                subdir, temp_fname = misc_helpers.construct_map_path_and_fname(base_path, psi_map.map_info.date_mean[0],
+                subdir, temp_fname = misc_helpers.construct_map_path_and_fname(base_path, psi_map.map_info.date_mean[
+                    len(psi_map.map_info) - 1],
                                                                                map_id, map_type, 'h5',
                                                                                inst=inst, mkdir=True)
                 h5_filename = os.path.join(subdir, temp_fname)
@@ -988,9 +990,9 @@ def add_map_dbase_record(db_session, psi_map, base_path=None, map_type=None):
                 temp_var_names = None
                 temp_var_descs = None
             db_session, temp_meth_id, temp_var_ids = get_method_id(db_session, row.meth_name,
-                                                                            meth_desc=row.meth_description,
-                                                                            var_names=temp_var_names,
-                                                                            var_descs=temp_var_descs, create=True)
+                                                                   meth_desc=row.meth_description,
+                                                                   var_names=temp_var_names,
+                                                                   var_descs=temp_var_descs, create=True)
             methods_df_cp.loc[index, 'meth_id'] = temp_meth_id
             if temp_var_ids is not None:
                 psi_map.method_info.loc[var_index, 'var_id'] = temp_var_ids
@@ -1005,26 +1007,33 @@ def add_map_dbase_record(db_session, psi_map, base_path=None, map_type=None):
     # Get method combo_id. Create if it doesn't already exist
     meth_ids = methods_df_cp.meth_id.to_list()
     meth_ids = list(dict.fromkeys(meth_ids))
+    meth_ids = methods_df_cp.meth_id.to_list()
+    meth_ids = list(dict.fromkeys(meth_ids))
+    var_vals = methods_df_cp.var_val.to_list()
+    var_vals = list(dict.fromkeys(var_vals))
     db_session, meth_combo_id = get_method_combo_id(db_session, meth_ids, create=True)
-    psi_map.map_info.loc[0, "meth_combo_id"] = meth_combo_id
+    psi_map.map_info.loc[:, "meth_combo_id"] = meth_combo_id
 
     # Get image combo_id. Create if it doesn't already exist.
     image_ids = psi_map.image_info.image_id.to_list()
     image_ids = tuple(image_ids)
     for ind, meth_id in enumerate(meth_ids):
-        db_session, combo_id, combo_times = get_combo_id(db_session=db_session, meth_id=meth_id,
-                                                                  image_ids=image_ids, create=True)
-        psi_map.map_info.loc[ind, "combo_id"] = combo_id
-        psi_map.map_info.loc[ind, "date_mean"] = combo_times['date_mean']
-        psi_map.map_info.loc[ind, "date_max"] = combo_times['date_max']
-        psi_map.map_info.loc[ind, "date_min"] = combo_times['date_min']
-        # add combo-image associations
-        for image in image_ids:
-            db_session, exit_flag = add_combo_image_assoc(db_session=db_session, combo_id=combo_id,
-                                                                   image_id=image)
+        if np.isnan(var_vals[ind]):
+            pass
+        else:
+            db_session, combo_id, combo_times = get_combo_id(db_session=db_session, meth_id=meth_id,
+                                                             image_ids=image_ids, create=True)
+            psi_map.map_info.loc[ind, "combo_id"] = combo_id
+            psi_map.map_info.loc[ind, "date_mean"] = combo_times['date_mean']
+            psi_map.map_info.loc[ind, "date_max"] = combo_times['date_max']
+            psi_map.map_info.loc[ind, "date_min"] = combo_times['date_min']
+            # add combo-image associations
+            for image in image_ids:
+                db_session, exit_flag = add_combo_image_assoc(db_session=db_session, combo_id=combo_id,
+                                                              image_id=image)
     db_session, exit_status, psi_map = add_euv_map(db_session=db_session, psi_map=psi_map,
-                                                            base_path=base_path,
-                                                            map_type=map_type)
+                                                   base_path=base_path,
+                                                   map_type=map_type)
 
     return db_session, psi_map
 
@@ -1334,7 +1343,6 @@ def query_var_val(db_session, meth_name, date_obs, inst_combo_query):
     """
     if type(date_obs) == str:
         date_obs = datetime.datetime.strptime(date_obs, "%Y-%m-%dT%H:%M:%S.%f")
-
     # query method_defs for method id
     method_id_info = get_method_id(db_session, meth_name, meth_desc=None, var_names=None, var_descs=None,
                                    create=False)
@@ -1342,14 +1350,20 @@ def query_var_val(db_session, meth_name, date_obs, inst_combo_query):
     var_id = get_var_id(db_session, method_id_info[1], var_name=None, var_desc=None, create=False)
 
     ### find correct combo id ###
-    #if date_obs <= inst_combo_query.date_mean.iloc[0]:
-       # correct_combo = inst_combo_query[(inst_combo_query['date_mean'] == str(inst_combo_query.date_mean.iloc[0]))]
-    #elif date_obs >= inst_combo_query.date_mean.iloc[-1]:
-        #correct_combo = inst_combo_query[(inst_combo_query['date_mean'] == str(inst_combo_query.date_mean.iloc[-1]))]
-    #else:
-    correct_combo = inst_combo_query[
-        (inst_combo_query['date_mean'] >= str(date_obs - datetime.timedelta(days=7))) & (
-                inst_combo_query['date_mean'] <= str(date_obs + datetime.timedelta(days=7)))]
+    if date_obs <= inst_combo_query.date_mean.iloc[0]:
+        correct_combo = inst_combo_query[(inst_combo_query['date_mean'] == str(inst_combo_query.date_mean.iloc[0]))]
+        if len(inst_combo_query) > 1:
+            correct_combo = correct_combo.append(
+                inst_combo_query[(inst_combo_query['date_mean'] == str(inst_combo_query.date_mean.iloc[1]))])
+    elif date_obs >= inst_combo_query.date_mean.iloc[-1]:
+        correct_combo = inst_combo_query[(inst_combo_query['date_mean'] == str(inst_combo_query.date_mean.iloc[-1]))]
+        if len(inst_combo_query) > 1:
+            correct_combo = correct_combo.append(
+                inst_combo_query[(inst_combo_query['date_mean'] == str(inst_combo_query.date_mean.iloc[-2]))])
+    else:
+        correct_combo = inst_combo_query[
+            (inst_combo_query['date_mean'] >= str(date_obs - datetime.timedelta(days=7))) & (
+                    inst_combo_query['date_mean'] <= str(date_obs + datetime.timedelta(days=7)))]
 
     # create empty arrays
     var_vals = np.zeros((len(correct_combo.combo_id), var_id[1].size))

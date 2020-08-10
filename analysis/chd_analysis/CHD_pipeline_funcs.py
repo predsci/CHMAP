@@ -57,7 +57,7 @@ def get_inst_combos(db_session, inst_list, time_min, time_max):
     @return: inst list of lbc combo queries, inst list of iit combo queries
     """
     start = time.time()
-    print("Querying Combo IDs from the database.")
+    print("Querying Combo IDs from the database. This only needs to be done once.")
     # query for combo ids within date range
     lbc_combo_query = [None] * len(inst_list)
     iit_combo_query = [None] * len(inst_list)
@@ -70,6 +70,7 @@ def get_inst_combos(db_session, inst_list, time_min, time_max):
                                               instrument=instrument)
         lbc_combo_query[inst_index] = lbc_combo
         iit_combo_query[inst_index] = iit_combo
+        print("Combo IDs have been queried for", instrument)
     end = time.time()
     print("Combo IDs have been queried from the database in", end - start, "seconds.")
     return lbc_combo_query, iit_combo_query
@@ -117,46 +118,55 @@ def apply_ipp(db_session, center_date, query_pd, inst_list, hdf_data_dir, lbc_co
     else:
         for inst_ind, instrument in enumerate(inst_list):
             # get image row
-            hist_inst = date_pd['instrument']
-            image_pd[inst_ind] = date_pd[hist_inst == instrument]
-            image_row = image_pd[inst_ind].iloc[0]
-            print("Processing image number", image_row.image_id, "for LBC and IIT Corrections.")
-            # apply LBC
-            los_list[inst_ind], lbcc_image, mu_indices, use_ind, theoretic_query = lbcc_funcs.apply_lbc(db_session,
-                                                                                                        hdf_data_dir,
-                                                                                                        lbc_combo_query[
-                                                                                                            inst_ind],
-                                                                                                        image_row=image_row,
-                                                                                                        n_intensity_bins=n_intensity_bins,
-                                                                                                        R0=R0)
-            # generate a record of the method and variable values used for LBC
-            #  lbc_method = {'meth_name': ("LBCC", "LBCC", "LBCC", "LBCC", "LBCC", "LBCC"), 'meth_description':
-            #                 ["LBCC Theoretic Fit Method"] * 6, 'var_name': ("TheoVar0", "TheoVar1", "TheoVar2", "TheoVar3", "TheoVar4", "TheoVar5"),
-            #                           'var_description': ("Theoretic fit parameter at index 0", "Theoretic fit parameter at index 1", "Theoretic fit parameter at index 2",
-            #                                               "Theoretic fit parameter at index 3", "Theoretic fit parameter at index 4", "Theoretic fit parameter at index 5"),
-            #                           'var_val': (theoretic_query[0], theoretic_query[1], theoretic_query[2], theoretic_query[3],
-            #                                       theoretic_query[4], theoretic_query[5])}
-            # apply IIT
-            lbcc_image, iit_list[inst_ind], use_indices[inst_ind], alpha, x = iit_funcs.apply_iit(db_session,
-                                                                                                  iit_combo_query[
-                                                                                                      inst_ind],
-                                                                                                  lbcc_image, use_ind,
-                                                                                                  los_list[inst_ind],
-                                                                                                  R0=R0)
-            # iit_method = {'meth_name': ("IIT", "IIT"), 'meth_description': ["IIT Fit Method"] * 2, 'var_name': (
-            # "alpha", "x"), 'var_description': ("IIT correction coefficient: alpha", "IIT correction coefficient:
-            # x"), 'var_val': (alpha, x)}
+            image_pd[inst_ind] = date_pd[date_pd['instrument'] == instrument]
+            inst_image = date_pd[date_pd['instrument'] == instrument]
+            if len(inst_image) == 0:
+                print("No", instrument, "image to process for this date.")
+            else:
+                image_row = inst_image.iloc[0]
+                index = np.where(date_pd['instrument'] == instrument)[0][0]
+                print("Processing image number", image_row.image_id, "for LBC and IIT Corrections.")
+                # apply LBC
+                los_list[inst_ind], lbcc_image, mu_indices, use_ind, theoretic_query = lbcc_funcs.apply_lbc(db_session,
+                                                                                                            hdf_data_dir,
+                                                                                                            lbc_combo_query[
+                                                                                                                inst_ind],
+                                                                                                            image_row=image_row,
+                                                                                                            n_intensity_bins=n_intensity_bins,
+                                                                                                            R0=R0)
+                # generate a record of the method and variable values used for LBC
+                #  lbc_method = {'meth_name': ("LBCC", "LBCC", "LBCC", "LBCC", "LBCC", "LBCC"), 'meth_description':
+                #                 ["LBCC Theoretic Fit Method"] * 6, 'var_name': ("TheoVar0", "TheoVar1", "TheoVar2", "TheoVar3", "TheoVar4", "TheoVar5"),
+                #                           'var_description': ("Theoretic fit parameter at index 0", "Theoretic fit parameter at index 1", "Theoretic fit parameter at index 2",
+                #                                               "Theoretic fit parameter at index 3", "Theoretic fit parameter at index 4", "Theoretic fit parameter at index 5"),
+                #                           'var_val': (theoretic_query[0], theoretic_query[1], theoretic_query[2], theoretic_query[3],
+                #                                       theoretic_query[4], theoretic_query[5])}
+                # apply IIT
+                lbcc_image, iit_list[inst_ind], use_indices[inst_ind], alpha, x = iit_funcs.apply_iit(db_session,
+                                                                                                      iit_combo_query[
+                                                                                                          inst_ind],
+                                                                                                      lbcc_image,
+                                                                                                      use_ind,
+                                                                                                      los_list[
+                                                                                                          inst_ind],
+                                                                                                      R0=R0)
+                print('alpha:', alpha, 'x:', x)
+                # iit_method = {'meth_name': ("IIT", "IIT"), 'meth_description': ["IIT Fit Method"] * 2, 'var_name': (
+                # "alpha", "x"), 'var_description': ("IIT correction coefficient: alpha", "IIT correction coefficient:
+                # x"), 'var_val': (alpha, x)}
 
-            # add methods to dataframe
-            ipp_method = {'meth_name': ("LBCC", "IIT"), 'meth_description': ["LBCC Theoretic Fit Method",
-                                                                             "IIT Fit Method"],
-                          'var_name': ("LBCC", "IIT"), 'var_description': (" ", " ")}
-            methods_list[inst_ind] = methods_list[inst_ind].append(pd.DataFrame(data=ipp_method), sort=False)
+                # add methods to dataframe
+                ipp_method = {'meth_name': ("LBCC", "IIT"), 'meth_description': ["LBCC Theoretic Fit Method",
+                                                                                 "IIT Fit Method"],
+                              'var_name': ("LBCC", "IIT"), 'var_description': (" ", " ")}
+                methods_list[index] = methods_list[index].append(pd.DataFrame(data=ipp_method), sort=False)
+                # methods_list[inst_ind] = pd.DataFrame(data=ipp_method)
         end = time.time()
         print("Image Pre-Processing Corrections (Limb-Brightening and Inter-Instrument Transformation) have been "
               "applied "
               " in", end - start, "seconds.")
-    return image_pd, los_list, iit_list, use_indices, methods_list, ref_alpha, ref_x
+
+    return date_pd, los_list, iit_list, use_indices, methods_list, ref_alpha, ref_x
 
 
 #### STEP THREE: CORONAL HOLE DETECTION ####
@@ -178,29 +188,31 @@ def chd(iit_list, los_list, use_indices, inst_list, thresh1, thresh2, ref_alpha,
     start = time.time()
     chd_image_list = [datatypes.CHDImage()] * len(inst_list)
     for inst_ind, instrument in enumerate(inst_list):
-        image_data = iit_list[inst_ind].iit_data
-        use_chd = use_indices[inst_ind].astype(int)
-        use_chd = np.where(use_chd == 1, use_chd, -9999)
-        nx = iit_list[inst_ind].x.size
-        ny = iit_list[inst_ind].y.size
-        t1 = thresh1 * ref_alpha + ref_x
-        t2 = thresh2 * ref_alpha + ref_x
-        ezseg_output, iters_used = ezsegwrapper.ezseg(np.log10(image_data), use_chd, nx, ny, t1, t2, nc, iters)
-        chd_result = np.logical_and(ezseg_output == 0, use_chd == 1)
-        chd_result = chd_result.astype(int)
-        chd_image_list[inst_ind] = datatypes.create_chd_image(los_list[inst_ind], chd_result)
-        chd_image_list[inst_ind].get_coordinates()
+        if iit_list[inst_ind] is not None:
+            image_data = iit_list[inst_ind].iit_data
+            use_chd = use_indices[inst_ind].astype(int)
+            use_chd = np.where(use_chd == 1, use_chd, -9999)
+            nx = iit_list[inst_ind].x.size
+            ny = iit_list[inst_ind].y.size
+            t1 = thresh1 * ref_alpha + ref_x
+            t2 = thresh2 * ref_alpha + ref_x
+            ezseg_output, iters_used = ezsegwrapper.ezseg(np.log10(image_data), use_chd, nx, ny, t1, t2, nc,
+                                                          iters)
+            chd_result = np.logical_and(ezseg_output == 0, use_chd == 1)
+            chd_result = chd_result.astype(int)
+            chd_image_list[inst_ind] = datatypes.create_chd_image(los_list[inst_ind], chd_result)
+            chd_image_list[inst_ind].get_coordinates()
     end = time.time()
     print("Coronal Hole Detection algorithm implemented in", end - start, "seconds.")
     return chd_image_list
 
 
 #### STEP FOUR: CONVERT TO MAPS ####
-def create_singles_maps(inst_list, image_pd, iit_list, chd_image_list, methods_list, map_x=None, map_y=None, R0=1.01):
+def create_singles_maps(inst_list, date_pd, iit_list, chd_image_list, methods_list, map_x=None, map_y=None, R0=1.01):
     """
     function to map single instrument images to a Carrington map
     @param inst_list: instrument list
-    @param image_pd: dataframe of EUV Images
+    @param date_pd: dataframe of EUV Images for specific date time
     @param iit_list: list of IIT Images for mapping
     @param chd_image_list: list of CHD Images for mapping
     @param methods_list: methods dataframe list
@@ -216,30 +228,33 @@ def create_singles_maps(inst_list, image_pd, iit_list, chd_image_list, methods_l
     chd_map_list = [datatypes.PsiMap()] * len(inst_list)
 
     for inst_ind, instrument in enumerate(inst_list):
-        # query correct image combos
-        image_row = image_pd[inst_ind].iloc[0]
-        # EUV map
-        map_list[inst_ind] = iit_list[inst_ind].interp_to_map(R0=R0, map_x=map_x, map_y=map_y,
-                                                              image_num=image_row.image_id)
-        # CHD map
-        chd_map_list[inst_ind] = chd_image_list[inst_ind].interp_to_map(R0=R0, map_x=map_x, map_y=map_y,
-                                                                        image_num=image_row.image_id)
-        # record image and map info
-        chd_map_list[inst_ind].append_image_info(image_row)
-        map_list[inst_ind].append_image_info(image_row)
-        image_info.append(image_row)
-        map_info.append(map_list[inst_ind].map_info)
+        if iit_list[inst_ind] is not None:
+            # query correct image combos
+            index = np.where(date_pd['instrument'] == instrument)[0][0]
+            inst_image = date_pd[date_pd['instrument'] == instrument]
+            image_row = inst_image.iloc[0]
+            # EUV map
+            map_list[inst_ind] = iit_list[inst_ind].interp_to_map(R0=R0, map_x=map_x, map_y=map_y,
+                                                                  image_num=image_row.image_id)
+            # CHD map
+            chd_map_list[inst_ind] = chd_image_list[inst_ind].interp_to_map(R0=R0, map_x=map_x, map_y=map_y,
+                                                                            image_num=image_row.image_id)
+            # record image and map info
+            chd_map_list[inst_ind].append_image_info(image_row)
+            map_list[inst_ind].append_image_info(image_row)
+            image_info.append(image_row)
+            map_info.append(map_list[inst_ind].map_info)
 
-        # generate a record of the method and variable values used for interpolation
-        interp_method = {'meth_name': ("Im2Map_Lin_Interp_1",), 'meth_description':
-            ["Use SciPy.RegularGridInterpolator() to linearly interpolate from an Image to a Map"] * 1,
-                         'var_name': ("R0",), 'var_description': ("Solar radii",), 'var_val': (R0,)}
-        # add to the methods dataframe for this map
-        methods_list[inst_ind] = methods_list[inst_ind].append(pd.DataFrame(data=interp_method), sort=False)
+            # generate a record of the method and variable values used for interpolation
+            interp_method = {'meth_name': ("Im2Map_Lin_Interp_1",), 'meth_description':
+                ["Use SciPy.RegularGridInterpolator() to linearly interpolate from an Image to a Map"] * 1,
+                             'var_name': ("R0",), 'var_description': ("Solar radii",), 'var_val': (R0,)}
+            # add to the methods dataframe for this map
+            methods_list[index] = methods_list[index].append(pd.DataFrame(data=interp_method), sort=False)
 
-        # incorporate the methods dataframe into the map object
-        map_list[inst_ind].append_method_info(methods_list[inst_ind])
-        chd_map_list[inst_ind].append_method_info(methods_list[inst_ind])
+            # incorporate the methods dataframe into the map object
+            map_list[inst_ind].append_method_info(methods_list[index])
+            chd_map_list[inst_ind].append_method_info(methods_list[index])
     end = time.time()
     print("Images interpolated to maps in", end - start, "seconds.")
     return map_list, chd_map_list, methods_list, image_info, map_info
@@ -247,7 +262,7 @@ def create_singles_maps(inst_list, image_pd, iit_list, chd_image_list, methods_l
 
 #### STEP FIVE: CREATE COMBINED MAPS AND SAVE TO DB ####
 def create_combined_maps(db_session, map_data_dir, map_list, chd_map_list, methods_list,
-                         image_info, map_info, del_mu=None, mu_cutoff=0.0):
+                         image_info, map_info, mu_cut_over=None, del_mu=None, mu_cutoff=0.0):
     """
     function to create combined EUV and CHD maps and save to database with associated method information
     @param db_session: database session to save maps to
@@ -257,20 +272,35 @@ def create_combined_maps(db_session, map_data_dir, map_list, chd_map_list, metho
     @param methods_list: methods list
     @param image_info: image info list
     @param map_info: map info list
-    @param del_mu: maximum mu value
+    @param mu_cut_over: cutoff mu value for overlap areas
     @param mu_cutoff: lower mu value
-    @return:
+    @return: combined euv map, combined chd map
     """
     # start time
     start = time.time()
     # create combined maps
-    euv_combined, chd_combined = combine_maps(map_list, chd_map_list, del_mu=del_mu)
-    # record merge parameters
-    combined_method = {'meth_name': ("Min-Int-Merge_1", "Min-Int-Merge_1"), 'meth_description':
-        ["Minimum intensity merge version 1"] * 2,
-                       'var_name': ("mu_cutoff", "del_mu"), 'var_description': ("lower mu cutoff value",
-                                                                                "max acceptable mu range"),
-                       'var_val': (mu_cutoff, del_mu)}
+    euv_maps = []
+    chd_maps = []
+    for euv_map in map_list:
+        if len(euv_map.data) != 0:
+            euv_maps.append(euv_map)
+    for chd_map in chd_map_list:
+        if len(chd_map.data) != 0:
+            chd_maps.append(chd_map)
+    if del_mu is not None:
+        euv_combined, chd_combined = combine_maps(euv_maps, chd_maps, del_mu=del_mu, mu_cutoff=mu_cutoff)
+        combined_method = {'meth_name': ("Min-Int-Merge_1", "Min-Int-Merge_1"), 'meth_description':
+            ["Minimum intensity merge: using del mu"] * 2,
+                           'var_name': ("mu_cutoff", "del_mu"), 'var_description': ("lower mu cutoff value",
+                                                                                    "max acceptable mu range"),
+                           'var_val': (mu_cutoff, del_mu)}
+    else:
+        euv_combined, chd_combined = combine_maps(euv_maps, chd_maps, mu_cut_over=mu_cut_over, mu_cutoff=mu_cutoff)
+        combined_method = {'meth_name': ("Min-Int-Merge_1", "Min-Int-Merge_1"), 'meth_description':
+            ["Minimum intensity merge: based on Caplan et. al."] * 2,
+                           'var_name': ("mu_cutoff", "mu_cut_over"), 'var_description': ("lower mu cutoff value",
+                                                                                         "mu cutoff value in areas of overlap"),
+                           'var_val': (mu_cutoff, mu_cut_over)}
 
     # generate a record of the method and variable values used for interpolation
     euv_combined.append_method_info(methods_list)

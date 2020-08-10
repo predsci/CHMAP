@@ -98,7 +98,7 @@ def apply_ipp(db_session, center_date, query_pd, inst_list, hdf_data_dir, lbc_co
         ipp_method = {'meth_name': ("LBCC", "IIT"), 'meth_description':["LBCC Theoretic Fit Method", "IIT Fit Method"] , 'var_name': ("LBCC", "IIT"), 'var_description': (" ", " ")}
         methods_list[inst_ind] = methods_list[inst_ind].append(pd.DataFrame(data=ipp_method), sort=False)
 
-        return image_pd, los_list, iit_list, use_indices, methods_list, ref_alpha, ref_x
+        return date_pd, los_list, iit_list, use_indices, methods_list, ref_alpha, ref_x
 ```  
 * 1.) <code>db_funcs.query_var_val</code>
     * this is a database function to [query variable values](https://github.com/predsci/CHD/blob/master/modules/DB_funs.py)
@@ -143,7 +143,7 @@ This [function](https://github.com/predsci/CHD/blob/master/analysis/chd_analysis
 instrument maps from both IIT Images and CHD Images. This mapping is done through linear interpolation onto a Carrington map.
 
 ```python
-def create_singles_maps(inst_list, image_pd, iit_list, chd_image_list, methods_list, map_x=None, map_y=None, R0=1.01):
+def create_singles_maps(inst_list, date_pd, iit_list, chd_image_list, methods_list, map_x=None, map_y=None, R0=1.01):
     """
     function to map single instrument images to a Carrington map
     """
@@ -175,13 +175,16 @@ are combined using a Minimum Intensity Merge.
 
 ```python
 def create_combined_maps(db_session, map_data_dir, map_list, chd_map_list, methods_list,
-                         image_info, map_info, del_mu, mu_cutoff=0.0):
+                         image_info, map_info, mu_cut_over=None, del_mu=None, mu_cutoff=0.0):
     """
     function to create combined EUV and CHD maps and save to database with associated method information
     """
-    euv_combined, chd_combined = combine_maps(map_list, chd_map_list, del_mu=del_mu)
-    combined_method = {'meth_name': ("Min-Int-Merge_1", "Min-Int-Merge_1"), 'meth_description':["Minimum intensity merge version 1"] * 2,
-                       'var_name': ("mu_cutoff", "del_mu"), 'var_description': ("lower mu cutoff value", "max acceptable mu range"), 'var_val': (mu_cutoff, del_mu)}
+    if del_mu is not None:
+        euv_combined, chd_combined = combine_maps_del_mu(euv_maps, chd_maps, del_mu=del_mu)
+        combined_method = {'meth_name': ("Min-Int-Merge_1", "Min-Int-Merge_1"), 'meth_description':["Minimum intensity merge version 1"] * 2,
+                           'var_name': ("mu_cutoff", "del_mu"), 'var_description': ("lower mu cutoff value", "max acceptable mu range"), 'var_val': (mu_cutoff, del_mu)}
+    else:
+        euv_combined, chd_combined = combine_maps(euv_maps, chd_maps, mu_cut_over=mu_cut_over)
     euv_combined.append_method_info(methods_list)
     euv_combined.append_method_info(pd.DataFrame(data=combined_method))
     euv_combined.append_image_info(image_info)
@@ -203,6 +206,7 @@ def create_combined_maps(db_session, map_data_dir, map_list, chd_map_list, metho
 ```
 * 1.) <code>combine_maps</code>
     * [function](cmb.md#combine-maps-function) that combines EUV and CHD maps using a minimum intensity merge 
+    * there are currently two implemented methods for the minimum intensity merge depending on initial input parameters 
 * 2.) <code>euv_combined.append_method_info, euv_combined.append_image_info, euv_combined.append_map_info</code>
     * append methods list and combination method information to the both the EUV and CHD combined maps
     * appends image and map info to combined maps, used for database storage

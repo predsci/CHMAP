@@ -22,7 +22,7 @@ import analysis.chd_analysis.CHD_pipeline_funcs as chd_funcs
 # -------- parameters --------- #
 # TIME RANGE FOR QUERYING
 query_time_min = datetime.datetime(2011, 10, 1, 4, 0, 0)
-query_time_max = datetime.datetime(2011, 10, 1, 8, 0, 0)
+query_time_max = datetime.datetime(2011, 10, 1, 6, 0, 0)
 map_freq = 2  # number of hours
 
 # INITIALIZE DATABASE CONNECTION
@@ -42,8 +42,9 @@ inst_list = ["AIA", "EUVI-A", "EUVI-B"]
 # CORRECTION PARAMETERS
 n_intensity_bins = 200
 R0 = 1.01
-del_mu = 0.2
-mu_cutoff = 0.0  # not current used, lower mu cutoff value
+del_mu = 0.2  # optional between this method and mu_cut_over method
+mu_cutoff = 0.0  # lower mu cutoff value
+mu_cut_over = 0.4  # mu cutoff in overlap areas
 
 # DETECTION PARAMETERS
 # region-growing threshold parameters
@@ -82,22 +83,27 @@ lbc_combo_query, iit_combo_query = chd_funcs.get_inst_combos(db_session, inst_li
 
 # 3.) loop through center dates
 for date_ind, center in enumerate(moving_avg_centers):
-    image_pd, los_list, iit_list, use_indices, methods_list, ref_alpha, ref_x = chd_funcs.apply_ipp(db_session, center, query_pd,
-                                                                                      inst_list,
-                                                                                      hdf_data_dir, lbc_combo_query,
-                                                                                      iit_combo_query, methods_list,
-                                                                                      n_intensity_bins, R0)
+    date_pd, los_list, iit_list, use_indices, methods_list, ref_alpha, ref_x = chd_funcs.apply_ipp(db_session, center,
+                                                                                                   query_pd,
+                                                                                                   inst_list,
+                                                                                                   hdf_data_dir,
+                                                                                                   lbc_combo_query,
+                                                                                                   iit_combo_query,
+                                                                                                   methods_list,
+                                                                                                   n_intensity_bins,
+                                                                                                   R0)
     #### STEP THREE: CORONAL HOLE DETECTION ####
     if los_list[0] is not None:
         chd_image_list = chd_funcs.chd(iit_list, los_list, use_indices, inst_list, thresh1, thresh2, ref_alpha, ref_x,
                                        nc, iters)
         #### STEP FOUR: CONVERT TO MAP ####
-        map_list, chd_map_list, methods_list, image_info, map_info = chd_funcs.create_singles_maps(inst_list, image_pd,
+        map_list, chd_map_list, methods_list, image_info, map_info = chd_funcs.create_singles_maps(inst_list, date_pd,
                                                                                                    iit_list,
                                                                                                    chd_image_list,
                                                                                                    methods_list, map_x,
                                                                                                    map_y, R0)
         #### STEP FIVE: CREATE COMBINED MAPS AND SAVE TO DB ####
         euv_combined, chd_combined = chd_funcs.create_combined_maps(db_session, map_data_dir, map_list, chd_map_list,
-                                                                    methods_list,
-                                                                    image_info, map_info, del_mu, mu_cutoff)
+                                                                    methods_list, image_info, map_info,
+                                                                    mu_cut_over=mu_cut_over, mu_cutoff=mu_cutoff)
+
