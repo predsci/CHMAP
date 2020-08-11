@@ -1,7 +1,7 @@
 """
 code to calculate IIT correction coefficients and save to database
 """
-sys.path.append("CHD")
+
 import os
 import time
 import datetime

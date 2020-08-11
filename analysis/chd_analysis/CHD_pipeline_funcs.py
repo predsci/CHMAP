@@ -40,7 +40,7 @@ def get_dates(time_min, time_max, map_freq=2):
     @param map_freq: integer value representing hourly cadence for map creation
     @return: list of center dates
     """
-    map_frequency = int((time_max - time_min).seconds / 3600 / map_freq)
+    map_frequency = int((time_max - time_min).total_seconds() / 3600 / map_freq)
     moving_avg_centers = np.array(
         [np.datetime64(str(time_min)) + ii * np.timedelta64(map_freq, 'h') for ii in range(map_frequency + 1)])
     return moving_avg_centers
@@ -150,11 +150,9 @@ def apply_ipp(db_session, center_date, query_pd, inst_list, hdf_data_dir, lbc_co
                                                                                                       los_list[
                                                                                                           inst_ind],
                                                                                                       R0=R0)
-                print('alpha:', alpha, 'x:', x)
                 # iit_method = {'meth_name': ("IIT", "IIT"), 'meth_description': ["IIT Fit Method"] * 2, 'var_name': (
                 # "alpha", "x"), 'var_description': ("IIT correction coefficient: alpha", "IIT correction coefficient:
                 # x"), 'var_val': (alpha, x)}
-
                 # add methods to dataframe
                 ipp_method = {'meth_name': ("LBCC", "IIT"), 'meth_description': ["LBCC Theoretic Fit Method",
                                                                                  "IIT Fit Method"],
@@ -273,6 +271,7 @@ def create_combined_maps(db_session, map_data_dir, map_list, chd_map_list, metho
     @param image_info: image info list
     @param map_info: map info list
     @param mu_cut_over: cutoff mu value for overlap areas
+    @param del_mu: maximum mu threshold value
     @param mu_cutoff: lower mu value
     @return: combined euv map, combined chd map
     """
@@ -296,10 +295,11 @@ def create_combined_maps(db_session, map_data_dir, map_list, chd_map_list, metho
                            'var_val': (mu_cutoff, del_mu)}
     else:
         euv_combined, chd_combined = combine_maps(euv_maps, chd_maps, mu_cut_over=mu_cut_over, mu_cutoff=mu_cutoff)
-        combined_method = {'meth_name': ("Min-Int-Merge_1", "Min-Int-Merge_1"), 'meth_description':
+        combined_method = {'meth_name': ("Min-Int-Merge_2", "Min-Int-Merge_2"), 'meth_description':
             ["Minimum intensity merge: based on Caplan et. al."] * 2,
                            'var_name': ("mu_cutoff", "mu_cut_over"), 'var_description': ("lower mu cutoff value",
-                                                                                         "mu cutoff value in areas of overlap"),
+                                                                                         "mu cutoff value in areas of "
+                                                                                         "overlap"),
                            'var_val': (mu_cutoff, mu_cut_over)}
 
     # generate a record of the method and variable values used for interpolation

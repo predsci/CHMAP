@@ -2,6 +2,7 @@
 overarching pipeline to correct images
 input: dataframe of images
 output: array of corrected images
+This function takes a lot of memory and is therefore slow:(
 """
 
 import time

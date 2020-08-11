@@ -180,11 +180,13 @@ def create_combined_maps(db_session, map_data_dir, map_list, chd_map_list, metho
     function to create combined EUV and CHD maps and save to database with associated method information
     """
     if del_mu is not None:
-        euv_combined, chd_combined = combine_maps_del_mu(euv_maps, chd_maps, del_mu=del_mu)
-        combined_method = {'meth_name': ("Min-Int-Merge_1", "Min-Int-Merge_1"), 'meth_description':["Minimum intensity merge version 1"] * 2,
-                           'var_name': ("mu_cutoff", "del_mu"), 'var_description': ("lower mu cutoff value", "max acceptable mu range"), 'var_val': (mu_cutoff, del_mu)}
+        euv_combined, chd_combined = combine_maps(euv_maps, chd_maps, del_mu=del_mu, mu_cutoff=mu_cutoff)
+        combined_method = {'meth_name': ("Min-Int-Merge_1", "Min-Int-Merge_1"), 'meth_description':["Minimum intensity merge: using del mu"] * 2,
+                       'var_name': ("mu_cutoff", "del_mu"), 'var_description': ("lower mu cutoff value", "max acceptable mu range"), 'var_val': (mu_cutoff, del_mu)}
     else:
-        euv_combined, chd_combined = combine_maps(euv_maps, chd_maps, mu_cut_over=mu_cut_over)
+        euv_combined, chd_combined = combine_maps(euv_maps, chd_maps, mu_cut_over=mu_cut_over, mu_cutoff=mu_cutoff)
+        combined_method = {'meth_name': ("Min-Int-Merge_2", "Min-Int-Merge_2"), 'meth_description':["Minimum intensity merge: based on Caplan et. al."] * 2,
+                           'var_name': ("mu_cutoff", "mu_cut_over"), 'var_description': ("lower mu cutoff value", "mu cutoff value in areas of overlap"), 'var_val': (mu_cutoff, mu_cut_over)}
     euv_combined.append_method_info(methods_list)
     euv_combined.append_method_info(pd.DataFrame(data=combined_method))
     euv_combined.append_image_info(image_info)
@@ -218,5 +220,5 @@ def create_combined_maps(db_session, map_data_dir, map_list, chd_map_list, metho
         * generates filename for map based off base path and map type
         * creates method combination of LBC, IIT, Interpolation, and Minimum Intensity Merge
         * creates Image Combination associated with each method
-        * stores map variable values (R0, mu_cutoff, del_mu) in database Var Vals Map table
+        * stores map variable values (R0, mu_cutoff, del_mu/mu_cut_over) in database Var Vals Map table
         * stores map information and filename in EUV Maps table

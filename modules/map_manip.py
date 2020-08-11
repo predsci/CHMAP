@@ -23,7 +23,10 @@ def combine_maps(map_list, chd_map_list=None, mu_cutoff=0.0, mu_cut_over=None, d
     # determine number of maps. if only one, do nothing
     nmaps = len(map_list)
     if nmaps == 1:
-        return map_list[0]
+        if chd_map_list is not None:
+            return map_list[0], chd_map_list[0]
+        else:
+            return map_list[0]
 
     # check that all maps have the same x and y grids
     same_grid = all(map_list[0].x == map_list[1].x) and all(map_list[0].y == map_list[1].y)

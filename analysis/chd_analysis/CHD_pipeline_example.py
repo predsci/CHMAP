@@ -42,9 +42,6 @@ inst_list = ["AIA", "EUVI-A", "EUVI-B"]
 # CORRECTION PARAMETERS
 n_intensity_bins = 200
 R0 = 1.01
-del_mu = 0.2  # optional between this method and mu_cut_over method
-mu_cutoff = 0.0  # lower mu cutoff value
-mu_cut_over = 0.4  # mu cutoff in overlap areas
 
 # DETECTION PARAMETERS
 # region-growing threshold parameters
@@ -54,6 +51,11 @@ thresh2 = 1.35
 nc = 3
 # maximum number of iterations
 iters = 1000
+
+# MINIMUM MERGE MAPPING PARAMETERS
+del_mu = 0.2  # optional between this method and mu_cut_over method
+mu_cutoff = 0.0  # lower mu cutoff value
+mu_cut_over = 0.4  # mu cutoff in overlap areas
 
 # MAP PARAMETERS
 x_range = [0, 2 * np.pi]
