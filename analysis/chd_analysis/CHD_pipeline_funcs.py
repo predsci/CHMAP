@@ -187,6 +187,7 @@ def chd(iit_list, los_list, use_indices, inst_list, thresh1, thresh2, ref_alpha,
     chd_image_list = [datatypes.CHDImage()] * len(inst_list)
     for inst_ind, instrument in enumerate(inst_list):
         if iit_list[inst_ind] is not None:
+            # define CHD parameters
             image_data = iit_list[inst_ind].iit_data
             use_chd = use_indices[inst_ind].astype(int)
             use_chd = np.where(use_chd == 1, use_chd, -9999)
@@ -194,14 +195,18 @@ def chd(iit_list, los_list, use_indices, inst_list, thresh1, thresh2, ref_alpha,
             ny = iit_list[inst_ind].y.size
             t1 = thresh1 * ref_alpha + ref_x
             t2 = thresh2 * ref_alpha + ref_x
-            ezseg_output, iters_used = ezsegwrapper.ezseg(np.log10(image_data), use_chd, nx, ny, t1, t2, nc,
-                                                          iters)
+
+            # fortran CHD algorithm
+            ezseg_output, iters_used = ezsegwrapper.ezseg(np.log10(image_data), use_chd, nx, ny, t1, t2, nc, iters)
             chd_result = np.logical_and(ezseg_output == 0, use_chd == 1)
             chd_result = chd_result.astype(int)
+
+            # create CHD image
             chd_image_list[inst_ind] = datatypes.create_chd_image(los_list[inst_ind], chd_result)
             chd_image_list[inst_ind].get_coordinates()
     end = time.time()
     print("Coronal Hole Detection algorithm implemented in", end - start, "seconds.")
+
     return chd_image_list
 
 

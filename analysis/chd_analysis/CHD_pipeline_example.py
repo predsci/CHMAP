@@ -21,8 +21,8 @@ import analysis.chd_analysis.CHD_pipeline_funcs as chd_funcs
 
 # -------- parameters --------- #
 # TIME RANGE FOR QUERYING
-query_time_min = datetime.datetime(2011, 10, 1, 4, 0, 0)
-query_time_max = datetime.datetime(2011, 10, 1, 6, 0, 0)
+query_time_min = datetime.datetime(2011, 8, 18, 22, 0, 0)
+query_time_max = datetime.datetime(2011, 8, 19, 2, 0, 0)
 map_freq = 2  # number of hours
 
 # INITIALIZE DATABASE CONNECTION
