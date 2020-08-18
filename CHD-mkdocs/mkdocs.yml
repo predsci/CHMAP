@@ -18,6 +18,7 @@ nav:
   - Coronal Hole Detection:
       - Fortran to Python: chd/f2py.md
       - CH Detection: chd/chd.md
+      - CR Probability Maps: chd/cr.md
   - Mapping:
       - Mapping Pipeline: map/map.md
       - Interpolation: map/int.md

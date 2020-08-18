@@ -99,7 +99,6 @@ def combine_maps(map_list, chd_map_list=None, mu_cutoff=0.0, mu_cut_over=None, d
 
         # Generate new CHD map
         if chd_map_list is not None:
-
             keep_chd = chd_array[row_index, col_index, map_index]
             chd_map = psi_d_types.PsiMap(keep_chd, map_list[0].x, map_list[0].y, mu=keep_mu,
                                          origin_image=keep_image, no_data_val=map_list[0].no_data_val)
@@ -116,17 +115,17 @@ def combine_maps(map_list, chd_map_list=None, mu_cutoff=0.0, mu_cut_over=None, d
     return euv_map, chd_map
 
 
-def combine_cr_maps(n_images, map_list, chd_map_list=None, mu_cutoff=0.0, mu_cut_over=None, del_mu=None):
+def combine_cr_maps(n_images, map_list, chd_map_list=None, mu_cutoff=0.0, mu_cut_over=0.4):
     """
         Take an already combined map, and a single image map, and do minimum intensity merge to a single map.
         Using mu_cut_over: based off the two cutoff algorithm from Caplan et. al. 2016.
         Using del_mu: based off maximum mu value from list
+        :param n_images: number of images in original map
         :param map_list: List of Psi_Map objects (single_euv_map, combined_euv_map)
         :param chd_map_list: List of Psi_Map objects of CHD data (single_chd_map, combined_chd_map)
         :param mu_cutoff: data points/pixels with a mu less than mu_cutoff will be discarded before
         merging.
         :param mu_cut_over: mu cutoff value for discarding pixels in areas of instrument overlap
-        :param del_mu: For a given data point/pixel of the map first find the maximum mu from map_list.
         :return: Psi_Map object resulting from merge.
         """
     # determine number of maps. if only one, do nothing
@@ -146,6 +145,16 @@ def combine_cr_maps(n_images, map_list, chd_map_list=None, mu_cutoff=0.0, mu_cut
             if not same_grid:
                 break
 
+    else:
+        # check that all maps have the same x and y grids
+        same_grid = all(map_list[0].x == map_list[1].x) and all(map_list[0].y == map_list[1].y)
+        if nmaps > 2:
+            for ii in range(1, nmaps - 1):
+                same_temp = all(map_list[ii].x == map_list[ii + 1].x) and all(map_list[ii].y == map_list[ii + 1].y)
+                same_grid = same_grid & same_temp
+                if not same_grid:
+                    break
+
     if same_grid:
         if mu_cutoff > 0.0:
             # for all pixels with mu < mu_cutoff, set intensity to no_data_val
@@ -156,43 +165,28 @@ def combine_cr_maps(n_images, map_list, chd_map_list=None, mu_cutoff=0.0, mu_cut
         mat_size = map_list[0].mu.shape
         mu_array = np.ndarray(shape=mat_size + (nmaps,), dtype=DTypes.MAP_MU)
         data_array = np.ndarray(shape=mat_size + (nmaps,), dtype=DTypes.MAP_DATA)
+        use_data = np.ndarray(shape=mat_size, dtype=DTypes.MAP_DATA)
+        map_index = np.ndarray(shape=mat_size, dtype=int)
         image_array = np.ndarray(shape=mat_size + (nmaps,), dtype=DTypes.MAP_ORIGIN_IMAGE)
-        if chd_map_list is not None:
-            chd_array = np.ndarray(shape=mat_size + (nmaps,), dtype=DTypes.MAP_DATA)
-            for ii in range(nmaps):
-                mu_array[:, :, ii] = map_list[ii].mu
-                data_array[:, :, ii] = map_list[ii].data
-                chd_array[:, :, ii] = chd_map_list[ii].data
-                image_array[:, :, ii] = map_list[ii].origin_image
-        else:
-            for ii in range(nmaps):
-                mu_array[:, :, ii] = map_list[ii].mu
-                data_array[:, :, ii] = map_list[ii].data
-                image_array[:, :, ii] = map_list[ii].origin_image
+        for ii in range(nmaps):
+            mu_array[:, :, ii] = map_list[ii].mu
+            data_array[:, :, ii] = map_list[ii].data
+            image_array[:, :, ii] = map_list[ii].origin_image
 
+        # find overlap indices
         float_info = np.finfo(map_list[0].data.dtype)
-        if mu_cut_over is not None:
-            good_index = np.ndarray(shape=mat_size + (nmaps,), dtype=bool)
-            overlap = np.ndarray(shape=mat_size + (nmaps,), dtype=bool)
-            for ii in range(nmaps):
-                for jj in range(nmaps):
-                    if ii != jj:
-                        overlap[:, :, ii] = np.logical_and(data_array[:, :, ii] != map_list[0].no_data_val,
-                                                           data_array[:, :, jj] != map_list[0].no_data_val)
-            for ii in range(nmaps):
-                good_index[:, :, ii] = np.logical_or(np.logical_and(overlap[:, :, ii],
-                                                                    mu_array[:, :, ii] >= mu_cut_over), np.logical_and(
-                    data_array[:, :, ii] != map_list[0].no_data_val, mu_array[:, :, ii] >= mu_cutoff))
-            # make poor mu pixels unusable to merge
-            data_array[np.logical_not(good_index)] = float_info.max
-        elif del_mu is not None:
-            max_mu = mu_array.max(axis=2)
-            good_index = np.ndarray(shape=mat_size + (nmaps,), dtype=bool)
-            for ii in range(nmaps):
-                good_index[:, :, ii] = mu_array[:, :, ii] > (max_mu - del_mu)
-            # make poor mu pixels unusable to merge
-            data_array[np.logical_not(good_index)] = float_info.max
+        good_index = np.ndarray(shape=mat_size + (nmaps,), dtype=bool)
+        overlap = np.logical_and(data_array[:, :, 0] != map_list[0].no_data_val,
+                                 data_array[:, :, 1] != map_list[0].no_data_val)
+        # insert data in no-overlap areas
+        for ii in range(nmaps):
+            good_mu = np.logical_and(overlap, mu_array[:, :, ii] >= mu_cut_over)
+            use_data[good_mu] = data_array[:, :, ii][good_mu]
+            # use_data[good_mu] = data_array[good_mu, ii]
+            good_index[:, :, ii] = np.logical_or(good_mu, data_array[:, :, ii] != map_list[0].no_data_val)
 
+        # make poor mu pixels unusable to merge
+        data_array[np.logical_not(good_index)] = float_info.max
         # make no_data_vals unusable to merge
         data_array[data_array == map_list[0].no_data_val] = float_info.max
         # find minimum intensity of remaining pixels
@@ -200,27 +194,54 @@ def combine_cr_maps(n_images, map_list, chd_map_list=None, mu_cutoff=0.0, mu_cut
         # return bad-mu and no-data pixels to no_data_val
         data_array[data_array == float_info.max] = map_list[0].no_data_val
 
+        # determine viable non-overlap pixels
+        euv_new = np.logical_and(map_list[0].data != map_list[0].no_data_val, np.logical_not(overlap))
+        euv_org = np.logical_and(map_list[1].data != map_list[0].no_data_val, np.logical_not(overlap))
+
+        # insert other non-overlap data
+        use_data[euv_new] = data_array[:, :, 0][euv_new]
+        use_data[euv_org] = data_array[:, :, 1][euv_org]
+
         # correct indices to create maps
         col_index, row_index = np.meshgrid(range(mat_size[1]), range(mat_size[0]))
+        map_index[euv_new] = 0
+        map_index[euv_org] = 1
         keep_mu = mu_array[row_index, col_index, map_index]
         keep_data = data_array[row_index, col_index, map_index]
         keep_image = image_array[row_index, col_index, map_index]
 
         # Generate new CHD map
         if chd_map_list is not None:
-            chd_array[np.logical_not(good_index)] = np.max(chd_array)
-            chd_array[data_array == map_list[0].no_data_val] = np.max(chd_array)
-            keep_chd = chd_array[row_index, col_index, map_index]
-            chd_map = psi_d_types.PsiMap(keep_chd, map_list[0].x, map_list[0].y, mu=keep_mu,
-                                         origin_image=keep_image, no_data_val=map_list[0].no_data_val)
+            chd_data = np.ndarray(shape=mat_size + (nmaps,), dtype=DTypes.MAP_DATA)
+            chd_array = np.ndarray(shape=mat_size, dtype=DTypes.MAP_DATA)
+            for ii in range(nmaps):
+                chd_data[:, :, ii] = chd_map_list[ii].data
+            # determine overlap pixels
+            use_chd = np.logical_and(map_list[0].data != map_list[0].no_data_val,
+                                     map_list[1].data != map_list[0].no_data_val)
+            # average chd data to get probability
+            chd_array[use_chd] = ((n_images - 1) * chd_data[:, :, 1][use_chd] + chd_data[:, :, 0][
+                use_chd]) / n_images
+
+            # determine viable non-overlap pixels
+            use_new = np.logical_and(map_list[0].data != map_list[0].no_data_val, np.logical_not(use_chd))
+            use_org = np.logical_and(map_list[1].data != map_list[0].no_data_val, np.logical_not(use_chd))
+            # insert other non-overlap data
+            chd_array[use_new] = chd_data[:, :, 0][use_new]
+            chd_array[use_org] = chd_data[:, :, 1][use_org]
+            # choose correct chd data to use
+            keep_chd = chd_array[row_index, col_index]
+            chd_combined = psi_d_types.PsiMap(keep_chd, map_list[0].x, map_list[0].y, mu=keep_mu,
+                                              origin_image=keep_image, no_data_val=map_list[0].no_data_val)
         else:
-            chd_map = None
+            chd_combined = None
         # Generate new EUV map
-        euv_map = psi_d_types.PsiMap(keep_data, map_list[0].x, map_list[0].y, mu=keep_mu,
-                                     origin_image=keep_image, no_data_val=map_list[0].no_data_val)
+        # keep_data = use_data[row_index, col_index]
+        euv_combined = psi_d_types.PsiMap(keep_data, map_list[0].x, map_list[0].y, mu=keep_mu,
+                                          origin_image=keep_image, no_data_val=map_list[0].no_data_val)
 
     else:
         raise ValueError("'map_list' maps have different grids. This is not yet supported in " +
                          "map_manip.combine_maps()")
 
-    return euv_map, chd_map
+    return euv_combined, chd_combined

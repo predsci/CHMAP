@@ -1,6 +1,7 @@
 """
 methods to create full CR maps with an unknown number of images
 inputs needed: min and max time, instrument list
+do we want to switch this to map an exact CR??
 """
 
 import os
@@ -16,7 +17,7 @@ import analysis.chd_analysis.CR_mapping_funcs as cr_funcs
 # -------- parameters --------- #
 # TIME RANGE FOR QUERYING
 query_time_min = datetime.datetime(2011, 4, 1, 0, 0, 0)
-query_time_max = datetime.datetime(2011, 4, 1, 6, 0, 0)
+query_time_max = datetime.datetime(2011, 4, 10, 6, 0, 0)
 map_freq = 2  # number of hours
 
 # INITIALIZE DATABASE CONNECTION
@@ -80,24 +81,24 @@ image_info = []
 map_info = []
 for row in query_pd.iterrows():
     #### STEP TWO: APPLY PRE-PROCESSING CORRECTIONS ####
-    methods_list, iit_image, los_image, use_indices = cr_funcs.apply_ipp(db_session, hdf_data_dir, inst_list, row,
+    los_image, iit_image, methods_list, use_indices = cr_funcs.apply_ipp(db_session, hdf_data_dir, inst_list, row,
                                                                          methods_list, lbc_combo_query,
                                                                          iit_combo_query,
                                                                          n_intensity_bins=n_intensity_bins, R0=R0)
 
     #### STEP THREE: CORONAL HOLE DETECTION ####
-    chd_image = cr_funcs.chd(db_session, inst_list, iit_image, los_image, use_indices, iit_combo_query, thresh1,
-                             thresh2, nc, iters)
+    chd_image = cr_funcs.chd(db_session, inst_list, los_image, iit_image, use_indices, iit_combo_query, thresh1=thresh1,
+                             thresh2=thresh2, nc=nc, iters=iters)
 
     #### STEP FOUR: CONVERT TO MAP ####
     euv_map, chd_map = cr_funcs.create_map(iit_image, chd_image, methods_list, row, map_x=map_x, map_y=map_y, R0=R0)
 
     #### STEP FIVE: CREATE COMBINED MAPS ####
     euv_combined, chd_combined, combined_method = cr_funcs.cr_map(euv_map, chd_map, euv_combined,
-                                                                                        chd_combined, image_info,
-                                                                                        map_info,
-                                                                                        mu_cutoff=mu_cutoff,
-                                                                                        mu_cut_over=mu_cut_over)
+                                                                  chd_combined, image_info,
+                                                                  map_info,
+                                                                  mu_cutoff=mu_cutoff,
+                                                                  mu_cut_over=mu_cut_over)
 
 #### STEP SIX: PLOT COMBINED MAP AND SAVE TO DATABASE ####
 cr_funcs.save_maps(db_session, map_data_dir, euv_combined, chd_combined, image_info, map_info,

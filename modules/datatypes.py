@@ -103,8 +103,12 @@ class LosImage:
 
     def interp_to_map(self, R0=1.0, map_x=None, map_y=None, no_data_val=-9999., image_num=None):
 
-        print("Converting " + self.info['instrument'] + "-" + str(self.info['wavelength']) + " image from " +
-              self.info['date_string'] + " to a map.")
+        if type(self) == CHDImage:
+            print("Converting " + self.info['instrument'] + "-" + str(self.info['wavelength']) + " image from " +
+                  self.info['date_string'] + " to a CHD map.")
+        else:
+            print("Converting " + self.info['instrument'] + "-" + str(self.info['wavelength']) + " image from " +
+              self.info['date_string'] + " to a EUV map.")
 
         if map_x is None and map_y is None:
             # Generate map grid based on number of image pixels vertically within R0
