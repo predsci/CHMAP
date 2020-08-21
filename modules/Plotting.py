@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 import matplotlib as mpl
 import numpy as np
 import matplotlib.cm as cm
-
+from matplotlib.lines import Line2D
 
 def PlotImage(los_image, nfig=None, mask_rad=1.5, title=None):
     """Super simple plotting routine for LosImage objects.
@@ -215,4 +215,61 @@ def Plot1d_Hist(norm_hist, instrument, inst_index, intensity_bin_edges, color_li
     plt.show()
     plt.legend()
 
+    return None
+
+
+def PlotQualityMap(map_plot, origin_image, inst_list, color_list, nfig=None, title=None, map_type=None):
+    plot = [None] * len(inst_list)
+    for inst_ind, inst in enumerate(inst_list):
+
+        # create usable data array
+        use_image = np.zeros(origin_image.shape)
+        use_image = np.where(origin_image != inst, use_image, 1.0)
+        use_image = np.where(origin_image == inst, use_image, np.nan)
+
+        # set color palette and normalization
+        color_map = color_list[inst_ind]
+        im_cmap = plt.get_cmap(color_map)
+        norm = mpl.colors.Normalize(vmin=0, vmax=1)
+
+        # plot the initial image
+        if nfig is None:
+            cur_figs = plt.get_fignums()
+            if not nfig:
+                nfig = 0
+            else:
+                nfig = cur_figs.max() + 1
+
+        # convert map x-extents to degrees
+        x_range = [180 * map_plot.x.min() / np.pi, 180 * map_plot.x.max() / np.pi]
+
+        # setup x-axis tickmarks
+        xticks = np.arange(x_range[0], x_range[1] + 1, 30)
+
+        # remove non-CH data
+        if map_type == 'CHD':
+            use_image = np.where(map_plot.data != 0, use_image, np.nan)
+
+        # mu values less than 0 become 0
+        mu_values = map_plot.mu
+        mu_values = np.where(mu_values > 0, mu_values, 0.01)
+        # add mu weighting to data
+        plot_data = use_image * mu_values
+
+        plt.figure(nfig)
+        plot[inst_ind] = plt.imshow(plot_data, extent=[x_range[0], x_range[1], map_plot.y.min(), map_plot.y.max()],
+                                    origin="lower", cmap=im_cmap, aspect=90.0, norm=norm)
+        plt.xlabel("Carrington Longitude")
+        plt.ylabel("Sine Latitude")
+        plt.xticks(xticks)
+
+        # title plot
+        if title is not None:
+            plt.title(title)
+
+    cmaps = [plot[ii].cmap for ii in range(len(inst_list))]
+    custom_lines = [Line2D([0], [0], color=cmaps[ii](1.), lw=4) for ii in range(len(inst_list))]
+
+    plt.legend(custom_lines, inst_list)
+    plt.show(block=False)
     return None

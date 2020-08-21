@@ -14,23 +14,11 @@ import modules.DB_funs as db_funcs
 import analysis.chd_analysis.CHD_pipeline_funcs as chd_funcs
 import analysis.chd_analysis.CR_mapping_funcs as cr_funcs
 
-# -------- parameters --------- #
+# -------- UPDATEABLE PARAMETERS --------- #
 # TIME RANGE FOR QUERYING
-query_time_min = datetime.datetime(2011, 4, 1, 0, 0, 0)
-query_time_max = datetime.datetime(2011, 4, 10, 6, 0, 0)
+query_time_min = datetime.datetime(2011, 5, 1, 0, 0, 0)
+query_time_max = datetime.datetime(2011, 5, 28, 0, 0, 0)
 map_freq = 2  # number of hours
-
-# INITIALIZE DATABASE CONNECTION
-# DATABASE PATHS
-map_data_dir = App.MAP_FILE_HOME
-raw_data_dir = App.RAW_DATA_HOME
-hdf_data_dir = App.PROCESSED_DATA_HOME
-database_dir = App.DATABASE_HOME
-sqlite_filename = App.DATABASE_FNAME
-# initialize database connection
-use_db = "sqlite"
-sqlite_path = os.path.join(database_dir, sqlite_filename)
-db_session = db_funcs.init_db_conn(db_name=use_db, chd_base=db_class.Base, sqlite_path=sqlite_path)
 
 # INSTRUMENTS
 inst_list = ["AIA", "EUVI-A", "EUVI-B"]
@@ -48,9 +36,9 @@ nc = 3
 iters = 1000
 
 # MINIMUM MERGE MAPPING PARAMETERS
-del_mu = None  # optional between this method and mu_cut_over method
+del_mu = None  # optional between this method and mu_merge_cutoff method
 mu_cutoff = 0.0  # lower mu cutoff value
-mu_cut_over = 0.4  # mu cutoff in overlap areas
+mu_merge_cutoff = 0.4  # mu cutoff in overlap areas
 
 # MAP PARAMETERS
 x_range = [0, 2 * np.pi]
@@ -61,6 +49,18 @@ map_nxcoord = (np.floor((x_range[1] - x_range[0]) / del_y) + 1).astype(int)
 # generate map x,y grids. y grid centered on equator, x referenced from lon=0
 map_y = np.linspace(y_range[0], y_range[1], map_nycoord, dtype='<f4')
 map_x = np.linspace(x_range[0], x_range[1], map_nxcoord, dtype='<f4')
+
+# INITIALIZE DATABASE CONNECTION
+# DATABASE PATHS
+map_data_dir = App.MAP_FILE_HOME
+raw_data_dir = App.RAW_DATA_HOME
+hdf_data_dir = App.PROCESSED_DATA_HOME
+database_dir = App.DATABASE_HOME
+sqlite_filename = App.DATABASE_FNAME
+# initialize database connection
+use_db = "sqlite"
+sqlite_path = os.path.join(database_dir, sqlite_filename)
+db_session = db_funcs.init_db_conn(db_name=use_db, chd_base=db_class.Base, sqlite_path=sqlite_path)
 
 ### --------- NOTHING TO UPDATE BELOW -------- ###
 #### STEP ONE: SELECT IMAGES ####
@@ -98,8 +98,14 @@ for row in query_pd.iterrows():
                                                                   chd_combined, image_info,
                                                                   map_info,
                                                                   mu_cutoff=mu_cutoff,
-                                                                  mu_cut_over=mu_cut_over)
+                                                                  mu_merge_cutoff=mu_merge_cutoff)
 
 #### STEP SIX: PLOT COMBINED MAP AND SAVE TO DATABASE ####
 cr_funcs.save_maps(db_session, map_data_dir, euv_combined, chd_combined, image_info, map_info,
                    methods_list, combined_method)
+
+
+#### CREATE QUALITY MAP
+from data_products.DP_funs import quality_map
+color_list = ["Blues", "Greens", "Reds", "Oranges", "Purples"]
+quality_map(db_session, map_data_dir, euv_combined, chd_combined, inst_list, query_pd, color_list)

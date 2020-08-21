@@ -7,16 +7,16 @@ import modules.datatypes as psi_d_types
 from settings.info import DTypes
 
 
-def combine_maps(map_list, chd_map_list=None, mu_cutoff=0.0, mu_cut_over=None, del_mu=None):
+def combine_maps(map_list, chd_map_list=None, mu_cutoff=0.0, mu_merge_cutoff=None, del_mu=None):
     """
     Take a list of Psi_Map objects and do minimum intensity merge to a single map.
-    Using mu_cut_over: based off the two cutoff algorithm from Caplan et. al. 2016.
+    Using mu_merge_cutoff: based off the two cutoff algorithm from Caplan et. al. 2016.
     Using del_mu: based off maximum mu value from list
     :param map_list: List of Psi_Map objects
     :param chd_map_list: List of Psi_Map objects of CHD data
     :param mu_cutoff: data points/pixels with a mu less than mu_cutoff will be discarded before
     merging.
-    :param mu_cut_over: mu cutoff value for discarding pixels in areas of instrument overlap
+    :param mu_merge_cutoff: mu cutoff value for discarding pixels in areas of instrument overlap
     :param del_mu: For a given data point/pixel of the map first find the maximum mu from map_list.
     :return: Psi_Map object resulting from merge.
     """
@@ -62,7 +62,7 @@ def combine_maps(map_list, chd_map_list=None, mu_cutoff=0.0, mu_cut_over=None, d
                 image_array[:, :, ii] = map_list[ii].origin_image
 
         float_info = np.finfo(map_list[0].data.dtype)
-        if mu_cut_over is not None:
+        if mu_merge_cutoff is not None:
             good_index = np.ndarray(shape=mat_size + (nmaps,), dtype=bool)
             overlap = np.ndarray(shape=mat_size + (nmaps,), dtype=bool)
             for ii in range(nmaps):
@@ -72,7 +72,7 @@ def combine_maps(map_list, chd_map_list=None, mu_cutoff=0.0, mu_cut_over=None, d
                                                            data_array[:, :, jj] != map_list[0].no_data_val)
             for ii in range(nmaps):
                 good_index[:, :, ii] = np.logical_or(np.logical_and(overlap[:, :, ii],
-                                                                    mu_array[:, :, ii] >= mu_cut_over), np.logical_and(
+                                                                    mu_array[:, :, ii] >= mu_merge_cutoff), np.logical_and(
                     data_array[:, :, ii] != map_list[0].no_data_val, mu_array[:, :, ii] >= mu_cutoff))
             # make poor mu pixels unusable to merge
             data_array[np.logical_not(good_index)] = float_info.max
@@ -115,17 +115,17 @@ def combine_maps(map_list, chd_map_list=None, mu_cutoff=0.0, mu_cut_over=None, d
     return euv_map, chd_map
 
 
-def combine_cr_maps(n_images, map_list, chd_map_list=None, mu_cutoff=0.0, mu_cut_over=0.4):
+def combine_cr_maps(n_images, map_list, chd_map_list=None, mu_cutoff=0.0, mu_merge_cutoff=0.4):
     """
         Take an already combined map, and a single image map, and do minimum intensity merge to a single map.
-        Using mu_cut_over: based off the two cutoff algorithm from Caplan et. al. 2016.
+        Using mu_merge_cutoff: based off the two cutoff algorithm from Caplan et. al. 2016.
         Using del_mu: based off maximum mu value from list
         :param n_images: number of images in original map
         :param map_list: List of Psi_Map objects (single_euv_map, combined_euv_map)
         :param chd_map_list: List of Psi_Map objects of CHD data (single_chd_map, combined_chd_map)
         :param mu_cutoff: data points/pixels with a mu less than mu_cutoff will be discarded before
         merging.
-        :param mu_cut_over: mu cutoff value for discarding pixels in areas of instrument overlap
+        :param mu_merge_cutoff: mu cutoff value for discarding pixels in areas of instrument overlap
         :return: Psi_Map object resulting from merge.
         """
     # determine number of maps. if only one, do nothing
@@ -180,10 +180,11 @@ def combine_cr_maps(n_images, map_list, chd_map_list=None, mu_cutoff=0.0, mu_cut
                                  data_array[:, :, 1] != map_list[0].no_data_val)
         # insert data in no-overlap areas
         for ii in range(nmaps):
-            good_mu = np.logical_and(overlap, mu_array[:, :, ii] >= mu_cut_over)
+            good_mu = np.logical_and(overlap, mu_array[:, :, ii] >= mu_merge_cutoff)
             use_data[good_mu] = data_array[:, :, ii][good_mu]
-            # use_data[good_mu] = data_array[good_mu, ii]
-            good_index[:, :, ii] = np.logical_or(good_mu, data_array[:, :, ii] != map_list[0].no_data_val)
+            # added the data != 0 to try and get rid of the white parts
+            good_index[:, :, ii] = np.logical_or(good_mu,  np.logical_or(data_array[:, :, ii] != map_list[0].no_data_val,
+                                                                         data_array[:, :, ii] != 0))
 
         # make poor mu pixels unusable to merge
         data_array[np.logical_not(good_index)] = float_info.max

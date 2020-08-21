@@ -457,9 +457,7 @@ def add_euv_map(db_session, psi_map, base_path=None, map_type=None):
                 else:
                     inst = None
                 subdir, temp_fname = misc_helpers.construct_map_path_and_fname(base_path, psi_map.map_info.date_mean[
-                    len(psi_map.map_info) - 1],
-                                                                               map_id, map_type, 'h5',
-                                                                               inst=inst, mkdir=True)
+                    len(psi_map.map_info) - 1], map_id, map_type, 'h5', inst=inst, mkdir=True)
                 h5_filename = os.path.join(subdir, temp_fname)
                 rel_file_path = h5_filename.replace(base_path, "")
                 # record file path in map object
@@ -748,12 +746,12 @@ def get_var_val(db_session, combo_id, meth_id, var_id, var_val=None, create=Fals
 def get_method_combo_id(db_session, meth_ids, create=False):
     # query DB to determine if this combo exists.
     n_meths = len(meth_ids)
-    # Return the number of matching images in each combo that has n_images and contains at least one of image_ids.
+    # Return the number of matching methods in each combo that has n_methods and contains at least one of meth_ids.
     match_groups = pd.read_sql(
         db_session.query(Method_Combo_Assoc.meth_combo_id, func.count(Method_Combo_Assoc.meth_combo_id).label(
             "m_count")).filter(Method_Combo_Assoc.meth_combo_id.in_(
             db_session.query(Method_Combos.meth_combo_id).filter(Method_Combos.n_methods == n_meths)
-        ), Method_Combo_Assoc.meth_combo_id.in_(meth_ids)
+        ), Method_Combo_Assoc.meth_id.in_(meth_ids)
         ).group_by(Method_Combo_Assoc.meth_combo_id).statement, db_session.bind)
 
     if len(match_groups) > 0:
@@ -1005,8 +1003,6 @@ def add_map_dbase_record(db_session, psi_map, base_path=None, map_type=None):
             pass
 
     # Get method combo_id. Create if it doesn't already exist
-    meth_ids = methods_df_cp.meth_id.to_list()
-    meth_ids = list(dict.fromkeys(meth_ids))
     meth_ids = methods_df_cp.meth_id.to_list()
     meth_ids = list(dict.fromkeys(meth_ids))
     var_vals = methods_df_cp.var_val.to_list()

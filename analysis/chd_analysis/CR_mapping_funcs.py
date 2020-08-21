@@ -114,7 +114,7 @@ def create_map(iit_image, chd_image, methods_list, row, map_x=None, map_y=None, 
 
 
 #### STEP FIVE: CREATE COMBINED MAPS ####
-def cr_map(euv_map, chd_map, euv_combined, chd_combined, image_info, map_info, mu_cutoff=0.0, mu_cut_over=None,
+def cr_map(euv_map, chd_map, euv_combined, chd_combined, image_info, map_info, mu_cutoff=0.0, mu_merge_cutoff=None,
            del_mu=None):
     start = time.time()
     # create map lists
@@ -136,14 +136,14 @@ def cr_map(euv_map, chd_map, euv_combined, chd_combined, image_info, map_info, m
                                                                                     "max acceptable mu range"),
                            'var_val': (mu_cutoff, del_mu)}
     else:
-        euv_combined, chd_combined = combine_cr_maps(n_images, euv_maps, chd_maps, mu_cut_over=mu_cut_over,
+        euv_combined, chd_combined = combine_cr_maps(n_images, euv_maps, chd_maps, mu_merge_cutoff=mu_merge_cutoff,
                                                      mu_cutoff=mu_cutoff)
         combined_method = {'meth_name': ("Min-Int-Merge_CR2", "Min-Int-Merge_CR2"), 'meth_description':
             ["Minimum intensity merge for CR Map: based on Caplan et. al."] * 2,
-                           'var_name': ("mu_cutoff", "mu_cut_over"), 'var_description': ("lower mu cutoff value",
+                           'var_name': ("mu_cutoff", "mu_merge_cutoff"), 'var_description': ("lower mu cutoff value",
                                                                                          "mu cutoff value in areas of "
                                                                                          "overlap"),
-                           'var_val': (mu_cutoff, mu_cut_over)}
+                           'var_val': (mu_cutoff, mu_merge_cutoff)}
     # append image and map info records
     image_info.append(euv_map.image_info)
     map_info.append(euv_map.map_info)
@@ -171,9 +171,9 @@ def save_maps(db_session, map_data_dir, euv_combined, chd_combined, image_info, 
     chd_combined.append_map_info(map_info)
 
     # plot maps
-    Plotting.PlotMap(euv_combined, nfig="CR EUV Map", title="Minimum Intensity Merge CR EUV Map")
+    Plotting.PlotMap(euv_combined, nfig="CR EUV Map", title="Minimum Intensity Merge CR EUV Map\nTime Min: " + str(euv_combined.image_info.iloc[0].date_obs) +"\nTime Max: " + str(euv_combined.image_info.iloc[-1].date_obs))
     Plotting.PlotMap(euv_combined, nfig="CR CHD Map", title="Minimum Intensity CR CHD Merge Map")
-    Plotting.PlotMap(chd_combined, nfig="CR CHD Map", title="Minimum Intensity CR CHD Merge Map", map_type='CHD')
+    Plotting.PlotMap(chd_combined, nfig="CR CHD Map", title="Minimum Intensity CR CHD Merge Map\nTime Min: " + str(chd_combined.image_info.iloc[0].date_obs) +"\nTime Max: " + str(chd_combined.image_info.iloc[-1].date_obs), map_type='CHD')
 
     # save EUV and CHD maps to database
     # euv_combined.write_to_file(map_data_dir, map_type='cr_euv', filename=None, db_session=db_session)

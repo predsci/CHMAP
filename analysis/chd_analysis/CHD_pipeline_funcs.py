@@ -258,6 +258,7 @@ def create_singles_maps(inst_list, date_pd, iit_list, chd_image_list, methods_li
             # incorporate the methods dataframe into the map object
             map_list[inst_ind].append_method_info(methods_list[index])
             chd_map_list[inst_ind].append_method_info(methods_list[index])
+
     end = time.time()
     print("Images interpolated to maps in", end - start, "seconds.")
     return map_list, chd_map_list, methods_list, image_info, map_info
@@ -265,7 +266,7 @@ def create_singles_maps(inst_list, date_pd, iit_list, chd_image_list, methods_li
 
 #### STEP FIVE: CREATE COMBINED MAPS AND SAVE TO DB ####
 def create_combined_maps(db_session, map_data_dir, map_list, chd_map_list, methods_list,
-                         image_info, map_info, mu_cut_over=None, del_mu=None, mu_cutoff=0.0):
+                         image_info, map_info, mu_merge_cutoff=None, del_mu=None, mu_cutoff=0.0):
     """
     function to create combined EUV and CHD maps and save to database with associated method information
     @param db_session: database session to save maps to
@@ -275,7 +276,7 @@ def create_combined_maps(db_session, map_data_dir, map_list, chd_map_list, metho
     @param methods_list: methods list
     @param image_info: image info list
     @param map_info: map info list
-    @param mu_cut_over: cutoff mu value for overlap areas
+    @param mu_merge_cutoff: cutoff mu value for overlap areas
     @param del_mu: maximum mu threshold value
     @param mu_cutoff: lower mu value
     @return: combined euv map, combined chd map
@@ -299,13 +300,13 @@ def create_combined_maps(db_session, map_data_dir, map_list, chd_map_list, metho
                                                                                     "max acceptable mu range"),
                            'var_val': (mu_cutoff, del_mu)}
     else:
-        euv_combined, chd_combined = combine_maps(euv_maps, chd_maps, mu_cut_over=mu_cut_over, mu_cutoff=mu_cutoff)
+        euv_combined, chd_combined = combine_maps(euv_maps, chd_maps, mu_merge_cutoff=mu_merge_cutoff, mu_cutoff=mu_cutoff)
         combined_method = {'meth_name': ("Min-Int-Merge_2", "Min-Int-Merge_2"), 'meth_description':
             ["Minimum intensity merge: based on Caplan et. al."] * 2,
-                           'var_name': ("mu_cutoff", "mu_cut_over"), 'var_description': ("lower mu cutoff value",
+                           'var_name': ("mu_cutoff", "mu_merge_cutoff"), 'var_description': ("lower mu cutoff value",
                                                                                          "mu cutoff value in areas of "
                                                                                          "overlap"),
-                           'var_val': (mu_cutoff, mu_cut_over)}
+                           'var_val': (mu_cutoff, mu_merge_cutoff)}
 
     # generate a record of the method and variable values used for interpolation
     euv_combined.append_method_info(methods_list)
@@ -320,15 +321,19 @@ def create_combined_maps(db_session, map_data_dir, map_list, chd_map_list, metho
     # plot maps
     Plotting.PlotMap(euv_combined, nfig="EUV Combined map for: " + str(euv_combined.image_info.date_obs[0]),
                      title="Minimum Intensity Merge Map\nDate: " + str(euv_combined.image_info.date_obs[0]))
-    Plotting.PlotMap(euv_combined, nfig="EUV/CHD Combined map for: " + str(euv_combined.image_info.date_obs[0]),
-                     title="Minimum Intensity EUV/CHD Merge Map\nDate: " + str(euv_combined.image_info.date_obs[0]))
+   # Plotting.PlotMap(euv_combined, nfig="EUV/CHD Combined map for: " + str(euv_combined.image_info.date_obs[0]),
+    #                 title="Minimum Intensity EUV/CHD Merge Map\nDate: " + str(euv_combined.image_info.date_obs[0]))
     Plotting.PlotMap(chd_combined, nfig="EUV/CHD Combined map for: " + str(chd_combined.image_info.date_obs[0]),
                      title="Minimum Intensity EUV/CHD Merge Map\nDate: " + str(chd_combined.image_info.date_obs[0]),
                      map_type='CHD')
 
     # save EUV and CHD maps to database
-    euv_combined.write_to_file(map_data_dir, map_type='synoptic_euv', filename=None, db_session=db_session)
-    chd_combined.write_to_file(map_data_dir, map_type='synoptic_chd', filename=None, db_session=db_session)
+    # TODO: figure out this filename issue, used to be None
+    #euv_combined.write_to_file(map_data_dir, map_type='synchronic_euv', filename=None,
+     #                          db_session=db_session)
+    #chd_combined.write_to_file(map_data_dir, map_type='synchronic_chd', filename=None,
+      #                         db_session=db_session)
+
     # end time
     end = time.time()
     print("Combined EUV and CHD Maps created and saved to the database in", end - start, "seconds.")

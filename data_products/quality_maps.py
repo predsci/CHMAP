@@ -7,7 +7,8 @@ outline to create combination EUV maps
     b. Inter-Instrument Transformation
 3. Coronal Hole Detection
 4. Convert to Map
-5. Combine Maps and Save to DB
+5. Combine Maps
+6. Create Mu Dependent Quality Map
 """
 
 import os
@@ -18,11 +19,12 @@ from settings.app import App
 import modules.DB_classes as db_class
 import modules.DB_funs as db_funcs
 import analysis.chd_analysis.CHD_pipeline_funcs as chd_funcs
+from data_products.DP_funs import quality_map
 
 # -------- parameters --------- #
 # TIME RANGE FOR QUERYING
-query_time_min = datetime.datetime(2011, 8, 16, 22, 0, 0)
-query_time_max = datetime.datetime(2011, 8, 17, 2, 0, 0)
+query_time_min = datetime.datetime(2011, 8, 16, 20, 0, 0)
+query_time_max = datetime.datetime(2011, 8, 17, 0, 0, 0)
 map_freq = 2  # number of hours
 
 # INITIALIZE DATABASE CONNECTION
@@ -39,6 +41,7 @@ db_session = db_funcs.init_db_conn(db_name=use_db, chd_base=db_class.Base, sqlit
 
 # INSTRUMENTS
 inst_list = ["AIA", "EUVI-A", "EUVI-B"]
+color_list = ["Blues", "Greens", "Reds", "Oranges", "Purples"]
 # CORRECTION PARAMETERS
 n_intensity_bins = 200
 R0 = 1.01
@@ -107,5 +110,11 @@ for date_ind, center in enumerate(moving_avg_centers):
         #### STEP FIVE: CREATE COMBINED MAPS AND SAVE TO DB ####
         euv_combined, chd_combined = chd_funcs.create_combined_maps(db_session, map_data_dir, map_list, chd_map_list,
                                                                     methods_list, image_info, map_info,
-                                                                    mu_merge_cutoff=mu_merge_cutoff, mu_cutoff=mu_cutoff)
+                                                                    mu_merge_cutoff=mu_merge_cutoff,
+                                                                    mu_cutoff=mu_cutoff)
+
+        #### STEP SIX: CREATE A QUALITY MAP FOR CORRESPONDING CHD MAP ####
+        quality_map(db_session, map_data_dir, euv_combined, chd_combined, inst_list, query_pd, color_list)
+
+
 
