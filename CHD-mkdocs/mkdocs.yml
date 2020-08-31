@@ -18,11 +18,15 @@ nav:
   - Coronal Hole Detection:
       - Fortran to Python: chd/f2py.md
       - CH Detection: chd/chd.md
-      - CR Probability Maps: chd/cr.md
   - Mapping:
       - Mapping Pipeline: map/map.md
       - Interpolation: map/int.md
       - Combining Maps: map/cmb.md
+  - Data Products:
+      - CR Maps: dp/cr.md
+      - Quality Maps: dp/qm.md
+      - Ensemble Detection: dp/ed.md
+      - Varying Threshold Maps: dp/vt.md
   - Database:
       - Database Basics: db/db.md
       - Database for LBC: db/lbc.md

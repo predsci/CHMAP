@@ -8,6 +8,7 @@ import numpy as np
 import matplotlib.cm as cm
 from matplotlib.lines import Line2D
 
+
 def PlotImage(los_image, nfig=None, mask_rad=1.5, title=None):
     """Super simple plotting routine for LosImage objects.
     imshow() should be replaced with pcolormesh() for generalizing to non-uniform rectilinear grids
@@ -88,7 +89,7 @@ def PlotMap(map_plot, nfig=None, title=None, map_type=None):
     # set color palette and normalization (improve by using Ron's colormap setup)
     if map_type == "CHD":
         # norm = mpl.colors.LogNorm(vmin=0.01, vmax=np.nanmax(map_plot.data))
-        im_cmap = plt.get_cmap('Purples')
+        im_cmap = plt.get_cmap('Greys')
         norm = mpl.colors.LogNorm(vmin=0.01, vmax=1)
     else:
         norm = mpl.colors.LogNorm(vmin=1.0, vmax=np.nanmax(map_plot.data))
@@ -225,7 +226,7 @@ def PlotQualityMap(map_plot, origin_image, inst_list, color_list, nfig=None, tit
         # create usable data array
         use_image = np.zeros(origin_image.shape)
         use_image = np.where(origin_image != inst, use_image, 1.0)
-        use_image = np.where(origin_image == inst, use_image, np.nan)
+        use_image = np.where(origin_image == inst, use_image, 0)
 
         # set color palette and normalization
         color_map = color_list[inst_ind]
@@ -248,7 +249,7 @@ def PlotQualityMap(map_plot, origin_image, inst_list, color_list, nfig=None, tit
 
         # remove non-CH data
         if map_type == 'CHD':
-            use_image = np.where(map_plot.data != 0, use_image, np.nan)
+            use_image = np.where(map_plot.data != 0, use_image, 0)
 
         # mu values less than 0 become 0
         mu_values = map_plot.mu
@@ -256,13 +257,16 @@ def PlotQualityMap(map_plot, origin_image, inst_list, color_list, nfig=None, tit
         # add mu weighting to data
         plot_data = use_image * mu_values
 
+        # mask invalid values
+        plot_data = np.ma.array(plot_data)
+        plot_data_masked = np.ma.masked_where(plot_data <= 0, plot_data)
         plt.figure(nfig)
-        plot[inst_ind] = plt.imshow(plot_data, extent=[x_range[0], x_range[1], map_plot.y.min(), map_plot.y.max()],
-                                    origin="lower", cmap=im_cmap, aspect=90.0, norm=norm)
+        plot[inst_ind] = plt.imshow(plot_data_masked,
+                                    extent=[x_range[0], x_range[1], map_plot.y.min(), map_plot.y.max()],
+                                    origin="lower", cmap=im_cmap, aspect=90.0, norm=norm, interpolation='nearest')
         plt.xlabel("Carrington Longitude")
         plt.ylabel("Sine Latitude")
         plt.xticks(xticks)
-
         # title plot
         if title is not None:
             plt.title(title)

@@ -63,6 +63,7 @@ def chd(db_session, inst_list, los_image, iit_image, use_indices, iit_combo_quer
     use_chd = np.where(use_chd == 1, use_chd, los_image.no_data_val)
     nx = iit_image.x.size
     ny = iit_image.y.size
+    # calculate new threshold parameters based off reference (AIA) instrument
     t1 = thresh1 * ref_alpha + ref_x
     t2 = thresh2 * ref_alpha + ref_x
 
@@ -141,8 +142,8 @@ def cr_map(euv_map, chd_map, euv_combined, chd_combined, image_info, map_info, m
         combined_method = {'meth_name': ("Min-Int-Merge_CR2", "Min-Int-Merge_CR2"), 'meth_description':
             ["Minimum intensity merge for CR Map: based on Caplan et. al."] * 2,
                            'var_name': ("mu_cutoff", "mu_merge_cutoff"), 'var_description': ("lower mu cutoff value",
-                                                                                         "mu cutoff value in areas of "
-                                                                                         "overlap"),
+                                                                                             "mu cutoff value in areas of "
+                                                                                             "overlap"),
                            'var_val': (mu_cutoff, mu_merge_cutoff)}
     # append image and map info records
     image_info.append(euv_map.image_info)
@@ -156,7 +157,8 @@ def cr_map(euv_map, chd_map, euv_combined, chd_combined, image_info, map_info, m
 
 
 #### STEP SIX: PLOT COMBINED MAP AND SAVE TO DATABASE ####
-def save_maps(db_session, map_data_dir, euv_combined, chd_combined, image_info, map_info, methods_list, combined_method):
+def save_maps(db_session, map_data_dir, euv_combined, chd_combined, image_info, map_info, methods_list,
+              combined_method):
     start = time.time()
     # generate a record of the method and variable values used for interpolation
     euv_combined.append_method_info(methods_list)
@@ -171,13 +173,16 @@ def save_maps(db_session, map_data_dir, euv_combined, chd_combined, image_info, 
     chd_combined.append_map_info(map_info)
 
     # plot maps
-    Plotting.PlotMap(euv_combined, nfig="CR EUV Map", title="Minimum Intensity Merge CR EUV Map\nTime Min: " + str(euv_combined.image_info.iloc[0].date_obs) +"\nTime Max: " + str(euv_combined.image_info.iloc[-1].date_obs))
-    Plotting.PlotMap(euv_combined, nfig="CR CHD Map", title="Minimum Intensity CR CHD Merge Map")
-    Plotting.PlotMap(chd_combined, nfig="CR CHD Map", title="Minimum Intensity CR CHD Merge Map\nTime Min: " + str(chd_combined.image_info.iloc[0].date_obs) +"\nTime Max: " + str(chd_combined.image_info.iloc[-1].date_obs), map_type='CHD')
+    Plotting.PlotMap(euv_combined, nfig="CR EUV Map", title="Minimum Intensity Merge CR EUV Map\nTime Min: " + str(
+        euv_combined.image_info.iloc[0].date_obs) + "\nTime Max: " + str(euv_combined.image_info.iloc[-1].date_obs))
+    # Plotting.PlotMap(euv_combined, nfig="CR CHD Map", title="Minimum Intensity CR CHD Merge Map")
+    Plotting.PlotMap(chd_combined, nfig="CR CHD Map", title="Minimum Intensity CR CHD Merge Map\nTime Min: " + str(
+        chd_combined.image_info.iloc[0].date_obs) + "\nTime Max: " + str(chd_combined.image_info.iloc[-1].date_obs),
+                     map_type='CHD')
 
     # save EUV and CHD maps to database
     # euv_combined.write_to_file(map_data_dir, map_type='cr_euv', filename=None, db_session=db_session)
     # chd_combined.write_to_file(map_data_dir, map_type='cr_chd', filename=None, db_session=db_session)
 
     end = time.time()
-    print("Combined CR Maps have been plotted and saved to the database in", end-start, "seconds.")
+    print("Combined CR Maps have been plotted and saved to the database in", end - start, "seconds.")

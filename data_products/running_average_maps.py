@@ -16,12 +16,12 @@ import analysis.chd_analysis.CR_mapping_funcs as cr_funcs
 # -------- UPDATEABLE PARAMETERS --------- #
 
 # TIMESCALES
-center_time = datetime.datetime(2011, 5, 1, 0, 0, 0)
+center_time = datetime.datetime(2011, 7, 1, 0, 0, 0)
 map_freq = 2  # number of hours between each map
 # list of timedelta timescales
-timescales = [datetime.timedelta(days=1), datetime.timedelta(hours=12)]
+timescales = [datetime.timedelta(days=1), datetime.timedelta(weeks=1), datetime.timedelta(weeks=2), datetime.timedelta(weeks=4)]
 # weighting of timescales, None for even weighting
-timescale_weight = [0.3, 0.7]
+timescale_weight = None
 
 # INSTRUMENTS
 inst_list = ["AIA", "EUVI-A", "EUVI-B"]
@@ -91,7 +91,7 @@ lbc_combo_query, iit_combo_query = chd_funcs.get_inst_combos(db_session, inst_li
                                                              time_max=max_time_max)
 
 for time_ind, timescale in enumerate(timescales):
-    print("Starting map creation for maps of timescale:", timescale)
+    print("Starting map creation for maps of timescale:", timescale, "\n")
     time_weight = timescale_weight[time_ind]
     query_time_min = center_time - (timescale / 2)
     query_time_max = center_time + (timescale / 2)
@@ -128,6 +128,15 @@ for time_ind, timescale in enumerate(timescales):
                                                                       chd_combined, image_info, map_info,
                                                                       mu_cutoff=mu_cutoff,
                                                                       mu_merge_cutoff=mu_merge_cutoff)
+    # add maps and info to timescale lists
+    euv_timescale[time_ind] = euv_combined
+    chd_timescale[time_ind] = chd_combined
+    image_info_timescale[time_ind] = image_info
+    map_info_timescale[time_ind] = map_info
+
+
+
+
 
 import numpy as np
 import modules.datatypes as psi_d_types
@@ -135,7 +144,7 @@ from settings.info import DTypes
 
 map_list = euv_timescale
 chd_map_list = chd_timescale
-timescale_weights = timescale_weight
+timescale_weights = [0.1, 0.2, 0.3, 0.4]
 
 #### STEP SEVEN: COMBINE TIMESCALE MAPS AND SAVE TO DATABASE ####
 # def combine_timescale_maps(timescale_weights, map_list, chd_map_list=None, mu_cutoff=0.0, mu_merge_cutoff=0.4):
@@ -214,20 +223,20 @@ if same_grid:
 
     # average EUV data based on timescale weights
     # TODO: currently assumes that all data is "good" - need to figure out how to implement "good index"
-    sum_wgt = 0
     col_index, row_index = np.meshgrid(range(mat_size[1]), range(mat_size[0]))
     # choose the good data to use
     good_data = np.ndarray(shape=mat_size + (nmaps,), dtype=DTypes.MAP_DATA)
     good_data[good_index] = data_array[good_index]
+    keep_data = np.ndarray(shape=mat_size, dtype=DTypes.MAP_DATA)
+    keep_chd = np.ndarray(shape=mat_size, dtype=DTypes.MAP_DATA)
+    keep_mu = np.ndarray(shape=mat_size, dtype=DTypes.MAP_DATA)
+    sum_wgt = 0
     for wgt_ind, weight in enumerate(timescale_weights):
-        keep_data = data_array[row_index, col_index, wgt_ind] * weight
-        keep_mu = mu_array[row_index, col_index, wgt_ind] * weight
-        if chd_map_list is not None:
-            keep_chd = chd_array[row_index, col_index, wgt_ind] * weight
         sum_wgt += weight
-    keep_data = keep_data / sum_wgt
-    keep_mu = keep_mu / sum_wgt
-    keep_chd = keep_chd / sum_wgt
+        keep_data = (keep_data + data_array[row_index, col_index, wgt_ind] * weight) / sum_wgt
+        keep_mu = (keep_mu + mu_array[row_index, col_index, wgt_ind] * weight) / sum_wgt
+        if chd_map_list is not None:
+            keep_chd = (keep_chd + chd_array[row_index, col_index, wgt_ind] * weight) / sum_wgt
 
     # Generate new CHD map
     if chd_map_list is not None:
@@ -271,3 +280,14 @@ Plotting.PlotMap(euv_timescale[0], nfig="EUV Map0",
 Plotting.PlotMap(euv_timescale[1], nfig="EUV Map1",
                  title="Minimum Intensity EUV Merge Map\nTime Min: " + str(max_time_min) + "\nTime Max: " + str(
                      max_time_max)+ "Timescale: 5 Days")
+
+
+for ind, map in enumerate(euv_timescale):
+    Plotting.PlotMap(euv_timescale[ind], nfig="EUV Map "+str(ind),
+                     title="Minimum Intensity EUV Merge Map\nTime Min: " + str(max_time_min) + "\nTime Max: " + str(
+                         max_time_max))
+    Plotting.PlotMap(chd_timescale[ind], nfig="CR CHD Map "+str(ind),
+                     title="Minimum Intensity CR CHD Merge Map\nTime Min: " + str(max_time_min) + "\nTime Max: " + str(
+                         max_time_max), map_type='CHD')
+
+

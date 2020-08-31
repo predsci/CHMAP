@@ -114,7 +114,7 @@ for date_ind, center in enumerate(moving_avg_centers):
                                                                     mu_cutoff=mu_cutoff)
 
         #### STEP SIX: CREATE A QUALITY MAP FOR CORRESPONDING CHD MAP ####
-        quality_map(db_session, map_data_dir, euv_combined, chd_combined, inst_list, query_pd, color_list)
+        quality_map(db_session, map_data_dir, inst_list, query_pd, euv_combined, chd_combined, color_list=None)
 
 
 

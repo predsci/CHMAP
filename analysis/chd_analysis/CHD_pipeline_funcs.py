@@ -193,6 +193,7 @@ def chd(iit_list, los_list, use_indices, inst_list, thresh1, thresh2, ref_alpha,
             use_chd = np.where(use_chd == 1, use_chd, -9999)
             nx = iit_list[inst_ind].x.size
             ny = iit_list[inst_ind].y.size
+            # calculate new threshold parameters based off reference (AIA) instrument
             t1 = thresh1 * ref_alpha + ref_x
             t2 = thresh2 * ref_alpha + ref_x
 

@@ -87,27 +87,31 @@ def query_euv_images(db_session, time_min=None, time_max=None, instrument=None, 
     elif wavelength is None:
         if instrument is None:
             query_out = pd.read_sql(db_session.query(EUV_Images).filter(EUV_Images.date_obs >= time_min,
-                                                                        EUV_Images.date_obs <= time_max).statement,
+                                                                        EUV_Images.date_obs <= time_max,
+                                                                        EUV_Images.flag == 0).statement,
                                     db_session.bind)
         else:
             query_out = pd.read_sql(db_session.query(EUV_Images).filter(EUV_Images.date_obs >= time_min,
                                                                         EUV_Images.date_obs <= time_max,
                                                                         EUV_Images.instrument.in_(
-                                                                            instrument)).statement,
+                                                                            instrument),
+                                                                        EUV_Images.flag == 0).statement,
                                     db_session.bind)
     else:
         if instrument is None:
             query_out = pd.read_sql(db_session.query(EUV_Images).filter(EUV_Images.date_obs >= time_min,
                                                                         EUV_Images.date_obs <= time_max,
                                                                         EUV_Images.wavelength.in_(
-                                                                            wavelength)).statement,
+                                                                            wavelength),
+                                                                        EUV_Images.flag == 0).statement,
                                     db_session.bind)
         else:
             query_out = pd.read_sql(db_session.query(EUV_Images).filter(EUV_Images.date_obs >= time_min,
                                                                         EUV_Images.date_obs <= time_max,
                                                                         EUV_Images.instrument.in_(instrument),
                                                                         EUV_Images.wavelength.in_(
-                                                                            wavelength)).statement,
+                                                                            wavelength),
+                                                                        EUV_Images.flag == 0).statement,
                                     db_session.bind)
 
     return query_out

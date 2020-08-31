@@ -13,7 +13,7 @@ import modules.DB_classes as db_class
 import modules.DB_funs as db_funcs
 import analysis.chd_analysis.CHD_pipeline_funcs as chd_funcs
 import analysis.chd_analysis.CR_mapping_funcs as cr_funcs
-from data_products.DP_funs import quality_map
+import data_products.DP_funs as dp_funcs
 
 # -------- UPDATEABLE PARAMETERS --------- #
 # TIME RANGE FOR QUERYING
@@ -97,16 +97,16 @@ for row in query_pd.iterrows():
     euv_map, chd_map = cr_funcs.create_map(iit_image, chd_image, methods_list, row, map_x=map_x, map_y=map_y, R0=R0)
 
     #### STEP FIVE: CREATE COMBINED MAPS ####
-    euv_combined, chd_combined, combined_method = cr_funcs.cr_map(euv_map, chd_map, euv_combined,
-                                                                  chd_combined, image_info,
-                                                                  map_info,
-                                                                  mu_cutoff=mu_cutoff,
-                                                                  mu_merge_cutoff=mu_merge_cutoff)
+    euv_combined, chd_combined, combined_method = dp_funcs.chd_mu_map(euv_map, chd_map, euv_combined,
+                                                                      chd_combined, image_info,
+                                                                      map_info,
+                                                                      mu_cutoff=mu_cutoff,
+                                                                      mu_merge_cutoff=mu_merge_cutoff)
 
 #### STEP SIX: PLOT COMBINED MAP AND SAVE TO DATABASE ####
-cr_funcs.save_maps(db_session, map_data_dir, euv_combined, chd_combined, image_info, map_info,
-                   methods_list, combined_method)
-
+dp_funcs.save_mu_probability_maps(db_session, map_data_dir, euv_combined, chd_combined, image_info, map_info,
+                                  methods_list, combined_method)
 
 #### CREATE QUALITY MAPS
-quality_map(db_session, map_data_dir, inst_list, query_pd, euv_combined, chd_combined=None, color_list=color_list)
+dp_funcs.quality_map(db_session, map_data_dir, inst_list, query_pd, euv_combined, chd_combined=None,
+                     color_list=color_list)
