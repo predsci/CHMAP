@@ -134,7 +134,7 @@ for time_ind, timescale in enumerate(timescales):
     image_info_timescale[time_ind] = image_info
     map_info_timescale[time_ind] = map_info
 
-
+#### STEP SEVEN: COMBINE TIMESCALE MAPS AND SAVE TO DATABASE ####
 
 
 
@@ -146,114 +146,7 @@ map_list = euv_timescale
 chd_map_list = chd_timescale
 timescale_weights = [0.1, 0.2, 0.3, 0.4]
 
-#### STEP SEVEN: COMBINE TIMESCALE MAPS AND SAVE TO DATABASE ####
-# def combine_timescale_maps(timescale_weights, map_list, chd_map_list=None, mu_cutoff=0.0, mu_merge_cutoff=0.4):
-#     """
-#         Take a list of combined maps of varying timescales and do weighted minimum intensity merge to a single map.
-#         :param timescale_weights: weighting list for timescales
-#         :param map_list: List of Psi_Map objects (single_euv_map, combined_euv_map)
-#         :param chd_map_list: List of Psi_Map objects of CHD data (single_chd_map, combined_chd_map)
-#         :param mu_cutoff: data points/pixels with a mu less than mu_cutoff will be discarded before
-#         merging.
-#         :param mu_merge_cutoff: mu cutoff value for discarding pixels in areas of instrument overlap
-#         :return: Psi_Map object resulting from merge.
-#         """
-# determine number of maps. if only one, do nothing
-nmaps = len(map_list)
 
-# if nmaps == 1:
-#     if chd_map_list is not None:
-#         return map_list[0], chd_map_list[0]
-#     else:
-#         return map_list[0]
-
-# check that all maps have the same x and y grids
-same_grid = all(map_list[0].x == map_list[1].x) and all(map_list[0].y == map_list[1].y)
-if nmaps > 2:
-    for ii in range(1, nmaps - 1):
-        same_temp = all(map_list[ii].x == map_list[ii + 1].x) and all(map_list[ii].y == map_list[ii + 1].y)
-        same_grid = same_grid & same_temp
-        if not same_grid:
-            break
-
-else:
-    # check that all maps have the same x and y grids
-    same_grid = all(map_list[0].x == map_list[1].x) and all(map_list[0].y == map_list[1].y)
-    if nmaps > 2:
-        for ii in range(1, nmaps - 1):
-            same_temp = all(map_list[ii].x == map_list[ii + 1].x) and all(map_list[ii].y == map_list[ii + 1].y)
-            same_grid = same_grid & same_temp
-            if not same_grid:
-                break
-
-if same_grid:
-    # construct arrays of mu's and data
-    mat_size = map_list[0].mu.shape
-    mu_array = np.ndarray(shape=mat_size + (nmaps,), dtype=DTypes.MAP_MU)
-    data_array = np.ndarray(shape=mat_size + (nmaps,), dtype=DTypes.MAP_DATA)
-    image_array = np.ndarray(shape=mat_size + (nmaps,), dtype=DTypes.MAP_ORIGIN_IMAGE)
-    if chd_map_list is not None:
-        chd_array = np.ndarray(shape=mat_size + (nmaps,), dtype=DTypes.MAP_DATA)
-        for ii in range(nmaps):
-            mu_array[:, :, ii] = map_list[ii].mu
-            data_array[:, :, ii] = map_list[ii].data
-            chd_array[:, :, ii] = chd_map_list[ii].data
-            image_array[:, :, ii] = map_list[ii].origin_image
-    else:
-        for ii in range(nmaps):
-            mu_array[:, :, ii] = map_list[ii].mu
-            data_array[:, :, ii] = map_list[ii].data
-            image_array[:, :, ii] = map_list[ii].origin_image
-
-    # find overlap indices
-    if mu_merge_cutoff is not None:
-        good_index = np.ndarray(shape=mat_size + (nmaps,), dtype=bool)
-        overlap = np.ndarray(shape=mat_size + (nmaps,), dtype=bool)
-        for ii in range(nmaps):
-            for jj in range(nmaps):
-                if ii != jj:
-                    overlap[:, :, ii] = np.logical_and(data_array[:, :, ii] != map_list[0].no_data_val,
-                                                       data_array[:, :, jj] != map_list[0].no_data_val)
-        for ii in range(nmaps):
-            good_index[:, :, ii] = np.logical_or(np.logical_and(overlap[:, :, ii],
-                                                                mu_array[:, :, ii] >= mu_merge_cutoff),
-                                                 np.logical_and(
-                                                     data_array[:, :, ii] != map_list[0].no_data_val,
-                                                     mu_array[:, :, ii] >= mu_cutoff))
-
-    # average EUV data based on timescale weights
-    # TODO: currently assumes that all data is "good" - need to figure out how to implement "good index"
-    col_index, row_index = np.meshgrid(range(mat_size[1]), range(mat_size[0]))
-    # choose the good data to use
-    good_data = np.ndarray(shape=mat_size + (nmaps,), dtype=DTypes.MAP_DATA)
-    good_data[good_index] = data_array[good_index]
-    keep_data = np.ndarray(shape=mat_size, dtype=DTypes.MAP_DATA)
-    keep_chd = np.ndarray(shape=mat_size, dtype=DTypes.MAP_DATA)
-    keep_mu = np.ndarray(shape=mat_size, dtype=DTypes.MAP_DATA)
-    sum_wgt = 0
-    for wgt_ind, weight in enumerate(timescale_weights):
-        sum_wgt += weight
-        keep_data = (keep_data + data_array[row_index, col_index, wgt_ind] * weight) / sum_wgt
-        keep_mu = (keep_mu + mu_array[row_index, col_index, wgt_ind] * weight) / sum_wgt
-        if chd_map_list is not None:
-            keep_chd = (keep_chd + chd_array[row_index, col_index, wgt_ind] * weight) / sum_wgt
-
-    # Generate new CHD map
-    if chd_map_list is not None:
-        chd_time_combined = psi_d_types.PsiMap(keep_chd, map_list[0].x, map_list[0].y, mu=keep_mu,
-                                               origin_image=None, no_data_val=map_list[0].no_data_val)
-    else:
-        chd_time_combined = None
-    # Generate new EUV map
-    # keep_data = use_data[row_index, col_index]
-    euv_time_combined = psi_d_types.PsiMap(keep_data, map_list[0].x, map_list[0].y, mu=keep_mu,
-                                           origin_image=None, no_data_val=map_list[0].no_data_val)
-
-else:
-    raise ValueError("'map_list' maps have different grids. This is not yet supported in " +
-                     "map_manip.combine_maps()")
-
-# return euv_time_combined, chd_time_combined
 
 
 import modules.Plotting as Plotting

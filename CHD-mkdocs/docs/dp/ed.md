@@ -6,3 +6,8 @@
 
 ###[CHD Map](../img/dp/time_wgt/CHD_Map_Timescale_Weighted.png)
 ![CHD Map](../img/dp/time_wgt/CHD_Map_Timescale_Weighted.png)
+
+## Code Outline
+This outline creates individual combined maps based on user defined 
+timescales (1 day, 1 week, 2 weeks, etc.), then combines the maps based
+on user defined weighting. 

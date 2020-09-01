@@ -1,6 +1,5 @@
 """
-outline to create combination EUV maps
-- this method doesn't automatically save individual image maps to database, bc storage
+outline to create combination EUV maps and equivalent quality maps
 1. Select images
 2. Apply pre-processing corrections
     a. Limb-Brightening
@@ -78,7 +77,7 @@ query_pd = db_funcs.query_euv_images(db_session=db_session, time_min=query_time_
 # 2.) generate a dataframe to record methods
 methods_list = db_funcs.generate_methdf(query_pd)
 
-#### STEP TWO: APPLY PRE-PROCESSING CORRECTIONS ####
+#### LOOP THROUGH CENTERS ####
 # 1.) get dates
 moving_avg_centers = chd_funcs.get_dates(time_min=query_time_min, time_max=query_time_max, map_freq=map_freq)
 
@@ -86,8 +85,8 @@ moving_avg_centers = chd_funcs.get_dates(time_min=query_time_min, time_max=query
 lbc_combo_query, iit_combo_query = chd_funcs.get_inst_combos(db_session, inst_list, time_min=query_time_min,
                                                              time_max=query_time_max)
 
-# 3.) loop through center dates
 for date_ind, center in enumerate(moving_avg_centers):
+    #### STEP TWO: APPLY PRE-PROCESSING CORRECTIONS ####
     date_pd, los_list, iit_list, use_indices, methods_list, ref_alpha, ref_x = chd_funcs.apply_ipp(db_session, center,
                                                                                                    query_pd,
                                                                                                    inst_list,
@@ -114,7 +113,7 @@ for date_ind, center in enumerate(moving_avg_centers):
                                                                     mu_cutoff=mu_cutoff)
 
         #### STEP SIX: CREATE A QUALITY MAP FOR CORRESPONDING CHD MAP ####
-        quality_map(db_session, map_data_dir, inst_list, query_pd, euv_combined, chd_combined, color_list=None)
+        quality_map(db_session, map_data_dir, inst_list, query_pd, euv_combined, chd_combined, color_list=color_list)
 
 
 
