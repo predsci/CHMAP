@@ -13,6 +13,10 @@ point.
 :-: | :-: 
 ![CHD Map](../img/dp/qual_map/CHD_Map_08162011.png) | ![Quality CHD Map](../img/dp/qual_map/CHD_Quality_Map_08162011.png) 
 
+[Full CR EUV Map](../img/dp/full_cr/CR_EUV_Map_052011.png) | [Quality CR EUV Map](../img/dp/full_cr/EUV_Quality_Map_052011.png)
+:-: | :-: 
+![Full CR EUV Map](../img/dp/full_cr/CR_EUV_Map_052011.png) | ![Quality CR EUV Map](../img/dp/full_cr/EUV_Quality_Map_052011.png)
+
 ## Code Outline
 ```python
 def quality_map(db_session, map_data_dir, inst_list, query_pd, euv_combined, chd_combined=None, color_list=None):
@@ -49,6 +53,3 @@ def quality_map(db_session, map_data_dir, inst_list, query_pd, euv_combined, chd
 * 3.) <code>Plotting.PlotQualityMap</code>
     * plot a quality map based off instrument and mu value of the final map
 
-[Full CR EUV Map](../img/dp/full_cr/CR_EUV_Map_052011.png) | [Quality CR EUV Map](../img/dp/full_cr/EUV_Quality_Map_052011.png)
-:-: | :-: 
-![Full CR EUV Map](../img/dp/full_cr/CR_EUV_Map_052011.png) | ![Quality CR EUV Map](../img/dp/full_cr/EUV_Quality_Map_052011.png)
