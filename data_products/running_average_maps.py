@@ -134,7 +134,7 @@ for time_ind, timescale in enumerate(timescales):
     image_info_timescale[time_ind] = image_info
     map_info_timescale[time_ind] = map_info
 
-#### STEP SEVEN: COMBINE TIMESCALE MAPS AND SAVE TO DATABASE ####
+#### STEP SIX: COMBINE TIMESCALE MAPS AND SAVE TO DATABASE ####
 
 
 

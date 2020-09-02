@@ -19,7 +19,6 @@ from data_products.DP_funs import quality_map
 # TIME RANGE FOR QUERYING
 query_time_min = datetime.datetime(2011, 5, 1, 0, 0, 0)
 query_time_max = datetime.datetime(2011, 6, 1, 0, 0, 0)
-map_freq = 2  # number of hours
 
 # INSTRUMENTS
 inst_list = ["AIA", "EUVI-A", "EUVI-B"]
