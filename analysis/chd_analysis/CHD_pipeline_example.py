@@ -21,8 +21,8 @@ import analysis.chd_analysis.CHD_pipeline_funcs as chd_funcs
 
 # -------- parameters --------- #
 # TIME RANGE FOR QUERYING
-query_time_min = datetime.datetime(2011, 8, 16, 22, 0, 0)
-query_time_max = datetime.datetime(2011, 8, 17, 2, 0, 0)
+query_time_min = datetime.datetime(2011, 8, 18, 22, 0, 0)
+query_time_max = datetime.datetime(2011, 8, 19, 2, 0, 0)
 map_freq = 2  # number of hours
 
 # INITIALIZE DATABASE CONNECTION
@@ -53,7 +53,7 @@ nc = 3
 iters = 1000
 
 # MINIMUM MERGE MAPPING PARAMETERS
-del_mu = 0.2  # optional between this method and mu_merge_cutoff method
+del_mu = None # optional between this method and mu_merge_cutoff method
 mu_cutoff = 0.0  # lower mu cutoff value
 mu_merge_cutoff = 0.4  # mu cutoff in overlap areas
 

@@ -131,20 +131,24 @@ def cr_map(euv_map, chd_map, euv_combined, chd_combined, image_info, map_info, m
     # combine maps with minimum intensity merge
     if del_mu is not None:
         euv_combined, chd_combined = combine_cr_maps(n_images, euv_maps, chd_maps, del_mu=del_mu, mu_cutoff=mu_cutoff)
-        combined_method = {'meth_name': ("Min-Int-Merge_CR1", "Min-Int-Merge_CR1"), 'meth_description':
-            ["Minimum intensity merge for CR Map: using del mu"] * 2,
+        combined_method = {'meth_name': ("Min-Int-CR-Merge-del_mu", "Min-Int-CR-Merge-del_mu"), 'meth_description':
+            ["Minimum intensity merge for Synoptic Map: using del mu"] * 2,
                            'var_name': ("mu_cutoff", "del_mu"), 'var_description': ("lower mu cutoff value",
                                                                                     "max acceptable mu range"),
                            'var_val': (mu_cutoff, del_mu)}
     else:
         euv_combined, chd_combined = combine_cr_maps(n_images, euv_maps, chd_maps, mu_merge_cutoff=mu_merge_cutoff,
                                                      mu_cutoff=mu_cutoff)
-        combined_method = {'meth_name': ("Min-Int-Merge_CR2", "Min-Int-Merge_CR2"), 'meth_description':
-            ["Minimum intensity merge for CR Map: based on Caplan et. al."] * 2,
+        combined_method = {'meth_name': ("Min-Int-CR-Merge-mu_merge", "Min-Int-CR-Merge-mu_merge"), 'meth_description':
+            ["Minimum intensity merge for Synoptic Map: based on Caplan et. al."] * 2,
                            'var_name': ("mu_cutoff", "mu_merge_cutoff"), 'var_description': ("lower mu cutoff value",
                                                                                              "mu cutoff value in areas of "
                                                                                              "overlap"),
                            'var_val': (mu_cutoff, mu_merge_cutoff)}
+
+    # chd combined method
+    chd_combined_method = {'meth_name': ("Prob-CHD-Merge", ), 'meth_description':["Probability Merge for CH Maps"]}
+
     # append image and map info records
     image_info.append(euv_map.image_info)
     map_info.append(euv_map.map_info)
@@ -153,18 +157,18 @@ def cr_map(euv_map, chd_map, euv_combined, chd_combined, image_info, map_info, m
     print("Image number", euv_map.image_info.image_id[0], "has been added to the combined CR map in", end - start,
           "seconds.")
 
-    return euv_combined, chd_combined, combined_method
+    return euv_combined, chd_combined, combined_method, chd_combined_method
 
 
 #### STEP SIX: PLOT COMBINED MAP AND SAVE TO DATABASE ####
 def save_maps(db_session, map_data_dir, euv_combined, chd_combined, image_info, map_info, methods_list,
-              combined_method):
+              combined_method, chd_combined_method):
     start = time.time()
     # generate a record of the method and variable values used for interpolation
     euv_combined.append_method_info(methods_list)
     euv_combined.append_method_info(pd.DataFrame(data=combined_method))
     chd_combined.append_method_info(methods_list)
-    chd_combined.append_method_info(pd.DataFrame(data=combined_method))
+    chd_combined.append_method_info(pd.DataFrame(data=chd_combined_method))
 
     # generate record of image and map info
     euv_combined.append_image_info(image_info)
@@ -181,8 +185,8 @@ def save_maps(db_session, map_data_dir, euv_combined, chd_combined, image_info, 
                      map_type='CHD')
 
     # save EUV and CHD maps to database
-    # euv_combined.write_to_file(map_data_dir, map_type='cr_euv', filename=None, db_session=db_session)
-    # chd_combined.write_to_file(map_data_dir, map_type='cr_chd', filename=None, db_session=db_session)
+    euv_combined.write_to_file(map_data_dir, map_type='synoptic_euv', filename=None, db_session=db_session)
+    chd_combined.write_to_file(map_data_dir, map_type='synoptic_chd', filename=None, db_session=db_session)
 
     end = time.time()
     print("Combined CR Maps have been plotted and saved to the database in", end - start, "seconds.")

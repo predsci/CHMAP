@@ -12,13 +12,13 @@ from settings.app import App
 import modules.DB_classes as db_class
 import modules.DB_funs as db_funcs
 import analysis.chd_analysis.CHD_pipeline_funcs as chd_funcs
-import analysis.chd_analysis.CR_mapping_funcs as cr_funcs
+import data_products.CR_mapping_funcs as cr_funcs
 import data_products.DP_funs as dp_funcs
 
 # -------- UPDATEABLE PARAMETERS --------- #
 # TIME RANGE FOR QUERYING
 query_time_min = datetime.datetime(2011, 5, 1, 0, 0, 0)
-query_time_max = datetime.datetime(2011, 6, 1, 0, 0, 0)
+query_time_max = datetime.datetime(2011, 5, 4, 0, 0, 0)
 map_freq = 2  # number of hours
 
 # INSTRUMENTS
@@ -97,7 +97,8 @@ for row in query_pd.iterrows():
     euv_map, chd_map = cr_funcs.create_map(iit_image, chd_image, methods_list, row, map_x=map_x, map_y=map_y, R0=R0)
 
     #### STEP FIVE: CREATE COMBINED MAPS ####
-    euv_combined, chd_combined, combined_method = dp_funcs.chd_mu_map(euv_map, chd_map, euv_combined,
+    euv_combined, chd_combined, euv_combined_method, chd_combined_method = dp_funcs.chd_mu_map(euv_map, chd_map,
+                                                                                               euv_combined,
                                                                       chd_combined, image_info,
                                                                       map_info,
                                                                       mu_cutoff=mu_cutoff,
@@ -105,7 +106,7 @@ for row in query_pd.iterrows():
 
 #### STEP SIX: PLOT COMBINED MAP AND SAVE TO DATABASE ####
 dp_funcs.save_mu_probability_maps(db_session, map_data_dir, euv_combined, chd_combined, image_info, map_info,
-                                  methods_list, combined_method)
+                                  methods_list, euv_combined_method, chd_combined_method)
 
 #### CREATE QUALITY MAPS
 dp_funcs.quality_map(db_session, map_data_dir, inst_list, query_pd, euv_combined, chd_combined=None,

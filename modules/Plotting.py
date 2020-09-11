@@ -5,7 +5,6 @@ Functions to plot EUV images and maps
 import matplotlib.pyplot as plt
 import matplotlib as mpl
 import numpy as np
-import matplotlib.cm as cm
 from matplotlib.lines import Line2D
 
 
@@ -112,9 +111,6 @@ def PlotMap(map_plot, nfig=None, title=None, map_type=None):
     plt.figure(nfig)
     plt.imshow(map_plot.data, extent=[x_range[0], x_range[1], map_plot.y.min(), map_plot.y.max()],
                origin="lower", cmap=im_cmap, aspect=90.0, norm=norm)
-    if map_type == "CHD":
-        normcm = mpl.colors.Normalize(vmin=0.01, vmax=1)
-        plt.colorbar(cm.ScalarMappable(norm=normcm, cmap=im_cmap))
     plt.xlabel("Carrington Longitude")
     plt.ylabel("Sine Latitude")
     plt.xticks(xticks)

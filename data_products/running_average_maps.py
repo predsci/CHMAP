@@ -11,12 +11,13 @@ from settings.app import App
 import modules.DB_classes as db_class
 import modules.DB_funs as db_funcs
 import analysis.chd_analysis.CHD_pipeline_funcs as chd_funcs
-import analysis.chd_analysis.CR_mapping_funcs as cr_funcs
+import data_products.CR_mapping_funcs as cr_funcs
+import data_products.DP_funs as dp_funcs
 
 # -------- UPDATEABLE PARAMETERS --------- #
 
 # TIMESCALES
-center_time = datetime.datetime(2011, 7, 1, 0, 0, 0)
+center_time = datetime.datetime(2011, 5, 16, 12, 0, 0)
 map_freq = 2  # number of hours between each map
 # list of timedelta timescales
 timescales = [datetime.timedelta(days=1), datetime.timedelta(weeks=1), datetime.timedelta(weeks=2), datetime.timedelta(weeks=4)]
@@ -104,8 +105,6 @@ for time_ind, timescale in enumerate(timescales):
     methods_list = db_funcs.generate_methdf(query_pd)
 
     #### LOOP THROUGH IMAGES ####
-    euv_combined = None
-    chd_combined = None
     image_info = []
     map_info = []
     for row in query_pd.iterrows():
@@ -124,63 +123,21 @@ for time_ind, timescale in enumerate(timescales):
         euv_map, chd_map = cr_funcs.create_map(iit_image, chd_image, methods_list, row, map_x=map_x, map_y=map_y, R0=R0)
 
         #### STEP FIVE: CREATE COMBINED MAPS ####
-        euv_combined, chd_combined, combined_method = cr_funcs.cr_map(euv_map, chd_map, euv_combined,
-                                                                      chd_combined, image_info, map_info,
-                                                                      mu_cutoff=mu_cutoff,
-                                                                      mu_merge_cutoff=mu_merge_cutoff)
-    # add maps and info to timescale lists
-    euv_timescale[time_ind] = euv_combined
-    chd_timescale[time_ind] = chd_combined
+        euv_timescale[time_ind], chd_timescale[time_ind], combined_method, chd_combined_method = cr_funcs.cr_map(euv_map, chd_map,
+                                                                                            euv_timescale[time_ind],
+                                                                                            chd_timescale[time_ind],
+                                                                                            image_info,
+                                                                                            map_info,
+                                                                                            mu_cutoff=mu_cutoff,
+                                                                                            mu_merge_cutoff=mu_merge_cutoff)
     image_info_timescale[time_ind] = image_info
     map_info_timescale[time_ind] = map_info
 
-#### STEP SIX: COMBINE TIMESCALE MAPS AND SAVE TO DATABASE ####
+#### STEP SIX: COMBINE TIMESCALE MAPS ####
+euv_combined, chd_combined, timescale_method = dp_funcs.create_timescale_maps(euv_timescale, chd_timescale,
+                                                                              timescale_weight, image_info_timescale,
+                                                                              map_info_timescale)
 
-
-
-import numpy as np
-import modules.datatypes as psi_d_types
-from settings.info import DTypes
-
-map_list = euv_timescale
-chd_map_list = chd_timescale
-timescale_weights = [0.1, 0.2, 0.3, 0.4]
-
-
-
-
-import modules.Plotting as Plotting
-
-Plotting.PlotMap(euv_time_combined, nfig="EUV Map Timescale Weighted",
-                 title="EUV Map Timescale Weighted\nTime Min: " + str(max_time_min) + "\nTime Max: " + str(
-                     max_time_max))
-Plotting.PlotMap(euv_time_combined, "CHD Map Timescale Weighted", title="CHD Map Timescale Weighted\nTime Min: " + str(max_time_min) + "\nTime Max: " + str(
-                     max_time_max))
-Plotting.PlotMap(chd_time_combined, nfig="CHD Map Timescale Weighted", title="CHD Map Timescale Weighted\nTime Min: " +
-                                                                             str(max_time_min) + "\nTime Max: " + str(
-    max_time_max), map_type='CHD')
-
-Plotting.PlotMap(chd_timescale[0], nfig="CR CHD Map",
-                 title="Minimum Intensity CR CHD Merge Map\nTime Min: " + str(max_time_min) + "\nTime Max: " + str(
-                     max_time_max), map_type='CHD')
-Plotting.PlotMap(chd_timescale[1], nfig="CR CHD Map1",
-                 title="Minimum Intensity CR CHD Merge Map\nTime Min: " + str(max_time_min) + "\nTime Max: " + str(
-                     max_time_max), map_type='CHD')
-
-Plotting.PlotMap(euv_timescale[0], nfig="EUV Map0",
-                 title="Minimum Intensity EUV Merge Map\nTime Min: " + str(max_time_min) + "\nTime Max: " + str(
-                     max_time_max) + "Timescale: 1 Day")
-Plotting.PlotMap(euv_timescale[1], nfig="EUV Map1",
-                 title="Minimum Intensity EUV Merge Map\nTime Min: " + str(max_time_min) + "\nTime Max: " + str(
-                     max_time_max)+ "Timescale: 5 Days")
-
-
-for ind, map in enumerate(euv_timescale):
-    Plotting.PlotMap(euv_timescale[ind], nfig="EUV Map "+str(ind),
-                     title="Minimum Intensity EUV Merge Map\nTime Min: " + str(max_time_min) + "\nTime Max: " + str(
-                         max_time_max))
-    Plotting.PlotMap(chd_timescale[ind], nfig="CR CHD Map "+str(ind),
-                     title="Minimum Intensity CR CHD Merge Map\nTime Min: " + str(max_time_min) + "\nTime Max: " + str(
-                         max_time_max), map_type='CHD')
-
-
+### STEP SEVEN: SAVE TO DATABASE ####
+dp_funcs.save_timescale_maps(db_session, map_data_dir, euv_combined, chd_combined, image_info_timescale, map_info_timescale,
+                        methods_list, combined_method, chd_combined_method, timescale_method)

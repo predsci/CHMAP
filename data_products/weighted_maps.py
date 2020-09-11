@@ -13,16 +13,21 @@ from settings.app import App
 import modules.DB_classes as db_class
 import modules.DB_funs as db_funcs
 import analysis.chd_analysis.CHD_pipeline_funcs as chd_funcs
-import analysis.chd_analysis.CR_mapping_funcs as cr_funcs
+import data_products.CR_mapping_funcs as cr_funcs
+import data_products.DP_funs as dp_funcs
 import seaborn as sns
+import numpy as np
+from modules.map_manip import combine_timewgt_maps
+import modules.datatypes as psi_d_types
+from settings.info import DTypes
 
 # TIME PARAMETERS
 # center date
-center_time = datetime.datetime(2011, 7, 1, 0, 0, 0)
+center_time = datetime.datetime(2011, 5, 16, 12, 0, 0)
 # map frequency, in hours
 map_freq = 2
 # timescale
-timescale = datetime.timedelta(days=7)
+timescale = datetime.timedelta(weeks=4, days=3)
 
 # INSTRUMENTS
 inst_list = ["AIA", "EUVI-A", "EUVI-B"]
@@ -43,6 +48,7 @@ iters = 1000
 del_mu = None  # optional between this method and mu_merge_cutoff method
 mu_cutoff = 0.0  # lower mu cutoff value
 mu_merge_cutoff = 0.4  # mu cutoff in overlap areas
+sigma = 0.15  # sigma value for time weighted gaussian distribution
 
 # MAP PARAMETERS
 x_range = [0, 2 * np.pi]
@@ -68,7 +74,7 @@ db_session = db_funcs.init_db_conn(db_name=use_db, chd_base=db_class.Base, sqlit
 
 
 ### --------- NOTHING TO UPDATE BELOW -------- ###
-# get instrument combos based on timescale
+# 1.) get instrument combos based on timescale
 query_time_min = center_time - (timescale / 2)
 query_time_max = center_time + (timescale / 2)
 lbc_combo_query, iit_combo_query = chd_funcs.get_inst_combos(db_session, inst_list, time_min=query_time_min,
@@ -82,21 +88,18 @@ query_pd = db_funcs.query_euv_images(db_session=db_session, time_min=query_time_
 methods_list = db_funcs.generate_methdf(query_pd)
 
 # 3.) generate normal distribution
-x = np.arange(0.5, 1.5, 0.001)
-norm_dist = norm.pdf(x, loc=1, scale=0.15)
-plt.plot(x, norm_dist)
+norm_dist = dp_funcs.gauss_time(query_pd, sigma)
 
 #### LOOP THROUGH IMAGES ####
 euv_combined = None
 chd_combined = None
 image_info = []
 map_info = []
+sum_wgt = 0
 for row in query_pd.iterrows():
     # determine correct weighting based off date
-    date_time = row.date_obs
+    date_time = row[1].date_obs
     weight = norm_dist[row[0]] # normal distribution at row index
-    if weight >= 1:
-        weight -= 1
     #### STEP TWO: APPLY PRE-PROCESSING CORRECTIONS ####
     los_image, iit_image, methods_list, use_indices = cr_funcs.apply_ipp(db_session, hdf_data_dir, inst_list, row,
                                                                          methods_list, lbc_combo_query,
@@ -112,27 +115,33 @@ for row in query_pd.iterrows():
     euv_map, chd_map = cr_funcs.create_map(iit_image, chd_image, methods_list, row, map_x=map_x, map_y=map_y, R0=R0)
 
     #### STEP FIVE: CREATE COMBINED MAPS ####
+    euv_combined, chd_combined, sum_wgt, combined_method = dp_funcs.time_wgt_map(euv_map, chd_map, euv_combined,
+                                                                                 chd_combined, image_info, map_info,
+                                                                                 weight, sum_wgt, sigma, mu_cutoff)
+
 
 #### STEP SIX: SAVE TO DATABASE ####
+dp_funcs.save_gauss_time_maps(db_session, map_data_dir, euv_combined, chd_combined, image_info, map_info, methods_list,
+                         combined_method)
 
-### TESTERS
-# UPPER TIME SERIES
-date_time = center_time
-sum = 0
-while query_time_max >= date_time >= query_time_min:
-    date_time += datetime.timedelta(hours=map_freq)
-
-# LOWER TIME SERIES
-date_time = center_time
-while query_time_max >= date_time >= query_time_min:
-    # determine correct image row
-    date_time -= datetime.timedelta(hours=map_freq)
-    row = query_pd[query_pd.date_obs == date_time]
-
-import numpy as np
-from scipy.stats import norm
-import matplotlib.pyplot as plt
-#x = np.linspace(norm.ppf(0.01), norm.ppf(0.99), 100)
-x = np.arange(0, 2, len(query_pd))
-norm_dist = norm.pdf(x, loc=1, scale=0.15)
-plt.plot(x, norm_dist)
+# ### TESTERS
+# # UPPER TIME SERIES
+# date_time = center_time
+# sum = 0
+# while query_time_max >= date_time >= query_time_min:
+#     date_time += datetime.timedelta(hours=map_freq)
+#
+# # LOWER TIME SERIES
+# date_time = center_time
+# while query_time_max >= date_time >= query_time_min:
+#     # determine correct image row
+#     date_time -= datetime.timedelta(hours=map_freq)
+#     row = query_pd[query_pd.date_obs == date_time]
+#
+# import numpy as np
+# from scipy.stats import norm
+# import matplotlib.pyplot as plt
+# #x = np.linspace(norm.ppf(0.01), norm.ppf(0.99), 100)
+# x = np.arange(0, 2, len(query_pd))
+# norm_dist = norm.pdf(x, loc=1, scale=0.15)
+# plt.plot(x, norm_dist)

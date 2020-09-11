@@ -404,7 +404,8 @@ def add_euv_map(db_session, psi_map, base_path=None, map_type=None):
     time_of_compute = psi_map.map_info.loc[0, 'time_of_compute'].to_pydatetime()
     fname = psi_map.map_info.loc[0, 'fname']
     # combo_id = psi_map.map_info.loc[0, 'combo_id'].__int__()
-    combo_id = psi_map.map_info.loc[len(psi_map.map_info) - 1, 'combo_id'].__int__()
+    valid_combo_ind = psi_map.map_info['combo_id'].index.get_loc(psi_map.map_info['combo_id'].last_valid_index())
+    combo_id = psi_map.map_info.loc[valid_combo_ind, 'combo_id'].__int__()
     meth_combo_id = psi_map.map_info.loc[0, 'meth_combo_id'].__int__()
 
     if fname is not None:
@@ -461,7 +462,7 @@ def add_euv_map(db_session, psi_map, base_path=None, map_type=None):
                 else:
                     inst = None
                 subdir, temp_fname = misc_helpers.construct_map_path_and_fname(base_path, psi_map.map_info.date_mean[
-                    len(psi_map.map_info) - 1], map_id, map_type, 'h5', inst=inst, mkdir=True)
+                    valid_combo_ind], map_id, map_type, 'h5', inst=inst, mkdir=True)
                 h5_filename = os.path.join(subdir, temp_fname)
                 rel_file_path = h5_filename.replace(base_path, "")
                 # record file path in map object
@@ -999,6 +1000,8 @@ def add_map_dbase_record(db_session, psi_map, base_path=None, map_type=None):
             if temp_var_ids is not None:
                 psi_map.method_info.loc[var_index, 'var_id'] = temp_var_ids
             # add method id back to psi_map.method_info
+            new_index = np.arange(0, len(psi_map.method_info))
+            psi_map.method_info = psi_map.method_info.reindex(new_index)
             for index2, row2 in psi_map.method_info.iterrows():
                 if row2.meth_name == row.meth_name:
                     psi_map.method_info.loc[index2, 'meth_id'] = temp_meth_id

@@ -295,15 +295,15 @@ def create_combined_maps(db_session, map_data_dir, map_list, chd_map_list, metho
             chd_maps.append(chd_map)
     if del_mu is not None:
         euv_combined, chd_combined = combine_maps(euv_maps, chd_maps, del_mu=del_mu, mu_cutoff=mu_cutoff)
-        combined_method = {'meth_name': ("Min-Int-Merge_1", "Min-Int-Merge_1"), 'meth_description':
-            ["Minimum intensity merge: using del mu"] * 2,
+        combined_method = {'meth_name': ("Min-Int-Merge-del_mu", "Min-Int-Merge-del_mu"), 'meth_description':
+            ["Minimum intensity merge for synchronic map: using del mu"] * 2,
                            'var_name': ("mu_cutoff", "del_mu"), 'var_description': ("lower mu cutoff value",
                                                                                     "max acceptable mu range"),
                            'var_val': (mu_cutoff, del_mu)}
     else:
         euv_combined, chd_combined = combine_maps(euv_maps, chd_maps, mu_merge_cutoff=mu_merge_cutoff, mu_cutoff=mu_cutoff)
-        combined_method = {'meth_name': ("Min-Int-Merge_2", "Min-Int-Merge_2"), 'meth_description':
-            ["Minimum intensity merge: based on Caplan et. al."] * 2,
+        combined_method = {'meth_name': ("Min-Int-Merge-mu_merge", "Min-Int-Merge-mu_merge"), 'meth_description':
+            ["Minimum intensity merge for synchronic map: based on Caplan et. al."] * 2,
                            'var_name': ("mu_cutoff", "mu_merge_cutoff"), 'var_description': ("lower mu cutoff value",
                                                                                          "mu cutoff value in areas of "
                                                                                          "overlap"),
@@ -320,20 +320,15 @@ def create_combined_maps(db_session, map_data_dir, map_list, chd_map_list, metho
     chd_combined.append_map_info(map_info)
 
     # plot maps
-    Plotting.PlotMap(euv_combined, nfig="EUV Combined map for: " + str(euv_combined.image_info.date_obs[0]),
+    Plotting.PlotMap(euv_combined, nfig="EUV Combined Map for: " + str(euv_combined.image_info.date_obs[0]),
                      title="Minimum Intensity Merge Map\nDate: " + str(euv_combined.image_info.date_obs[0]))
-   # Plotting.PlotMap(euv_combined, nfig="EUV/CHD Combined map for: " + str(euv_combined.image_info.date_obs[0]),
-    #                 title="Minimum Intensity EUV/CHD Merge Map\nDate: " + str(euv_combined.image_info.date_obs[0]))
-    Plotting.PlotMap(chd_combined, nfig="EUV/CHD Combined map for: " + str(chd_combined.image_info.date_obs[0]),
-                     title="Minimum Intensity EUV/CHD Merge Map\nDate: " + str(chd_combined.image_info.date_obs[0]),
+    Plotting.PlotMap(chd_combined, nfig="CHD Combined Map for: " + str(chd_combined.image_info.date_obs[0]),
+                     title="Minimum Intensity CHD Merge Map\nDate: " + str(chd_combined.image_info.date_obs[0]),
                      map_type='CHD')
 
     # save EUV and CHD maps to database
-    # TODO: figure out this filename issue, used to be None
-    #euv_combined.write_to_file(map_data_dir, map_type='synchronic_euv', filename=None,
-     #                          db_session=db_session)
-    #chd_combined.write_to_file(map_data_dir, map_type='synchronic_chd', filename=None,
-      #                         db_session=db_session)
+    euv_combined.write_to_file(map_data_dir, map_type='synchronic_euv', filename=None, db_session=db_session)
+    chd_combined.write_to_file(map_data_dir, map_type='synchronic_chd', filename=None, db_session=db_session)
 
     # end time
     end = time.time()

@@ -12,13 +12,13 @@ from settings.app import App
 import modules.DB_classes as db_class
 import modules.DB_funs as db_funcs
 import analysis.chd_analysis.CHD_pipeline_funcs as chd_funcs
-import analysis.chd_analysis.CR_mapping_funcs as cr_funcs
+import data_products.CR_mapping_funcs as cr_funcs
 from data_products.DP_funs import quality_map
 
 # -------- UPDATEABLE PARAMETERS --------- #
 # TIME RANGE FOR QUERYING
 query_time_min = datetime.datetime(2011, 5, 1, 0, 0, 0)
-query_time_max = datetime.datetime(2011, 6, 1, 0, 0, 0)
+query_time_max = datetime.datetime(2011, 5, 4, 0, 0, 0)
 
 # INSTRUMENTS
 inst_list = ["AIA", "EUVI-A", "EUVI-B"]
@@ -96,15 +96,15 @@ for row in query_pd.iterrows():
     euv_map, chd_map = cr_funcs.create_map(iit_image, chd_image, methods_list, row, map_x=map_x, map_y=map_y, R0=R0)
 
     #### STEP FIVE: CREATE COMBINED MAPS ####
-    euv_combined, chd_combined, combined_method = cr_funcs.cr_map(euv_map, chd_map, euv_combined,
+    euv_combined, chd_combined, combined_method, chd_combined_method = cr_funcs.cr_map(euv_map, chd_map, euv_combined,
                                                                   chd_combined, image_info,
                                                                   map_info,
                                                                   mu_cutoff=mu_cutoff,
                                                                   mu_merge_cutoff=mu_merge_cutoff)
 
 #### STEP SIX: PLOT COMBINED MAP AND SAVE TO DATABASE ####
-cr_funcs.save_maps(db_session, map_data_dir, euv_combined, chd_combined, image_info, map_info,
-                   methods_list, combined_method)
+cr_funcs.save_maps(db_session, map_data_dir, euv_combined, chd_combined, image_info, map_info, methods_list,
+              combined_method, chd_combined_method)
 
 
 #### CREATE QUALITY MAPS
