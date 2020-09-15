@@ -15,7 +15,7 @@
         <meta name="author" content="Tamar Ervin">
       
       <link rel="shortcut icon" href="../../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.1.2, mkdocs-material-5.3.3">
+      <meta name="generator" content="mkdocs-1.1.2, mkdocs-material-5.4.0">
     
     
       
@@ -425,8 +425,8 @@
 
 
   <li class="md-nav__item">
-    <a href="../cr/" title="CR Maps" class="md-nav__link">
-      CR Maps
+    <a href="../cr/" title="Synoptic Maps" class="md-nav__link">
+      Synoptic Maps
     </a>
   </li>
 
@@ -469,9 +469,69 @@
       
     
     
+      <label class="md-nav__link md-nav__link--active" for="__toc">
+        Varying Threshold Maps
+        <span class="md-nav__icon md-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 9h14V7H3v2m0 4h14v-2H3v2m0 4h14v-2H3v2m16 0h2v-2h-2v2m0-10v2h2V7h-2m0 6h2v-2h-2v2z"/></svg>
+        </span>
+      </label>
+    
     <a href="./" title="Varying Threshold Maps" class="md-nav__link md-nav__link--active">
       Varying Threshold Maps
     </a>
+    
+      
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"/></svg>
+      </span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#example-maps" class="md-nav__link">
+    Example Maps
+  </a>
+  
+    <nav class="md-nav" aria-label="Example Maps">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#euv-map" class="md-nav__link">
+    EUV Map
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#chd-map" class="md-nav__link">
+    CHD Map
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#code-outline" class="md-nav__link">
+    Code Outline
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
     
   </li>
 
@@ -576,6 +636,50 @@
     
   
   
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"/></svg>
+      </span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#example-maps" class="md-nav__link">
+    Example Maps
+  </a>
+  
+    <nav class="md-nav" aria-label="Example Maps">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#euv-map" class="md-nav__link">
+    EUV Map
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#chd-map" class="md-nav__link">
+    CHD Map
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#code-outline" class="md-nav__link">
+    Code Outline
+  </a>
+  
+</li>
+      
+    </ul>
+  
 </nav>
                   </div>
                 </div>
@@ -595,6 +699,64 @@
                 
                 
                 <h1 id="gaussian-varying-threshold-parameters">Gaussian Varying Threshold Parameters</h1>
+<p>These maps are created using varying CHD Threshold parameters. The threshold
+is varied based off a Gaussian distribution with a user inputted value of sigma (sigma=0.15) and thresholds for each image are randomly
+selected. The only different data product produced here is the Coronal Hole Detection map, the
+EUV map is the same as the <a href="../cr/#cr-euv-map">synoptic EUV maps</a> created.</p>
+<p>In these Gaussian weighted CHD Maps, coronal hole detections are weighted to produce
+a probability type map just as in the <a href="../cr/#cr-chd-map">synoptic CHD Maps</a>.</p>
+<h2 id="example-maps">Example Maps</h2>
+<h3 id="euv-map"><a href="../../img/dp/var_thresh/EUV_Map_052011.png">EUV Map</a></h3>
+<p><img alt="EUV Map" src="../../img/dp/var_thresh/EUV_Map_052011.png" /></p>
+<h3 id="chd-map"><a href="../../img/dp/var_thresh/Varying_Threshold_CHD_Map_052011.png">CHD Map</a></h3>
+<p><img alt="CHD Map" src="../../img/dp/var_thresh/Varying_Threshold_CHD_Map_052011.png" />  </p>
+<h2 id="code-outline">Code Outline</h2>
+<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre>1
+2
+3
+4
+5
+6
+7</pre></div></td><td class="code"><div class="codehilite"><pre><span></span><code><span class="n">query_pd</span> <span class="o">=</span> <span class="n">db_funcs</span><span class="o">.</span><span class="n">query_euv_images</span><span class="p">(</span><span class="n">db_session</span><span class="o">=</span><span class="n">db_session</span><span class="p">,</span> <span class="n">time_min</span><span class="o">=</span><span class="n">query_time_min</span><span class="p">,</span> <span class="n">time_max</span><span class="o">=</span><span class="n">query_time_max</span><span class="p">)</span>
+<span class="n">lbc_combo_query</span><span class="p">,</span> <span class="n">iit_combo_query</span> <span class="o">=</span> <span class="n">chd_funcs</span><span class="o">.</span><span class="n">get_inst_combos</span><span class="p">(</span><span class="n">db_session</span><span class="p">,</span> <span class="n">inst_list</span><span class="p">,</span> <span class="n">time_min</span><span class="o">=</span><span class="n">query_time_min</span><span class="p">,</span> <span class="n">time_max</span><span class="o">=</span><span class="n">query_time_max</span><span class="p">)</span>
+<span class="n">los_image</span><span class="p">,</span> <span class="n">iit_image</span><span class="p">,</span> <span class="n">methods_list</span><span class="p">,</span> <span class="n">use_indices</span> <span class="o">=</span> <span class="n">cr_funcs</span><span class="o">.</span><span class="n">apply_ipp</span><span class="p">(</span><span class="n">db_session</span><span class="p">,</span> <span class="n">hdf_data_dir</span><span class="p">,</span> <span class="n">inst_list</span><span class="p">,</span> <span class="n">row</span><span class="p">,</span> <span class="n">methods_list</span><span class="p">,</span> <span class="n">lbc_combo_query</span><span class="p">,</span> <span class="n">iit_combo_query</span><span class="p">,</span> <span class="n">n_intensity_bins</span><span class="o">=</span><span class="n">n_intensity_bins</span><span class="p">,</span> <span class="n">R0</span><span class="o">=</span><span class="n">R0</span><span class="p">)</span>
+<span class="n">chd_image</span> <span class="o">=</span> <span class="n">dp_funcs</span><span class="o">.</span><span class="n">gauss_chd</span><span class="p">(</span><span class="n">db_session</span><span class="p">,</span> <span class="n">inst_list</span><span class="p">,</span> <span class="n">los_image</span><span class="p">,</span> <span class="n">iit_image</span><span class="p">,</span> <span class="n">use_indices</span><span class="p">,</span> <span class="n">iit_combo_query</span><span class="p">,</span> <span class="n">thresh1</span><span class="o">=</span><span class="n">thresh1</span><span class="p">,</span> <span class="n">thresh2</span><span class="o">=</span><span class="n">thresh2</span><span class="p">,</span> <span class="n">nc</span><span class="o">=</span><span class="n">nc</span><span class="p">,</span> <span class="n">iters</span><span class="o">=</span><span class="n">iters</span><span class="p">,</span> <span class="n">sigma</span><span class="o">=</span><span class="n">sigma</span><span class="p">)</span>
+<span class="n">euv_map</span><span class="p">,</span> <span class="n">chd_map</span> <span class="o">=</span> <span class="n">cr_funcs</span><span class="o">.</span><span class="n">create_map</span><span class="p">(</span><span class="n">iit_image</span><span class="p">,</span> <span class="n">chd_image</span><span class="p">,</span> <span class="n">methods_list</span><span class="p">,</span> <span class="n">row</span><span class="p">,</span> <span class="n">map_x</span><span class="o">=</span><span class="n">map_x</span><span class="p">,</span> <span class="n">map_y</span><span class="o">=</span><span class="n">map_y</span><span class="p">,</span> <span class="n">R0</span><span class="o">=</span><span class="n">R0</span><span class="p">)</span>
+<span class="n">euv_combined</span><span class="p">,</span> <span class="n">chd_combined</span><span class="p">,</span> <span class="n">euv_combined_method</span><span class="p">,</span> <span class="n">chd_combined_method</span> <span class="o">=</span> <span class="n">cr_funcs</span><span class="o">.</span><span class="n">cr_map</span><span class="p">(</span><span class="n">euv_map</span><span class="p">,</span> <span class="n">chd_map</span><span class="p">,</span> <span class="n">euv_combined</span><span class="p">,</span> <span class="n">chd_combined</span><span class="p">,</span> <span class="n">image_info</span><span class="p">,</span> <span class="n">map_info</span><span class="p">,</span> <span class="n">mu_cutoff</span><span class="o">=</span><span class="n">mu_cutoff</span><span class="p">,</span> <span class="n">mu_merge_cutoff</span><span class="o">=</span><span class="n">mu_merge_cutoff</span><span class="p">)</span>
+<span class="n">dp_funcs</span><span class="o">.</span><span class="n">save_threshold_maps</span><span class="p">(</span><span class="n">db_session</span><span class="p">,</span> <span class="n">map_data_dir</span><span class="p">,</span> <span class="n">euv_combined</span><span class="p">,</span> <span class="n">chd_combined</span><span class="p">,</span> <span class="n">image_info</span><span class="p">,</span> <span class="n">map_info</span><span class="p">,</span> <span class="n">methods_list</span><span class="p">,</span> <span class="n">euv_combined_method</span><span class="p">,</span> <span class="n">chd_combined_method</span><span class="p">,</span> <span class="n">sigma</span><span class="p">)</span>
+</code></pre></div>
+</td></tr></table>
+
+<ul>
+<li>1.) <code>db_funcs.query_euv_images</code><ul>
+<li>query the database for images based off the time range and center date</li>
+</ul>
+</li>
+<li>2.) <code>chd_funcs.get_inst_combos</code><ul>
+<li>query the appropriate combo ids for each instrument based off the maximum time range the user inputted</li>
+</ul>
+</li>
+<li>3.) <code>cr_funcs.apply_ipp</code><ul>
+<li>apply image pre-processing corrections</li>
+</ul>
+</li>
+<li>4.) <code>dp_funcs.gauss_chd</code><ul>
+<li>apply Coronal Hole Detection algorithm based on gaussian weighted threshold parameters</li>
+</ul>
+</li>
+<li>5.) <code>cr_funcs.create_map</code><ul>
+<li>convert the image and detection to a map</li>
+</ul>
+</li>
+<li>6.) <code>cr_funcs.cr_map</code><ul>
+<li>add image to synoptic map </li>
+</ul>
+</li>
+<li>7.) <code>dp_funcs.save_threshold_maps</code><ul>
+<li>plot and save varying threshold map to database with included methods</li>
+</ul>
+</li>
+</ul>
                 
               
               
@@ -662,14 +824,14 @@
     </div>
     
       <script src="../../assets/javascripts/vendor.d710d30a.min.js"></script>
-      <script src="../../assets/javascripts/bundle.4a5ba8d6.min.js"></script><script id="__lang" type="application/json">{"clipboard.copy": "Copy to clipboard", "clipboard.copied": "Copied to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.result.placeholder": "Type to start searching", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents"}</script>
+      <script src="../../assets/javascripts/bundle.b39636ac.min.js"></script><script id="__lang" type="application/json">{"clipboard.copy": "Copy to clipboard", "clipboard.copied": "Copied to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.result.placeholder": "Type to start searching", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents"}</script>
       
       <script>
         app = initialize({
           base: "../..",
           features: [],
           search: Object.assign({
-            worker: "../../assets/javascripts/worker/search.9b3611bd.min.js"
+            worker: "../../assets/javascripts/worker/search.a68abb33.min.js"
           }, typeof search !== "undefined" && search)
         })
       </script>

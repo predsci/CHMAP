@@ -15,7 +15,7 @@
         <meta name="author" content="Tamar Ervin">
       
       <link rel="shortcut icon" href="../../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.1.2, mkdocs-material-5.3.3">
+      <meta name="generator" content="mkdocs-1.1.2, mkdocs-material-5.4.0">
     
     
       
@@ -425,8 +425,8 @@
 
 
   <li class="md-nav__item">
-    <a href="../cr/" title="CR Maps" class="md-nav__link">
-      CR Maps
+    <a href="../cr/" title="Synoptic Maps" class="md-nav__link">
+      Synoptic Maps
     </a>
   </li>
 
@@ -484,23 +484,37 @@
     <ul class="md-nav__list" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#example-maps" class="md-nav__link">
-    Example Maps
+  <a href="#running-average-maps" class="md-nav__link">
+    Running Average Maps
   </a>
   
-    <nav class="md-nav" aria-label="Example Maps">
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#gaussian-time-varying-maps" class="md-nav__link">
+    Gaussian Time Varying Maps
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#code-outline" class="md-nav__link">
+    Code Outline
+  </a>
+  
+    <nav class="md-nav" aria-label="Code Outline">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#euv-map" class="md-nav__link">
-    EUV Map
+  <a href="#running-average-maps_1" class="md-nav__link">
+    Running Average Maps
   </a>
   
 </li>
         
           <li class="md-nav__item">
-  <a href="#chd-map" class="md-nav__link">
-    CHD Map
+  <a href="#gaussian-time-varying-maps_1" class="md-nav__link">
+    Gaussian Time Varying Maps
   </a>
   
 </li>
@@ -638,23 +652,37 @@
     <ul class="md-nav__list" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#example-maps" class="md-nav__link">
-    Example Maps
+  <a href="#running-average-maps" class="md-nav__link">
+    Running Average Maps
   </a>
   
-    <nav class="md-nav" aria-label="Example Maps">
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#gaussian-time-varying-maps" class="md-nav__link">
+    Gaussian Time Varying Maps
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#code-outline" class="md-nav__link">
+    Code Outline
+  </a>
+  
+    <nav class="md-nav" aria-label="Code Outline">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#euv-map" class="md-nav__link">
-    EUV Map
+  <a href="#running-average-maps_1" class="md-nav__link">
+    Running Average Maps
   </a>
   
 </li>
         
           <li class="md-nav__item">
-  <a href="#chd-map" class="md-nav__link">
-    CHD Map
+  <a href="#gaussian-time-varying-maps_1" class="md-nav__link">
+    Gaussian Time Varying Maps
   </a>
   
 </li>
@@ -685,11 +713,177 @@
                 
                 
                 <h1 id="time-varying-ensemble-detection">Time-Varying Ensemble Detection</h1>
-<h2 id="example-maps">Example Maps</h2>
-<h3 id="euv-map"><a href="../../img/dp/time_wgt/EUV_Map_Timescale_Weighted.png">EUV Map</a></h3>
-<p><img alt="EUV Map" src="../../img/dp/time_wgt/EUV_Map_Timescale_Weighted.png" /></p>
-<h3 id="chd-map"><a href="../../img/dp/time_wgt/CHD_Map_Timescale_Weighted.png">CHD Map</a></h3>
-<p><img alt="CHD Map" src="../../img/dp/time_wgt/CHD_Map_Timescale_Weighted.png" /></p>
+<p>There are currently two methods of creating time-varying maps. </p>
+<p>The first creates maps of varying timescale based on user entered intervals around a 
+specific user inputted center date. These <a href="#running-average-maps">maps</a> are then combined with a weighted
+average - either user inputted, or evenly weighted.</p>
+<p>The second method uses a Gaussian distribution and a user inputted center date. 
+The closer an image is to the center date, the more weight it has. Images are added
+one at a time to create the resultant <a href="#gaussian-time-varying-maps">maps</a>.</p>
+<h2 id="running-average-maps">Running Average Maps</h2>
+<table>
+<thead>
+<tr>
+<th align="center"><a href="../../img/dp/time_wgt/EUV_Map_Timescale_Weighted_052011.png">EUV Map</a></th>
+<th align="center"><a href="../../img/dp/time_wgt/CHD_Map_Timescale_Weighted_052011.png">CHD Map</a></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="center"><img alt="EUV Map" src="../../img/dp/time_wgt/EUV_Map_Timescale_Weighted_052011.png" /></td>
+<td align="center"><img alt="CHD Map" src="../../img/dp/time_wgt/CHD_Map_Timescale_Weighted_052011.png" /></td>
+</tr>
+</tbody>
+</table>
+<h2 id="gaussian-time-varying-maps">Gaussian Time Varying Maps</h2>
+<table>
+<thead>
+<tr>
+<th align="center"><a href="../../img/dp/time_wgt/EUV_Gauss_Time_052011.png">EUV Map</a></th>
+<th align="center"><a href="../../img/dp/time_wgt/CHD_Gauss_Time_052011.png">CHD Map</a></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="center"><img alt="EUV Map" src="../../img/dp/time_wgt/EUV_Gauss_Time_052011.png" /></td>
+<td align="center"><img alt="CHD Map" src="../../img/dp/time_wgt/CHD_Gauss_Time_052011.png" /></td>
+</tr>
+</tbody>
+</table>
+<h2 id="code-outline">Code Outline</h2>
+<h3 id="running-average-maps_1">Running Average Maps</h3>
+<p>This outline creates individual combined maps based on user defined 
+timescales (1 day, 1 week, 2 weeks, etc.), then combines the maps based
+on user defined weighting. </p>
+<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
+ 2
+ 3
+ 4
+ 5
+ 6
+ 7
+ 8
+ 9
+10
+11
+12
+13
+14
+15</pre></div></td><td class="code"><div class="codehilite"><pre><span></span><code><span class="k">if</span> <span class="n">timescale_weight</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="n">timescale_weight</span> <span class="o">=</span> <span class="p">[</span><span class="mf">1.0</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="n">timescales</span><span class="p">)]</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">timescales</span><span class="p">)</span>
+<span class="n">weight_sum</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">timescale_weight</span><span class="p">)</span>
+<span class="k">if</span> <span class="n">weight_sum</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;The timescale weights do not sum to 1. Please reenter weights or change to None for even weighting of maps.&quot;</span><span class="p">)</span>
+<span class="n">lbc_combo_query</span><span class="p">,</span> <span class="n">iit_combo_query</span> <span class="o">=</span> <span class="n">chd_funcs</span><span class="o">.</span><span class="n">get_inst_combos</span><span class="p">(</span><span class="n">db_session</span><span class="p">,</span> <span class="n">inst_list</span><span class="p">,</span> <span class="n">time_min</span><span class="o">=</span><span class="n">max_time_min</span><span class="p">,</span> <span class="n">time_max</span><span class="o">=</span><span class="n">max_time_max</span><span class="p">)</span>
+<span class="n">query_pd</span> <span class="o">=</span> <span class="n">db_funcs</span><span class="o">.</span><span class="n">query_euv_images</span><span class="p">(</span><span class="n">db_session</span><span class="o">=</span><span class="n">db_session</span><span class="p">,</span> <span class="n">time_min</span><span class="o">=</span><span class="n">query_time_min</span><span class="p">,</span> <span class="n">time_max</span><span class="o">=</span><span class="n">query_time_max</span><span class="p">)</span>
+<span class="n">los_image</span><span class="p">,</span> <span class="n">iit_image</span><span class="p">,</span> <span class="n">methods_list</span><span class="p">,</span> <span class="n">use_indices</span> <span class="o">=</span> <span class="n">cr_funcs</span><span class="o">.</span><span class="n">apply_ipp</span><span class="p">(</span><span class="n">db_session</span><span class="p">,</span> <span class="n">hdf_data_dir</span><span class="p">,</span> <span class="n">inst_list</span><span class="p">,</span> <span class="n">row</span><span class="p">,</span> <span class="n">methods_list</span><span class="p">,</span> <span class="n">lbc_combo_query</span><span class="p">,</span>
+                                                                     <span class="n">iit_combo_query</span><span class="p">,</span> <span class="n">n_intensity_bins</span><span class="o">=</span><span class="n">n_intensity_bins</span><span class="p">,</span> <span class="n">R0</span><span class="o">=</span><span class="n">R0</span><span class="p">)</span>
+<span class="n">chd_image</span> <span class="o">=</span> <span class="n">cr_funcs</span><span class="o">.</span><span class="n">chd</span><span class="p">(</span><span class="n">db_session</span><span class="p">,</span> <span class="n">inst_list</span><span class="p">,</span> <span class="n">los_image</span><span class="p">,</span> <span class="n">iit_image</span><span class="p">,</span> <span class="n">use_indices</span><span class="p">,</span> <span class="n">iit_combo_query</span><span class="p">,</span> <span class="n">thresh1</span><span class="o">=</span><span class="n">thresh1</span><span class="p">,</span> <span class="n">thresh2</span><span class="o">=</span><span class="n">thresh2</span><span class="p">,</span> <span class="n">nc</span><span class="o">=</span><span class="n">nc</span><span class="p">,</span> <span class="n">iters</span><span class="o">=</span><span class="n">iters</span><span class="p">)</span>
+<span class="n">euv_map</span><span class="p">,</span> <span class="n">chd_map</span> <span class="o">=</span> <span class="n">cr_funcs</span><span class="o">.</span><span class="n">create_map</span><span class="p">(</span><span class="n">iit_image</span><span class="p">,</span> <span class="n">chd_image</span><span class="p">,</span> <span class="n">methods_list</span><span class="p">,</span> <span class="n">row</span><span class="p">,</span> <span class="n">map_x</span><span class="o">=</span><span class="n">map_x</span><span class="p">,</span> <span class="n">map_y</span><span class="o">=</span><span class="n">map_y</span><span class="p">,</span> <span class="n">R0</span><span class="o">=</span><span class="n">R0</span><span class="p">)</span>
+<span class="n">euv_timescale</span><span class="p">[</span><span class="n">time_ind</span><span class="p">],</span> <span class="n">chd_timescale</span><span class="p">[</span><span class="n">time_ind</span><span class="p">],</span> <span class="n">combined_method</span><span class="p">,</span> <span class="n">chd_combined_method</span> <span class="o">=</span> <span class="n">cr_funcs</span><span class="o">.</span><span class="n">cr_map</span><span class="p">(</span><span class="n">euv_map</span><span class="p">,</span> <span class="n">chd_map</span><span class="p">,</span> <span class="n">euv_timescale</span><span class="p">[</span><span class="n">time_ind</span><span class="p">],</span>
+                                 <span class="n">chd_timescale</span><span class="p">[</span><span class="n">time_ind</span><span class="p">],</span> <span class="n">image_info</span><span class="p">,</span> <span class="n">map_info</span><span class="p">,</span> <span class="n">mu_cutoff</span><span class="o">=</span><span class="n">mu_cutoff</span><span class="p">,</span> <span class="n">mu_merge_cutoff</span><span class="o">=</span><span class="n">mu_merge_cutoff</span><span class="p">)</span>
+<span class="n">euv_combined</span><span class="p">,</span> <span class="n">chd_combined</span><span class="p">,</span> <span class="n">timescale_method</span> <span class="o">=</span> <span class="n">dp_funcs</span><span class="o">.</span><span class="n">create_timescale_maps</span><span class="p">(</span><span class="n">euv_timescale</span><span class="p">,</span> <span class="n">chd_timescale</span><span class="p">,</span> <span class="n">timescale_weight</span><span class="p">,</span> <span class="n">image_info_timescale</span><span class="p">,</span> <span class="n">map_info_timescale</span><span class="p">)</span>
+<span class="n">dp_funcs</span><span class="o">.</span><span class="n">save_timescale_maps</span><span class="p">(</span><span class="n">db_session</span><span class="p">,</span> <span class="n">map_data_dir</span><span class="p">,</span> <span class="n">euv_combined</span><span class="p">,</span> <span class="n">chd_combined</span><span class="p">,</span> <span class="n">image_info_timescale</span><span class="p">,</span> <span class="n">map_info_timescale</span><span class="p">,</span> <span class="n">methods_list</span><span class="p">,</span> <span class="n">combined_method</span><span class="p">,</span> <span class="n">chd_combined_method</span><span class="p">,</span> <span class="n">timescale_method</span><span class="p">)</span>
+</code></pre></div>
+</td></tr></table>
+
+<ul>
+<li>1.) <code>timescale_weight = [1.0 / len(timescales)] * len(timescales)</code>  <ul>
+<li>if the timescale weights are undefined, create an array of even weights  </li>
+</ul>
+</li>
+<li>2.) <code>raise ValueError</code>  <ul>
+<li>check that the weights in the array add up to 1  </li>
+</ul>
+</li>
+<li>3.) <code>chd_funcs.get_inst_combos</code><ul>
+<li>query the appropriate combo ids for each instrument based off the maximum time range the user inputted</li>
+</ul>
+</li>
+<li>4.) <code> db_funcs.query_euv_images</code>  <ul>
+<li>query the database for images based off the time range and center date</li>
+</ul>
+</li>
+<li>5.) <code>cr_funcs.apply_ipp</code><ul>
+<li>apply image pre-processing corrections</li>
+</ul>
+</li>
+<li>6.) <code>cr_funcs.chd</code><ul>
+<li>apply the Coronal Hole Detection algorithm to the image</li>
+</ul>
+</li>
+<li>7.) <code>cr_funcs.create_map</code>  <ul>
+<li>convert the image and detection to a map</li>
+</ul>
+</li>
+<li>8.) <code>cr_funcs.cr_map</code><ul>
+<li>create combined maps using the method for synoptic mapping</li>
+</ul>
+</li>
+<li>9.) <code>dp_funcs.create_timescale_maps</code><ul>
+<li>combine the timescale maps to create a running average map, based off the <a href="https://github.com/predsci/CHD/blob/master/modules/map_manip.py">timescale combination function</a></li>
+</ul>
+</li>
+<li>10.) <code>dp_funcs.save_timescale_maps</code><ul>
+<li>plot and save timescale maps to the database, including the methods combination</li>
+</ul>
+</li>
+</ul>
+<h3 id="gaussian-time-varying-maps_1">Gaussian Time Varying Maps</h3>
+<p>This method first creates a gaussian distribution and then weights images 
+based off their closeness to a center date.  </p>
+<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre>1
+2
+3
+4
+5
+6
+7
+8</pre></div></td><td class="code"><div class="codehilite"><pre><span></span><code><span class="n">lbc_combo_query</span><span class="p">,</span> <span class="n">iit_combo_query</span> <span class="o">=</span> <span class="n">chd_funcs</span><span class="o">.</span><span class="n">get_inst_combos</span><span class="p">(</span><span class="n">db_session</span><span class="p">,</span> <span class="n">inst_list</span><span class="p">,</span> <span class="n">time_min</span><span class="o">=</span><span class="n">query_time_min</span><span class="p">,</span> <span class="n">time_max</span><span class="o">=</span><span class="n">query_time_max</span><span class="p">)</span>
+<span class="n">query_pd</span> <span class="o">=</span> <span class="n">db_funcs</span><span class="o">.</span><span class="n">query_euv_images</span><span class="p">(</span><span class="n">db_session</span><span class="o">=</span><span class="n">db_session</span><span class="p">,</span> <span class="n">time_min</span><span class="o">=</span><span class="n">query_time_min</span><span class="p">,</span> <span class="n">time_max</span><span class="o">=</span><span class="n">query_time_max</span><span class="p">)</span>
+<span class="n">norm_dist</span> <span class="o">=</span> <span class="n">dp_funcs</span><span class="o">.</span><span class="n">gauss_time</span><span class="p">(</span><span class="n">query_pd</span><span class="p">,</span> <span class="n">sigma</span><span class="p">)</span>
+<span class="n">los_image</span><span class="p">,</span> <span class="n">iit_image</span><span class="p">,</span> <span class="n">methods_list</span><span class="p">,</span> <span class="n">use_indices</span> <span class="o">=</span> <span class="n">cr_funcs</span><span class="o">.</span><span class="n">apply_ipp</span><span class="p">(</span><span class="n">db_session</span><span class="p">,</span> <span class="n">hdf_data_dir</span><span class="p">,</span> <span class="n">inst_list</span><span class="p">,</span> <span class="n">row</span><span class="p">,</span> <span class="n">methods_list</span><span class="p">,</span> <span class="n">lbc_combo_query</span><span class="p">,</span> <span class="n">iit_combo_query</span><span class="p">,</span> <span class="n">n_intensity_bins</span><span class="o">=</span><span class="n">n_intensity_bins</span><span class="p">,</span> <span class="n">R0</span><span class="o">=</span><span class="n">R0</span><span class="p">)</span>
+<span class="n">chd_image</span> <span class="o">=</span> <span class="n">cr_funcs</span><span class="o">.</span><span class="n">chd</span><span class="p">(</span><span class="n">db_session</span><span class="p">,</span> <span class="n">inst_list</span><span class="p">,</span> <span class="n">los_image</span><span class="p">,</span> <span class="n">iit_image</span><span class="p">,</span> <span class="n">use_indices</span><span class="p">,</span> <span class="n">iit_combo_query</span><span class="p">,</span> <span class="n">thresh1</span><span class="o">=</span><span class="n">thresh1</span><span class="p">,</span> <span class="n">thresh2</span><span class="o">=</span><span class="n">thresh2</span><span class="p">,</span> <span class="n">nc</span><span class="o">=</span><span class="n">nc</span><span class="p">,</span> <span class="n">iters</span><span class="o">=</span><span class="n">iters</span><span class="p">)</span>
+<span class="n">euv_map</span><span class="p">,</span> <span class="n">chd_map</span> <span class="o">=</span> <span class="n">cr_funcs</span><span class="o">.</span><span class="n">create_map</span><span class="p">(</span><span class="n">iit_image</span><span class="p">,</span> <span class="n">chd_image</span><span class="p">,</span> <span class="n">methods_list</span><span class="p">,</span> <span class="n">row</span><span class="p">,</span> <span class="n">map_x</span><span class="o">=</span><span class="n">map_x</span><span class="p">,</span> <span class="n">map_y</span><span class="o">=</span><span class="n">map_y</span><span class="p">,</span> <span class="n">R0</span><span class="o">=</span><span class="n">R0</span><span class="p">)</span>
+<span class="n">euv_combined</span><span class="p">,</span> <span class="n">chd_combined</span><span class="p">,</span> <span class="n">sum_wgt</span><span class="p">,</span> <span class="n">combined_method</span> <span class="o">=</span> <span class="n">dp_funcs</span><span class="o">.</span><span class="n">time_wgt_map</span><span class="p">(</span><span class="n">euv_map</span><span class="p">,</span> <span class="n">chd_map</span><span class="p">,</span> <span class="n">euv_combined</span><span class="p">,</span> <span class="n">chd_combined</span><span class="p">,</span> <span class="n">image_info</span><span class="p">,</span> <span class="n">weight</span><span class="p">,</span> <span class="n">sum_wgt</span><span class="p">,</span> <span class="n">sigma</span><span class="p">,</span> <span class="n">mu_cutoff</span><span class="p">)</span>
+<span class="n">dp_funcs</span><span class="o">.</span><span class="n">save_gauss_time_maps</span><span class="p">(</span><span class="n">db_session</span><span class="p">,</span> <span class="n">map_data_dir</span><span class="p">,</span> <span class="n">euv_combined</span><span class="p">,</span> <span class="n">chd_combined</span><span class="p">,</span> <span class="n">image_info</span><span class="p">,</span> <span class="n">map_info</span><span class="p">,</span> <span class="n">methods_list</span><span class="p">,</span> <span class="n">combined_method</span><span class="p">)</span>
+</code></pre></div>
+</td></tr></table>
+
+<ul>
+<li>1.) <code>chd_funcs.get_inst_combos</code><ul>
+<li>query the appropriate combo ids for each instrument based off the maximum time range the user inputted</li>
+</ul>
+</li>
+<li>2.) <code>db_funcs.query_euv_images</code><ul>
+<li>query the database for images based off the time range and center date</li>
+</ul>
+</li>
+<li>3.) <code>dp_funcs.gauss_time</code><ul>
+<li>generate a gaussian distribution based off the number of images queried and user defined sigma balue</li>
+</ul>
+</li>
+<li>4.) <code>cr_funcs.apply_ipp</code><ul>
+<li>apply image pre-processing corrections</li>
+</ul>
+</li>
+<li>5.) <code>cr_funcs.chd</code><ul>
+<li>apply the Coronal Hole Detection algorithm to the image</li>
+</ul>
+</li>
+<li>6.) <code>cr_funcs.create_map</code>  <ul>
+<li>convert the image and detection to a map</li>
+</ul>
+</li>
+<li>6.) <code>dp_funcs.time_wgt_map</code><ul>
+<li>create combined maps based off the weighting of the Gaussian distribution</li>
+</ul>
+</li>
+<li>7.) <code>dp_funcs.save_gauss_time_maps</code><ul>
+<li>plot and save time weighted maps to the database, including the methods combination</li>
+</ul>
+</li>
+</ul>
                 
               
               
@@ -757,14 +951,14 @@
     </div>
     
       <script src="../../assets/javascripts/vendor.d710d30a.min.js"></script>
-      <script src="../../assets/javascripts/bundle.4a5ba8d6.min.js"></script><script id="__lang" type="application/json">{"clipboard.copy": "Copy to clipboard", "clipboard.copied": "Copied to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.result.placeholder": "Type to start searching", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents"}</script>
+      <script src="../../assets/javascripts/bundle.b39636ac.min.js"></script><script id="__lang" type="application/json">{"clipboard.copy": "Copy to clipboard", "clipboard.copied": "Copied to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.result.placeholder": "Type to start searching", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents"}</script>
       
       <script>
         app = initialize({
           base: "../..",
           features: [],
           search: Object.assign({
-            worker: "../../assets/javascripts/worker/search.9b3611bd.min.js"
+            worker: "../../assets/javascripts/worker/search.a68abb33.min.js"
           }, typeof search !== "undefined" && search)
         })
       </script>
