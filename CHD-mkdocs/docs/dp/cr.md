@@ -1,4 +1,4 @@
-# Full Carrington Rotation Plots
+# Synoptic Maps
 
 
 ## Example Maps for the Month of June 2011
