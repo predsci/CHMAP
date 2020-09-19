@@ -1,0 +1,20 @@
+!    -*- f90 -*-
+! Note: the context of this file is case sensitive.
+
+python module ezsegwrapper
+    interface
+        subroutine ezseg(img,seg,nt,np,thresh1,thresh2,nc,iters)
+            real*4 dimension(nt,np), intent(in),depend(nt,np) :: img
+            real*4 dimension(nt,np),depend(nt,np), intent(in,out) :: seg
+            integer intent(in) :: nt
+            integer intent(in) :: np
+            real*4 intent(in) :: thresh1
+            real*4 intent(in) :: thresh2
+            integer intent(in) :: nc
+            integer intent(in,out) :: iters
+        end subroutine ezseg
+    end interface 
+end python module ezsegwrapper
+
+! This file was auto-generated with f2py (version:2).
+! See http://cens.ioc.ee/projects/f2py2e/
