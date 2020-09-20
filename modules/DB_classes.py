@@ -206,7 +206,7 @@ class Histogram(Base):
     wavelength = Column(Integer)
     n_mu_bins = Column(Integer)
     n_intensity_bins = Column(Integer)
-    lat_band = Column(LargeBinary)
+    lat_band = Column(Float)
     mu_bin_edges = Column(LargeBinary)
     intensity_bin_edges = Column(LargeBinary)
     hist = Column(LargeBinary)
