@@ -23,7 +23,7 @@ nav:
       - Interpolation: map/int.md
       - Combining Maps: map/cmb.md
   - Data Products:
-      - CR Maps: dp/cr.md
+      - Synoptic Maps: dp/cr.md
       - Quality Maps: dp/qm.md
       - Ensemble Detection: dp/ed.md
       - Varying Threshold Maps: dp/vt.md
