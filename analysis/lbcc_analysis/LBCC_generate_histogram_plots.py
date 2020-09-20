@@ -66,7 +66,7 @@ for instrument in inst_list:
                          time_max=hist_plot_query_time_max,
                          instrument=query_instrument)
     # convert from binary to usable histogram type
-    lat_band, mu_bin_array, intensity_bin_array, full_hist = psi_d_types.binary_to_hist(pd_hist, n_mu_bins,
+    mu_bin_array, intensity_bin_array, full_hist = psi_d_types.binary_to_hist(pd_hist, n_mu_bins,
                                                                                         n_intensity_bins)
     # query correct image combos
     combo_query = query_inst_combo(db_session, hist_plot_query_time_min, hist_plot_query_time_max, meth_name, instrument)

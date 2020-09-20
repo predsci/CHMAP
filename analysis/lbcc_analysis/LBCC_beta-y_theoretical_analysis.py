@@ -75,7 +75,7 @@ for date_index, center_date in enumerate(moving_avg_centers):
                                       instrument=query_instrument)
 
         # convert the binary types back to arrays
-        lat_band, mu_bin_array, intensity_bin_array, full_hist = psi_d_types.binary_to_hist(pd_hist, n_mu_bins,
+        mu_bin_array, intensity_bin_array, full_hist = psi_d_types.binary_to_hist(pd_hist, n_mu_bins,
                                                                                             n_intensity_bins)
 
         # create list of observed dates in time frame
