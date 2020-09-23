@@ -33,8 +33,4 @@ def upgrade():
 
 
 def downgrade():
-    conn = op.get_bind()
-    inspector = Inspector.from_engine(conn)
-    tables = inspector.get_table_names()
-    if 'var_vals' in tables:
-        op.add_column('var_vals', sa.Column('map_id', sa.Integer, sa.ForeignKey('euv_images.image_id'), primary_key=True))
+    pass

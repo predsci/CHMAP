@@ -20,7 +20,6 @@ def upgrade():
     conn = op.get_bind()
     inspector = Inspector.from_engine(conn)
     tables = inspector.get_table_names()
-    print(tables)
     if 'var_vals_map' not in tables:
         op.create_table(
             'var_vals_map',

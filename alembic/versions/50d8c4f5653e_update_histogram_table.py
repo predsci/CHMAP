@@ -24,7 +24,11 @@ def upgrade():
     index_list = [index['name'] for index in indices]
     if 'hist_index' not in index_list:
         op.create_index('hist_index', 'histogram', ["date_obs", "instrument", "wavelength"])
-    op.alter_column('histogram', 'lat_band', type_=sa.Float, existing_type=sa.LargeBinary)
+    columns = inspector.get_columns('histogram')
+    column_names = [column['name'] for column in columns]
+    lat_index = column_names.index('lat_band')
+    if columns[lat_index]['type'] == sa.LargeBinary:
+        op.alter_column('histogram', 'lat_band', type_=sa.Float, existing_type=sa.LargeBinary)
 
 
 def downgrade():
