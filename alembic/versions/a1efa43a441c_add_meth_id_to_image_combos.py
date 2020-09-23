@@ -7,6 +7,7 @@ Create Date: 2020-07-10 09:14:02.605460
 """
 from alembic import op
 import sqlalchemy as sa
+from sqlalchemy.engine.reflection import Inspector
 
 # revision identifiers, used by Alembic.
 revision = 'a1efa43a441c'
@@ -29,4 +30,8 @@ def upgrade():
 
 
 def downgrade():
-    op.drop_column('image_combos', sa.Column('meth_id', sa.Integer, sa.ForeignKey('meth_defs.meth_id')))
+    conn = op.get_bind()
+    inspector = Inspector.from_engine(conn)
+    columns = inspector.get_columns('image_combos')
+    column_list = [column['name'] for column in columns]
+    print(column_list)

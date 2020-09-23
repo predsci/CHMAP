@@ -562,14 +562,14 @@ class Hist:
     """
 
     def __init__(self, image_id, meth_id, date_obs, instrument, wavelength, mu_bin_edges=None, intensity_bin_edges=None,
-                 lat_band=np.pi / 64., hist=None):
+                 lat_band=[-np.pi / 64., np.pi / 64.], hist=None):
 
         self.image_id = image_id
         self.meth_id = meth_id
         self.date_obs = date_obs
         self.instrument = instrument
         self.wavelength = wavelength
-        self.lat_band = lat_band
+        self.lat_band = float(np.max(lat_band))
 
         if mu_bin_edges is not None:
             self.n_mu_bins = len(mu_bin_edges) - 1
@@ -611,9 +611,11 @@ def create_lbcc_hist(h5_file, image_id, meth_id, mu_bin_edges, intensity_bin_edg
     x, y, z, data, chd_meta, sunpy_meta = psihdf.rdh5_meta(h5_file)
     # create the structure
     date_format = "%Y-%m-%dT%H:%M:%S.%f"
+    # lat band float
+    lat_band_float = float(np.max(lat_band))
     hist_out = Hist(image_id, meth_id, datetime.datetime.strptime(chd_meta['date_string'], date_format),
                     chd_meta['instrument'], chd_meta['wavelength'], mu_bin_edges,
-                    intensity_bin_edges, lat_band, hist=mu_hist)
+                    intensity_bin_edges, lat_band_float, hist=mu_hist)
     return hist_out
 
 
@@ -627,10 +629,11 @@ def create_iit_hist(lbcc_image, meth_id, lat_band, iit_hist):
     instrument = lbcc_image.instrument
     wavelength = lbcc_image.wavelength
     intensity_bin_edges = lbcc_image.intensity_bin_edges
+    lat_band_float = float(np.max(lat_band))
 
     # create structure
     iit_hist = Hist(image_id=image_id, meth_id=meth_id, date_obs=date_obs, instrument=instrument, wavelength=wavelength,
-                    mu_bin_edges=None, intensity_bin_edges=intensity_bin_edges, lat_band=lat_band, hist=iit_hist)
+                    mu_bin_edges=None, intensity_bin_edges=intensity_bin_edges, lat_band=lat_band_float, hist=iit_hist)
     return iit_hist
 
 

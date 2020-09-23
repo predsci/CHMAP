@@ -2,10 +2,13 @@
 functions used in production of various
 output data/mapping products
 """
+
 import time
 import random
+import datetime
 import numpy as np
 import pandas as pd
+
 from scipy.stats import norm
 import modules.Plotting as Plotting
 import modules.DB_funs as db_funcs
@@ -14,6 +17,7 @@ import modules.datatypes as datatypes
 from modules.map_manip import combine_mu_maps, combine_timewgt_maps, combine_timescale_maps
 
 
+### FUNCTIONS FOR MAP CREATION
 def quality_map(db_session, map_data_dir, inst_list, query_pd, euv_combined, chd_combined=None, color_list=None):
     if color_list is None:
         color_list = ["Blues", "Greens", "Reds", "Oranges", "Purples"]
@@ -68,13 +72,13 @@ def create_timescale_maps(euv_map_list, chd_map_list, timescale_weights, image_i
     # create method information
     var_names = tuple([("timescale_weight_" + str(i)) for i in range(len(timescale_weights))])
     var_descs = tuple([("timescale weight factor at "
-                                                                                           "index " + str(i)) for i in
-                                                                                          range(len(timescale_weights
-                                                                                                     ))])
+                        "index " + str(i)) for i in
+                       range(len(timescale_weights
+                                 ))])
     var_vals = tuple(timescale_weights)
     timescale_method = {'meth_name': ("Timescale-Weight-Merge",) * (len(timescale_weights)), 'meth_description':
         ["Timescale weighted merge based on weighting array"] * (len(timescale_weights)),
-                       'var_name': var_names, 'var_description': var_descs, 'var_val': var_vals}
+                        'var_name': var_names, 'var_description': var_descs, 'var_val': var_vals}
 
     # append image and map info records
     # TODO: check this works
@@ -153,20 +157,22 @@ def chd_mu_map(euv_map, chd_map, euv_combined, chd_combined, image_info, map_inf
         euv_combined, chd_combined = combine_mu_maps(n_images, euv_maps, chd_maps, del_mu=del_mu, mu_cutoff=mu_cutoff)
         euv_combined_method = {'meth_name': ("Min-Int-CR-Merge-del_mu", "Min-Int-CR-Merge-del_mu"), 'meth_description':
             ["Minimum intensity merge for Synoptic Map: using del mu"] * 2,
-                           'var_name': ("mu_cutoff", "del_mu"), 'var_description': ("lower mu cutoff value",
-                                                                                    "max acceptable mu range"),
-                           'var_val': (mu_cutoff, del_mu)}
+                               'var_name': ("mu_cutoff", "del_mu"), 'var_description': ("lower mu cutoff value",
+                                                                                        "max acceptable mu range"),
+                               'var_val': (mu_cutoff, del_mu)}
     else:
         euv_combined, chd_combined = combine_mu_maps(n_images, euv_maps, chd_maps, mu_merge_cutoff=mu_merge_cutoff,
                                                      mu_cutoff=mu_cutoff)
-        euv_combined_method = {'meth_name': ("Min-Int-CR-Merge-mu_merge", "Min-Int-CR-Merge-mu_merge"), 'meth_description':
-            ["Minimum intensity merge for Synoptic Map: based on Caplan et. al."] * 2,
-                           'var_name': ("mu_cutoff", "mu_merge_cutoff"), 'var_description': ("lower mu cutoff value",
-                                                                                             "mu cutoff value in areas of "
-                                                                                             "overlap"),
-                           'var_val': (mu_cutoff, mu_merge_cutoff)}
+        euv_combined_method = {'meth_name': ("Min-Int-CR-Merge-mu_merge", "Min-Int-CR-Merge-mu_merge"),
+                               'meth_description':
+                                   ["Minimum intensity merge for Synoptic Map: based on Caplan et. al."] * 2,
+                               'var_name': ("mu_cutoff", "mu_merge_cutoff"),
+                               'var_description': ("lower mu cutoff value",
+                                                   "mu cutoff value in areas of "
+                                                   "overlap"),
+                               'var_val': (mu_cutoff, mu_merge_cutoff)}
     # chd combined method
-    chd_combined_method = {'meth_name': ("MuDep-Prob-CHD-Merge", ), 'meth_description':
+    chd_combined_method = {'meth_name': ("MuDep-Prob-CHD-Merge",), 'meth_description':
         ["Mu Dependent Probability Merge for CH Maps"]}
     # append image and map info records
     image_info.append(euv_map.image_info)
@@ -189,9 +195,6 @@ def time_wgt_map(euv_map, chd_map, euv_combined, chd_combined, image_info, map_i
     if chd_combined is not None:
         chd_maps.append(chd_combined)
 
-    # length of gaussian distribution used
-    gauss_dist_len = len(image_info) + 1
-
     # combine maps
     euv_combined, chd_combined, sum_wgt = combine_timewgt_maps(weight, sum_wgt, map_list=euv_maps,
                                                                chd_map_list=chd_maps,
@@ -201,9 +204,9 @@ def time_wgt_map(euv_map, chd_map, euv_combined, chd_combined, image_info, map_i
     combined_method = {'meth_name': ("Gauss-Time-Weight", "Gauss-Time-Weight"), 'meth_description':
         ["Synoptic map merge based off time varied Gaussian distribution"] * 2,
                        'var_name': ("mu_cutoff", "sigma"), 'var_description': ("lower mu cutoff value",
-                                                                                             "sigma value used in "
-                                                                                             "creation of gaussian "
-                                                                                             "distribution"),
+                                                                               "sigma value used in "
+                                                                               "creation of gaussian "
+                                                                               "distribution"),
                        'var_val': (mu_cutoff, sigma)}
 
     # append image and map info records
@@ -282,7 +285,7 @@ def save_mu_probability_maps(db_session, map_data_dir, euv_combined, chd_combine
     # plot maps
     Plotting.PlotMap(euv_combined, nfig="EUV Map", title="Minimum Intensity Merge EUV Map\nTime Min: " + str(
         euv_combined.image_info.iloc[0].date_obs) + "\nTime Max: " + str(euv_combined.image_info.iloc[-1].date_obs))
-    Plotting.PlotMap(chd_combined, nfig="Mu Dependent CHD Probability Map", title="Mu Dependent CHD Probability"
+    Plotting.PlotMap(chd_combined, nfig="Mu Dependent CHD Probability Map", title="Mu Dependent CHD Probability "
                                                                                   "Map\nTime Min: " + str(
         chd_combined.image_info.iloc[0].date_obs) + "\nTime Max: " + str(chd_combined.image_info.iloc[-1].date_obs),
                      map_type='CHD')
@@ -324,7 +327,7 @@ def save_threshold_maps(db_session, map_data_dir, euv_combined, chd_combined, im
     Plotting.PlotMap(euv_combined, nfig="Varying Threshold EUV Map", title="Minimum Intensity Merge CR EUV Map\nTime "
                                                                            "Min: " + str(
         euv_combined.image_info.iloc[0].date_obs) + "\nTime Max: " + str(euv_combined.image_info.iloc[-1].date_obs))
-    Plotting.PlotMap(chd_combined, nfig="Varying Threshold CHD Map", title="Minimum Intensity CHD Merge Map with "
+    Plotting.PlotMap(chd_combined, nfig="Varying Threshold CHD Map", title="CHD Merge Map with "
                                                                            "Gaussian Varying Threshold Values\nTime "
                                                                            "Min: " + str(
         chd_combined.image_info.iloc[0].date_obs) + "\nTime Max: " + str(chd_combined.image_info.iloc[-1].date_obs),
@@ -373,6 +376,7 @@ def save_gauss_time_maps(db_session, map_data_dir, euv_combined, chd_combined, i
     chd_combined.write_to_file(map_data_dir, map_type='timewgt_chd', filename=None, db_session=db_session)
 
     end = time.time()
-    print("Combined Gaussian Time Weighted Maps have been plotted and saved to the database in", end - start, "seconds.")
+    print("Combined Gaussian Time Weighted Maps have been plotted and saved to the database in", end - start,
+          "seconds.")
 
     return None

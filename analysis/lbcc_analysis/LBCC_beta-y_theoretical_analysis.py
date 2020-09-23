@@ -28,7 +28,7 @@ hdf_data_dir = App.PROCESSED_DATA_HOME
 
 # TIME FRAME TO QUERY HISTOGRAMS
 query_time_min = datetime.datetime(2011, 4, 1, 0, 0, 0)
-query_time_max = datetime.datetime(2011, 10, 1, 0, 0, 0)
+query_time_max = datetime.datetime(2011, 4, 10, 0, 0, 0)
 weekday = 0
 number_of_days = 180
 
@@ -69,7 +69,7 @@ for date_index, center_date in enumerate(moving_avg_centers):
         query_instrument = [instrument, ]
         pd_hist = query_hist(db_session=db_session, meth_id=method_id[1], n_mu_bins=n_mu_bins,
                                       n_intensity_bins=n_intensity_bins,
-                                      lat_band=np.array(lat_band).tobytes(),
+                                      lat_band=lat_band,
                                       time_min=np.datetime64(min_date).astype(datetime.datetime),
                                       time_max=np.datetime64(max_date).astype(datetime.datetime),
                                       instrument=query_instrument)

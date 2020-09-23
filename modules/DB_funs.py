@@ -1184,6 +1184,9 @@ def query_hist(db_session, meth_id, n_mu_bins=None, n_intensity_bins=None, lat_b
     @param wavelength:
     @return: pandas data frame
     """
+    # convert lat_band to float value
+    lat_band_float = float(np.max(lat_band))
+
     if time_min is None and time_max is None:
         # get entire DB
         query_out = pd.read_sql(db_session.query(Histogram).statement, db_session.bind)
@@ -1196,7 +1199,7 @@ def query_hist(db_session, meth_id, n_mu_bins=None, n_intensity_bins=None, lat_b
                                                                        Histogram.meth_id == meth_id,
                                                                        Histogram.n_mu_bins == n_mu_bins,
                                                                        Histogram.n_intensity_bins == n_intensity_bins,
-                                                                       Histogram.lat_band == lat_band
+                                                                       Histogram.lat_band == lat_band_float
                                                                        ).statement,
                                     db_session.bind)
         elif n_mu_bins is None:
@@ -1206,7 +1209,7 @@ def query_hist(db_session, meth_id, n_mu_bins=None, n_intensity_bins=None, lat_b
                                                                        Histogram.instrument.in_(
                                                                            instrument),
                                                                        Histogram.n_intensity_bins == n_intensity_bins,
-                                                                       Histogram.lat_band == lat_band
+                                                                       Histogram.lat_band == lat_band_float
                                                                        ).statement,
                                     db_session.bind)
         else:
@@ -1217,7 +1220,7 @@ def query_hist(db_session, meth_id, n_mu_bins=None, n_intensity_bins=None, lat_b
                                                                            instrument),
                                                                        Histogram.n_mu_bins == n_mu_bins,
                                                                        Histogram.n_intensity_bins == n_intensity_bins,
-                                                                       Histogram.lat_band == lat_band
+                                                                       Histogram.lat_band == lat_band_float
                                                                        ).statement,
                                     db_session.bind)
     else:
@@ -1229,7 +1232,7 @@ def query_hist(db_session, meth_id, n_mu_bins=None, n_intensity_bins=None, lat_b
                                                                            wavelength),
                                                                        Histogram.n_mu_bins == n_mu_bins,
                                                                        Histogram.n_intensity_bins == n_intensity_bins,
-                                                                       Histogram.lat_band == lat_band
+                                                                       Histogram.lat_band == lat_band_float
                                                                        ).statement,
                                     db_session.bind)
         elif n_mu_bins is None:
@@ -1241,7 +1244,7 @@ def query_hist(db_session, meth_id, n_mu_bins=None, n_intensity_bins=None, lat_b
                                                                        Histogram.wavelength.in_(
                                                                            wavelength),
                                                                        Histogram.n_intensity_bins == n_intensity_bins,
-                                                                       Histogram.lat_band == lat_band
+                                                                       Histogram.lat_band == lat_band_float
                                                                        ).statement,
                                     db_session.bind)
 
@@ -1255,7 +1258,7 @@ def query_hist(db_session, meth_id, n_mu_bins=None, n_intensity_bins=None, lat_b
                                                                            wavelength),
                                                                        Histogram.n_mu_bins == n_mu_bins,
                                                                        Histogram.n_intensity_bins == n_intensity_bins,
-                                                                       Histogram.lat_band == lat_band
+                                                                       Histogram.lat_band == lat_band_float
                                                                        ).statement,
                                     db_session.bind)
 
@@ -1275,8 +1278,9 @@ def add_hist(db_session, histogram):
 
     hist_identifier = histogram.instrument + " observed at " + str(histogram.date_obs)
 
+
     # convert arrays to correct binary format
-    lat_band, intensity_bin_edges, mu_bin_edges, hist = datatypes.hist_to_binary(histogram)
+    intensity_bin_edges, mu_bin_edges, hist = datatypes.hist_to_binary(histogram)
 
     # check if row already exists in DB
     existing_row_id = db_session.query(Histogram.hist_id).filter(
@@ -1286,7 +1290,7 @@ def add_hist(db_session, histogram):
         Histogram.n_intensity_bins == histogram.n_intensity_bins,
         Histogram.instrument == histogram.instrument,
         Histogram.date_obs == histogram.date_obs,
-        Histogram.lat_band == lat_band,
+        Histogram.lat_band == histogram.lat_band,
         Histogram.wavelength == histogram.wavelength).all()
     if len(existing_row_id) == 1:
         # histogram has already been downloaded and entered into DB. do nothing
@@ -1305,7 +1309,7 @@ def add_hist(db_session, histogram):
                              date_obs=histogram.date_obs,
                              instrument=histogram.instrument, wavelength=histogram.wavelength,
                              n_mu_bins=histogram.n_mu_bins, n_intensity_bins=histogram.n_intensity_bins,
-                             lat_band=lat_band, intensity_bin_edges=intensity_bin_edges, mu_bin_edges=mu_bin_edges,
+                             lat_band=histogram.lat_band, intensity_bin_edges=intensity_bin_edges, mu_bin_edges=mu_bin_edges,
                              hist=hist)
         # Append to the list of rows to be added
         db_session.add(hist_add)

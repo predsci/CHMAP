@@ -99,7 +99,7 @@ sum_wgt = 0
 for row in query_pd.iterrows():
     # determine correct weighting based off date
     date_time = row[1].date_obs
-    weight = norm_dist[row[0]] # normal distribution at row index
+    weight = norm_dist[row[0]]  # normal distribution at row index
     #### STEP TWO: APPLY PRE-PROCESSING CORRECTIONS ####
     los_image, iit_image, methods_list, use_indices = cr_funcs.apply_ipp(db_session, hdf_data_dir, inst_list, row,
                                                                          methods_list, lbc_combo_query,

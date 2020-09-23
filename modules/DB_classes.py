@@ -211,4 +211,4 @@ class Histogram(Base):
     intensity_bin_edges = Column(LargeBinary)
     hist = Column(LargeBinary)
 
-    __table_args__ = (Index('lbcc_index', "date_obs", "instrument", "wavelength"),)
+    __table_args__ = (Index('hist_index', "date_obs", "instrument", "wavelength"),)

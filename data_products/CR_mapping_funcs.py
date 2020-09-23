@@ -20,6 +20,29 @@ import analysis.lbcc_analysis.LBCC_theoretic_funcs as lbcc_funcs
 import analysis.iit_analysis.IIT_pipeline_funcs as iit_funcs
 
 
+#### STEP ONE: SELECT IMAGES ####
+def query_datebase_cr(db_session, query_time_min=None, query_time_max=None, interest_date=None, center=None,
+                      ref_inst=None, cr_rot=None):
+    if query_time_min and query_time_max is not None:
+        query_pd = db_funcs.query_euv_images(db_session=db_session, time_min=query_time_min, time_max=query_time_max)
+    elif cr_rot is not None:
+        query_pd = db_funcs.query_euv_images_rot(db_session, rot_min=cr_rot, rot_max=cr_rot + 1)
+    else:
+        ref_instrument = [ref_inst, ]
+        euv_images = db_funcs.query_euv_images(db_session, time_min=interest_date + datetime.timedelta(hours=1),
+                                               time_max=interest_date + datetime.timedelta(hours=1),
+                                               instrument=ref_instrument)
+        # get min and max carrington rotation
+        # TODO: really only want one CR_value
+        cr_rot = euv_images.cr_rot
+        if center:
+            query_pd = db_funcs.query_euv_images_rot(db_session, rot_min=cr_rot - 0.5, rot_max=cr_rot + 0.5)
+        else:
+            query_pd = db_funcs.query_euv_images_rot(db_session, rot_min=cr_rot, rot_max=cr_rot + 1)
+
+    return query_pd
+
+
 #### STEP TWO: APPLY PRE-PROCESSING CORRECTIONS ####
 def apply_ipp(db_session, hdf_data_dir, inst_list, row, methods_list, lbc_combo_query, iit_combo_query,
               n_intensity_bins=200, R0=1.01):
@@ -147,7 +170,7 @@ def cr_map(euv_map, chd_map, euv_combined, chd_combined, image_info, map_info, m
                            'var_val': (mu_cutoff, mu_merge_cutoff)}
 
     # chd combined method
-    chd_combined_method = {'meth_name': ("Prob-CHD-Merge", ), 'meth_description':["Probability Merge for CH Maps"]}
+    chd_combined_method = {'meth_name': ("Prob-CHD-Merge",), 'meth_description': ["Probability Merge for CH Maps"]}
 
     # append image and map info records
     image_info.append(euv_map.image_info)
@@ -180,7 +203,7 @@ def save_maps(db_session, map_data_dir, euv_combined, chd_combined, image_info, 
     Plotting.PlotMap(euv_combined, nfig="CR EUV Map", title="Minimum Intensity Merge CR EUV Map\nTime Min: " + str(
         euv_combined.image_info.iloc[0].date_obs) + "\nTime Max: " + str(euv_combined.image_info.iloc[-1].date_obs))
     # Plotting.PlotMap(euv_combined, nfig="CR CHD Map", title="Minimum Intensity CR CHD Merge Map")
-    Plotting.PlotMap(chd_combined, nfig="CR CHD Map", title="Minimum Intensity CR CHD Merge Map\nTime Min: " + str(
+    Plotting.PlotMap(chd_combined, nfig="CR CHD Map", title="CHD Probability Merge Map\nTime Min: " + str(
         chd_combined.image_info.iloc[0].date_obs) + "\nTime Max: " + str(chd_combined.image_info.iloc[-1].date_obs),
                      map_type='CHD')
 

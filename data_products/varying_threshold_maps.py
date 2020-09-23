@@ -15,7 +15,7 @@ import data_products.DP_funs as dp_funcs
 #### PARAMETERS ####
 # TIME RANGE FOR QUERYING
 query_time_min = datetime.datetime(2011, 5, 1, 0, 0, 0)
-query_time_max = datetime.datetime(2011, 6, 1, 0, 0, 0)
+query_time_max = datetime.datetime(2011, 5, 1, 12, 0, 0)
 map_freq = 2  # number of hours
 
 # INSTRUMENTS
@@ -34,6 +34,8 @@ nc = 3
 iters = 1000
 # deviation for randomly varying gaussian
 sigma = 0.15
+# number of times to randomly vary threshold values
+n_samples = 5
 
 # MINIMUM MERGE MAPPING PARAMETERS
 del_mu = None  # optional between this method and mu_merge_cutoff method
@@ -84,19 +86,21 @@ for row in query_pd.iterrows():
                                                                          methods_list, lbc_combo_query,
                                                                          iit_combo_query,
                                                                          n_intensity_bins=n_intensity_bins, R0=R0)
+    for i in range(n_samples):
+        #### STEP THREE: CORONAL HOLE DETECTION ####
+        chd_image = dp_funcs.gauss_chd(db_session, inst_list, los_image, iit_image, use_indices, iit_combo_query,
+                                       thresh1=thresh1, thresh2=thresh2, nc=nc, iters=iters, sigma=sigma)
 
-    #### STEP THREE: CORONAL HOLE DETECTION ####
-    chd_image = dp_funcs.gauss_chd(db_session, inst_list, los_image, iit_image, use_indices, iit_combo_query,
-                                   thresh1=thresh1, thresh2=thresh2, nc=nc, iters=iters, sigma=sigma)
+        #### STEP FOUR: CONVERT TO MAP ####
+        euv_map, chd_map = cr_funcs.create_map(iit_image, chd_image, methods_list, row, map_x=map_x, map_y=map_y, R0=R0)
 
-    #### STEP FOUR: CONVERT TO MAP ####
-    euv_map, chd_map = cr_funcs.create_map(iit_image, chd_image, methods_list, row, map_x=map_x, map_y=map_y, R0=R0)
-
-    #### STEP FIVE: CREATE COMBINED MAPS ####
-    euv_combined, chd_combined, euv_combined_method, chd_combined_method = cr_funcs.cr_map(euv_map, chd_map, euv_combined,
-                                                                  chd_combined, image_info,
-                                                                  map_info, mu_cutoff=mu_cutoff,
-                                                                  mu_merge_cutoff=mu_merge_cutoff)
+        #### STEP FIVE: CREATE COMBINED MAPS ####
+        euv_combined, chd_combined, euv_combined_method, chd_combined_method = cr_funcs.cr_map(euv_map, chd_map,
+                                                                                               euv_combined,
+                                                                                               chd_combined, image_info,
+                                                                                               map_info,
+                                                                                               mu_cutoff=mu_cutoff,
+                                                                                               mu_merge_cutoff=mu_merge_cutoff)
 
 # use gaussian varying for threshold
 # g(x) = (1/sigma*2*pi)*exp(-0.5*((x - mu)/sigma)^2)
