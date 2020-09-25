@@ -22,6 +22,11 @@ nav:
       - Mapping Pipeline: map/map.md
       - Interpolation: map/int.md
       - Combining Maps: map/cmb.md
+  - Data Products:
+      - Synoptic Maps: dp/cr.md
+      - Quality Maps: dp/qm.md
+      - Ensemble Detection: dp/ed.md
+      - Varying Threshold Maps: dp/vt.md
   - Database:
       - Database Basics: db/db.md
       - Database for LBC: db/lbc.md

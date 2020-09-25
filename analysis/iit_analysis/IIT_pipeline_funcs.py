@@ -2,7 +2,6 @@
 Functions to Generate Inter-Instrument Correction
 """
 
-import os
 import numpy as np
 import time
 import datetime

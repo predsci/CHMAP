@@ -123,13 +123,13 @@ def calc_theoretic_fit(db_session, inst_list, calc_query_time_min, calc_query_ti
             query_instrument = [instrument, ]
             pd_hist = db_funcs.query_hist(db_session=db_session, meth_id=method_id[1], n_mu_bins=n_mu_bins,
                                           n_intensity_bins=n_intensity_bins,
-                                          lat_band=np.array(lat_band).tobytes(),
+                                          lat_band=lat_band,
                                           time_min=np.datetime64(min_date).astype(datetime.datetime),
                                           time_max=np.datetime64(max_date).astype(datetime.datetime),
                                           instrument=query_instrument)
 
             # convert the binary types back to arrays
-            lat_band, mu_bin_array, intensity_bin_array, full_hist = psi_d_types.binary_to_hist(pd_hist, n_mu_bins,
+            mu_bin_array, intensity_bin_array, full_hist = psi_d_types.binary_to_hist(pd_hist, n_mu_bins,
                                                                                                 n_intensity_bins)
 
             # create list of observed dates in time frame
@@ -478,12 +478,12 @@ def generate_histogram_plots(db_session, hdf_data_dir, inst_list, hist_plot_quer
         query_instrument = [instrument, ]
         pd_hist = db_funcs.query_hist(db_session=db_session, meth_id=method_id[1], n_mu_bins=n_mu_bins,
                                       n_intensity_bins=n_intensity_bins,
-                                      lat_band=np.array(lat_band).tobytes(),
+                                      lat_band=lat_band,
                                       time_min=hist_plot_query_time_min,
                                       time_max=hist_plot_query_time_max,
                                       instrument=query_instrument)
         # convert from binary to usable histogram type
-        lat_band, mu_bin_array, intensity_bin_array, full_hist = psi_d_types.binary_to_hist(pd_hist, n_mu_bins,
+        mu_bin_array, intensity_bin_array, full_hist = psi_d_types.binary_to_hist(pd_hist, n_mu_bins,
                                                                                             n_intensity_bins)
         # query correct image combos
         combo_query = db_funcs.query_inst_combo(db_session, hist_plot_query_time_min, hist_plot_query_time_max,

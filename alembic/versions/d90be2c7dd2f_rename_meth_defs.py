@@ -7,6 +7,7 @@ Create Date: 2020-08-03 12:15:31.637458
 """
 from alembic import op
 import sqlalchemy as sa
+from sqlalchemy.engine.reflection import Inspector
 
 
 # revision identifiers, used by Alembic.
@@ -17,8 +18,16 @@ depends_on = None
 
 
 def upgrade():
-    op.rename_table('meth_defs', 'method_defs')
+    conn = op.get_bind()
+    inspector = Inspector.from_engine(conn)
+    tables = inspector.get_table_names()
+    if 'meth_defs' in tables:
+        op.rename_table('meth_defs', 'method_defs')
 
 
 def downgrade():
-    op.rename_table('method_defs', 'meth_defs')
+    conn = op.get_bind()
+    inspector = Inspector.from_engine(conn)
+    tables = inspector.get_table_names()
+    if 'method_defs' in tables:
+        op.rename_table('method_defs', 'meth_defs')

@@ -103,8 +103,12 @@ class LosImage:
 
     def interp_to_map(self, R0=1.0, map_x=None, map_y=None, no_data_val=-9999., image_num=None):
 
-        print("Converting " + self.info['instrument'] + "-" + str(self.info['wavelength']) + " image from " +
-              self.info['date_string'] + " to a map.")
+        if type(self) == CHDImage:
+            print("Converting " + self.info['instrument'] + "-" + str(self.info['wavelength']) + " image from " +
+                  self.info['date_string'] + " to a CHD map.")
+        else:
+            print("Converting " + self.info['instrument'] + "-" + str(self.info['wavelength']) + " image from " +
+              self.info['date_string'] + " to a EUV map.")
 
         if map_x is None and map_y is None:
             # Generate map grid based on number of image pixels vertically within R0
@@ -567,7 +571,7 @@ class Hist:
         self.date_obs = date_obs
         self.instrument = instrument
         self.wavelength = wavelength
-        self.lat_band = lat_band
+        self.lat_band = float(np.max(lat_band))
 
         if mu_bin_edges is not None:
             self.n_mu_bins = len(mu_bin_edges) - 1
@@ -609,9 +613,11 @@ def create_lbcc_hist(h5_file, image_id, meth_id, mu_bin_edges, intensity_bin_edg
     x, y, z, data, chd_meta, sunpy_meta = psihdf.rdh5_meta(h5_file)
     # create the structure
     date_format = "%Y-%m-%dT%H:%M:%S.%f"
+    # lat band float
+    lat_band_float = float(np.max(lat_band))
     hist_out = Hist(image_id, meth_id, datetime.datetime.strptime(chd_meta['date_string'], date_format),
                     chd_meta['instrument'], chd_meta['wavelength'], mu_bin_edges,
-                    intensity_bin_edges, lat_band, hist=mu_hist)
+                    intensity_bin_edges, lat_band_float, hist=mu_hist)
     return hist_out
 
 
@@ -625,10 +631,11 @@ def create_iit_hist(lbcc_image, meth_id, lat_band, iit_hist):
     instrument = lbcc_image.instrument
     wavelength = lbcc_image.wavelength
     intensity_bin_edges = lbcc_image.intensity_bin_edges
+    lat_band_float = float(np.max(lat_band))
 
     # create structure
     iit_hist = Hist(image_id=image_id, meth_id=meth_id, date_obs=date_obs, instrument=instrument, wavelength=wavelength,
-                    mu_bin_edges=None, intensity_bin_edges=intensity_bin_edges, lat_band=lat_band, hist=iit_hist)
+                    mu_bin_edges=None, intensity_bin_edges=intensity_bin_edges, lat_band=lat_band_float, hist=iit_hist)
     return iit_hist
 
 
@@ -640,8 +647,7 @@ def hist_to_binary(hist):
     :param hist: LBCCHist histogram object
     :return: binary data types for array
     """
-    lat_band = np.array(hist.lat_band)
-    lat_band = lat_band.tobytes()
+
     if hist.intensity_bin_edges is not None:
         intensity_bin_edges = hist.intensity_bin_edges.tobytes()
     else:
@@ -652,14 +658,13 @@ def hist_to_binary(hist):
         mu_bin_edges = None
     hist = hist.hist.tobytes()
 
-    return lat_band, intensity_bin_edges, mu_bin_edges, hist
+    return intensity_bin_edges, mu_bin_edges, hist
 
 
 def binary_to_hist(hist_binary, n_mu_bins, n_intensity_bins):
     # generate histogram for time window
     if n_mu_bins is not None:
         for index, row in hist_binary.iterrows():
-            lat_band = np.frombuffer(row.lat_band, dtype=np.float)
             mu_bin_array = np.frombuffer(row.mu_bin_edges, dtype=np.float)
             intensity_bin_array = np.frombuffer(row.intensity_bin_edges, dtype=np.float)
         full_hist = np.full((n_mu_bins, n_intensity_bins, hist_binary.__len__()), 0, dtype=np.int64)
@@ -671,7 +676,6 @@ def binary_to_hist(hist_binary, n_mu_bins, n_intensity_bins):
             full_hist[:, :, index] = hist
     else:
         for index, row in hist_binary.iterrows():
-            lat_band = np.frombuffer(row.lat_band, dtype=np.float)
             mu_bin_array = None
             intensity_bin_array = np.frombuffer(row.intensity_bin_edges, dtype=np.float)
         full_hist = np.full((n_intensity_bins, hist_binary.__len__()), 0, dtype=np.int64)
@@ -682,4 +686,4 @@ def binary_to_hist(hist_binary, n_mu_bins, n_intensity_bins):
             hist = np.ndarray(shape=n_intensity_bins, dtype=np.int, buffer=buffer_hist)
             full_hist[:, index] = hist
 
-    return lat_band, mu_bin_array, intensity_bin_array, full_hist
+    return mu_bin_array, intensity_bin_array, full_hist

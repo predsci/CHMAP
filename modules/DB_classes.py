@@ -208,9 +208,9 @@ class Histogram(Base):
     wavelength = Column(Integer)
     n_mu_bins = Column(Integer)
     n_intensity_bins = Column(Integer)
-    lat_band = Column(LargeBinary)
+    lat_band = Column(Float)
     mu_bin_edges = Column(LargeBinary)
     intensity_bin_edges = Column(LargeBinary)
     hist = Column(LargeBinary)
 
-    __table_args__ = (Index('lbcc_index', "date_obs", "instrument", "wavelength"),)
+    __table_args__ = (Index('hist_index', "date_obs", "instrument", "wavelength"),)

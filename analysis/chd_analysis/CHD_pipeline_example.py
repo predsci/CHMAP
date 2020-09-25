@@ -53,9 +53,9 @@ nc = 3
 iters = 1000
 
 # MINIMUM MERGE MAPPING PARAMETERS
-del_mu = 0.2  # optional between this method and mu_cut_over method
+del_mu = None # optional between this method and mu_merge_cutoff method
 mu_cutoff = 0.0  # lower mu cutoff value
-mu_cut_over = 0.4  # mu cutoff in overlap areas
+mu_merge_cutoff = 0.4  # mu cutoff in overlap areas
 
 # MAP PARAMETERS
 x_range = [0, 2 * np.pi]
@@ -107,5 +107,5 @@ for date_ind, center in enumerate(moving_avg_centers):
         #### STEP FIVE: CREATE COMBINED MAPS AND SAVE TO DB ####
         euv_combined, chd_combined = chd_funcs.create_combined_maps(db_session, map_data_dir, map_list, chd_map_list,
                                                                     methods_list, image_info, map_info,
-                                                                    mu_cut_over=mu_cut_over, mu_cutoff=mu_cutoff)
+                                                                    mu_merge_cutoff=mu_merge_cutoff, mu_cutoff=mu_cutoff)
 

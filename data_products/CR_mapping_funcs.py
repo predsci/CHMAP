@@ -3,6 +3,7 @@ functions used for EUV/CHD mapping of a full CR
 """
 
 import os
+import time
 import numpy as np
 import datetime
 import pandas as pd
@@ -19,9 +20,33 @@ import analysis.lbcc_analysis.LBCC_theoretic_funcs as lbcc_funcs
 import analysis.iit_analysis.IIT_pipeline_funcs as iit_funcs
 
 
+#### STEP ONE: SELECT IMAGES ####
+def query_datebase_cr(db_session, query_time_min=None, query_time_max=None, interest_date=None, center=None,
+                      ref_inst=None, cr_rot=None):
+    if query_time_min and query_time_max is not None:
+        query_pd = db_funcs.query_euv_images(db_session=db_session, time_min=query_time_min, time_max=query_time_max)
+    elif cr_rot is not None:
+        query_pd = db_funcs.query_euv_images_rot(db_session, rot_min=cr_rot, rot_max=cr_rot + 1)
+    else:
+        ref_instrument = [ref_inst, ]
+        euv_images = db_funcs.query_euv_images(db_session, time_min=interest_date + datetime.timedelta(hours=1),
+                                               time_max=interest_date + datetime.timedelta(hours=1),
+                                               instrument=ref_instrument)
+        # get min and max carrington rotation
+        # TODO: really only want one CR_value
+        cr_rot = euv_images.cr_rot
+        if center:
+            query_pd = db_funcs.query_euv_images_rot(db_session, rot_min=cr_rot - 0.5, rot_max=cr_rot + 0.5)
+        else:
+            query_pd = db_funcs.query_euv_images_rot(db_session, rot_min=cr_rot, rot_max=cr_rot + 1)
+
+    return query_pd
+
+
 #### STEP TWO: APPLY PRE-PROCESSING CORRECTIONS ####
 def apply_ipp(db_session, hdf_data_dir, inst_list, row, methods_list, lbc_combo_query, iit_combo_query,
               n_intensity_bins=200, R0=1.01):
+    start = time.time()
     index = row[0]
     image_row = row[1]
     inst_ind = inst_list.index(image_row.instrument)
@@ -39,12 +64,17 @@ def apply_ipp(db_session, hdf_data_dir, inst_list, row, methods_list, lbc_combo_
                   'var_name': ("LBCC", "IIT"), 'var_description': (" ", " ")}
     methods_list[index] = methods_list[index].append(pd.DataFrame(data=ipp_method), sort=False)
 
-    return methods_list, iit_image, los_image, use_indices
+    end = time.time()
+    print("Image Pre-Processing Corrections (Limb-Brightening and Inter-Instrument Transformation) have been "
+          "applied to image", image_row.image_id, "in", end - start, "seconds.")
+
+    return los_image, iit_image, methods_list, use_indices
 
 
 #### STEP THREE: CORONAL HOLE DETECTION ####
-def chd(db_session, inst_list, iit_image, los_image, use_indices, iit_combo_query, thresh1=0.95, thresh2=1.35, nc=3,
+def chd(db_session, inst_list, los_image, iit_image, use_indices, iit_combo_query, thresh1=0.95, thresh2=1.35, nc=3,
         iters=1000):
+    start = time.time()
     # reference alpha, x for threshold
     sta_ind = inst_list.index('EUVI-A')
     ref_alpha, ref_x = db_funcs.query_var_val(db_session, meth_name='IIT', date_obs=los_image.info['date_string'],
@@ -53,13 +83,15 @@ def chd(db_session, inst_list, iit_image, los_image, use_indices, iit_combo_quer
     # define chd parameters
     image_data = iit_image.iit_data
     use_chd = use_indices.astype(int)
-    use_chd = np.where(use_chd == 1, use_chd, -9999)
+    use_chd = np.where(use_chd == 1, use_chd, los_image.no_data_val)
     nx = iit_image.x.size
     ny = iit_image.y.size
+    # calculate new threshold parameters based off reference (AIA) instrument
     t1 = thresh1 * ref_alpha + ref_x
     t2 = thresh2 * ref_alpha + ref_x
 
     # fortran chd algorithm
+    np.seterr(divide='ignore')
     ezseg_output, iters_used = ezsegwrapper.ezseg(np.log10(image_data), use_chd, nx, ny, t1, t2, nc, iters)
     chd_result = np.logical_and(ezseg_output == 0, use_chd == 1)
     chd_result = chd_result.astype(int)
@@ -68,11 +100,16 @@ def chd(db_session, inst_list, iit_image, los_image, use_indices, iit_combo_quer
     chd_image = datatypes.create_chd_image(los_image, chd_result)
     chd_image.get_coordinates()
 
+    end = time.time()
+    print("Coronal Hole Detection Algorithm has been applied to image", iit_image.image_id, "in", end - start,
+          "seconds.")
+
     return chd_image
 
 
 #### STEP FOUR: CONVERT TO MAP ####
 def create_map(iit_image, chd_image, methods_list, row, map_x=None, map_y=None, R0=1.01):
+    start = time.time()
     index = row[0]
     image_row = row[1]
     # EUV map
@@ -94,52 +131,67 @@ def create_map(iit_image, chd_image, methods_list, row, map_x=None, map_y=None, 
     euv_map.append_method_info(methods_list[index])
     chd_map.append_method_info(methods_list[index])
 
+    end = time.time()
+    print("Image number", iit_image.image_id, "has been interpolated to map(s) in", end - start, "seconds.")
+
     return euv_map, chd_map
 
 
 #### STEP FIVE: CREATE COMBINED MAPS ####
-def cr_map(euv_map, chd_map, euv_combined, chd_combined, image_info, map_info, mu_cutoff=0.0, mu_cut_over=None, del_mu=None):
+def cr_map(euv_map, chd_map, euv_combined, chd_combined, image_info, map_info, mu_cutoff=0.0, mu_merge_cutoff=None,
+           del_mu=None):
+    start = time.time()
     # create map lists
     euv_maps = [euv_map, ]
     chd_maps = [chd_map, ]
-    # determine number of images already in combined map
-    n_images = len(image_info)
     if euv_combined is not None:
         euv_maps.append(euv_combined)
     if chd_combined is not None:
         chd_maps.append(chd_combined)
+    # determine number of images already in combined map
+    n_images = len(image_info)
 
     # combine maps with minimum intensity merge
     if del_mu is not None:
         euv_combined, chd_combined = combine_cr_maps(n_images, euv_maps, chd_maps, del_mu=del_mu, mu_cutoff=mu_cutoff)
-        combined_method = {'meth_name': ("Min-Int-Merge_CR1", "Min-Int-Merge_CR1"), 'meth_description':
-            ["Minimum intensity merge for CR Map: using del mu"] * 2,
+        combined_method = {'meth_name': ("Min-Int-CR-Merge-del_mu", "Min-Int-CR-Merge-del_mu"), 'meth_description':
+            ["Minimum intensity merge for Synoptic Map: using del mu"] * 2,
                            'var_name': ("mu_cutoff", "del_mu"), 'var_description': ("lower mu cutoff value",
                                                                                     "max acceptable mu range"),
                            'var_val': (mu_cutoff, del_mu)}
     else:
-        euv_combined, chd_combined = combine_cr_maps(n_images, euv_maps, chd_maps, mu_cut_over=mu_cut_over,
+        euv_combined, chd_combined = combine_cr_maps(n_images, euv_maps, chd_maps, mu_merge_cutoff=mu_merge_cutoff,
                                                      mu_cutoff=mu_cutoff)
-        combined_method = {'meth_name': ("Min-Int-Merge_CR2", "Min-Int-Merge_CR2"), 'meth_description':
-            ["Minimum intensity merge for CR Map: based on Caplan et. al."] * 2,
-                           'var_name': ("mu_cutoff", "mu_cut_over"), 'var_description': ("lower mu cutoff value",
-                                                                                         "mu cutoff value in areas of "
-                                                                                         "overlap"),
-                           'var_val': (mu_cutoff, mu_cut_over)}
+        combined_method = {'meth_name': ("Min-Int-CR-Merge-mu_merge", "Min-Int-CR-Merge-mu_merge"), 'meth_description':
+            ["Minimum intensity merge for Synoptic Map: based on Caplan et. al."] * 2,
+                           'var_name': ("mu_cutoff", "mu_merge_cutoff"), 'var_description': ("lower mu cutoff value",
+                                                                                             "mu cutoff value in areas of "
+                                                                                             "overlap"),
+                           'var_val': (mu_cutoff, mu_merge_cutoff)}
+
+    # chd combined method
+    chd_combined_method = {'meth_name': ("Prob-CHD-Merge",), 'meth_description': ["Probability Merge for CH Maps"]}
+
     # append image and map info records
     image_info.append(euv_map.image_info)
     map_info.append(euv_map.map_info)
 
-    return euv_combined, chd_combined, combined_method
+    end = time.time()
+    print("Image number", euv_map.image_info.image_id[0], "has been added to the combined CR map in", end - start,
+          "seconds.")
+
+    return euv_combined, chd_combined, combined_method, chd_combined_method
 
 
 #### STEP SIX: PLOT COMBINED MAP AND SAVE TO DATABASE ####
-def save_maps(db_session, map_data_dir, euv_combined, chd_combined, image_info, map_info, methods_list, combined_method):
+def save_maps(db_session, map_data_dir, euv_combined, chd_combined, image_info, map_info, methods_list,
+              combined_method, chd_combined_method):
+    start = time.time()
     # generate a record of the method and variable values used for interpolation
     euv_combined.append_method_info(methods_list)
     euv_combined.append_method_info(pd.DataFrame(data=combined_method))
     chd_combined.append_method_info(methods_list)
-    chd_combined.append_method_info(pd.DataFrame(data=combined_method))
+    chd_combined.append_method_info(pd.DataFrame(data=chd_combined_method))
 
     # generate record of image and map info
     euv_combined.append_image_info(image_info)
@@ -148,11 +200,16 @@ def save_maps(db_session, map_data_dir, euv_combined, chd_combined, image_info, 
     chd_combined.append_map_info(map_info)
 
     # plot maps
-    Plotting.PlotMap(euv_combined, nfig="EUV Combined Map", title="Minimum Intensity Merge EUV Map")
-    Plotting.PlotMap(euv_combined, nfig="EUV/CHD Combined Map", title="Minimum Intensity EUV/CHD Merge Map")
-    Plotting.PlotMap(chd_combined, nfig="EUV/CHD Combined Map", title="Minimum Intensity EUV/CHD Merge Map",
+    Plotting.PlotMap(euv_combined, nfig="CR EUV Map", title="Minimum Intensity Merge CR EUV Map\nTime Min: " + str(
+        euv_combined.image_info.iloc[0].date_obs) + "\nTime Max: " + str(euv_combined.image_info.iloc[-1].date_obs))
+    # Plotting.PlotMap(euv_combined, nfig="CR CHD Map", title="Minimum Intensity CR CHD Merge Map")
+    Plotting.PlotMap(chd_combined, nfig="CR CHD Map", title="CHD Probability Merge Map\nTime Min: " + str(
+        chd_combined.image_info.iloc[0].date_obs) + "\nTime Max: " + str(chd_combined.image_info.iloc[-1].date_obs),
                      map_type='CHD')
 
     # save EUV and CHD maps to database
-    # euv_combined.write_to_file(map_data_dir, map_type='synoptic_euv', filename=None, db_session=db_session)
-    # chd_combined.write_to_file(map_data_dir, map_type='synoptic_chd', filename=None, db_session=db_session)
+    euv_combined.write_to_file(map_data_dir, map_type='synoptic_euv', filename=None, db_session=db_session)
+    chd_combined.write_to_file(map_data_dir, map_type='synoptic_chd', filename=None, db_session=db_session)
+
+    end = time.time()
+    print("Combined CR Maps have been plotted and saved to the database in", end - start, "seconds.")

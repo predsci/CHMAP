@@ -99,27 +99,31 @@ def query_euv_images(db_session, time_min=None, time_max=None, instrument=None, 
     elif wavelength is None:
         if instrument is None:
             query_out = pd.read_sql(db_session.query(EUV_Images).filter(EUV_Images.date_obs >= time_min,
-                                                                        EUV_Images.date_obs <= time_max).statement,
+                                                                        EUV_Images.date_obs <= time_max,
+                                                                        EUV_Images.flag == 0).statement,
                                     db_session.bind)
         else:
             query_out = pd.read_sql(db_session.query(EUV_Images).filter(EUV_Images.date_obs >= time_min,
                                                                         EUV_Images.date_obs <= time_max,
                                                                         EUV_Images.instrument.in_(
-                                                                            instrument)).statement,
+                                                                            instrument),
+                                                                        EUV_Images.flag == 0).statement,
                                     db_session.bind)
     else:
         if instrument is None:
             query_out = pd.read_sql(db_session.query(EUV_Images).filter(EUV_Images.date_obs >= time_min,
                                                                         EUV_Images.date_obs <= time_max,
                                                                         EUV_Images.wavelength.in_(
-                                                                            wavelength)).statement,
+                                                                            wavelength),
+                                                                        EUV_Images.flag == 0).statement,
                                     db_session.bind)
         else:
             query_out = pd.read_sql(db_session.query(EUV_Images).filter(EUV_Images.date_obs >= time_min,
                                                                         EUV_Images.date_obs <= time_max,
                                                                         EUV_Images.instrument.in_(instrument),
                                                                         EUV_Images.wavelength.in_(
-                                                                            wavelength)).statement,
+                                                                            wavelength),
+                                                                        EUV_Images.flag == 0).statement,
                                     db_session.bind)
 
     return query_out
@@ -412,7 +416,8 @@ def add_euv_map(db_session, psi_map, base_path=None, map_type=None):
     time_of_compute = psi_map.map_info.loc[0, 'time_of_compute'].to_pydatetime()
     fname = psi_map.map_info.loc[0, 'fname']
     # combo_id = psi_map.map_info.loc[0, 'combo_id'].__int__()
-    combo_id = psi_map.map_info.loc[len(psi_map.map_info) - 1, 'combo_id'].__int__()
+    valid_combo_ind = psi_map.map_info['combo_id'].index.get_loc(psi_map.map_info['combo_id'].last_valid_index())
+    combo_id = psi_map.map_info.loc[valid_combo_ind, 'combo_id'].__int__()
     meth_combo_id = psi_map.map_info.loc[0, 'meth_combo_id'].__int__()
 
     if fname is not None:
@@ -469,9 +474,7 @@ def add_euv_map(db_session, psi_map, base_path=None, map_type=None):
                 else:
                     inst = None
                 subdir, temp_fname = misc_helpers.construct_map_path_and_fname(base_path, psi_map.map_info.date_mean[
-                    len(psi_map.map_info) - 1],
-                                                                               map_id, map_type, 'h5',
-                                                                               inst=inst, mkdir=True)
+                    valid_combo_ind], map_id, map_type, 'h5', inst=inst, mkdir=True)
                 h5_filename = os.path.join(subdir, temp_fname)
                 rel_file_path = h5_filename.replace(base_path, "")
                 # record file path in map object
@@ -760,12 +763,12 @@ def get_var_val(db_session, combo_id, meth_id, var_id, var_val=None, create=Fals
 def get_method_combo_id(db_session, meth_ids, create=False):
     # query DB to determine if this combo exists.
     n_meths = len(meth_ids)
-    # Return the number of matching images in each combo that has n_images and contains at least one of image_ids.
+    # Return the number of matching methods in each combo that has n_methods and contains at least one of meth_ids.
     match_groups = pd.read_sql(
         db_session.query(Method_Combo_Assoc.meth_combo_id, func.count(Method_Combo_Assoc.meth_combo_id).label(
             "m_count")).filter(Method_Combo_Assoc.meth_combo_id.in_(
             db_session.query(Method_Combos.meth_combo_id).filter(Method_Combos.n_methods == n_meths)
-        ), Method_Combo_Assoc.meth_combo_id.in_(meth_ids)
+        ), Method_Combo_Assoc.meth_id.in_(meth_ids)
         ).group_by(Method_Combo_Assoc.meth_combo_id).statement, db_session.bind)
 
     if len(match_groups) > 0:
@@ -1009,6 +1012,8 @@ def add_map_dbase_record(db_session, psi_map, base_path=None, map_type=None):
             if temp_var_ids is not None:
                 psi_map.method_info.loc[var_index, 'var_id'] = temp_var_ids
             # add method id back to psi_map.method_info
+            new_index = np.arange(0, len(psi_map.method_info))
+            psi_map.method_info = psi_map.method_info.reindex(new_index)
             for index2, row2 in psi_map.method_info.iterrows():
                 if row2.meth_name == row.meth_name:
                     psi_map.method_info.loc[index2, 'meth_id'] = temp_meth_id
@@ -1017,8 +1022,6 @@ def add_map_dbase_record(db_session, psi_map, base_path=None, map_type=None):
             pass
 
     # Get method combo_id. Create if it doesn't already exist
-    meth_ids = methods_df_cp.meth_id.to_list()
-    meth_ids = list(dict.fromkeys(meth_ids))
     meth_ids = methods_df_cp.meth_id.to_list()
     meth_ids = list(dict.fromkeys(meth_ids))
     var_vals = methods_df_cp.var_val.to_list()
@@ -1193,6 +1196,9 @@ def query_hist(db_session, meth_id, n_mu_bins=None, n_intensity_bins=None, lat_b
     @param wavelength:
     @return: pandas data frame
     """
+    # convert lat_band to float value
+    lat_band_float = float(np.max(lat_band))
+
     if time_min is None and time_max is None:
         # get entire DB
         query_out = pd.read_sql(db_session.query(Histogram).statement, db_session.bind)
@@ -1205,7 +1211,7 @@ def query_hist(db_session, meth_id, n_mu_bins=None, n_intensity_bins=None, lat_b
                                                                        Histogram.meth_id == meth_id,
                                                                        Histogram.n_mu_bins == n_mu_bins,
                                                                        Histogram.n_intensity_bins == n_intensity_bins,
-                                                                       Histogram.lat_band == lat_band
+                                                                       Histogram.lat_band == lat_band_float
                                                                        ).statement,
                                     db_session.bind)
         elif n_mu_bins is None:
@@ -1215,7 +1221,7 @@ def query_hist(db_session, meth_id, n_mu_bins=None, n_intensity_bins=None, lat_b
                                                                        Histogram.instrument.in_(
                                                                            instrument),
                                                                        Histogram.n_intensity_bins == n_intensity_bins,
-                                                                       Histogram.lat_band == lat_band
+                                                                       Histogram.lat_band == lat_band_float
                                                                        ).statement,
                                     db_session.bind)
         else:
@@ -1226,7 +1232,7 @@ def query_hist(db_session, meth_id, n_mu_bins=None, n_intensity_bins=None, lat_b
                                                                            instrument),
                                                                        Histogram.n_mu_bins == n_mu_bins,
                                                                        Histogram.n_intensity_bins == n_intensity_bins,
-                                                                       Histogram.lat_band == lat_band
+                                                                       Histogram.lat_band == lat_band_float
                                                                        ).statement,
                                     db_session.bind)
     else:
@@ -1238,7 +1244,7 @@ def query_hist(db_session, meth_id, n_mu_bins=None, n_intensity_bins=None, lat_b
                                                                            wavelength),
                                                                        Histogram.n_mu_bins == n_mu_bins,
                                                                        Histogram.n_intensity_bins == n_intensity_bins,
-                                                                       Histogram.lat_band == lat_band
+                                                                       Histogram.lat_band == lat_band_float
                                                                        ).statement,
                                     db_session.bind)
         elif n_mu_bins is None:
@@ -1250,7 +1256,7 @@ def query_hist(db_session, meth_id, n_mu_bins=None, n_intensity_bins=None, lat_b
                                                                        Histogram.wavelength.in_(
                                                                            wavelength),
                                                                        Histogram.n_intensity_bins == n_intensity_bins,
-                                                                       Histogram.lat_band == lat_band
+                                                                       Histogram.lat_band == lat_band_float
                                                                        ).statement,
                                     db_session.bind)
 
@@ -1264,7 +1270,7 @@ def query_hist(db_session, meth_id, n_mu_bins=None, n_intensity_bins=None, lat_b
                                                                            wavelength),
                                                                        Histogram.n_mu_bins == n_mu_bins,
                                                                        Histogram.n_intensity_bins == n_intensity_bins,
-                                                                       Histogram.lat_band == lat_band
+                                                                       Histogram.lat_band == lat_band_float
                                                                        ).statement,
                                     db_session.bind)
 
@@ -1284,8 +1290,9 @@ def add_hist(db_session, histogram):
 
     hist_identifier = histogram.instrument + " observed at " + str(histogram.date_obs)
 
+
     # convert arrays to correct binary format
-    lat_band, intensity_bin_edges, mu_bin_edges, hist = datatypes.hist_to_binary(histogram)
+    intensity_bin_edges, mu_bin_edges, hist = datatypes.hist_to_binary(histogram)
 
     # check if row already exists in DB
     existing_row_id = db_session.query(Histogram.hist_id).filter(
@@ -1295,7 +1302,7 @@ def add_hist(db_session, histogram):
         Histogram.n_intensity_bins == histogram.n_intensity_bins,
         Histogram.instrument == histogram.instrument,
         Histogram.date_obs == histogram.date_obs,
-        Histogram.lat_band == lat_band,
+        Histogram.lat_band == histogram.lat_band,
         Histogram.wavelength == histogram.wavelength).all()
     if len(existing_row_id) == 1:
         # histogram has already been downloaded and entered into DB. do nothing
@@ -1314,7 +1321,7 @@ def add_hist(db_session, histogram):
                              date_obs=histogram.date_obs,
                              instrument=histogram.instrument, wavelength=histogram.wavelength,
                              n_mu_bins=histogram.n_mu_bins, n_intensity_bins=histogram.n_intensity_bins,
-                             lat_band=lat_band, intensity_bin_edges=intensity_bin_edges, mu_bin_edges=mu_bin_edges,
+                             lat_band=histogram.lat_band, intensity_bin_edges=intensity_bin_edges, mu_bin_edges=mu_bin_edges,
                              hist=hist)
         # Append to the list of rows to be added
         db_session.add(hist_add)
