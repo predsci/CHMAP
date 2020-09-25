@@ -32,7 +32,7 @@ image_out_path = os.path.join(App.APP_HOME, "test_data", "analysis/lbcc_function
 
 # TIME FRAME TO QUERY HISTOGRAMS
 query_time_min = datetime.datetime(2011, 4, 1, 0, 0, 0)
-query_time_max = datetime.datetime(2011, 10, 1, 0, 0, 0)
+query_time_max = datetime.datetime(2012, 10, 1, 0, 0, 0)
 weekday = 0
 number_of_days = 180
 
@@ -59,7 +59,7 @@ mu_bin_centers = (mu_bin_array[1:] + mu_bin_array[:-1]) / 2
 # time arrays
 # returns array of moving averages center dates, based off start and end date
 moving_avg_centers, moving_width = lbcc.moving_averages(query_time_min, query_time_max, weekday,
-                                                        number_of_days=None)
+                                                        days=None)
 
 # calc beta and y for a few sample mu-values
 sample_mu = [0.125, 0.325, 0.575, 0.875]
@@ -195,5 +195,5 @@ for inst_index, instrument in enumerate(inst_list):
     plt.close(200 + inst_index)
 
 end_time_tot = time.time()
-print("Theoretical plots of beta and y over time hvae been generated and saved.")
+print("Theoretical plots of beta and y over time have been generated and saved.")
 print("Total elapsed time for plot creation: " + str(round(end_time_tot - start_time_tot, 3)) + " seconds.")

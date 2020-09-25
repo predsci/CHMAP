@@ -23,9 +23,10 @@ from modules.misc_funs import get_metadata
 from helpers import misc_helpers
 from modules import datatypes
 import helpers.psihdf as psihdf
+import modules.cred_funs as creds
 
 
-def init_db_conn(db_name, chd_base, sqlite_path=""):
+def init_db_conn(db_name, chd_base, sqlite_path="", user="", password=""):
     """
     Connect to the database specified by db_name.
     Then establish the SQLAlchemy declarative base
@@ -46,7 +47,7 @@ def init_db_conn(db_name, chd_base, sqlite_path=""):
         connect_string = 'mysql://' + db_user + ':' + url_psswd + '@shadow.predsci.com:3306/CHD'
         print("Attempting to connect to DB file", connect_string)  # print to check
     elif db_name == 'sqlite':
-        print("Attempting to connect to SQLite DB file " + sqlite_path)
+        print("Attempting to connect to SQLite DB server " + sqlite_path)
         connect_string = 'sqlite:///' + sqlite_path
     elif db_name == 'chd-db':
         database_dir = App.DATABASE_HOME
@@ -54,12 +55,23 @@ def init_db_conn(db_name, chd_base, sqlite_path=""):
         sqlite_path = os.path.join(database_dir, sqlite_filename)
         print('Attempting to connect to CHD_DB file ' + sqlite_path)
         connect_string = 'sqlite:///' + sqlite_path
+    elif db_name == 'mysql-Q':
+        db_user = user
+        if password == "":
+            db_psswd = creds.recover_pwd()
+        else:
+            db_psswd = password
+        url_psswd = urllib.parse.quote_plus(db_psswd)
+        connect_string = 'mysql://' + db_user + ':' + url_psswd + '@q.predsci.com:3306/chd'
+        print_string = 'mysql://' + db_user + ':****pwd****@q.predsci.com:3306/chd'
+        print("Attempting to connect to DB server ", print_string)  # print to check
     else:
-        sys.exit("At this time, 'db_name' must be either 'sqlite', 'chd-db', or 'mysql-shadow'.")
+        sys.exit("At this time, 'db_name' must be either 'sqlite', 'chd-db', 'mysql-Q', or 'mysql-shadow'.")
 
     # now establish the engine
     engine = create_engine(connect_string)
-    # import base declarative table definitions into the engine
+    # import base declarative table definitions into the engine. Also instructs the engine to create tables if they
+    # don't exist.
     chd_base.metadata.create_all(engine)
     # define the session
     session = sessionmaker(bind=engine)

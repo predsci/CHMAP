@@ -220,7 +220,9 @@ class LosImage:
         use_mu = self.mu[use_index]
         use_data = self.data[use_index]
         if log10:
-            use_data[use_data < 0.] = 0.
+            # use_data[use_data < 0.] = 0.
+            # log(0) is still a problem, set to a very small number
+            use_data[use_data <= 0.] = 1E-8
             use_data = np.log10(use_data)
         # generate intensity histogram
         hist_out, temp_x, temp_y = np.histogram2d(use_mu, use_data, bins=[mu_bin_edges, intensity_bin_edges])

@@ -4,7 +4,6 @@ Query available images and download best matches.
 """
 
 import sys
-sys.path.append('/Users/tamarervin/work/chd')
 import os
 import numpy as np
 import pandas as pd
@@ -17,8 +16,8 @@ from modules.DB_funs import init_db_conn
 from modules.image_download import synchronic_euv_download
 
 # Specify a vector of synchronic times
-period_start = Time('2012-04-01T00:00:00.000', scale='utc')
-period_end = Time('2013-01-01T00:00:00.000', scale='utc')
+period_start = Time('2013-01-01T00:00:00.000', scale='utc')
+period_end = Time('2014-01-01T00:00:00.000', scale='utc')
 # define image search interval cadence and width
 interval_cadence = 2*u.hour
 del_interval = 30*u.minute
@@ -29,7 +28,8 @@ synch_times = pd.DataFrame({'target_time': target_times, 'min_time': target_time
                             'max_time': target_times + del_interval})
 
 # specify path and filename for download_results file
-pickle_file = os.path.join(App.APP_HOME, "test_data")
+download_results_filename = "download_results_" + period_start.__str__()
+pickle_file = os.path.join(App.APP_HOME, "test_data", download_results_filename)
 
 # Establish connection to database
 use_db = "sqlite"

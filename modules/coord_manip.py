@@ -81,7 +81,9 @@ def image_grid_to_CR(image_x, image_y, R0=1.0, obsv_lat=0, obsv_lon=0, get_mu=Fa
     use_y = image_y[use_index]
 
     # Find z coord (we can assume it is in the positive direction)
-    use_z = np.sqrt(R0 ** 2 - use_x ** 2 - use_y ** 2)
+    # use_z = np.sqrt(R0 ** 2 - use_x ** 2 - use_y ** 2)
+    # to be numerically equivalent to the use_index definition, change to this:
+    use_z = np.sqrt(R0**2 - (use_x**2 + use_y**2))
 
     # Calc image_theta, image_phi, and image_mu
     if get_mu:
@@ -99,6 +101,9 @@ def image_grid_to_CR(image_x, image_y, R0=1.0, obsv_lat=0, obsv_lon=0, get_mu=Fa
     # apply rotation matrix to coordinates
     map3D_coord = np.matmul(rev_rot, coord_array)
 
+    # Occasionally numeric error from the rotation causes a z magnitude to be greater than R0
+    num_err_z_index = np.abs(map3D_coord[2, :]) > R0
+    map3D_coord[2, num_err_z_index] = np.sign(map3D_coord[2, num_err_z_index]) * R0
     # Convert map cartesian to map theta and phi
     cr_theta = np.arccos(map3D_coord[2, :] / R0)
     cr_phi = np.arctan2(map3D_coord[1, :], map3D_coord[0, :])

@@ -9,6 +9,7 @@
 
 settings/app.py
 settings/app_*.py
+settings/e_cred.bin
 setup.conf
 
 # ignore the output folders in schema_viz

@@ -12,29 +12,41 @@ from settings.app import App
 from modules.DB_classes import *
 from modules.DB_funs import init_db_conn, build_euvimages_from_fits, query_euv_images
 
-# In this example we use the 'reference_data' fits files supplied with repo
-# manually set the data-file dirs
-raw_data_dir = os.path.join(App.APP_HOME, "reference_data", "raw")
-hdf_data_dir = os.path.join(App.APP_HOME, "reference_data", "processed")
-# manually set the database location
-# database_dir = App.DATABASE_HOME
-database_dir = os.path.join(App.APP_HOME, "reference_data")
+# In this example we can use the 'reference_data' fits files supplied with repo or the directories setup in App.py
+# data-file dirs
+raw_data_dir = App.RAW_DATA_HOME
+hdf_data_dir = App.PROCESSED_DATA_HOME
+# database location
+database_dir = App.DATABASE_HOME
 # give the sqlite file a unique name
-sqlite_filename = "db_create-test.db"
+sqlite_filename = App.DATABASE_FNAME
 
 # To recreate the SQLite database file in reference_data/, use these:
+# raw_data_dir = os.path.join(App.APP_HOME, "reference_data", "raw")
+# hdf_data_dir = os.path.join(App.APP_HOME, "reference_data", "processed")
 # database_dir = os.path.join(App.APP_HOME, "reference_data")
-sqlite_filename = "dbtest.db"
+# sqlite_filename = "dbtest.db"
 
-# setup database connection
-use_db = "sqlite"
-sqlite_path = os.path.join(database_dir, sqlite_filename)
+# designate which database to connect to
+use_db = "sqlite"       # 'sqlite'  Use local sqlite file-based db
+                        # 'mysql-Q' Use the remote MySQL database on Q
+user = "turtle"         # only needed for remote databases.
+password = ""           # See example109 for setting-up an encrypted password.  In # this case leave password="", and
+# init_db_conn() will automatically find and use your saved password. Otherwise, enter your MySQL password here.
 
-if os.path.exists(sqlite_path):
-    os.remove(sqlite_path)
-    print("\nPrevious file ", sqlite_filename, " deleted.\n")
+if use_db == 'sqlite':
+    # setup database connection to local sqlite file
+    sqlite_path = os.path.join(database_dir, sqlite_filename)
 
-db_session = init_db_conn(db_name=use_db, chd_base=Base, sqlite_path=sqlite_path)
+    if os.path.exists(sqlite_path):
+        os.remove(sqlite_path)
+        print("\nPrevious file ", sqlite_filename, " deleted.\n")
+
+    db_session = init_db_conn(db_name=use_db, chd_base=Base, sqlite_path=sqlite_path)
+elif use_db == 'mysql-Q':
+    # setup database connection to MySQL database on Q
+    db_session = init_db_conn(db_name=use_db, chd_base=Base, user=user, password=password)
+
 
 # build database
 print("\nNow build database image records for each existing file:")

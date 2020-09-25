@@ -87,7 +87,8 @@ class Image_Combos(Base):
     date_mean = Column(DateTime)
     date_max = Column(DateTime)
     date_min = Column(DateTime)
-    __table_args__ = (Index('mean_time', "date_mean"), )
+    __table_args__ = (Index('mean_time', "date_mean"),
+                      Index('unique_combo', "meth_id", "n_images", "date_mean", "date_max", "date_min", unique=True))
 
     images = relationship("Image_Combo_Assoc")
 
@@ -99,7 +100,8 @@ class Image_Combo_Assoc(Base):
     __tablename__ = 'image_combo_assoc'
     combo_id = Column(Integer, ForeignKey('image_combos.combo_id'), primary_key=True)
     image_id = Column(Integer, ForeignKey('euv_images.image_id'), primary_key=True)
-    __table_args__ = (Index('image_first', "image_id"), )
+    __table_args__ = (Index('image_first', "image_id"),
+                      Index('unique_assoc', "combo_id", "image_id", unique=True))
 
     image_info = relationship("EUV_Images")
 
