@@ -319,9 +319,10 @@ def build_euvimages_from_fits(db_session, raw_data_dir, hdf_data_dir):
                 # extract metadata from file and write a row to the database (session)
                 db_session = add_image2session(data_dir=raw_data_dir, subdir=relative_path, fname=filename,
                                                db_session=db_session)
+        # commit changes to the DB
+        db_session.commit()
 
-    # commit changes to the DB
-    db_session.commit()
+
 
     # now look for matching hdf files
     # first query image DB for all records
@@ -1211,7 +1212,9 @@ def query_hist(db_session, meth_id, n_mu_bins=None, n_intensity_bins=None, lat_b
                                                                        Histogram.meth_id == meth_id,
                                                                        Histogram.n_mu_bins == n_mu_bins,
                                                                        Histogram.n_intensity_bins == n_intensity_bins,
-                                                                       Histogram.lat_band == lat_band_float
+                                                                       Histogram.lat_band.between(
+                                                                           (1. - 1e-4)*lat_band_float,
+                                                                           (1. + 1e-4)*lat_band_float)
                                                                        ).statement,
                                     db_session.bind)
         elif n_mu_bins is None:
@@ -1221,7 +1224,9 @@ def query_hist(db_session, meth_id, n_mu_bins=None, n_intensity_bins=None, lat_b
                                                                        Histogram.instrument.in_(
                                                                            instrument),
                                                                        Histogram.n_intensity_bins == n_intensity_bins,
-                                                                       Histogram.lat_band == lat_band_float
+                                                                       Histogram.lat_band.between(
+                                                                           (1. - 1e-4)*lat_band_float,
+                                                                           (1. + 1e-4)*lat_band_float)
                                                                        ).statement,
                                     db_session.bind)
         else:
@@ -1232,7 +1237,9 @@ def query_hist(db_session, meth_id, n_mu_bins=None, n_intensity_bins=None, lat_b
                                                                            instrument),
                                                                        Histogram.n_mu_bins == n_mu_bins,
                                                                        Histogram.n_intensity_bins == n_intensity_bins,
-                                                                       Histogram.lat_band == lat_band_float
+                                                                       Histogram.lat_band.between(
+                                                                           (1. - 1e-4)*lat_band_float,
+                                                                           (1. + 1e-4)*lat_band_float)
                                                                        ).statement,
                                     db_session.bind)
     else:
@@ -1244,7 +1251,9 @@ def query_hist(db_session, meth_id, n_mu_bins=None, n_intensity_bins=None, lat_b
                                                                            wavelength),
                                                                        Histogram.n_mu_bins == n_mu_bins,
                                                                        Histogram.n_intensity_bins == n_intensity_bins,
-                                                                       Histogram.lat_band == lat_band_float
+                                                                       Histogram.lat_band.between(
+                                                                           (1. - 1e-4)*lat_band_float,
+                                                                           (1. + 1e-4)*lat_band_float)
                                                                        ).statement,
                                     db_session.bind)
         elif n_mu_bins is None:
@@ -1256,7 +1265,9 @@ def query_hist(db_session, meth_id, n_mu_bins=None, n_intensity_bins=None, lat_b
                                                                        Histogram.wavelength.in_(
                                                                            wavelength),
                                                                        Histogram.n_intensity_bins == n_intensity_bins,
-                                                                       Histogram.lat_band == lat_band_float
+                                                                       Histogram.lat_band.between(
+                                                                           (1. - 1e-4)*lat_band_float,
+                                                                           (1. + 1e-4)*lat_band_float)
                                                                        ).statement,
                                     db_session.bind)
 
@@ -1270,7 +1281,9 @@ def query_hist(db_session, meth_id, n_mu_bins=None, n_intensity_bins=None, lat_b
                                                                            wavelength),
                                                                        Histogram.n_mu_bins == n_mu_bins,
                                                                        Histogram.n_intensity_bins == n_intensity_bins,
-                                                                       Histogram.lat_band == lat_band_float
+                                                                       Histogram.lat_band.between(
+                                                                           (1. - 1e-4)*lat_band_float,
+                                                                           (1. + 1e-4)*lat_band_float)
                                                                        ).statement,
                                     db_session.bind)
 
@@ -1300,10 +1313,15 @@ def add_hist(db_session, histogram):
         Histogram.meth_id == histogram.meth_id,
         Histogram.n_mu_bins == histogram.n_mu_bins,
         Histogram.n_intensity_bins == histogram.n_intensity_bins,
-        Histogram.instrument == histogram.instrument,
-        Histogram.date_obs == histogram.date_obs,
-        Histogram.lat_band == histogram.lat_band,
-        Histogram.wavelength == histogram.wavelength).all()
+        Histogram.lat_band.between((1.-1e-4)*histogram.lat_band, (1.+1e-4)*histogram.lat_band)).all()
+        # Histogram.image_id == histogram.image_id,
+        # Histogram.meth_id == histogram.meth_id,
+        # Histogram.n_mu_bins == histogram.n_mu_bins,
+        # Histogram.n_intensity_bins == histogram.n_intensity_bins,
+        # Histogram.instrument == histogram.instrument,
+        # Histogram.date_obs == histogram.date_obs,
+        # Histogram.lat_band == histogram.lat_band,
+        # Histogram.wavelength == histogram.wavelength).all()
     if len(existing_row_id) == 1:
         # histogram has already been downloaded and entered into DB. do nothing
         print("Histogram is already logged in database.  Nothing added.")
@@ -1338,17 +1356,38 @@ def query_inst_combo(db_session, query_time_min, query_time_max, meth_name, inst
     method_id = get_method_id(db_session, meth_name, meth_desc=None, var_names=None, var_descs=None,
                               create=True)
 
-    inst_combo_query = pd.read_sql(
-        db_session.query(Image_Combo_Assoc.combo_id).filter(Image_Combo_Assoc.image_id.in_(
-            db_session.query(EUV_Images.image_id).filter(EUV_Images.instrument == instrument))).statement,
-        db_session.bind)
-    combo_query = pd.read_sql(db_session.query(Image_Combos).filter(Image_Combos.date_mean <= query_time_max).
-                              filter(Image_Combos.date_mean >= query_time_min).filter(
-        Image_Combos.meth_id == method_id[1],
-        Image_Combos.combo_id.in_(inst_combo_query.combo_id)).statement,
-                              db_session.bind)
+    # inst_combo_query = pd.read_sql(
+    #     db_session.query(Image_Combo_Assoc.combo_id).filter(Image_Combo_Assoc.image_id.in_(
+    #         db_session.query(EUV_Images.image_id).filter(EUV_Images.instrument == instrument))).statement,
+    #     db_session.bind)
+    # combo_query = pd.read_sql(db_session.query(Image_Combos).filter(Image_Combos.date_mean <= query_time_max).
+    #                           filter(Image_Combos.date_mean >= query_time_min).filter(
+    #     Image_Combos.meth_id == method_id[1],
+    #     Image_Combos.combo_id.in_(inst_combo_query.combo_id)).statement,
+    #                           db_session.bind)
 
-    return combo_query
+    # try to speed this up by first querying combos:
+    combo_query = db_session.query(Image_Combos.combo_id).filter(Image_Combos.date_mean <= query_time_max).filter(
+        Image_Combos.date_mean >= query_time_min).filter(Image_Combos.meth_id == method_id[1])
+
+    # join instrument to image_combo info for candidate combos from combo_query
+    image_inst_join = db_session.query(Image_Combo_Assoc, EUV_Images.instrument).join(EUV_Images).filter(
+        Image_Combo_Assoc.combo_id.in_(combo_query))
+
+    # execute query
+    image_combo_instrument = pd.read_sql(image_inst_join.statement, db_session.bind)
+
+    # Find two unique lists of combos
+    inst_index = image_combo_instrument['instrument'].eq(instrument[0])
+    list_A = image_combo_instrument.combo_id[inst_index].unique()
+    list_B = image_combo_instrument.combo_id[~inst_index].unique()
+    # determine correct combos by determining which exist in A but not in B
+    combos_keep = np.setdiff1d(list_A, list_B, assume_unique=True)
+    # return correct pandas format for back-compatibility
+    combo_result = pd.read_sql(db_session.query(Image_Combos).filter(
+        Image_Combos.combo_id.in_(combos_keep.tolist())).statement, db_session.bind)
+
+    return combo_result
 
 
 def query_var_val(db_session, meth_name, date_obs, inst_combo_query):

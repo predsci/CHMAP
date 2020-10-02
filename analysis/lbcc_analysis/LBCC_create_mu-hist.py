@@ -29,18 +29,37 @@ R0 = 1.01
 log10 = True
 lat_band = [- np.pi / 64., np.pi / 64.]
 
-# recover database paths
+# recover local filesystem paths
 raw_data_dir = App.RAW_DATA_HOME
 hdf_data_dir = App.PROCESSED_DATA_HOME
+
+
+# designate which database to connect to
+use_db = "mysql-Q"       # 'sqlite'  Use local sqlite file-based db
+                        # 'mysql-Q' Use the remote MySQL database on Q
+user = "turtle"         # only needed for remote databases.
+password = ""           # See example109 for setting-up an encrypted password.  In this case leave password="", and
+# init_db_conn() will automatically find and use your saved password. Otherwise, enter your MySQL password here.
+# setup local database paths (only used for use_db='sqlite')
 database_dir = App.DATABASE_HOME
 sqlite_filename = App.DATABASE_FNAME
 
-# setup database connection
-use_db = "sqlite"
-sqlite_path = os.path.join(database_dir, sqlite_filename)
-db_session = init_db_conn(db_name=use_db, chd_base=db_class.Base, sqlite_path=sqlite_path)
 
 # ------------ NO NEED TO UPDATE ANYTHING BELOW  ------------- #
+
+# setup database connection
+if use_db == 'sqlite':
+    # setup database connection to local sqlite file
+    sqlite_path = os.path.join(database_dir, sqlite_filename)
+
+    if os.path.exists(sqlite_path):
+        os.remove(sqlite_path)
+        print("\nPrevious file ", sqlite_filename, " deleted.\n")
+
+    db_session = init_db_conn(db_name=use_db, chd_base=db_class.Base, sqlite_path=sqlite_path)
+elif use_db == 'mysql-Q':
+    # setup database connection to MySQL database on Q
+    db_session = init_db_conn(db_name=use_db, chd_base=db_class.Base, user=user, password=password)
 
 # start time
 start_time_tot = time.time()

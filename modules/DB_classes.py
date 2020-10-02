@@ -194,6 +194,8 @@ class Var_Vals(Base):
     meth_info = relationship("Method_Defs")
     combo_info = relationship("Image_Combos")
 
+    __table_args__ = (Index('var_vals_index', "combo_id", "meth_id", "var_id", unique=True),)
+
 
 class Histogram(Base):
     """
@@ -213,4 +215,7 @@ class Histogram(Base):
     intensity_bin_edges = Column(LargeBinary)
     hist = Column(LargeBinary)
 
-    __table_args__ = (Index('hist_index', "date_obs", "instrument", "wavelength"),)
+    __table_args__ = (Index('hist_index', "date_obs", "instrument", "wavelength"),
+                      Index('hist_unique', "image_id", "meth_id", "n_mu_bins", "n_intensity_bins", "lat_band",
+                            unique=True)
+                      )

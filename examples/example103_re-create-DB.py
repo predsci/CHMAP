@@ -28,10 +28,10 @@ sqlite_filename = App.DATABASE_FNAME
 # sqlite_filename = "dbtest.db"
 
 # designate which database to connect to
-use_db = "sqlite"       # 'sqlite'  Use local sqlite file-based db
+use_db = "mysql-Q"       # 'sqlite'  Use local sqlite file-based db
                         # 'mysql-Q' Use the remote MySQL database on Q
 user = "turtle"         # only needed for remote databases.
-password = ""           # See example109 for setting-up an encrypted password.  In # this case leave password="", and
+password = ""           # See example109 for setting-up an encrypted password.  In this case leave password="", and
 # init_db_conn() will automatically find and use your saved password. Otherwise, enter your MySQL password here.
 
 if use_db == 'sqlite':
@@ -52,9 +52,17 @@ elif use_db == 'mysql-Q':
 print("\nNow build database image records for each existing file:")
 db_session = build_euvimages_from_fits(db_session=db_session, raw_data_dir=raw_data_dir, hdf_data_dir=hdf_data_dir)
 
-# recover entire DB and print
-print("\nCheck that 'euv_images' table contains records:")
-test_pd = query_euv_images(db_session=db_session)
-print(test_pd)
+print("\nProcess complete.")
+
+if use_db == 'sqlite':
+    # recover all image records and print
+    print("\nCheck that 'euv_images' table contains records:")
+    test_pd = query_euv_images(db_session=db_session)
+    print(test_pd)
+elif use_db == 'mysql-Q':
+    # recover all image records and print the count
+    test_pd = query_euv_images(db_session=db_session)
+    num_rows = test_pd.shape[0]
+    print("\nTotal number of images in database: " + str(num_rows) + "\n")
 
 db_session.close()
