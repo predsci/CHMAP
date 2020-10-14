@@ -1,0 +1,106 @@
+
+import os
+import requests
+import h5py
+import pandas as pd
+import datetime
+from astropy.time import Time, TimeDelta
+
+from settings.app import App
+
+
+def download_lmsal_index(file_write):
+
+    # specify index url
+    down_url = "https://www.lmsal.com/solarsoft/pfss_genxcat/surffield_v2.h5"
+    # download url contents
+    print("Downloading current LMSAL index from ", down_url, "...\n", sep="")
+    out_obj = requests.get(down_url)
+    # write to file
+    print("Download complete. Saving to file ", file_write)
+    file_con = open(file_write, 'wb')
+    file_con.write(out_obj.content)
+    file_con.close()
+
+
+def build_lmsal_index_path(filename=None, path=None):
+
+    # Default path. database /tmp folder
+    if path is None:
+        path = App.TMP_HOME
+    # Default filename
+    if filename is None:
+        filename = "lmsal_index.h5"
+
+    out_path = os.path.join(path, filename)
+    return out_path
+
+
+def read_lmsal_index(lmsal_filename):
+    # read file
+    lmsal_con = h5py.File(lmsal_filename, 'r')
+    # unpack data
+    lmsal_array = lmsal_con['ssw_pfss_database'][0]
+    base_url = lmsal_array[0].decode("utf-8")
+
+    lmsal_float_time = lmsal_array[1]
+    lmsal_path = lmsal_array[2].astype(str)
+
+    # convert TAI seconds to a datetime format
+    tai_epoch = Time("1958-01-01T00:00:00.000", scale="tai", format="isot")
+    tai_datetime = tai_epoch + TimeDelta(lmsal_float_time, format="sec", scale="tai")
+
+    # convert to UTC:
+    utc_datetime = tai_datetime.utc
+    # convert to datetime class. Because of the database, we generally want to work with the basic datetime class.
+    out_datetime = utc_datetime.tt.datetime
+
+    # combine into dataframe (this is really slow)
+    # out_frame = pd.DataFrame({'timestamp': utc_datetime, 'sub_path': lmsal_path})
+
+    return base_url, out_datetime, lmsal_path
+
+
+def query_lmsal_index(min_datetime, max_datetime=None):
+    """
+    Time-based query of lmsal synchronic magnetic maps.  When max_datetime is None, function looks for exact matche
+    to min_datetime. Else, the function will search the interval min_datetime<= x <=max_datetime.
+    :param min_datetime: a single datetime
+    :param max_datetime: a single datetime
+    :return: a pandas dataframe of datetimes and corresponding urls
+    """
+    # generate path to index file
+    lmsal_index_path = build_lmsal_index_path()
+    # check that index file exists
+    file_exists = os.path.isfile(lmsal_index_path)
+    if not file_exists:
+        print("Synchronic magnetic map index downloading...\n")
+        download_lmsal_index(lmsal_index_path)
+    # read index file
+    base_url, utc_datetime, lmsal_path = read_lmsal_index(lmsal_index_path)
+
+    if max_datetime is None:
+        max_datetime = min_datetime
+
+    match_index = (utc_datetime >= min_datetime) & (utc_datetime <= max_datetime)
+    # check for any matches
+    if match_index.sum() == 0 and file_exists:
+        print("No matches found. Updating synchronic magnetic map index file...")
+        # if we used an existing file and the query had no matches, re-download the index
+        download_lmsal_index(lmsal_index_path)
+        base_url, utc_datetime, lmsal_path = read_lmsal_index(lmsal_index_path)
+        # re-evaluate the match index
+        match_index = (utc_datetime >= min_datetime) & (utc_datetime <= max_datetime)
+        if match_index.sum() == 0:
+            print("No matches found in updated file. Check datetime inputs.\n")
+
+    out_dates = utc_datetime[match_index]
+    out_url_stub = lmsal_path[match_index]
+
+    out_url = [base_url + s for s in out_url_stub]
+
+    out_df = pd.DataFrame({'datetime': out_dates, 'full_url': out_url})
+
+    return out_df
+
+

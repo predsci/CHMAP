@@ -14,8 +14,8 @@ import modules.datatypes as psi_d_types
 ###### ------ PARAMETERS TO UPDATE -------- ########
 
 # TIME RANGE
-hist_query_time_min = datetime.datetime(2011, 1, 1, 0, 0, 0)
-hist_query_time_max = datetime.datetime(2012, 1, 1, 0, 0, 0)
+hist_query_time_min = datetime.datetime(2012, 1, 1, 0, 0, 0)
+hist_query_time_max = datetime.datetime(2013, 1, 1, 0, 0, 0)
 
 # define instruments
 inst_list = ["AIA", "EUVI-A", "EUVI-B"]

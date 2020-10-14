@@ -16,7 +16,7 @@ import analysis.lbcc_analysis.LBCC_theoretic_funcs as lbcc_funcs
 ###### ------ UPDATEABLE PARAMETERS ------- #######
 # TIME RANGE FOR LBC CORRECTION AND HISTOGRAM CREATION
 lbc_query_time_min = datetime.datetime(2011, 1, 1, 0, 0, 0)
-lbc_query_time_max = datetime.datetime(2012, 1, 1, 0, 0, 0)
+lbc_query_time_max = datetime.datetime(2013, 1, 1, 0, 0, 0)
 
 # define instruments
 inst_list = ["AIA", "EUVI-A", "EUVI-B"]
@@ -34,15 +34,31 @@ hdf_data_dir = App.PROCESSED_DATA_HOME
 database_dir = App.DATABASE_HOME
 sqlite_filename = App.DATABASE_FNAME
 
-# setup database connection
+# setup database parameters
 create = True  # true if you want to add to database
-use_db = "sqlite"
-sqlite_path = os.path.join(database_dir, sqlite_filename)
-db_session = init_db_conn(db_name=use_db, chd_base=db_class.Base, sqlite_path=sqlite_path)
+database_dir = App.DATABASE_HOME
+sqlite_filename = App.DATABASE_FNAME
+# designate which database to connect to
+use_db = "mysql-Q"       # 'sqlite'  Use local sqlite file-based db
+                        # 'mysql-Q' Use the remote MySQL database on Q
+user = "turtle"         # only needed for remote databases.
+password = ""           # See example109 for setting-up an encrypted password.  In this case leave password="", and
+# init_db_conn() will automatically find and use your saved password. Otherwise, enter your MySQL password here.
 
 ###### ------- NOTHING TO UPDATE BELOW ------- #######
 # start time
 start_time = time.time()
+
+# connect to database
+if use_db == 'sqlite':
+    # setup database connection to local sqlite file
+    sqlite_path = os.path.join(database_dir, sqlite_filename)
+
+    db_session = init_db_conn(db_name=use_db, chd_base=db_class.Base, sqlite_path=sqlite_path)
+elif use_db == 'mysql-Q':
+    # setup database connection to MySQL database on Q
+    db_session = init_db_conn(db_name=use_db, chd_base=db_class.Base, user=user, password=password)
+
 
 # create IIT method
 meth_name = "IIT"
@@ -50,6 +66,7 @@ meth_desc = "IIT Fit Method"
 method_id = db_funcs.get_method_id(db_session, meth_name, meth_desc, var_names=None, var_descs=None, create=True)
 
 for instrument in inst_list:
+    print("Begining loop for instrument:", instrument)
     # query EUV images
     query_instrument = [instrument, ]
     image_pd = db_funcs.query_euv_images(db_session=db_session, time_min=lbc_query_time_min,
@@ -59,6 +76,7 @@ for instrument in inst_list:
                                             instrument=instrument)
     # apply LBC
     for index, row in image_pd.iterrows():
+        print("Calculating IIT histogram at time:", row.date_obs)
         original_los, lbcc_image, mu_indices, use_indices, theoretic_query = lbcc_funcs.apply_lbc(db_session, hdf_data_dir,
                                                                                  combo_query,
                                                                                  image_row=row,

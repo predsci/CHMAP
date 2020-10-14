@@ -28,7 +28,7 @@ hdf_data_dir = App.PROCESSED_DATA_HOME
 
 # TIME FRAME TO QUERY HISTOGRAMS
 query_time_min = datetime.datetime(2011, 4, 1, 0, 0, 0)
-query_time_max = datetime.datetime(2011, 4, 2, 0, 0, 0)
+query_time_max = datetime.datetime(2012, 10, 1, 0, 0, 0)
 weekday = 0
 number_of_days = 180
 
@@ -68,28 +68,31 @@ meth_name = 'LBCC'
 meth_desc = 'LBCC Theoretic Fit Method'
 method_id = get_method_id(db_session, meth_name, meth_desc, var_names=None, var_descs=None, create=False)
 
-for date_index, center_date in enumerate(moving_avg_centers):
-    print("Begin date " + str(center_date))
+for inst_index, instrument in enumerate(inst_list):
+    print("\nStarting calculations for " + instrument + "\n")
 
-    # determine time range based off moving average centers
-    min_date = center_date - moving_width / 2
-    max_date = center_date + moving_width / 2
+    # download all histograms needed for this instrument
+    range_min_date = np.datetime64(query_time_min) - moving_width/2
+    range_max_date = np.datetime64(query_time_max) + moving_width/2
+    # query the histograms
+    query_instrument = [instrument, ]
+    pd_hist = query_hist(db_session=db_session, meth_id=method_id[1], n_mu_bins=n_mu_bins,
+                         n_intensity_bins=n_intensity_bins,
+                         lat_band=lat_band,
+                         time_min=np.datetime64(range_min_date).astype(datetime.datetime),
+                         time_max=np.datetime64(range_max_date).astype(datetime.datetime),
+                         instrument=query_instrument)
 
-    for inst_index, instrument in enumerate(inst_list):
-        print("\nStarting calculations for " + instrument + "\n")
+    # convert the binary types back to arrays
+    mu_bin_array, intensity_bin_array, full_hist = psi_d_types.binary_to_hist(pd_hist, n_mu_bins,
+                                                                              n_intensity_bins)
 
-        # query the histograms for time range based off moving average centers
-        query_instrument = [instrument, ]
-        pd_hist = query_hist(db_session=db_session, meth_id=method_id[1], n_mu_bins=n_mu_bins,
-                                      n_intensity_bins=n_intensity_bins,
-                                      lat_band=lat_band,
-                                      time_min=np.datetime64(min_date).astype(datetime.datetime),
-                                      time_max=np.datetime64(max_date).astype(datetime.datetime),
-                                      instrument=query_instrument)
+    for date_index, center_date in enumerate(moving_avg_centers):
+        print("Begin date " + str(center_date))
 
-        # convert the binary types back to arrays
-        mu_bin_array, intensity_bin_array, full_hist = psi_d_types.binary_to_hist(pd_hist, n_mu_bins,
-                                                                                            n_intensity_bins)
+        # determine time range based off moving average centers
+        min_date = center_date - moving_width/2
+        max_date = center_date + moving_width/2
 
         # create list of observed dates in time frame
         date_obs_npDT64 = pd_hist['date_obs']
@@ -137,8 +140,8 @@ for date_index, center_date in enumerate(moving_avg_centers):
         meth_desc = 'LBCC Theoretic Fit Method'
         var_name = "TheoVar"
         var_desc = "Theoretic fit parameter at index "
-        store_lbcc_values(db_session, pd_hist, meth_name, meth_desc, var_name, var_desc, date_index,
-                                   inst_index, optim_vals=optim_vals_theo[0:6], results=results_theo, create=create)
+        store_lbcc_values(db_session, pd_hist[date_ind], meth_name, meth_desc, var_name, var_desc, date_index,
+                          inst_index, optim_vals=optim_vals_theo[0:6], results=results_theo, create=create)
 
         end_time_tot = time.time()
         print("Total elapsed time: " + str(round(end_time_tot - start_time_tot, 3)) + " seconds.")

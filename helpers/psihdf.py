@@ -9,6 +9,7 @@ import numpy as np
 import json
 import h5py as h5
 import pandas as pd
+import settings.info as chd_info
 
 
 def wrh5_meta(h5_filename, x, y, z, f, chd_meta=None, sunpy_meta=None):
@@ -174,9 +175,11 @@ def wrh5_fullmap(h5_filename, x, y, z, f, method_info=None, image_info=None, map
 
     # Save secondary data arrays
     if mu is not None:
-        h5file.create_dataset("mu", data=mu, dtype='f8')
+        # h5file.create_dataset("mu", data=mu, dtype='f8')
+        h5file.create_dataset("mu", data=mu, dtype=chd_info.DTypes.MAP_MU)
     if origin_image is not None:
-        h5file.create_dataset("origin_image", data=origin_image, dtype='i4')
+        # h5file.create_dataset("origin_image", data=origin_image, dtype='i4')
+        h5file.create_dataset("origin_image", data=origin_image, dtype=chd_info.DTypes.MAP_ORIGIN_IMAGE)
 
     # Convert the metadata to a json string, save it as an "attribute"
     if method_info is not None:

@@ -93,21 +93,24 @@ def query_euv_images(db_session, time_min=None, time_max=None, instrument=None, 
 
     if time_min is None and time_max is None:
         # get entire DB
-        query_out = pd.read_sql(db_session.query(EUV_Images).statement, db_session.bind)
+        query_out = pd.read_sql(db_session.query(EUV_Images).order_by(
+            EUV_Images.instrument, EUV_Images.date_obs).statement, db_session.bind)
     elif not isinstance(time_min, datetime.datetime) or not isinstance(time_max, datetime.datetime):
         sys.exit("Error: time_min and time_max must have matching entries of 'None' or of type Datetime.")
     elif wavelength is None:
         if instrument is None:
             query_out = pd.read_sql(db_session.query(EUV_Images).filter(EUV_Images.date_obs >= time_min,
                                                                         EUV_Images.date_obs <= time_max,
-                                                                        EUV_Images.flag == 0).statement,
+                                                                        EUV_Images.flag == 0).order_by(
+            EUV_Images.instrument, EUV_Images.date_obs).statement,
                                     db_session.bind)
         else:
             query_out = pd.read_sql(db_session.query(EUV_Images).filter(EUV_Images.date_obs >= time_min,
                                                                         EUV_Images.date_obs <= time_max,
                                                                         EUV_Images.instrument.in_(
                                                                             instrument),
-                                                                        EUV_Images.flag == 0).statement,
+                                                                        EUV_Images.flag == 0).order_by(
+            EUV_Images.instrument, EUV_Images.date_obs).statement,
                                     db_session.bind)
     else:
         if instrument is None:
@@ -115,7 +118,8 @@ def query_euv_images(db_session, time_min=None, time_max=None, instrument=None, 
                                                                         EUV_Images.date_obs <= time_max,
                                                                         EUV_Images.wavelength.in_(
                                                                             wavelength),
-                                                                        EUV_Images.flag == 0).statement,
+                                                                        EUV_Images.flag == 0).order_by(
+            EUV_Images.instrument, EUV_Images.date_obs).statement,
                                     db_session.bind)
         else:
             query_out = pd.read_sql(db_session.query(EUV_Images).filter(EUV_Images.date_obs >= time_min,
@@ -123,7 +127,8 @@ def query_euv_images(db_session, time_min=None, time_max=None, instrument=None, 
                                                                         EUV_Images.instrument.in_(instrument),
                                                                         EUV_Images.wavelength.in_(
                                                                             wavelength),
-                                                                        EUV_Images.flag == 0).statement,
+                                                                        EUV_Images.flag == 0).order_by(
+            EUV_Images.instrument, EUV_Images.date_obs).statement,
                                     db_session.bind)
 
     return query_out
@@ -560,7 +565,7 @@ def get_combo_id(db_session, meth_id, image_ids, create=False):
     # match_groups = pd.DataFrame(columns = ['combo_id', 'i_count'])
 
     if len(match_groups) > 0:
-        # reduce match_groups to combos that match
+        # reduce match_groups to combos that match exactly
         match_groups = match_groups.loc[match_groups.i_count == n_images]
         if len(match_groups) == 1:
             # return the existing combo_id
@@ -602,6 +607,13 @@ def get_combo_id(db_session, meth_id, image_ids, create=False):
         # Add record to DB
         db_session.commit()
         combo_id = combo_add.combo_id
+
+        # Add image/combo associations to DB
+        for image_id in image_ids:
+            assoc_add = Image_Combo_Assoc(combo_id=combo_id, image_id=image_id)
+            db_session.add(assoc_add)
+        # commit changes to DB
+        db_session.commit()
 
     return db_session, combo_id, combo_times
 
@@ -1044,9 +1056,10 @@ def add_map_dbase_record(db_session, psi_map, base_path=None, map_type=None):
             psi_map.map_info.loc[ind, "date_max"] = combo_times['date_max']
             psi_map.map_info.loc[ind, "date_min"] = combo_times['date_min']
             # add combo-image associations
-            for image in image_ids:
-                db_session, exit_flag = add_combo_image_assoc(db_session=db_session, combo_id=combo_id,
-                                                              image_id=image)
+                # this is now done inside get_combo_id()
+            # for image in image_ids:
+            #     db_session, exit_flag = add_combo_image_assoc(db_session=db_session, combo_id=combo_id,
+            #                                                   image_id=image)
     db_session, exit_status, psi_map = add_euv_map(db_session=db_session, psi_map=psi_map,
                                                    base_path=base_path,
                                                    map_type=map_type)
@@ -1378,7 +1391,7 @@ def query_inst_combo(db_session, query_time_min, query_time_max, meth_name, inst
     image_combo_instrument = pd.read_sql(image_inst_join.statement, db_session.bind)
 
     # Find two unique lists of combos
-    inst_index = image_combo_instrument['instrument'].eq(instrument[0])
+    inst_index = image_combo_instrument['instrument'].eq(instrument)
     list_A = image_combo_instrument.combo_id[inst_index].unique()
     list_B = image_combo_instrument.combo_id[~inst_index].unique()
     # determine correct combos by determining which exist in A but not in B
@@ -1486,6 +1499,24 @@ def return_closest_combo(db_session, class_name, class_column, meth_id, inst_que
 
 def store_lbcc_values(db_session, pd_hist, meth_name, meth_desc, var_name, var_desc, date_index, inst_index, optim_vals,
                       results, create=False):
+    """
+
+    :param db_session:
+    :param pd_hist:
+    :param meth_name:
+    :param meth_desc:
+    :param var_name:
+    :param var_desc:
+    :param date_index:
+    :param inst_index:
+    :param optim_vals:
+    :param results:
+    :param create:
+    :return:
+    TODO: In the get_var_val() call at the end, if the variable value already exists (in the DB) this call will simply
+        return the existing value; rather than writing the input values.  Decide if default behavior should be to
+        overwrite or not.  In the meantime, I have included a print statement warning.
+    """
     # create image combos in db table
     # get image_ids from queried histograms - same as ids in euv_images table
     image_ids = tuple(pd_hist['image_id'])
@@ -1497,8 +1528,9 @@ def store_lbcc_values(db_session, pd_hist, meth_name, meth_desc, var_name, var_d
     combo_id = combo_id_info[1]
 
     # create association between combo and image_id
-    for image_id in image_ids:
-        add_combo_image_assoc(db_session, combo_id, image_id)
+    # this is now handled in get_combo_id()
+    # for image_id in image_ids:
+    #     add_combo_image_assoc(db_session, combo_id, image_id)
 
     # create variables in database
     for i in range(len(optim_vals)):
@@ -1509,54 +1541,82 @@ def store_lbcc_values(db_session, pd_hist, meth_name, meth_desc, var_name, var_d
 
         ##### store values #####
         # add method to db
-        method_id_info = get_method_id(db_session, meth_name, meth_desc, var_names=None, var_descs=None, create=create)
-        method_id = method_id_info[1]
+        # method_id_info = get_method_id(db_session, meth_name, meth_desc, var_names=None, var_descs=None, create=create)
+        # method_id = method_id_info[1]
         # add variable to db
         var_id_info = get_var_id(db_session, method_id, var_name_i, var_desc_i, create=create)
         var_id = int(var_id_info[1])
         # add variable value to database
         var_val = results[date_index, inst_index, i]
-        get_var_val(db_session, combo_id, method_id, var_id, var_val, create=create)
+        db_session, var_val_db = get_var_val(db_session, combo_id, method_id, var_id, var_val, create=create)
+        # test if input val and output val are within 4 sig figs
+        if ~np.isclose(var_val, var_val_db, rtol=1e-4):
+            print("WARNING: LBCC variable value already exists in DB and was NOT overwritten. ",
+                  "In DB_funs.store_lbcc_values(), for combo_id: ", combo_id, ", method_id: ", method_id,
+                  ", and variable: ", var_name_i, sep="")
 
     return db_session
 
 
 def store_iit_values(db_session, pd_hist, meth_name, meth_desc, alpha_x_parameters, create=False):
+    """
+
+    :param db_session:
+    :param pd_hist:
+    :param meth_name:
+    :param meth_desc:
+    :param alpha_x_parameters:
+    :param create:
+    :return:
+    TODO: In the get_var_val() call at the end, if the variable value already exists (in the DB) this call will simply
+        return the existing value; rather than writing the input values.  Decide if default behavior should be to
+        overwrite or not.  In the meantime, I have included a print statement warning.
+    """
     # create image combos in db table
     # get image_ids from queried histograms - same as ids in euv_images table
     image_ids = tuple(pd_hist['image_id'])
     # add method to db
-    method_id_info = get_method_id(db_session, meth_name, meth_desc, var_names=None, var_descs=None, create=create)
+    var_names = ["alpha", "x"]
+    var_descs = ["IIT scale factor", "IIT offset"]
+    method_id_info = get_method_id(db_session, meth_name, meth_desc, var_names=var_names, var_descs=var_descs,
+                                   create=create)
     method_id = method_id_info[1]
     # get combo_ids
     combo_id_info = get_combo_id(db_session, meth_id=method_id, image_ids=image_ids, create=create)
     combo_id = combo_id_info[1]
 
     # create association between combo and image_id
-    for image_id in image_ids:
-        add_combo_image_assoc(db_session, combo_id, image_id)
+    # this is now handled in get_combo_id()
+    # for image_id in image_ids:
+    #     add_combo_image_assoc(db_session, combo_id, image_id)
 
     # create variables in database
     for i in range(len(alpha_x_parameters)):
         #### definitions #####
         # create variable definitions
-        if i == 0:
-            var_name = "alpha"
-            var_desc = "IIT scale factor"
-        elif i == 1:
-            var_name = "x"
-            var_desc = "IIT offset"
-
+        # if i == 0:
+        #     var_name = "alpha"
+        #     var_desc = "IIT scale factor"
+        # elif i == 1:
+        #     var_name = "x"
+        #     var_desc = "IIT offset"
+        var_name = var_names[i]
+        var_desc = var_descs[i]
         ##### store values #####
         # add method to db
-        method_id_info = get_method_id(db_session, meth_name, meth_desc, var_name, var_desc, create=create)
-        method_id = method_id_info[1]
-        # add variable to db
+        # method_id_info = get_method_id(db_session, meth_name, meth_desc, var_name, var_desc, create=create)
+        # method_id = method_id_info[1]
+        # recover variable id
         var_id_info = get_var_id(db_session, method_id, var_name, var_desc, create=create)
         var_id = int(var_id_info[1])
         # add variable value to database
         var_val = alpha_x_parameters[i]
-        get_var_val(db_session, combo_id, method_id, var_id, var_val, create=create)
+        db_session, var_val_db = get_var_val(db_session, combo_id, method_id, var_id, var_val, create=create)
+        # test if input val and output val are within 4 sig figs (rough check to see if value already existed)
+        if ~np.isclose(var_val, var_val_db, rtol=1e-4):
+            print("WARNING: IIT variable value already exists in DB and was NOT overwritten. ",
+                  "In DB_funs.store_iit_values(), for combo_id: ", combo_id, ", method_id: ", method_id,
+                  ", and variable: ", var_name, sep="")
 
     return db_session
 
@@ -1665,8 +1725,9 @@ def store_mu_values(db_session, pd_hist, meth_name, meth_desc, var_name, var_des
     combo_id = combo_id_info[1]
 
     # create association between combo and image_id
-    for image_id in image_ids:
-        add_combo_image_assoc(db_session, combo_id, image_id)
+    # this is now handled in get_combo_id()
+    # for image_id in image_ids:
+    #     add_combo_image_assoc(db_session, combo_id, image_id)
 
     # create variables in database
     for i in range(len(optim_vals)):
@@ -1701,8 +1762,9 @@ def store_beta_y_values(db_session, pd_hist, meth_name, meth_desc, var_name, var
     combo_id = combo_id_info[1]
 
     # create association between combo and image_id
-    for image_id in image_ids:
-        add_combo_image_assoc(db_session, combo_id, image_id)
+        # this is now handled in get_combo_id()
+    # for image_id in image_ids:
+    #     add_combo_image_assoc(db_session, combo_id, image_id)
 
     # create variables in database]
     for i in range(len(beta_y_parameters)):

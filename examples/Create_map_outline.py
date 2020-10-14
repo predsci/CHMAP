@@ -44,14 +44,14 @@ db_session = init_db_conn(db_name=use_db, chd_base=db_class.Base, sqlite_path=sq
 
 # query some images
 query_time_min = datetime.datetime(2011, 4, 1, 0, 0, 0)
-query_time_max = datetime.datetime(2011, 4, 1, 12, 0, 0)
+query_time_max = datetime.datetime(2011, 4, 1, 3, 0, 0)
 query_pd = query_euv_images(db_session=db_session, time_min=query_time_min, time_max=query_time_max)
 
 # generate a dataframe to record methods
     # maybe this needs to be made a function?
 # methods_template is a combination of Meth_Defs and Var_Defs columns
 meth_columns = []
-for column in db_class.Meth_Defs.__table__.columns:
+for column in db_class.Method_Defs.__table__.columns:
     meth_columns.append(column.key)
 defs_columns = []
 for column in db_class.Var_Defs.__table__.columns:
@@ -111,9 +111,11 @@ if keepgoing:
     # The default behavior of los_image.interp_to_map() is to determine map vertical
     # resolution from image vertical R0-resolution.  Here we want the maps that we
     # intend to combine to have a fixed resolution.
-    map_nycoord = 1600
+    # map_nycoord = 1600
+    map_nycoord = 720
     del_y = (y_range[1] - y_range[0])/(map_nycoord - 1)
-    map_nxcoord = (np.floor((x_range[1] - x_range[0])/del_y) + 1).astype(int)
+    # map_nxcoord = (np.floor((x_range[1] - x_range[0])/del_y) + 1).astype(int)
+    map_nxcoord = 1800
 
     # generate map x,y grids. y grid centered on equator, x referenced from lon=0
     map_y = np.linspace(y_range[0], y_range[1], map_nycoord, dtype='<f4')
@@ -122,11 +124,11 @@ if keepgoing:
     map_list = [None]*len(los_list)
     for ii in range(len(los_list)):
         # use fixed map resolution
-        map_list[ii] = los_list[ii].interp_to_map(R0=R0, map_x=map_x, map_y=map_y, image_num=selected_images.image_id[ii])
+        map_list[ii] = los_list[ii].interp_to_map(R0=R0, map_x=map_x, map_y=map_y, image_num=query_pd.image_id[ii])
         # Alternatively, we could have resolution determined from image
         # map_list[ii] = los_list[ii].interp_to_map(R0=R0)
         # record image info
-        map_list[ii].append_image_info(selected_images.iloc[ii])
+        map_list[ii].append_image_info(query_pd.iloc[ii])
 
         # generate a record of the method and variable values used for interpolation
         new_method = {'meth_name': ("Im2Map_Lin_Interp_1", ), 'meth_description':
@@ -146,18 +148,22 @@ if keepgoing:
 
     # --- 6. Combine Maps ---------------------------------------------------------
     del_mu = 0.2
-    combined_map = combine_maps(map_list, del_mu=del_mu)
+    combined_map, combined_chd = combine_maps(map_list, del_mu=del_mu)
 
     # generate a record of the method and variable values used for interpolation
     new_method = {'meth_name': ("Min-Int-Merge_1", ), 'meth_description':
                   ["Minimum intensity merge version 1"] * 1,
                   'var_name': ("del_mu", ), 'var_description': ("max acceptable mu range", ), 'var_val': (del_mu, )}
-    combined_map = combined_map.append_method_info(pd.DataFrame(data=new_method), sort=False)
+
+    combined_map.append_method_info(pd.DataFrame(data=new_method))
 
     EasyPlot.PlotMap(combined_map, nfig=20, title="Minimum Intensity Merge Map")
     plt.show()
 
+    # write to file and record in DB
     combined_map.write_to_file(map_data_dir, map_type='synoptic', filename=None, db_session=db_session)
+    # just write to file
+    # combined_map.write_to_file(map_data_dir, map_type='synoptic', filename="test_3.h5", db_session=None)
 
     # --- 7. Save to DB -----------------------------------------------------------
     # # add image info to map object
