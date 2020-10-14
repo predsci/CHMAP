@@ -21,8 +21,8 @@ import analysis.chd_analysis.CHD_pipeline_funcs as chd_funcs
 
 # -------- parameters --------- #
 # TIME RANGE FOR QUERYING
-query_time_min = datetime.datetime(2011, 8, 18, 22, 0, 0)
-query_time_max = datetime.datetime(2011, 8, 19, 2, 0, 0)
+query_time_min = datetime.datetime(2011, 10, 18, 22, 0, 0)
+query_time_max = datetime.datetime(2011, 10, 19, 2, 0, 0)
 map_freq = 2  # number of hours
 
 # INITIALIZE DATABASE CONNECTION
@@ -33,10 +33,15 @@ hdf_data_dir = App.PROCESSED_DATA_HOME
 database_dir = App.DATABASE_HOME
 sqlite_filename = App.DATABASE_FNAME
 # initialize database connection
-use_db = "sqlite"
+# using sqlite
+use_db = "mysql-Q"
+user = "tervin"
+password = ""
 sqlite_path = os.path.join(database_dir, sqlite_filename)
-db_session = db_funcs.init_db_conn(db_name=use_db, chd_base=db_class.Base, sqlite_path=sqlite_path)
-
+db_session = db_funcs.init_db_conn(db_name=use_db, chd_base=db_class.Base, user=user, password=password)
+# using mySQL
+# use_db = 'mysql-Q'
+# db_session = db_funcs.init_db_conn(db_name=use_db, chd_base=db_class.Base, user="tervin", password="luv2runFH")
 # INSTRUMENTS
 inst_list = ["AIA", "EUVI-A", "EUVI-B"]
 # CORRECTION PARAMETERS
@@ -60,9 +65,10 @@ mu_merge_cutoff = 0.4  # mu cutoff in overlap areas
 # MAP PARAMETERS
 x_range = [0, 2 * np.pi]
 y_range = [-1, 1]
-map_nycoord = 1600
-del_y = (y_range[1] - y_range[0]) / (map_nycoord - 1)
-map_nxcoord = (np.floor((x_range[1] - x_range[0]) / del_y) + 1).astype(int)
+map_nycoord = 720
+map_nxcoord = 1800
+# del_y = (y_range[1] - y_range[0]) / (map_nycoord - 1)
+# map_nxcoord = (np.floor((x_range[1] - x_range[0]) / del_y) + 1).astype(int)
 # generate map x,y grids. y grid centered on equator, x referenced from lon=0
 map_y = np.linspace(y_range[0], y_range[1], map_nycoord, dtype='<f4')
 map_x = np.linspace(x_range[0], x_range[1], map_nxcoord, dtype='<f4')

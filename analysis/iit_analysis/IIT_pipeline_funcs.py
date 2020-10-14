@@ -98,13 +98,13 @@ def calc_iit_coefficients(db_session, inst_list, ref_inst, calc_query_time_min, 
     # query histograms
     ref_hist_pd = db_funcs.query_hist(db_session=db_session, meth_id=method_id[1],
                                       n_intensity_bins=n_intensity_bins,
-                                      lat_band=np.array(lat_band).tobytes(),
+                                      lat_band=lat_band,
                                       time_min=calc_query_time_min - datetime.timedelta(days=number_of_days),
                                       time_max=calc_query_time_max + datetime.timedelta(days=number_of_days),
                                       instrument=ref_instrument)
 
     # convert binary to histogram data
-    lat_band, mu_bin_edges, intensity_bin_edges, ref_full_hist = psi_d_types.binary_to_hist(hist_binary=ref_hist_pd,
+    mu_bin_edges, intensity_bin_edges, ref_full_hist = psi_d_types.binary_to_hist(hist_binary=ref_hist_pd,
                                                                                             n_mu_bins=None,
                                                                                             n_intensity_bins=n_intensity_bins)
 
@@ -140,12 +140,12 @@ def calc_iit_coefficients(db_session, inst_list, ref_inst, calc_query_time_min, 
                                                                     number_of_days)
             inst_hist_pd = db_funcs.query_hist(db_session=db_session, meth_id=method_id[1],
                                                n_intensity_bins=n_intensity_bins,
-                                               lat_band=np.array(lat_band).tobytes(),
+                                               lat_band=lat_band,
                                                time_min=inst_time_min - datetime.timedelta(days=number_of_days),
                                                time_max=inst_time_max + datetime.timedelta(days=number_of_days),
                                                instrument=query_instrument)
             # convert binary to histogram data
-            lat_band, mu_bin_edges, intensity_bin_edges, inst_full_hist = psi_d_types.binary_to_hist(
+            mu_bin_edges, intensity_bin_edges, inst_full_hist = psi_d_types.binary_to_hist(
                 hist_binary=inst_hist_pd, n_mu_bins=None, n_intensity_bins=n_intensity_bins)
             # loops through moving average centers
             for date_index, center_date in enumerate(moving_avg_centers):
@@ -325,12 +325,12 @@ def plot_iit_histograms(db_session, hdf_data_dir, hist_query_time_min, hist_quer
     # query for IIT histograms
     pd_lbc_hist = db_funcs.query_hist(db_session=db_session, meth_id=method_id[1],
                                       n_intensity_bins=n_intensity_bins,
-                                      lat_band=np.array(lat_band).tobytes(),
+                                      lat_band=lat_band,
                                       time_min=hist_query_time_min,
                                       time_max=hist_query_time_max)
     pd_lbc_hist_srt = pd_lbc_hist.sort_values(by=['image_id'])
     # convert the binary types back to arrays
-    lat_band, mu_bin_edges, intensity_bin_edges, full_lbc_hist = psi_d_types.binary_to_hist(pd_lbc_hist_srt,
+    mu_bin_edges, intensity_bin_edges, full_lbc_hist = psi_d_types.binary_to_hist(pd_lbc_hist_srt,
                                                                                             n_mu_bins=None,
                                                                                             n_intensity_bins=
                                                                                             n_intensity_bins)

@@ -83,7 +83,7 @@ def image_grid_to_CR(image_x, image_y, R0=1.0, obsv_lat=0, obsv_lon=0, get_mu=Fa
     # Find z coord (we can assume it is in the positive direction)
     # use_z = np.sqrt(R0 ** 2 - use_x ** 2 - use_y ** 2)
     # to be numerically equivalent to the use_index definition, change to this:
-    use_z = np.sqrt(R0**2 - (use_x**2 + use_y**2))
+    use_z = np.sqrt(R0 ** 2 - (use_x ** 2 + use_y ** 2))
 
     # Calc image_theta, image_phi, and image_mu
     if get_mu:
@@ -178,7 +178,16 @@ def interp_los_image_to_map(image_in, R0, map_x, map_y, no_data_val=-9999.):
     mu_vec = np.cos(image_theta)
     mu_mat = mu_vec.reshape((map_nycoord, map_nxcoord), order="C")
 
-    out_obj = psi_dt.InterpResult(interp_result, map_x, map_y, mu_mat=mu_mat)
+    # interpolate longitude array
+    interp_vec_lon = interpolate2D_regular2irregular(image_in.x, image_in.y, image_in.lon, image_x[interp_index],
+                                                     image_y[interp_index])
+    interp_result_vec_lon = interp_result.flatten(order="C")
+    interp_result_vec_lon[interp_index] = interp_vec_lon
+    # reformat result to matrix form
+    interp_result_lon = interp_result_vec_lon.reshape((map_nycoord, map_nxcoord), order="C")
+    map_lon = interp_result_lon.reshape((map_nycoord, map_nxcoord), order="C")
+
+    out_obj = psi_dt.InterpResult(interp_result, map_x, map_y, mu_mat=mu_mat, map_lon=map_lon)
 
     return out_obj
 
@@ -225,7 +234,8 @@ def interp_los_image_to_map2(image_in, R0, map_x, map_y, no_data_val=-9999.):
     # only interpolate points on the front half of the sphere
     interp_index = image_z > 0
 
-    interp_vec = interpolate2D_regular2irregular2(image_in.lon, image_in.lat, image_in.data.flatten(), image_x[interp_index],
+    interp_vec = interpolate2D_regular2irregular2(image_in.lon, image_in.lat, image_in.data.flatten(),
+                                                  image_x[interp_index],
                                                   image_y[interp_index])
     interp_result_vec[interp_index] = interp_vec
     # reformat result to matrix form

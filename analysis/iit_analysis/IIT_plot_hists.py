@@ -66,12 +66,12 @@ method_id = db_funcs.get_method_id(db_session, meth_name, meth_desc=None, var_na
 # query for IIT histograms
 pd_lbc_hist = db_funcs.query_hist(db_session=db_session, meth_id=method_id[1],
                               n_intensity_bins=n_intensity_bins,
-                              lat_band=np.array(lat_band).tobytes(),
+                              lat_band=lat_band,
                               time_min=hist_query_time_min,
                               time_max=hist_query_time_max)
 pd_lbc_hist_srt = pd_lbc_hist.sort_values(by=['image_id'])
 # convert the binary types back to arrays
-lat_band, mu_bin_edges, intensity_bin_edges, full_lbc_hist = psi_d_types.binary_to_hist(pd_lbc_hist_srt, n_mu_bins=None,
+mu_bin_edges, intensity_bin_edges, full_lbc_hist = psi_d_types.binary_to_hist(pd_lbc_hist_srt, n_mu_bins=None,
                                                                                     n_intensity_bins=
                                                                                     n_intensity_bins)
 # create corrected/original histograms

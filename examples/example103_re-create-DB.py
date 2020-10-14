@@ -30,7 +30,7 @@ sqlite_filename = App.DATABASE_FNAME
 # designate which database to connect to
 use_db = "mysql-Q"       # 'sqlite'  Use local sqlite file-based db
                         # 'mysql-Q' Use the remote MySQL database on Q
-user = "turtle"         # only needed for remote databases.
+user = "tervin"         # only needed for remote databases.
 password = ""           # See example109 for setting-up an encrypted password.  In this case leave password="", and
 # init_db_conn() will automatically find and use your saved password. Otherwise, enter your MySQL password here.
 

@@ -74,26 +74,11 @@ use_db = "sqlite"
 sqlite_path = os.path.join(database_dir, sqlite_filename)
 db_session = db_funcs.init_db_conn(db_name=use_db, chd_base=db_class.Base, sqlite_path=sqlite_path)
 
-
 #### ------- nothing to update below ------- ####
 #### STEP ONE: SELECT IMAGES ####
 # 1.) query some images
-if query_time_min and query_time_max is not None:
-    query_pd = db_funcs.query_euv_images(db_session=db_session, time_min=query_time_min, time_max=query_time_max)
-elif cr_rot is not None:
-    query_pd = db_funcs.query_euv_images_rot(db_session, rot_min=cr_rot, rot_max=cr_rot+1)
-else:
-    ref_instrument = [ref_inst, ]
-    euv_images = db_funcs.query_euv_images(db_session, time_min=interest_date + datetime.timedelta(hours=1),
-                                           time_max=interest_date + datetime.timedelta(hours=1),
-                                           instrument=ref_instrument)
-    # get min and max carrington rotation
-    # TODO: really only want one CR_value
-    cr_rot = euv_images.cr_rot
-    if center:
-        query_pd = db_funcs.query_euv_images_rot(db_session, rot_min=cr_rot - 0.5, rot_max=cr_rot + 0.5)
-    else:
-        query_pd = db_funcs.query_euv_images_rot(db_session, rot_min=cr_rot, rot_max=cr_rot + 1)
+query_pd = cr_funcs.query_datebase_cr(db_session, query_time_min, query_time_max, interest_date, center, ref_inst,
+                                      cr_rot)
 
 # 2.) generate a dataframe to record methods
 methods_list = db_funcs.generate_methdf(query_pd)
@@ -123,16 +108,18 @@ for row in query_pd.iterrows():
 
     #### STEP FIVE: CREATE COMBINED MAPS ####
     euv_combined, chd_combined, combined_method, chd_combined_method = cr_funcs.cr_map(euv_map, chd_map, euv_combined,
-                                                                  chd_combined, image_info,
-                                                                  map_info,
-                                                                  mu_cutoff=mu_cutoff,
-                                                                  mu_merge_cutoff=mu_merge_cutoff)
+                                                                                       chd_combined, image_info,
+                                                                                       map_info,
+                                                                                       mu_cutoff=mu_cutoff,
+                                                                                       mu_merge_cutoff=mu_merge_cutoff)
 
 #### STEP SIX: PLOT COMBINED MAP AND SAVE TO DATABASE ####
 cr_funcs.save_maps(db_session, map_data_dir, euv_combined, chd_combined, image_info, map_info, methods_list,
-              combined_method, chd_combined_method)
-
+                   combined_method, chd_combined_method)
 
 #### CREATE QUALITY MAPS
 dp_funcs.quality_map(db_session, map_data_dir, inst_list, query_pd, euv_combined,
                      chd_combined=None, color_list=color_list)
+
+
+

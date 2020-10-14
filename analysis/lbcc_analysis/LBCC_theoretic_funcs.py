@@ -42,7 +42,7 @@ def save_histograms(db_session, hdf_data_dir, inst_list, hist_query_time_min, hi
     image_intensity_bin_edges = np.linspace(0, 5, num=n_intensity_bins + 1, dtype='float')
 
     # create LBC method
-    meth_name = 'LBCC '
+    meth_name = 'LBCC'
     meth_desc = 'LBCC Theoretic Fit Method'
     method_id = db_funcs.get_method_id(db_session, meth_name, meth_desc, var_names=None, var_descs=None, create=True)
 
@@ -107,7 +107,7 @@ def calc_theoretic_fit(db_session, inst_list, calc_query_time_min, calc_query_ti
     # get method id
     meth_name = 'LBCC'
     meth_desc = 'LBCC Theoretic Fit Method'
-    method_id = db_funcs.get_method_id(db_session, meth_name, meth_desc, var_names=None, var_descs=None, create=False)
+    method_id = db_funcs.get_method_id(db_session, meth_name, meth_desc=None, var_names=None, var_descs=None, create=False)
 
     for date_index, center_date in enumerate(moving_avg_centers):
         print("Begin date " + str(center_date))
@@ -127,7 +127,7 @@ def calc_theoretic_fit(db_session, inst_list, calc_query_time_min, calc_query_ti
                                           time_min=np.datetime64(min_date).astype(datetime.datetime),
                                           time_max=np.datetime64(max_date).astype(datetime.datetime),
                                           instrument=query_instrument)
-
+            print(pd_hist)
             # convert the binary types back to arrays
             mu_bin_array, intensity_bin_array, full_hist = psi_d_types.binary_to_hist(pd_hist, n_mu_bins,
                                                                                                 n_intensity_bins)

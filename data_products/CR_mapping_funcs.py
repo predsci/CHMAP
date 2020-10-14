@@ -155,7 +155,7 @@ def cr_map(euv_map, chd_map, euv_combined, chd_combined, image_info, map_info, m
     if del_mu is not None:
         euv_combined, chd_combined = combine_cr_maps(n_images, euv_maps, chd_maps, del_mu=del_mu, mu_cutoff=mu_cutoff)
         combined_method = {'meth_name': ("Min-Int-CR-Merge-del_mu", "Min-Int-CR-Merge-del_mu"), 'meth_description':
-            ["Minimum intensity merge for Synoptic Map: using del mu"] * 2,
+            ["Minimum intensity merge for CR Map: using del mu"] * 2,
                            'var_name': ("mu_cutoff", "del_mu"), 'var_description': ("lower mu cutoff value",
                                                                                     "max acceptable mu range"),
                            'var_val': (mu_cutoff, del_mu)}
@@ -163,14 +163,14 @@ def cr_map(euv_map, chd_map, euv_combined, chd_combined, image_info, map_info, m
         euv_combined, chd_combined = combine_cr_maps(n_images, euv_maps, chd_maps, mu_merge_cutoff=mu_merge_cutoff,
                                                      mu_cutoff=mu_cutoff)
         combined_method = {'meth_name': ("Min-Int-CR-Merge-mu_merge", "Min-Int-CR-Merge-mu_merge"), 'meth_description':
-            ["Minimum intensity merge for Synoptic Map: based on Caplan et. al."] * 2,
+            ["Minimum intensity merge for CR Map: based on Caplan et. al."] * 2,
                            'var_name': ("mu_cutoff", "mu_merge_cutoff"), 'var_description': ("lower mu cutoff value",
                                                                                              "mu cutoff value in areas of "
                                                                                              "overlap"),
                            'var_val': (mu_cutoff, mu_merge_cutoff)}
 
     # chd combined method
-    chd_combined_method = {'meth_name': ("Prob-CHD-Merge",), 'meth_description': ["Probability Merge for CH Maps"]}
+    chd_combined_method = {'meth_name': ("Prob-CR-CHD-Merge",), 'meth_description': ["Probability Merge for CR CHD Maps"]}
 
     # append image and map info records
     image_info.append(euv_map.image_info)
@@ -208,8 +208,8 @@ def save_maps(db_session, map_data_dir, euv_combined, chd_combined, image_info, 
                      map_type='CHD')
 
     # save EUV and CHD maps to database
-    euv_combined.write_to_file(map_data_dir, map_type='synoptic_euv', filename=None, db_session=db_session)
-    chd_combined.write_to_file(map_data_dir, map_type='synoptic_chd', filename=None, db_session=db_session)
+    euv_combined.write_to_file(map_data_dir, map_type='cr_euv', filename=None, db_session=db_session)
+    chd_combined.write_to_file(map_data_dir, map_type='cr_chd', filename=None, db_session=db_session)
 
     end = time.time()
     print("Combined CR Maps have been plotted and saved to the database in", end - start, "seconds.")

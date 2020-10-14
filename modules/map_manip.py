@@ -168,7 +168,6 @@ def combine_cr_maps(n_images, map_list, chd_map_list=None, mu_cutoff=0.0, mu_mer
         mu_array = np.ndarray(shape=mat_size + (nmaps,), dtype=DTypes.MAP_MU)
         data_array = np.ndarray(shape=mat_size + (nmaps,), dtype=DTypes.MAP_DATA)
         use_data = np.ndarray(shape=mat_size, dtype=DTypes.MAP_DATA)
-        map_index = np.ndarray(shape=mat_size, dtype=int)
         image_array = np.ndarray(shape=mat_size + (nmaps,), dtype=DTypes.MAP_ORIGIN_IMAGE)
         for ii in range(nmaps):
             mu_array[:, :, ii] = map_list[ii].mu
@@ -555,3 +554,5 @@ def combine_timewgt_maps(weight, sum_wgt, map_list, chd_map_list=None, mu_cutoff
             sum_wgt += weight
 
     return euv_combined, chd_combined, sum_wgt
+
+

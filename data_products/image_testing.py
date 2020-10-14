@@ -1,8 +1,11 @@
+#!/usr/bin/env python
 """
 create histogram of image intensities for comparison
 used to determine "bad" images and flag in the database
 """
+import sys
 
+sys.path.append("/Users/tamarervin/CH_Project/CHD")
 import os
 import time
 import datetime
@@ -18,11 +21,11 @@ import matplotlib as mpl
 ###### ------ PARAMETERS TO UPDATE -------- ########
 
 # TIME RANGE
-query_time_min = datetime.datetime(2011, 1, 1, 0, 0, 0)
-query_time_max = datetime.datetime(2012, 1, 1, 0, 0, 0)
+query_time_min = datetime.datetime(2011, 5, 1, 0, 0, 0)
+query_time_max = datetime.datetime(2011, 5, 4, 0, 0, 0)
 
 # define instruments
-inst_list = ["AIA", "EUVI-A", "EUVI-B"]
+inst_list = ["EUVI-A", "EUVI-B"]
 
 # define number of bins
 n_mu_bins = 18
@@ -117,7 +120,7 @@ def plot_bad_images(hdf_data_dir, bad_data):
 # ------------ NO NEED TO UPDATE ANYTHING BELOW  ------------- #
 
 # loop over instrument
-for instrument in inst_list:
+for inst_index, instrument in enumerate(inst_list):
 
     # query EUV images
     query_instrument = [instrument, ]
@@ -184,29 +187,31 @@ for instrument in inst_list:
     # plt.scatter(x, z_score)
 
     # if outlier, add image id to bad_data list
-    bad_data = pd.DataFrame()
+    bad_data = pd.DataFrame() * len(inst_list)
     # standard deviation outlier
     std_outlier = find_anomalies(std)
     for outlier in std_outlier:
-        bad_data = bad_data.append(query_pd.iloc[outlier], ignore_index=True)
+        bad_data[inst_index] = bad_data[inst_index].append(query_pd.iloc[outlier], ignore_index=True)
 
     # mean outlier
     mean_outlier = find_anomalies(mean)
     for outlier in mean_outlier:
-        bad_data = bad_data.append(query_pd.iloc[outlier], ignore_index=True)
+        bad_data[inst_index] = bad_data[inst_index].append(query_pd.iloc[outlier], ignore_index=True)
 
+for inst_index, instrument in enumerate(inst_list):
+    print("Bad Images for", instrument, "are:\n", bad_data[inst_index])
     # plot the bad images
-    plot_bad_images(hdf_data_dir, bad_data)
+    plot_bad_images(hdf_data_dir, bad_data[inst_index])
 
     # remove images you don't want to flag
     remove_image_ids = []
-    bad_images = remove_image(remove_image_ids, bad_data)
-
-    # OR, add images you want to flag
-    add_image_ids = []
-    bad_images = flag_image(add_image_ids, bad_data)
-
-    # flag bad image in database
+    bad_images = remove_image(remove_image_ids, bad_data[inst_index])
+    #
+    #     # OR, add images you want to flag
+    add_image_ids = [8482, 7398, 6891, 353, 5034, 4246, 3414, 1745]
+    bad_images = flag_image(add_image_ids, bad_data[inst_index])
+    #
+    #     # flag bad image in database
     for index, image_row in bad_images.iterrows():
         update_image_val(db_session, image_row, 'flag', -1)
 

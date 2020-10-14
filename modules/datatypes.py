@@ -121,12 +121,15 @@ class LosImage:
             cr_lon = self.info['cr_lon']
 
             # determine number of pixels in map y-grid
-            map_nycoord = sum(abs(self.y) < R0)
-            del_y = (y_range[1] - y_range[0]) / (map_nycoord - 1)
-            # how to define pixels? square in sin-lat v phi or lat v phi?
-            # del_x = del_y*np.pi/2
-            del_x = del_y
-            map_nxcoord = (np.floor((x_range[1] - x_range[0]) / del_x) + 1).astype(int)
+            # map_nycoord = sum(abs(self.y) < R0)
+            #             del_y = (y_range[1] - y_range[0]) / (map_nycoord - 1)
+            #             # how to define pixels? square in sin-lat v phi or lat v phi?
+            #             # del_x = del_y*np.pi/2
+            #             del_x = del_y
+            #             map_nxcoord = (np.floor((x_range[1] - x_range[0]) / del_x) + 1).astype(int)
+
+            map_nxcoord = 1800
+            map_nycoord = 720
 
             # generate map x,y grids. y grid centered on equator, x referenced from lon=0
             map_y = np.linspace(y_range[0], y_range[1], map_nycoord, dtype=DTypes.MAP_AXES)
@@ -142,7 +145,8 @@ class LosImage:
 
         # Partially populate a map object with grid and data info
         map_out = PsiMap(interp_result.data, interp_result.x, interp_result.y,
-                         mu=interp_result.mu_mat, origin_image=origin_image, no_data_val=no_data_val)
+                         mu=interp_result.mu_mat, map_lon=interp_result.map_lon,
+                         origin_image=origin_image, no_data_val=no_data_val)
 
         # construct map_info df to record basic map info
         map_info_df = pd.DataFrame(data=[[1, datetime.datetime.now()], ],
@@ -389,7 +393,7 @@ class PsiMap:
         3. reading a map hdf file ---needs to be created---
     """
 
-    def __init__(self, data=None, x=None, y=None, mu=None, origin_image=None, no_data_val=-9999.0):
+    def __init__(self, data=None, x=None, y=None, mu=None, origin_image=None, map_lon=None, no_data_val=-9999.0):
         """
         Class to hold the standard information for a PSI map image
     for the CHD package.
@@ -446,6 +450,11 @@ class PsiMap:
             else:
                 # create placeholder
                 self.origin_image = None
+            if map_lon is not None:
+                self.map_lon = map_lon.astype(DTypes.MAP_DATA)
+            else:
+                # create placeholder
+                self.map_lon = None
 
     def append_map_info(self, map_df):
         """
@@ -550,12 +559,13 @@ class InterpResult:
 
     """
 
-    def __init__(self, data, x, y, mu_mat=None):
+    def __init__(self, data, x, y, mu_mat=None, map_lon=None):
         # create the data tags
         self.data = data
         self.x = x
         self.y = y
         self.mu_mat = mu_mat
+        self.map_lon = map_lon
 
 
 class Hist:

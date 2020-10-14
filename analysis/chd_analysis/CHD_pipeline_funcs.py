@@ -321,14 +321,17 @@ def create_combined_maps(db_session, map_data_dir, map_list, chd_map_list, metho
 
     # plot maps
     Plotting.PlotMap(euv_combined, nfig="EUV Combined Map for: " + str(euv_combined.image_info.date_obs[0]),
-                     title="Minimum Intensity Merge Map\nDate: " + str(euv_combined.image_info.date_obs[0]))
+                     title="Minimum Intensity Merge EUV Map\nDate: " + str(euv_combined.image_info.date_obs[0]))
     Plotting.PlotMap(chd_combined, nfig="CHD Combined Map for: " + str(chd_combined.image_info.date_obs[0]),
-                     title="Minimum Intensity CHD Merge Map\nDate: " + str(chd_combined.image_info.date_obs[0]),
+                     title="Minimum Intensity Merge CHD Map\nDate: " + str(chd_combined.image_info.date_obs[0]),
                      map_type='CHD')
+    Plotting.PlotMap(chd_combined, nfig="CHD Contour Map for: " + str(chd_combined.image_info.date_obs[0]),
+                     title="Minimum Intensity Merge CHD Contour Map\nDate: " + str(chd_combined.image_info.date_obs[0]),
+                     map_type='Contour')
 
     # save EUV and CHD maps to database
-    euv_combined.write_to_file(map_data_dir, map_type='synchronic_euv', filename=None, db_session=db_session)
-    chd_combined.write_to_file(map_data_dir, map_type='synchronic_chd', filename=None, db_session=db_session)
+    # euv_combined.write_to_file(map_data_dir, map_type='synchronic_euv', filename=None, db_session=db_session)
+    # chd_combined.write_to_file(map_data_dir, map_type='synchronic_chd', filename=None, db_session=db_session)
 
     # end time
     end = time.time()
