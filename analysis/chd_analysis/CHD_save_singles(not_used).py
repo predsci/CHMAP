@@ -141,8 +141,8 @@ moving_avg_centers = np.array(
 
 for index, center in enumerate(moving_avg_centers):
     date_time = np.datetime64(center).astype(datetime.datetime)
-    map_info, image_info, method_info, map_list = db_funcs.query_euv_maps(db_session, mean_time_range=[date_time - datetime.timedelta(hours=1),
-                                                               date_time + datetime.timedelta(hours=1)], n_images=1)
+    map_info, image_info, method_info, map_list = db_funcs.query_euv_map_list(db_session, mean_time_range=[date_time - datetime.timedelta(hours=1),
+                                                                                                           date_time + datetime.timedelta(hours=1)], n_images=1)
     if len(map_list) == 0:
         continue
     combined_map = combine_maps(map_list, del_mu=del_mu)

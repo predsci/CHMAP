@@ -9,9 +9,11 @@ from itertools import combinations
 
 import numpy as np
 import pandas as pd
+import datetime
 import sunpy
 import astropy.units as u
 import sunpy.util.metadata
+
 from helpers import drms_helpers, vso_helpers
 from helpers.misc_helpers import carrington_rotation_number_relative
 from sunpy.time import TimeRange
@@ -253,3 +255,12 @@ def read_meta_from_json(file):
     """
     dict = json.load(open(file, 'r'))
     return sunpy.util.metadata.MetaDict(dict)
+
+
+def roundSeconds(dateTimeObject):
+    newDateTime = dateTimeObject
+
+    if newDateTime.microsecond >= 500000:
+        newDateTime = newDateTime + datetime.timedelta(seconds=1)
+
+    return newDateTime.replace(microsecond=0)

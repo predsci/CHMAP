@@ -386,10 +386,10 @@ class PsiMap:
     Map Object is created in three ways:
         1. interpolating from an image LosImage.interp_to_map()
         2. merging other maps map_manip.combine_maps()
-        3. reading a map hdf file ---needs to be created---
+        3. reading a map hdf file read_psi_map()
     """
 
-    def __init__(self, data=None, x=None, y=None, mu=None, origin_image=None, no_data_val=-9999.0):
+    def __init__(self, data=None, x=None, y=None, mu=None, origin_image=None, chd=None, no_data_val=-9999.0):
         """
         Class to hold the standard information for a PSI map image
     for the CHD package.
@@ -399,7 +399,7 @@ class PsiMap:
             x: a 1D array of the solar x positions of each pixel [Carrington lon].
             y: a 1D array of the solar y positions of each pixel [Sine lat].
 
-        - mu and origin_image are optional and should be numpy arrays with
+        - mu, origin_image, and chd are optional and should be numpy arrays with
             dimensions identical to 'data'.
 
         Initialization also uses database definitions to generate empty dataframes
@@ -435,17 +435,24 @@ class PsiMap:
             self.data = data.astype(DTypes.MAP_DATA)
             self.x = x.astype(DTypes.MAP_AXES)
             self.y = y.astype(DTypes.MAP_AXES)
+            # designate a 'no data' value for 'data' array
+            self.no_data_val = no_data_val
+            # optional data handling
             if mu is not None:
                 self.mu = mu.astype(DTypes.MAP_MU)
             else:
                 # create placeholder
                 self.mu = None
-            self.no_data_val = no_data_val
             if origin_image is not None:
                 self.origin_image = origin_image.astype(DTypes.MAP_ORIGIN_IMAGE)
             else:
                 # create placeholder
                 self.origin_image = None
+            if chd is not None:
+                self.chd = chd.astype(DTypes.MAP_CHD)
+            else:
+                # create placeholder
+                self.chd = None
 
     def append_map_info(self, map_df):
         """
@@ -493,7 +500,7 @@ class PsiMap:
             # write map to file
             psihdf.wrh5_fullmap(h5_filename, self.x, self.y, np.array([]), self.data, method_info=self.method_info,
                                 image_info=self.image_info, map_info=self.map_info,
-                                no_data_val=self.no_data_val, mu=self.mu, origin_image=self.origin_image)
+                                no_data_val=self.no_data_val, mu=self.mu, origin_image=self.origin_image, chd=self.chd)
             print("PsiMap object written to: " + h5_filename)
 
         else:
@@ -510,11 +517,11 @@ def read_psi_map(h5_file):
     :return: PsiMap object
     """
     # read the image and metadata
-    x, y, z, f, method_info, image_info, map_info, var_info, no_data_val, mu, origin_image = psihdf.rdh5_fullmap(
+    x, y, z, f, method_info, image_info, map_info, var_info, no_data_val, mu, origin_image, chd = psihdf.rdh5_fullmap(
         h5_file)
 
     # create the map structure
-    psi_map = PsiMap(f, x, y, mu=mu, origin_image=origin_image, no_data_val=no_data_val)
+    psi_map = PsiMap(f, x, y, mu=mu, origin_image=origin_image, chd=chd, no_data_val=no_data_val)
     # fill in DB meta data
     if method_info is not None:
         psi_map.append_method_info(method_info)
