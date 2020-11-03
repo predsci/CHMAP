@@ -28,7 +28,7 @@ days = 180  # days for moving average
 
 # TIME RANGE FOR LBC CORRECTION AND IMAGE PLOTTING
 lbc_query_time_min = datetime.datetime(2011, 4, 1, 0, 0, 0)
-lbc_query_time_max = datetime.datetime(2011, 4, 10, 0, 0, 0)
+lbc_query_time_max = datetime.datetime(2011, 4, 1, 6, 0, 0)
 n_images_plot = 1
 plot = True  # true if you want images plotted
 

@@ -15,8 +15,8 @@ import modules.Plotting as Plotting
 import modules.lbcc_funs as lbcc
 
 # define time range to query
-lbc_query_time_min = datetime.datetime(2011, 5, 1, 0, 0, 0)
-lbc_query_time_max = datetime.datetime(2011, 5, 20, 0, 0, 0)
+lbc_query_time_min = datetime.datetime(2011, 4, 1, 0, 0, 0)
+lbc_query_time_max = datetime.datetime(2011, 4, 1, 6, 0, 0)
 plot = True  # plot images
 n_images_plot = 1  # number of images to plot
 
@@ -34,13 +34,25 @@ raw_data_dir = App.RAW_DATA_HOME
 hdf_data_dir = App.PROCESSED_DATA_HOME
 
 ##### INITIALIZE DATABASE CONNECTION #####
-use_db = "sqlite"
-sqlite_path = os.path.join(database_dir, sqlite_filename)
-db_session = init_db_conn(db_name=use_db, chd_base=db_class.Base, sqlite_path=sqlite_path)
+# use_db = "sqlite"
+# sqlite_path = os.path.join(database_dir, sqlite_filename)
+use_db = "mysql-Q"
+user = "tervin"
+password = ""
 
 ##### -------- APPLY LBC FIT ------- ######
 # start time
 start_time_tot = time.time()
+
+# connect to database
+if use_db == 'sqlite':
+    # setup database connection to local sqlite file
+    sqlite_path = os.path.join(database_dir, sqlite_filename)
+
+    db_session = init_db_conn(db_name=use_db, chd_base=db_class.Base, sqlite_path=sqlite_path)
+elif use_db == 'mysql-Q':
+    # setup database connection to MySQL database on Q
+    db_session = init_db_conn(db_name=use_db, chd_base=db_class.Base, user=user, password=password)
 
 # method information
 meth_name = "LBCC"
@@ -52,7 +64,8 @@ for inst_index, instrument in enumerate(inst_list):
     image_pd = query_euv_images(db_session=db_session, time_min=lbc_query_time_min,
                                 time_max=lbc_query_time_max, instrument=query_instrument)
     # query correct image combos
-    combo_query = query_inst_combo(db_session, lbc_query_time_min, lbc_query_time_max, meth_name, instrument)
+    combo_query = query_inst_combo(db_session, lbc_query_time_min - datetime.timedelta(weeks = 2),
+                                   lbc_query_time_max + datetime.timedelta(weeks = 2), meth_name, instrument)
 
     ###### GET LOS IMAGES COORDINATES (DATA) #####
     # apply LBC

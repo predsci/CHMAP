@@ -49,11 +49,12 @@ def create_histograms(db_session, inst_list, lbc_query_time_min, lbc_query_time_
                                                 meth_name="LBCC", instrument=instrument)
         # apply LBC
         for index, row in image_pd.iterrows():
-            original_los, lbcc_image, mu_indices, use_indices, theoretic_query = lbcc_funcs.apply_lbc(db_session, hdf_data_dir,
-                                                                                     combo_query,
-                                                                                     image_row=row,
-                                                                                     n_intensity_bins=n_intensity_bins,
-                                                                                     R0=R0)
+            original_los, lbcc_image, mu_indices, use_indices, theoretic_query = lbcc_funcs.apply_lbc(db_session,
+                                                                                                      hdf_data_dir,
+                                                                                                      combo_query,
+                                                                                                      image_row=row,
+                                                                                                      n_intensity_bins=n_intensity_bins,
+                                                                                                      R0=R0)
             # calculate IIT histogram from LBC
             hist = psi_d_types.LBCCImage.iit_hist(lbcc_image, lat_band, log10)
 
@@ -105,8 +106,8 @@ def calc_iit_coefficients(db_session, inst_list, ref_inst, calc_query_time_min, 
 
     # convert binary to histogram data
     mu_bin_edges, intensity_bin_edges, ref_full_hist = psi_d_types.binary_to_hist(hist_binary=ref_hist_pd,
-                                                                                            n_mu_bins=None,
-                                                                                            n_intensity_bins=n_intensity_bins)
+                                                                                  n_mu_bins=None,
+                                                                                  n_intensity_bins=n_intensity_bins)
 
     for inst_index, instrument in enumerate(inst_list):
         # check if this is the reference instrument
@@ -245,14 +246,15 @@ def apply_iit_correction(db_session, hdf_data_dir, iit_query_time_min, iit_query
             row = image_pd.iloc[index]
             print("Processing image number", row.image_id, "for IIT Correction.")
             #### APPLY LBC CORRECTION #####
-            original_los, lbcc_image, mu_indices, use_indices, theoretic_query = lbcc_funcs.apply_lbc(db_session, hdf_data_dir,
-                                                                                     combo_query_lbc,
-                                                                                     image_row=row,
-                                                                                     n_intensity_bins=n_intensity_bins,
-                                                                                     R0=R0)
+            original_los, lbcc_image, mu_indices, use_indices, theoretic_query = lbcc_funcs.apply_lbc(db_session,
+                                                                                                      hdf_data_dir,
+                                                                                                      combo_query_lbc,
+                                                                                                      image_row=row,
+                                                                                                      n_intensity_bins=n_intensity_bins,
+                                                                                                      R0=R0)
             #### APPLY IIT CORRECTION ####
             lbcc_image, iit_image, use_indices, alpha, x = apply_iit(db_session, combo_query_iit,
-                                                           lbcc_image, use_indices, original_los, R0=R0)
+                                                                     lbcc_image, use_indices, original_los, R0=R0)
 
             if plot:
                 lbcc_data = lbcc_image.lbcc_data
@@ -331,9 +333,9 @@ def plot_iit_histograms(db_session, hdf_data_dir, hist_query_time_min, hist_quer
     pd_lbc_hist_srt = pd_lbc_hist.sort_values(by=['image_id'])
     # convert the binary types back to arrays
     mu_bin_edges, intensity_bin_edges, full_lbc_hist = psi_d_types.binary_to_hist(pd_lbc_hist_srt,
-                                                                                            n_mu_bins=None,
-                                                                                            n_intensity_bins=
-                                                                                            n_intensity_bins)
+                                                                                  n_mu_bins=None,
+                                                                                  n_intensity_bins=
+                                                                                  n_intensity_bins)
     # create corrected/original histograms
     original_hist_list = np.full(full_lbc_hist.shape, 0, dtype=np.int64)
     corrected_hist_list = np.full(full_lbc_hist.shape, 0, dtype=np.int64)
@@ -363,11 +365,12 @@ def plot_iit_histograms(db_session, hdf_data_dir, hist_query_time_min, hist_quer
                                                     instrument=instrument)
         for index, row in image_pd.iterrows():
             # apply LBC
-            original_los, lbcc_image, mu_indices, use_indices, theoretic_query = lbcc_funcs.apply_lbc(db_session, hdf_data_dir,
-                                                                                     combo_query_lbc,
-                                                                                     image_row=row,
-                                                                                     n_intensity_bins=n_intensity_bins,
-                                                                                     R0=R0)
+            original_los, lbcc_image, mu_indices, use_indices, theoretic_query = lbcc_funcs.apply_lbc(db_session,
+                                                                                                      hdf_data_dir,
+                                                                                                      combo_query_lbc,
+                                                                                                      image_row=row,
+                                                                                                      n_intensity_bins=n_intensity_bins,
+                                                                                                      R0=R0)
 
             #### ORIGINAL LOS DATA ####
             # calculate IIT histogram from original data
@@ -377,9 +380,8 @@ def plot_iit_histograms(db_session, hdf_data_dir, hist_query_time_min, hist_quer
 
             #### CORRECTED DATA ####
             # apply IIT correction
-            lbcc_image, iit_image, use_indices, alpha, x = iit_funcs.apply_iit(db_session, hdf_data_dir, combo_query_iit,
-                                                                     lbcc_image,
-                                                                     use_indices, image_row=row, R0=R0)
+            lbcc_image, iit_image, use_indices, alpha, x = iit_funcs.apply_iit(db_session, combo_query_iit, lbcc_image,
+                                                                               use_indices, original_los, R0=R0)
 
             #### CREATE CORRECTED IIT HISTOGRAM #####
             # calculate IIT histogram from LBC

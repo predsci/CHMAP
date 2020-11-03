@@ -24,7 +24,7 @@ inst_list = ['AIA', "EUVI-A", "EUVI-B"]
 # PLOT PARAMETERS
 n_mu_bins = 18
 year = "2011"  # used for naming plot file
-time_period = "Theoretic-6Month(2)"  # used for naming plot file
+time_period = "Theoretic-6Month"  # used for naming plot file
 title_time_period = "6 Month"  # used for plot titles
 plot_week = 5  # index of week you want to plot
 # path to save plots to

@@ -1,3 +1,8 @@
+#!/usr/bin/env python
+import sys
+
+sys.path.append("/Users/tamarervin/CH_Project/CHD")
+
 """
 code to calculate IIT correction coefficients and save to database
 """
@@ -16,8 +21,8 @@ import modules.lbcc_funs as lbcc
 ####### -------- updateable parameters ------ #######
 
 # TIME RANGE FOR FIT PARAMETER CALCULATION
-calc_query_time_min = datetime.datetime(2011, 4, 1, 0, 0, 0)
-calc_query_time_max = datetime.datetime(2012, 10, 1, 0, 0, 0)
+calc_query_time_min = datetime.datetime(2011, 10, 1, 0, 0, 0)
+calc_query_time_max = datetime.datetime(2012, 4, 1, 0, 0, 0)
 weekday = 0  # start at 0 for Monday
 number_of_days = 180
 
@@ -40,13 +45,13 @@ sqlite_filename = App.DATABASE_FNAME
 
 # setup database parameters
 create = True  # true if you want to add to database
-database_dir = App.DATABASE_HOME
-sqlite_filename = App.DATABASE_FNAME
+use_db = "sqlite"
+sqlite_path = os.path.join(database_dir, sqlite_filename)
 # designate which database to connect to
-use_db = "mysql-Q"       # 'sqlite'  Use local sqlite file-based db
+# use_db = "mysql-Q"       # 'sqlite'  Use local sqlite file-based db
                         # 'mysql-Q' Use the remote MySQL database on Q
-user = "turtle"         # only needed for remote databases.
-password = ""           # See example109 for setting-up an encrypted password.  In this case leave password="", and
+# user = "turtle"         # only needed for remote databases.
+# password = ""           # See example109 for setting-up an encrypted password.  In this case leave password="", and
 # init_db_conn() will automatically find and use your saved password. Otherwise, enter your MySQL password here.
 
 ###### ------- nothing to update below -------- #######
@@ -89,7 +94,8 @@ ref_hist_pd = db_funcs.query_hist(db_session=db_session, meth_id=method_id[1],
 
 # convert binary to histogram data
 mu_bin_edges, intensity_bin_edges, ref_full_hist = psi_d_types.binary_to_hist(hist_binary=ref_hist_pd,
-                                   n_mu_bins=None, n_intensity_bins=n_intensity_bins)
+                                                                              n_mu_bins=None,
+                                                                              n_intensity_bins=n_intensity_bins)
 
 for inst_index, instrument in enumerate(inst_list):
     # check if this is the reference instrument
@@ -129,7 +135,7 @@ for inst_index, instrument in enumerate(inst_list):
                                            instrument=query_instrument)
         # convert binary to histogram data
         mu_bin_edges, intensity_bin_edges, inst_full_hist = psi_d_types.binary_to_hist(
-            hist_binary=inst_hist_pd, n_mu_bins=None, n_intensity_bins= n_intensity_bins)
+            hist_binary=inst_hist_pd, n_mu_bins=None, n_intensity_bins=n_intensity_bins)
         # loops through moving average centers
         for date_index, center_date in enumerate(moving_avg_centers):
             print("Starting calculations for", instrument, ":", center_date)
@@ -158,12 +164,10 @@ for inst_index, instrument in enumerate(inst_list):
             hist_ref = ref_hist_use.sum(axis=1)
 
             # normalize fit histogram
-            norm_hist_fit = np.zeros(hist_fit.shape)
             fit_sums = hist_fit.sum(axis=0, keepdims=True)
             norm_hist_fit = hist_fit / fit_sums
 
             # normalize reference histogram
-            norm_hist_ref = np.zeros(hist_ref.shape)
             ref_sums = hist_ref.sum(axis=0, keepdims=True)
             norm_hist_ref = hist_ref / ref_sums
 

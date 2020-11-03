@@ -21,8 +21,8 @@ import matplotlib as mpl
 ###### ------ PARAMETERS TO UPDATE -------- ########
 
 # TIME RANGE
-query_time_min = datetime.datetime(2011, 5, 1, 0, 0, 0)
-query_time_max = datetime.datetime(2011, 5, 4, 0, 0, 0)
+query_time_min = datetime.datetime(2012, 1, 1, 0, 0, 0)
+query_time_max = datetime.datetime(2013, 1, 1, 0, 0, 0)
 
 # define instruments
 inst_list = ["EUVI-A", "EUVI-B"]
@@ -85,14 +85,14 @@ def find_anomalies(data):
 
 
 # plot bad images
-def plot_bad_images(hdf_data_dir, bad_data):
-    for index, row in bad_data.iterrows():
-        print("Plotting image number", row.image_id, ".")
-        if row.fname_hdf == "":
-            print("Warning: Image # " + str(row.image_id) + " does not have an associated hdf file. Skipping")
+def plot_bad_images(hdf_dir, data):
+    for im_ind, im_row in data.iterrows():
+        print("Plotting image number", im_row.image_id, ".")
+        if im_row.fname_hdf == "":
+            print("Warning: Image # " + str(im_row.image_id) + " does not have an associated hdf file. Skipping")
             continue
-        hdf_path = os.path.join(hdf_data_dir, row.fname_hdf)
-        los_image = psi_d_types.read_los_image(hdf_path)
+        hdf = os.path.join(hdf_dir, im_row.fname_hdf)
+        los_image = psi_d_types.read_los_image(hdf)
         # add coordinates to los object
         los_image.get_coordinates(R0=R0)
 
@@ -108,12 +108,12 @@ def plot_bad_images(hdf_data_dir, bad_data):
         plot_arr[plot_arr < .001] = .001
 
         # plot the initial image
-        plt.figure(row.image_id)
+        plt.figure(im_row.image_id)
         plt.imshow(plot_arr, extent=[los_image.x.min(), los_image.x.max(), los_image.y.min(), los_image.y.max()],
                    origin="lower", cmap=im_cmap, aspect="equal", norm=norm)
         plt.xlabel("x (solar radii)")
         plt.ylabel("y (solar radii)")
-        plt.title(row.image_id)
+        plt.title(im_row.image_id)
     plt.show()
 
 
@@ -161,57 +161,109 @@ for inst_index, instrument in enumerate(inst_list):
         std[index] = np.std(hist)
 
     # plot mean
-    plt.figure("Mean")
-    plt.scatter(x, mean)
+    plt.figure("Mean " + instrument)
+    plt.scatter(x, mean/max(mean))
     plt.xlabel("Index")
     plt.ylabel("Mean")
     plt.title("Mean")
+    plt.savefig('maps/image_testing/' + 'mean_' + instrument)
+
     # plot standard deviation
-    plt.figure("STD")
-    plt.scatter(x, std)
+    plt.figure("STD " + instrument)
+    plt.scatter(x, std/max(std))
     plt.xlabel("Index")
     plt.ylabel("STD")
     plt.title("STD")
+    plt.savefig('maps/image_testing/' + 'std_' + instrument)
 
-    # determine median of mean, std
-    med_mean = np.median(mean)
-    med_std = np.median(std)
+    # plot mean v. std
+    plt.figure("Mean v. STD " + instrument)
+    plt.scatter(mean, std)
+    plt.xlabel("Mean")
+    plt.ylabel("STD")
+    plt.title("Mean v. STD")
+    plt.savefig('maps/image_testing/' + 'mean_std_' + instrument)
 
-    # check if mean, std is outlier
-    # if outlier, flag in database
-    # TODO: what determines an outlier
-    # z_score = np.zeros((len(query_pd)))
-    # for index, mean1 in enumerate(mean):
-    #     z_score[index] = (mean1 - med_mean) / std[index]
-    # plt.figure("Z_Score")
-    # plt.scatter(x, z_score)
+    # mean/std
+    plt.figure("Mean/STD " + instrument)
+    plt.scatter(x, std/mean)
+    plt.xlabel("Index")
+    plt.ylabel("STD/Mean")
+    plt.title("Mean/STD")
+    plt.savefig('maps/image_testing/' + 'mean_div_std_' + instrument)
 
-    # if outlier, add image id to bad_data list
-    bad_data = pd.DataFrame() * len(inst_list)
-    # standard deviation outlier
-    std_outlier = find_anomalies(std)
-    for outlier in std_outlier:
-        bad_data[inst_index] = bad_data[inst_index].append(query_pd.iloc[outlier], ignore_index=True)
+#     # determine median of mean, std
+#     med_mean = np.median(mean)
+#     med_std = np.median(std)
+#
+#     # check if mean, std is outlier
+#     # if outlier, flag in database
+#     # TODO: what determines an outlier
+#     # z_score = np.zeros((len(query_pd)))
+#     # for index, mean1 in enumerate(mean):
+#     #     z_score[index] = (mean1 - med_mean) / std[index]
+#     # plt.figure("Z_Score")
+#     # plt.scatter(x, z_score)
+#
+#     # if outlier, add image id to bad_data list
+#     # bad_data = pd.DataFrame(rows=row.axes)
+#     bad_data = pd.DataFrame()
+#
+#     # standard deviation outlier
+#     std_outlier = find_anomalies(std)
+#     for outlier in std_outlier:
+#         # if bad_data is not None:
+#         bad_data = bad_data.append(query_pd.iloc[outlier], ignore_index=True)
+#     #         else:
+#     #             bad_data = pd.DataFrame(query_pd.iloc[outlier])
+#
+#     # mean outlier
+#     mean_outlier = find_anomalies(mean)
+#     for outlier in mean_outlier:
+#         # if bad_data is not None:
+#         bad_data = bad_data.append(query_pd.iloc[outlier], ignore_index=True)
+#         #         else:
+#         #             bad_data = pd.DataFrame(query_pd.iloc[outlier])
+#
+#     print("Bad Images for", instrument, "are:\n", bad_data)
+#     # plot the bad images
+#     plot_bad_images(hdf_data_dir, bad_data)
+#
+#     # remove images you don't want to flag
+#     remove = input("Are there images from this list you would like to remove? (y/n) ")
+#     if remove == 'y':
+#         remove_image_ids = input("List of image ids to remove: ")
+#         bad_images = remove_image(remove_image_ids, bad_data)
+#     #
+#     #     # OR, add images you want to flag
+#     remove = input("Are there images from this list you would like to flag? (y/n) ")
+#     if remove == 'y':
+#         add_image_ids = input("List of image ids to flag: ")
+#         bad_images = flag_image(add_image_ids, bad_data)
+#     # add_image_ids = [8482, 7398, 6891, 353, 5034, 4246, 3414, 1745]
+#
+#     #
+#     #     # flag bad image in database
+#
+#     for index, image_row in bad_images.iterrows():
+#         update_image_val(db_session, image_row, 'flag', -1)
+#
+#
+# #### query and flagging bad images
+# from modules.DB_funs import init_db_conn, update_image_val
+# import modules.DB_classes as db_class
+# use_db = "mysql-Q"
+# user = "tervin"
+# password = ""
+# db_session = init_db_conn(db_name=use_db, chd_base=db_class.Base, user=user, password=password)
+#
+# bad_images = [1745, 3414, 4246, 5034, 6170, 6891, 7398, 8482, 10665, 11705, 12796]
+#
+# from modules.DB_classes import *
+# import pandas as pd
+# for image_id in bad_images:
+#     query_out = pd.read_sql(db_session.query(EUV_Images).filter(EUV_Images.image_id == image_id).statement,
+#                             db_session.bind)
+#     update_image_val(db_session, query_out, 'flag', -1)
 
-    # mean outlier
-    mean_outlier = find_anomalies(mean)
-    for outlier in mean_outlier:
-        bad_data[inst_index] = bad_data[inst_index].append(query_pd.iloc[outlier], ignore_index=True)
-
-for inst_index, instrument in enumerate(inst_list):
-    print("Bad Images for", instrument, "are:\n", bad_data[inst_index])
-    # plot the bad images
-    plot_bad_images(hdf_data_dir, bad_data[inst_index])
-
-    # remove images you don't want to flag
-    remove_image_ids = []
-    bad_images = remove_image(remove_image_ids, bad_data[inst_index])
-    #
-    #     # OR, add images you want to flag
-    add_image_ids = [8482, 7398, 6891, 353, 5034, 4246, 3414, 1745]
-    bad_images = flag_image(add_image_ids, bad_data[inst_index])
-    #
-    #     # flag bad image in database
-    for index, image_row in bad_images.iterrows():
-        update_image_val(db_session, image_row, 'flag', -1)
 

@@ -1,3 +1,8 @@
+#!/usr/bin/env python
+import sys
+
+sys.path.append("/Users/tamarervin/CH_Project/CHD")
+
 """
 code for creation of IIT histograms and saving to database
 """
@@ -15,7 +20,7 @@ import analysis.lbcc_analysis.LBCC_theoretic_funcs as lbcc_funcs
 
 ###### ------ UPDATEABLE PARAMETERS ------- #######
 # TIME RANGE FOR LBC CORRECTION AND HISTOGRAM CREATION
-lbc_query_time_min = datetime.datetime(2011, 1, 1, 0, 0, 0)
+lbc_query_time_min = datetime.datetime(2012, 1, 1, 0, 0, 0)
 lbc_query_time_max = datetime.datetime(2013, 1, 1, 0, 0, 0)
 
 # define instruments
@@ -36,13 +41,16 @@ sqlite_filename = App.DATABASE_FNAME
 
 # setup database parameters
 create = True  # true if you want to add to database
-database_dir = App.DATABASE_HOME
-sqlite_filename = App.DATABASE_FNAME
 # designate which database to connect to
-use_db = "mysql-Q"       # 'sqlite'  Use local sqlite file-based db
+# sqlite
+use_db = "sqlite"
+sqlite_path = os.path.join(database_dir, sqlite_filename)
+
+# mysql
+# use_db = "mysql-Q"       # 'sqlite'  Use local sqlite file-based db
                         # 'mysql-Q' Use the remote MySQL database on Q
-user = "turtle"         # only needed for remote databases.
-password = ""           # See example109 for setting-up an encrypted password.  In this case leave password="", and
+# user = "turtle"         # only needed for remote databases.
+# password = ""           # See example109 for setting-up an encrypted password.  In this case leave password="", and
 # init_db_conn() will automatically find and use your saved password. Otherwise, enter your MySQL password here.
 
 ###### ------- NOTHING TO UPDATE BELOW ------- #######
@@ -66,7 +74,7 @@ meth_desc = "IIT Fit Method"
 method_id = db_funcs.get_method_id(db_session, meth_name, meth_desc, var_names=None, var_descs=None, create=True)
 
 for instrument in inst_list:
-    print("Begining loop for instrument:", instrument)
+    print("Beginning loop for instrument:", instrument)
     # query EUV images
     query_instrument = [instrument, ]
     image_pd = db_funcs.query_euv_images(db_session=db_session, time_min=lbc_query_time_min,

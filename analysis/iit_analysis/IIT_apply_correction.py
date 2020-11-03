@@ -19,8 +19,8 @@ import modules.Plotting as Plotting
 # TIME RANGE FOR IIT CORRECTION AND IMAGE PLOTTING
 iit_query_time_min = datetime.datetime(2011, 4, 1, 0, 0, 0)
 iit_query_time_max = datetime.datetime(2011, 10, 1, 0, 0, 0)
-plot = True
-n_images_plot = 1
+plot = False
+n_images_plot = 4
 
 # define instruments
 inst_list = ["AIA", "EUVI-A", "EUVI-B"]
@@ -38,15 +38,29 @@ hdf_data_dir = App.PROCESSED_DATA_HOME
 database_dir = App.DATABASE_HOME
 sqlite_filename = App.DATABASE_FNAME
 
-# setup database connection
-create = True  # true if you want to add to database
+##### INITIALIZE DATABASE CONNECTION #####
+# sqlite
 use_db = "sqlite"
 sqlite_path = os.path.join(database_dir, sqlite_filename)
-db_session = init_db_conn(db_name=use_db, chd_base=db_class.Base, sqlite_path=sqlite_path)
 
-##### ------- nothing to update below --------- #####
+# mySQL
+# use_db = "mysql-Q"
+# user = "tervin"
+# password = ""
+
+##### -------- APPLY LBC FIT ------- ######
 # start time
 start_time = time.time()
+
+# connect to database
+if use_db == 'sqlite':
+    # setup database connection to local sqlite file
+    sqlite_path = os.path.join(database_dir, sqlite_filename)
+
+    db_session = init_db_conn(db_name=use_db, chd_base=db_class.Base, sqlite_path=sqlite_path)
+elif use_db == 'mysql-Q':
+    # setup database connection to MySQL database on Q
+    db_session = init_db_conn(db_name=use_db, chd_base=db_class.Base, user=user, password=password)
 
 #### GET REFERENCE INFO FOR LATER USE ####
 # get index number of reference instrument
@@ -79,15 +93,24 @@ for inst_index, instrument in enumerate(inst_list):
     for index in range(n_images_plot):
         row = image_pd.iloc[index]
         #### APPLY LBC CORRECTION #####
-        original_los, lbcc_image, mu_indices, use_indices,theoretic_query = lbcc_funcs.apply_lbc(db_session, hdf_data_dir,
-                                                                                 combo_query_lbc,
-                                                                                 image_row=row,
-                                                                                 n_intensity_bins=n_intensity_bins,
-                                                                                 R0=R0)
+        #### APPLY LBC CORRECTION #####
+        original_los, lbcc_image, mu_indices, use_indices, theoretic_query = lbcc_funcs.apply_lbc(db_session,
+                                                                                                  hdf_data_dir,
+                                                                                                  combo_query_lbc,
+                                                                                                  image_row=row,
+                                                                                                  n_intensity_bins=n_intensity_bins,
+                                                                                                  R0=R0)
         #### APPLY IIT CORRECTION ####
-        lbcc_image, iit_image, use_indices, alpha, x = iit_funcs.apply_iit(db_session, hdf_data_dir, combo_query_iit,
-                                                                 lbcc_image, use_indices, image_row=row, R0=R0)
+        lbcc_image, iit_image, use_indices, alpha, x = iit_funcs.apply_iit(db_session, combo_query_iit,
+                                                                 lbcc_image, use_indices, original_los, R0=R0)
+        import matplotlib.pyplot as plt
+        plt.figure("LBCC")
+        lbc_data = lbcc_image.lbcc_data / lbcc_image.lbcc_data.sum(axis=0, keepdims=True)
+        plt.plot(lbc_data)
 
+        plt.figure("IIT")
+        iit_data = iit_image.iit_data / iit_image.iit_data.sum(axis=0, keepdims=True)
+        plt.plot(iit_data)
         if plot:
             lbcc_data = lbcc_image.lbcc_data
             corrected_iit_data = iit_image.iit_data
@@ -102,7 +125,7 @@ for inst_index, instrument in enumerate(inst_list):
             Plotting.PlotCorrectedImage(lbcc_data - corrected_iit_data, los_image=original_los,
                                         nfig=300 + inst_index * 10 + index,
                                         title="Difference Plot for " + instrument)
-
+plt.show()
 # end time
 end_time = time.time()
 print("ITT has been applied and specified images plotted.")

@@ -234,8 +234,7 @@ def interp_los_image_to_map2(image_in, R0, map_x, map_y, no_data_val=-9999.):
     # only interpolate points on the front half of the sphere
     interp_index = image_z > 0
 
-    interp_vec = interpolate2D_regular2irregular2(image_in.lon, image_in.lat, image_in.data.flatten(),
-                                                  image_x[interp_index],
+    interp_vec = interpolate2D_regular2irregular2(image_in.lon, image_in.lat, image_in.data.flatten(), image_x[interp_index],
                                                   image_y[interp_index])
     interp_result_vec[interp_index] = interp_vec
     # reformat result to matrix form
