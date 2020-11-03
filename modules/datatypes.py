@@ -390,7 +390,7 @@ class PsiMap:
         3. reading a map hdf file ---needs to be created---
     """
 
-    def __init__(self, data=None, x=None, y=None, mu=None, origin_image=None, map_lon=None, no_data_val=-9999.0):
+    def __init__(self, data=None, x=None, y=None, mu=None, origin_image=None, map_lon=None, chd=None, no_data_val=-9999.0):
         """
         Class to hold the standard information for a PSI map image
     for the CHD package.
@@ -400,7 +400,7 @@ class PsiMap:
             x: a 1D array of the solar x positions of each pixel [Carrington lon].
             y: a 1D array of the solar y positions of each pixel [Sine lat].
 
-        - mu and origin_image are optional and should be numpy arrays with
+        - mu, origin_image, and chd are optional and should be numpy arrays with
             dimensions identical to 'data'.
 
         Initialization also uses database definitions to generate empty dataframes
@@ -436,12 +436,14 @@ class PsiMap:
             self.data = data.astype(DTypes.MAP_DATA)
             self.x = x.astype(DTypes.MAP_AXES)
             self.y = y.astype(DTypes.MAP_AXES)
+            # designate a 'no data' value for 'data' array
+            self.no_data_val = no_data_val
+            # optional data handling
             if mu is not None:
                 self.mu = mu.astype(DTypes.MAP_MU)
             else:
                 # create placeholder
                 self.mu = None
-            self.no_data_val = no_data_val
             if origin_image is not None:
                 self.origin_image = origin_image.astype(DTypes.MAP_ORIGIN_IMAGE)
             else:
@@ -452,6 +454,11 @@ class PsiMap:
             else:
                 # create placeholder
                 self.map_lon = None
+            if chd is not None:
+                self.chd = chd.astype(DTypes.MAP_CHD)
+            else:
+                # create placeholder
+                self.chd = None
 
     def append_map_info(self, map_df):
         """
