@@ -121,7 +121,7 @@ def rdh5_meta(h5_filename):
 
 
 def wrh5_fullmap(h5_filename, x, y, z, f, method_info=None, image_info=None, map_info=None,
-             var_info=None, no_data_val=None, mu=None, origin_image=None):
+             var_info=None, no_data_val=None, mu=None, origin_image=None, chd=None):
     """
     Write an hdf5 file similar to the standard PSI format + secondary data + json metadata
     - f is a 1, 2, or 3D numpy array
@@ -180,6 +180,9 @@ def wrh5_fullmap(h5_filename, x, y, z, f, method_info=None, image_info=None, map
     if origin_image is not None:
         # h5file.create_dataset("origin_image", data=origin_image, dtype='i4')
         h5file.create_dataset("origin_image", data=origin_image, dtype=chd_info.DTypes.MAP_ORIGIN_IMAGE)
+    if chd is not None:
+        h5file.create_dataset("chd", data=origin_image, dtype=chd_info.DTypes.MAP_CHD)
+
 
     # Convert the metadata to a json string, save it as an "attribute"
     if method_info is not None:
@@ -249,6 +252,10 @@ def rdh5_fullmap(h5_filename):
         origin_image = h5file.get('origin_image')[:]
     else:
         origin_image = None
+    if 'chd' in h5file.keys():
+        chd = h5file.get('chd')[:]
+    else:
+        chd = None
 
     # load the metadata, convert it from the json string to a dict.
     if 'method_info' in h5file.attrs:
@@ -275,7 +282,7 @@ def rdh5_fullmap(h5_filename):
     h5file.close()
 
     return (x, y, z, f, method_info, image_info, map_info, var_info,
-            no_data_val, mu, origin_image)
+            no_data_val, mu, origin_image, chd)
 
 
 def wrh5_map(h5_filename, x, y, z, f, method_info=None, image_info=None, map_info=None,

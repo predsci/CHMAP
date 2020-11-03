@@ -15,4 +15,5 @@ class DTypes:
     MAP_AXES = "float32"
     MAP_ORIGIN_IMAGE = "uint32"
     MAP_MU = "float16"
+    MAP_CHD = "float16"
 

@@ -81,6 +81,13 @@ def synchronic_euv_download(synch_times, raw_data_dir, db_session, download=True
         # keep f_list elements that are not in del_list
         f_list = [f_list[ii] for ii in range(len(f_list)) if ii not in set(del_list)]
 
+        if f_list.__len__() == 0:
+            print("No instrument images in time range.\n")
+            # record download results 'No image in time range'
+            download_result = download_result.append(new_rows)
+            # skip to next iteration of temporal for loop
+            continue
+
         # Now loop over all the image pairs to select the "perfect" group of images.
         imin = cluster_meth_1(f_list=f_list, jd0=jd0)
 

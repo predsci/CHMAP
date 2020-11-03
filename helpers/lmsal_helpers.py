@@ -36,7 +36,16 @@ def build_lmsal_index_path(filename=None, path=None):
     return out_path
 
 
-def read_lmsal_index(lmsal_filename):
+def read_lmsal_index(lmsal_filename, alter=1):
+    """
+    Read LMSAL .h5 catalog file and convert TAI seconds to UTC datetime.
+    :param lmsal_filename: Path to file as a string
+    :param alter: At time of function development (Oct 2020), the links in the catalog file
+    do not work out-of-the-box.  alter=1 fixes the links. It is intended that alter=0 will
+    be used if the catalog links are fixed, and alter=2 will be used if a new fix is required
+    in the future.
+    :return:
+    """
     # read file
     lmsal_con = h5py.File(lmsal_filename, 'r')
     # unpack data
@@ -45,6 +54,7 @@ def read_lmsal_index(lmsal_filename):
 
     lmsal_float_time = lmsal_array[1]
     lmsal_path = lmsal_array[2].astype(str)
+    # lmsal_path = lmsal_path.tolist()
 
     # convert TAI seconds to a datetime format
     tai_epoch = Time("1958-01-01T00:00:00.000", scale="tai", format="isot")
@@ -54,6 +64,16 @@ def read_lmsal_index(lmsal_filename):
     utc_datetime = tai_datetime.utc
     # convert to datetime class. Because of the database, we generally want to work with the basic datetime class.
     out_datetime = utc_datetime.tt.datetime
+
+    if alter == 1:
+        # remove dashes and colons from lmsal_path
+        for ii in range(lmsal_path.__len__()):
+            lmsal_path[ii] = lmsal_path[ii].replace("-", "")
+            lmsal_path[ii] = lmsal_path[ii].replace(":", "")
+            lmsal_path[ii] = lmsal_path[ii].replace("T", "_")
+
+        # add 'sfield_' to base_url
+        base_url = base_url.replace("pfss_links_v2", "pfss_links_sfield_v2")
 
     # combine into dataframe (this is really slow)
     # out_frame = pd.DataFrame({'timestamp': utc_datetime, 'sub_path': lmsal_path})

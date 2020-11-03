@@ -21,7 +21,7 @@ from settings.app import App
 from modules.DB_classes import *
 from modules.misc_funs import get_metadata
 from helpers import misc_helpers
-from modules import datatypes
+from modules import datatypes, misc_funs
 import helpers.psihdf as psihdf
 import modules.cred_funs as creds
 
@@ -197,7 +197,7 @@ def add_image2session(data_dir, subdir, fname, db_session):
     # check if row already exists in DB
     existing_row_id = db_session.query(EUV_Images.image_id, EUV_Images.fname_raw).filter(
         EUV_Images.instrument == file_meta['instrument'],
-        EUV_Images.date_obs == file_meta['datetime'],
+        EUV_Images.date_obs == misc_funs.roundSeconds(file_meta['datetime']),
         EUV_Images.wavelength == file_meta['wavelength']).all()
     if len(existing_row_id) == 1:
         if DB_path != existing_row_id[0][1]:
@@ -817,7 +817,7 @@ def get_method_combo_id(db_session, meth_ids, create=False):
 
 
 def query_euv_maps(db_session, mean_time_range=None, extrema_time_range=None, n_images=None, image_ids=None,
-                   methods=None, var_val_range=None, wavelength=None):
+                     methods=None, var_val_range=None, wavelength=None):
     """
     Query the database for maps that meet the input specifications.  db_session specifies database information.  All
     other inputs are query specifiers.  If more than one query specifier is 'not None', they are connected to one
@@ -834,7 +834,7 @@ def query_euv_maps(db_session, mean_time_range=None, extrema_time_range=None, n_
     specified range.
     :param wavelength: A list of one or more integer values. Returns maps with at least one image from each wavelength
     listed in 'wavelength'.
-    :return:
+    :return: map_info, image_info, method_info - three pandas dataframes that summarize map details.
     """
 
     # combo query
@@ -930,11 +930,20 @@ def query_euv_maps(db_session, mean_time_range=None, extrema_time_range=None, n_
     # remove duplicate var_id columns
     method_info = method_info.T.groupby(level=0).first().T
 
-    # also get method info
-    # method_info = pd.read_sql(db_session.query(Method_Defs).statement, db_session.bind)
+    return map_info, image_info, method_info, image_assoc
 
-    # Then divide results up into a list of Map objects
-    map_list = [datatypes.PsiMap()] * len(map_info)
+
+def get_euv_map_list(map_info, image_info, method_info, image_assoc):
+    """
+    This function returns a list of map objects. This could grow large quickly if too many maps are requested.
+    The inputs are pandas dataframes as expected from the output of query_euv_maps()
+    :param map_info:
+    :param image_info:
+    :param method_info:
+    :param image_assoc:
+    :return: a list of PSI_Map objects
+    """
+    map_list = [datatypes.PsiMap()]*len(map_info)
     map_data_dir = App.MAP_FILE_HOME
     for index, map_series in map_info.iterrows():
         print("Reading in map with map id:", map_series.map_id)
@@ -948,11 +957,41 @@ def query_euv_maps(db_session, mean_time_range=None, extrema_time_range=None, n_
         image_ids = image_assoc.image_id[image_assoc.combo_id == combo_id]
         images_slice = image_info.loc[image_info.image_id.isin(image_ids)]
         map_list[index].append_image_info(images_slice)
-        #     # var_info
-        # var_slice = var_query.loc[var_query.map_id == map_series.map_id]
-        # map_list[index].append_var_info(var_slice)
         #     # method info
         map_list[index].append_method_info(method_info.loc[method_info.meth_id == map_series.meth_id])
+
+    return map_list
+
+
+def query_euv_map_list(db_session, mean_time_range=None, extrema_time_range=None, n_images=None, image_ids=None,
+                       methods=None, var_val_range=None, wavelength=None):
+    """
+    Query the database for maps that meet the input specifications.  db_session specifies database information.  All
+    other inputs are query specifiers.  If more than one query specifier is 'not None', they are connected to one
+    another using 'and' logic.
+    :param db_session: SQLAlchemy database session.  Used for database connection and structure info.
+    :param mean_time_range: Two element list of datetime values. Returns maps with mean_time in the range.
+    :param extrema_time_range: Two element list of datetime values. Returns maps with min/max ranges that intersect
+    extrema_time_range.
+    :param n_images: An integer value. Returns maps made from n_images number of images.
+    :param image_ids: A list of one or more integers.  Returns maps that include all images in image_ids.
+    :param methods: A list of one or more character strings.  Returns maps that include all methods in 'methods'.
+    :param var_val_range: A dict with variable names as element labels and a two-element list as values.  Ex
+    {'par1': [min_par1, max_par1], 'par2': [min_par2, max_par2]}. Returns maps with parameter values in the
+    specified range.
+    :param wavelength: A list of one or more integer values. Returns maps with at least one image from each wavelength
+    listed in 'wavelength'.
+    :return: map_info, image_info, method_info - three dataframes that summarize map details
+             map_list - a list of the map objects loaded from query results
+    """
+
+    map_info, image_info, method_info, image_assoc = query_euv_maps(db_session, mean_time_range=mean_time_range,
+                                                       extrema_time_range=extrema_time_range, n_images=n_images,
+                                                       image_ids=image_ids, methods=methods,
+                                                       var_val_range=var_val_range, wavelength=wavelength)
+
+    # Then divide results up into a list of Map objects
+    map_list = get_euv_map_list(map_info, image_info, method_info, image_assoc)
 
     return map_info, image_info, method_info, map_list
 
@@ -1103,6 +1142,74 @@ def delete_map_dbase_record(db_session, map_object, data_dir=None):
         db_session.commit()
         print(str(out_flag) + " row(s) deleted from 'euv_maps' for map_id=" + str(map_id))
     exit_status = 0
+
+    return exit_status
+
+
+def update_method_existing_map(db_session, map_id, psi_map, map_path=App.MAP_FILE_HOME):
+    """
+    Given an existing map and DB map record, update method info/combo.  A method change implies a change to the data,
+    mu, origin_image, or chd fields. So in addition to updating the database, this function also overwrites the map
+    file with the contents of 'psi_map'.
+    :param db_session: SQLAlchemy database session.  Used for database connection and structure info.
+    :param map_id: integer from DB map table specifying the existing map record
+    :param psi_map: PsiMap class. Map object MUST INCLUDE new CHD grid and detection method.
+    :return: flag indicating process result
+                    0 - Operation success
+                    1 -
+                    2 - Failure, undefined method id
+    """
+    exit_status = 0
+    # --- assign a new meth_combo_id ---
+    # check that all methods in psi_map.method_info have method-id numbers
+    if psi_map.method_info.meth_id.isnull().any():
+        print("One or more null method_ids in psi_map. In DB_funs.update_method_existing_map(), all methods must be "
+              "previously defined and meth_id inserted into map object prior to function call. Exiting function "
+              "with status 2 - Failure, undefined method id.")
+        exit_status = 2
+        return exit_status
+
+    # determine if any methods are new?
+    existing_record = pd.read_sql(db_session.query(EUV_Maps).filter(
+        EUV_Maps.map_id == map_id).statement, db_session.bind)
+    if existing_record.shape[0] == 0:
+        # map_id in psi_map does not match with a database record, search for different map_id?
+        exit_status = 3
+        print("No map record to modify. In DB_funs.update_method_existing_map(), 'map_id' must match an existing"
+              "database map record. Exiting function with status 3 - Failure, undefined no database record for map_id.")
+        return exit_status
+
+    existing_methods_query = pd.read_sql(db_session.query(Method_Combo_Assoc).filter(
+        Method_Combo_Assoc.meth_combo_id == existing_record.combo_id[0]).statement, db_session.bind)
+    existing_methods = existing_methods_query.meth_id
+    new_map_methods = psi_map.method_info.meth_id.unique()
+    new_methods = set(new_map_methods) - set(existing_methods)
+
+    # get a combo_id for the new combination of methods
+    new_combo_id = get_method_combo_id(db_session, new_map_methods, create=True)
+    # update map object
+    psi_map.map_info.meth_combo_id = new_combo_id
+
+    # --- update map record ---
+    db_session.query(EUV_Maps).filter(EUV_Maps.map_id == map_id).update({"meth_combo_id": new_combo_id})
+
+    # --- write variable values for new methods ---
+    for method_id in new_methods:
+        # loop through methods and write variable values
+        method_index = np.where(psi_map.method_info.meth_id == method_id)
+        for method_row in method_index:
+            # write variable value
+            add_var_val = Var_Vals_Map(map_id=map_id, combo_id=existing_record.combo_id[0],
+                                       meth_id=psi_map.method_info.meth_id[method_row],
+                                       var_id=psi_map.method_info.var_id[method_row],
+                                       var_val=psi_map.method_info.var_val[method_row])
+            db_session.add(add_var_val)
+
+    # now commit the changes
+    db_session.commit()
+
+    # --- overwrite map file ---
+    psi_map.write_to_file(map_path, filename=existing_record.fname[0], db_session=None)
 
     return exit_status
 

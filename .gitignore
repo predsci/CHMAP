@@ -11,6 +11,7 @@ settings/app.py
 settings/app_*.py
 settings/e_cred.bin
 setup.conf
+setup_*
 
 # ignore the output folders in schema_viz
 schema_viz/mysql/output/*
