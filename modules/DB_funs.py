@@ -1503,9 +1503,9 @@ def query_inst_combo(db_session, query_time_min, query_time_max, meth_name, inst
     list_B = image_combo_instrument.combo_id[~inst_index].unique()
     # determine correct combos by determining which exist in A but not in B
     combos_keep = np.setdiff1d(list_A, list_B, assume_unique=True)
-    # return correct pandas format for back-compatibility
+    # return correct pandas format for back-compatibility (ordered by date_mean)
     combo_result = pd.read_sql(db_session.query(Image_Combos).filter(
-        Image_Combos.combo_id.in_(combos_keep.tolist())).statement, db_session.bind)
+        Image_Combos.combo_id.in_(combos_keep.tolist())).order_by(Image_Combos.date_mean).statement, db_session.bind)
 
     return combo_result
 
@@ -1551,7 +1551,7 @@ def query_var_val(db_session, meth_name, date_obs, inst_combo_query):
         # query variable values
         var_val_query = pd.read_sql(db_session.query(Var_Vals).filter(Var_Vals.meth_id == method_id_info[1],
                                                                       Var_Vals.combo_id == combo_id
-                                                                      ).statement,
+                                                                      ).order_by(Var_Vals.var_id).statement,
                                     db_session.bind)
         if var_val_query.size == 0:
             var_vals[i, :] = np.nan * var_id[1].size
