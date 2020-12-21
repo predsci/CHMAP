@@ -46,8 +46,7 @@ six
 h5py
 
 alembic
-astropy
-astropy_healpix
+tensorflow
 
 
 For simplicity, run the included script:
