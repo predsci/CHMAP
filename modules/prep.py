@@ -49,7 +49,7 @@ def prep_euv_image(fitsfile, processed_home_dir, deconvolve=True, write=True, id
     - After writing the file, it returns a relative sub directory, filename, and LosImage object
       that can be used to populate the filename information in the database.
     """
-    print("### Preparing FITS Image: " + os.path.basename(fitsfile), flush=True)
+    print("  Preparing FITS Image: " + os.path.basename(fitsfile), flush=True)
 
     # read the fits file using sunpy map (almost as fast as direct read, but you get metadata)
     map_raw = sunpy.map.Map(fitsfile)
@@ -108,9 +108,9 @@ def prep_aia_image(map_raw, deconvolve=True):
             psf_name = psf_name + '_PSF2'
 
         # Call the deconvolution script
-        print("  Calling Remote SGP PSF Deconvolution (" + psf_name + ")... ", end='', flush=True)
+        print("  Calling Remote PSF Deconvolution (" + psf_name + ")... ", end='', flush=True)
         t0 = timer()
-        image = deconv.deconv_sgp(image, psf_name)
+        image = deconv.deconv_decurlog_gpu(image, psf_name)
         time_deconv = timer() - t0
         print('done ({0:.2f}s)'.format(time_deconv), flush=True)
 
@@ -227,9 +227,9 @@ def prep_euvi_image(map_raw, deconvolve=True, idl_session=None):
             psf_name = psf_name + '_SHEARER'
 
         # Call the deconvolution script
-        print("  Calling Remote SGP PSF Deconvolution (" + psf_name + ")... ", end='', flush=True)
+        print("  Calling Remote PSF Deconvolution (" + psf_name + ")... ", end='', flush=True)
         t0 = timer()
-        image = deconv.deconv_sgp(image, psf_name)
+        image = deconv.deconv_decurlog_gpu(image, psf_name)
         time_deconv = timer() - t0
         print('done ({0:.2f}s)'.format(time_deconv), flush=True)
 

@@ -4,8 +4,10 @@ numpy
 scipy
 matplotlib
 sunpy=1.1.2
+astropy-healpix
 drms
 sqlalchemy-utils
+mysqlclient
 alembic
 pyhdf
 h5py

@@ -167,6 +167,19 @@ def uncompress_compressed_fits_image(infile, outfile, int=False):
     hdu.writeto(outfile, output_verify='silentfix', overwrite=True, checksum=True)
 
 
+def read_uncompressed_fits_image(infile):
+    """
+    read an uncompressed fits file and return the data and header
+    - The silentfix is to avoid warnings/and or crashes when astropy encounters nans in the header values
+    """
+    hdulist = astropy.io.fits.open(infile)
+    hdulist.verify('silentfix')
+    hdr = hdulist[0].header
+    data = hdulist[0].data
+
+    return data, hdr
+
+
 def write_sunpy_map_as_fits(outfile, map, dtype=np.uint16):
     """
     Helper function to take a sunpy map object and save the data as a fits file.
@@ -192,6 +205,49 @@ def write_sunpy_map_as_fits(outfile, map, dtype=np.uint16):
     # write the file
     hdulist.close()
     hdu.writeto(outfile, output_verify='silentfix', overwrite=True, checksum=True)
+
+
+def write_array_as_fits(outfile, data, header=None):
+    """
+    Helper function to take a 2D array object and save the data as a fits file.
+    - If no header is supplied, then the basic info is written by Astropy.
+
+    - This function circumvents sunpy.io in order to gain flexibility in the output
+      data type and how the fits library is called.
+
+    - I use it to write files of desired type for the Decurlog GPU deconvolution code.
+    """
+    # start a new fits file object
+    hdu = astropy.io.fits.PrimaryHDU(data, header=header)
+
+    # build the hdu list
+    hdulist = astropy.io.fits.HDUList([hdu])
+
+    # write the file
+    hdulist.close()
+    hdu.writeto(outfile, output_verify='silentfix', overwrite=True, checksum=True)
+
+
+def write_array_as_compressed_fits(outfile, data, header=None, quantize_level=16.):
+    """
+    Helper function to take a 2D array object and save the data as a fits file.
+    - If no header is supplied, then the basic info is written by Astropy.
+
+    - This function circumvents sunpy.io in order to gain flexibility in the output
+      data type and how the fits library is called.
+
+    - I use it to write files of desired type for the Decurlog GPU deconvolution code.
+    """
+    # start a new fits file object
+    hdu = astropy.io.fits.PrimaryHDU(data, header=header)
+
+    # build the hdu list
+    hdulist = astropy.io.fits.HDUList([hdu])
+
+    # write out the file
+    comp_hdu = astropy.io.fits.CompImageHDU(hdulist[0].data, header, quantize_level=quantize_level)
+    hdulist.close()
+    comp_hdu.writeto(outfile, output_verify='silentfix', overwrite=True, checksum=True)
 
 
 def carrington_rotation_number_relative(time, lon):
