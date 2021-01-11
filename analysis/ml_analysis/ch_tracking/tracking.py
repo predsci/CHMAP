@@ -30,7 +30,7 @@ def main():
     """
 
     # Create a VideoCapture object
-    cap = cv2.VideoCapture("/Users/opalissan/CH_Project/CHD_DB/processed_images/maps_r101_chm_low_res_1.mov")
+    cap = cv2.VideoCapture("example_vid/maps_r101_chm_low_res_1.mov")
 
     # Create the background subtractor object
     # Use the last 700 video frames to build the background

@@ -2,7 +2,7 @@
 Author: Opal Issan. Date: Jan 7th, 2020.
 Assumptions:
 -------------------
-1. Coronal hole that does not appear after one frame is no longer present. -- hence center list is reinitialized after
+1. Coronal hole that does not appear after 5 frame is no longer present. -- hence center list is reinitialized after
 each frame.
 2. a coronal hole center will be somewhat closer to its previous frame center than to other coronal hole centers. -
 distance is measured in euclidean.
@@ -11,28 +11,33 @@ The primary assumption of the centroid tracking algorithm is that a given object
 in between subsequent frames, but the distance between the centroids for frames F_t and F_{t + 1} will
 be smaller than all other distances between objects.
 
+
+# TODO:
+1. New map projection to avoid classifying multiple coronal holes at the poles...
+2. set a metric to match coronal holes based on the percentage of their bounding rectangles overlap.
+
+
 """
 
 import cv2
 import numpy as np
-from scipy.spatial import distance as dist
+from analysis.ml_analysis.ch_tracking.ch_db import CoronalHoleDB
 
 # Upload coronal hole video.
-cap = cv2.VideoCapture("/Users/opalissan/CH_Project/CHD_DB/processed_images/maps_r101_chm_low_res_1.mov")
+cap = cv2.VideoCapture("example_vid/maps_r101_chm_low_res_1.mov")
 
 # cut out the axis and title.
 t, b, r, l = 47, -55, 110, -55
 
-# save contour dict of the video.
-centroid_dict = dict()
-# save coronal hole centers of the previous frame.
-centroid_input = []
-centroid_prev = []
+# coronal hole video database.
+ch_lib = CoronalHoleDB()
 
 # initialize frame index.
-frame_idx = 1
+ch_lib.frame_num = 1
 
-while frame_idx <= 100:
+# loop over each frame.
+while ch_lib.frame_num <= 10:
+
     # read in frame by frame.
     success, img = cap.read()
 
@@ -42,73 +47,32 @@ while frame_idx <= 100:
     # gray scale.
     imgray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
+    # add coronal holes to data base.
+    ch_lib.find_contours(imgray)
 
-    # find contours.
-    ret, thresh = cv2.threshold(imgray, 55, 255, 0)
-    contours, hierarchy = cv2.findContours(cv2.bitwise_not(thresh), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
-    print("\nNumber of contours detected initially = %d" % len(contours))
-
-    # do not count small contours.
-    AreaThreshold = 50
-    saved_contour = []
-    for i in range(0, len(contours)):
-        area = cv2.contourArea(contours[i])
-        if area > AreaThreshold:
-            saved_contour.append(contours[i])
-
-    print("Number of contours detected after elimination = %d" % len(saved_contour))
-    cv2.drawContours(image, contours, -1, (0, 255, 0), 1)
-
-    # finding connections between old frame and new frame.
-    for c in saved_contour:
-        M = cv2.moments(c)
-        cX = int(M["m10"] / M["m00"])
-        cY = int(M["m01"] / M["m00"])
-
-        # measure the euclidean distance between
-        centroid_input.append((cX, cY))
-
-    # specific an index for each contour.
-    # find the circle with the closes proximity from the previous frame.
-    # check that this is not the first frame.
-    if frame_idx == 1:
-        # specific an index for each contour.
-        idx = 1
-        for cX, cY in centroid_input:
-            # plot the circle and ID number.
-            cv2.circle(image, (cX, cY), 5, (255, 0, 0), -1)
-            cv2.putText(image, "ch #" + str(idx), (cX - 20, cY + 15), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 1)
-            idx += 1
-        centroid_prev = centroid_input.copy()
+    # plot the contours.
+    if ch_lib.frame_num == 1:
+        # initialize first frame.
+        ch_lib.first_frame_initialize()
 
     else:
-        D = dist.cdist(centroid_prev, centroid_input)
-        rows = D.min(axis=1).argsort()
-        cols = D.argmin(axis=1)[rows]
-        priority_queue = (list(zip(rows, cols)))
-        priority_queue = [(a, b) for i, [a, b] in enumerate(priority_queue) if not any(c == b for _, c in priority_queue[:i])]
-        print("length of priority queue = ", len(priority_queue))
-        print(priority_queue)
+        # find the match.
+        ch_lib.match_coronal_holes()
 
-        centroid_copy = centroid_input.copy()
-        if len(centroid_prev) > len(centroid_input):
-            centroid_ordered = centroid_prev.copy()
-        else:
-            centroid_ordered = centroid_input.copy()
+    # iterate over each coronal hole and plot its color + id number.
+    for c in ch_lib.p1.contour_list:
+        # plot each contour in our current frame. cv2.FILLED colors the whole contour in its unique color.
+        cv2.drawContours(image=image, contours=[c.contour], contourIdx=0, color=c.color, thickness=cv2.FILLED)
+        # plot the contours center.
+        cv2.circle(img=image, center=c.pixel_centroid, radius=3, color=(0, 0, 0), thickness=-1)
+        # plot the contour's ID number.
+        cv2.putText(img=image, text="ch #" + str(c.id), org=tuple(np.add(c.pixel_centroid, (-20, 15))),
+                    fontFace=cv2.Formatter_FMT_DEFAULT, fontScale=0.5, color=(0, 0, 0), thickness=1)
 
-        for obj, new in priority_queue:
-            cX, cY = centroid_input[new]
-            cv2.circle(image, (cX, cY), 5, (255, 0, 0), -1)
-            cv2.putText(image, "ch #" + str(obj+1), (cX - 20, cY + 15), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 1)
-            centroid_ordered[obj] = centroid_input[new]
-        centroid_prev = centroid_ordered.copy()
-
-    # reinitialize.
-    frame_idx += 1
-    centroid_input = []
-    # show the image
-    cv2.imshow("Image", image)
-    cv2.imwrite("ID.png", image)
-    cv2.waitKey(10)
+    ch_lib.frame_num += 1
+    cv2.imshow("Coronal Hole Tracking", image)
+    cv2.imwrite("figures/CoronalHoleTracking.png", image)
+    cv2.waitKey(1000)
 
 cv2.waitKey(0)
+

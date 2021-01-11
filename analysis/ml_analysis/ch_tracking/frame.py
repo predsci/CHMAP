@@ -1,6 +1,6 @@
 """Author: Opal Issan, Jan 8th, 2021.
 
-A data structure for a coronal hole - consists of a list of contours.
+A data structure for a frame - consists of a list of contours.
 
 we might want to group disconnected contours with close proximity to be identified as 1 coronal hole.
 
@@ -15,14 +15,17 @@ Video processing to avoid flickering:
 import json
 
 
-class CoronalHole:
-    """ Coronal Hole Object Data Structure."""
+class Frame:
+    """ Frame data structure. """
 
     def __init__(self, contour_list):
         # list of Contours that are part of this CoronalHole Object.
         self.contour_list = contour_list
 
-        # the unique identification number of this coronal hole.
+        # list of contour centers.
+        self.centroid_list = self.compute_centroid_list()
+
+        # the unique identification number of this frame.
         self.id = None
 
     def __str__(self):
@@ -32,5 +35,10 @@ class CoronalHole:
     def json_dict(self):
         return {
             'contour_list': self.contour_list,
+            'centroid_list': self.centroid_list,
             'id': self.id,
         }
+
+    def compute_centroid_list(self):
+        """ compute the coronal hole centers and save them in a list. """
+        return [ch.pixel_centroid for ch in self.contour_list]

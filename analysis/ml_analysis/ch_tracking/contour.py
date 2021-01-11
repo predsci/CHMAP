@@ -37,6 +37,12 @@ class Contour:
         self.rotate_box = self.compute_rot_bounding_rectangle()
         self.straight_box = self.compute_straight_bounding_rectangle()
 
+        # the unique identification number of this coronal hole.
+        self.id = None
+
+        # the unique color for identification of this coronal hole.
+        self.color = None
+
     def __str__(self):
         return json.dumps(
             self.json_dict(), indent=2, default=lambda o: o.json_dict())
