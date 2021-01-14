@@ -42,7 +42,7 @@ def save_histograms(db_session, hdf_data_dir, inst_list, hist_query_time_min, hi
     image_intensity_bin_edges = np.linspace(0, 5, num=n_intensity_bins + 1, dtype='float')
 
     # create LBC method
-    meth_name = 'LBCC '
+    meth_name = 'LBCC'
     meth_desc = 'LBCC Theoretic Fit Method'
     method_id = db_funcs.get_method_id(db_session, meth_name, meth_desc, var_names=None, var_descs=None, create=True)
 
@@ -107,7 +107,8 @@ def calc_theoretic_fit(db_session, inst_list, calc_query_time_min, calc_query_ti
     # get method id
     meth_name = 'LBCC'
     meth_desc = 'LBCC Theoretic Fit Method'
-    method_id = db_funcs.get_method_id(db_session, meth_name, meth_desc, var_names=None, var_descs=None, create=False)
+    method_id = db_funcs.get_method_id(db_session, meth_name, meth_desc=None, var_names=None, var_descs=None,
+                                       create=False)
 
     for date_index, center_date in enumerate(moving_avg_centers):
         print("Begin date " + str(center_date))
@@ -127,10 +128,10 @@ def calc_theoretic_fit(db_session, inst_list, calc_query_time_min, calc_query_ti
                                           time_min=np.datetime64(min_date).astype(datetime.datetime),
                                           time_max=np.datetime64(max_date).astype(datetime.datetime),
                                           instrument=query_instrument)
-
+            print(pd_hist)
             # convert the binary types back to arrays
             mu_bin_array, intensity_bin_array, full_hist = psi_d_types.binary_to_hist(pd_hist, n_mu_bins,
-                                                                                                n_intensity_bins)
+                                                                                      n_intensity_bins)
 
             # create list of observed dates in time frame
             date_obs_npDT64 = pd_hist['date_obs']
@@ -152,7 +153,7 @@ def calc_theoretic_fit(db_session, inst_list, calc_query_time_min, calc_query_ti
             norm_hist[zero_row_index[0]] = summed_hist[zero_row_index[0]] / row_sums[zero_row_index[0]]
 
             # separate the reference bin from the fitted bins
-            hist_ref = norm_hist[-1,]
+            hist_ref = norm_hist[-1, ]
             hist_mat = norm_hist[:-1, ]
             mu_vec = mu_bin_centers[:-1]
 
@@ -220,11 +221,13 @@ def apply_lbc_correction(db_session, hdf_data_dir, inst_list, lbc_query_time_min
                                                 instrument)
         ###### GET LOS IMAGES COORDINATES (DATA) #####
         for index in range(n_images_plot):
+            print(index)
             row = image_pd.iloc[index]
             print("Processing image number", row.image_id, "for LB Correction.")
             original_los, lbcc_image, mu_indices, use_indices, theoretic_query = apply_lbc(db_session, hdf_data_dir,
-                                                                          combo_query, image_row=row,
-                                                                          n_intensity_bins=n_intensity_bins, R0=R0)
+                                                                                           combo_query, image_row=row,
+                                                                                           n_intensity_bins=n_intensity_bins,
+                                                                                           R0=R0)
             ##### PLOTTING ######
             if plot:
                 Plotting.PlotImage(original_los, nfig=100 + inst_index * 10 + index, title="Original LOS Image for " +
@@ -484,7 +487,7 @@ def generate_histogram_plots(db_session, hdf_data_dir, inst_list, hist_plot_quer
                                       instrument=query_instrument)
         # convert from binary to usable histogram type
         mu_bin_array, intensity_bin_array, full_hist = psi_d_types.binary_to_hist(pd_hist, n_mu_bins,
-                                                                                            n_intensity_bins)
+                                                                                  n_intensity_bins)
         # query correct image combos
         combo_query = db_funcs.query_inst_combo(db_session, hist_plot_query_time_min, hist_plot_query_time_max,
                                                 meth_name, instrument)
@@ -507,7 +510,8 @@ def generate_histogram_plots(db_session, hdf_data_dir, inst_list, hist_plot_quer
                 # apply LBC
                 original_los, lbcc_image, mu_indices, use_indices, theoretic_query = apply_lbc(db_session, hdf_data_dir,
                                                                                                combo_query, row,
-                                                                             n_intensity_bins=n_intensity_bins, R0=R0)
+                                                                                               n_intensity_bins=n_intensity_bins,
+                                                                                               R0=R0)
                 #### CREATE NEW HISTOGRAMS ####
                 # perform 2D histogram on mu and image intensity
                 hdf_path = os.path.join(hdf_data_dir, row.fname_hdf)

@@ -17,18 +17,18 @@ start_time_tot = time.time()
 ###### ------ PARAMETERS TO UPDATE -------- ########
 
 # TIME RANGE FOR HISTOGRAM CALCULATION
-hist_query_time_min = datetime.datetime(2012, 1, 1, 0, 0, 0)
-hist_query_time_max = datetime.datetime(2013, 1, 1, 0, 0, 0)
+hist_query_time_min = datetime.datetime(2011, 1, 1, 0, 0, 0)
+hist_query_time_max = datetime.datetime(2011, 1, 1, 0, 0, 0)
 
 # TIME RANGE FOR FIT PARAMETER CALCULATION
-calc_query_time_min = datetime.datetime(2011, 10, 1, 0, 0, 0)
-calc_query_time_max = datetime.datetime(2012, 4, 1, 0, 0, 0)
+calc_query_time_min = datetime.datetime(2011, 4, 1, 0, 0, 0)
+calc_query_time_max = datetime.datetime(2011, 10, 1, 0, 0, 0)
 weekday_calc = 0  # start at 0 for Monday
 days = 180  # days for moving average
 
 # TIME RANGE FOR LBC CORRECTION AND IMAGE PLOTTING
 lbc_query_time_min = datetime.datetime(2011, 4, 1, 0, 0, 0)
-lbc_query_time_max = datetime.datetime(2011, 4, 10, 0, 0, 0)
+lbc_query_time_max = datetime.datetime(2011, 4, 1, 6, 0, 0)
 n_images_plot = 1
 plot = True  # true if you want images plotted
 

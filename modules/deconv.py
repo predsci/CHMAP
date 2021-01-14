@@ -18,6 +18,7 @@ Helper module for working with PSF deconvolution algorithms.
 import numpy as np
 import os
 import time
+from helpers.misc_helpers import read_uncompressed_fits_image, write_array_as_compressed_fits
 
 from settings.app import App
 
@@ -27,6 +28,7 @@ sgp_min_val = np.float64(1e-16)
 
 sgp_remote_script = os.path.join(App.APP_HOME, 'shell_scripts', 'run_deconv_gpu.sh')
 
+dcurlog_remote_script  = os.path.join(App.APP_HOME, 'shell_scripts', 'run_remote_deconv_gpu.sh')
 
 def write_sgp_datfile(filename, image):
     """
@@ -138,6 +140,67 @@ def deconv_sgp(image, psf_name):
             os.remove(file)
         else:
             raise Exception('Temporary SGP file not found, something is probably wrong: {}'.format(file))
+
+    return image_deconv
+
+
+def deconv_decurlog_gpu(image, psf_name):
+    """
+    """
+    debug = False
+
+    # define the temporary file names
+    fname_in = App.TMP_HOME + '/tmp_fits4decurlog_gpu.fits'
+    fname_out = App.TMP_HOME + '/tmp_fits4decurlog_gpu_deconvolved.fits'
+
+    if debug:
+        print(fname_in)
+        print(fname_out)
+
+    # ensure that the image has no zero values
+    image_thresh = image.copy()
+    image_thresh[image <= sgp_min_val] = sgp_min_val
+
+    # write the image as a temporary FITS data file (don't bother with header here)
+    # use COMPRESSION because that seems to be what Mark's code expects, but set the
+    # quantize_level to 256 (default 16). This makes a more accurate compressed file where
+    # BUT it does not preserve floating point accuracy. At 256 this is better than a percent
+    # in coronal hole regions and much better (smaller error) in bright regions. it seems to be
+    # based on a noise estimation for the row? The small files also help transfer size in the
+    # outgoing direction.
+    write_array_as_compressed_fits(fname_in, np.float32(image_thresh), quantize_level=256.)
+
+    # build the call for the remote deconvolution algorithm
+    npts_str = str(image_thresh.shape[0])
+    command = dcurlog_remote_script + ' ' + psf_name + ' ' + npts_str + ' ' + os.path.basename(fname_in)
+    if debug:
+        print('Calling Deconvolution: ' + command)
+
+    # call the shell command, wait and try again a certain number of times.
+    status = call_deconv_command(command, debug=debug)
+
+    # check the return code
+    if status != 0:
+        raise RuntimeError(f'Deconv command: {command} returned exit code: {status}')
+    if debug:
+        print(status)
+
+    # give the filesystem a moment to recover just in case
+    time.sleep(0.2)
+
+    # read the deconvolved image (header is assumed to be plain/useless)
+    image_deconv, header_deconv = read_uncompressed_fits_image(fname_out)
+
+    # convert to 64 bit so it works better in prep/subpy
+    image_deconv = np.float64(image_deconv)
+
+    # clean up the temporary files
+    for file in [fname_in, fname_out]:
+
+        if os.path.isfile(file):
+            os.remove(file)
+        else:
+            raise Exception('Deconvolved temporary FITS file not found, something is probably wrong: {}'.format(file))
 
     return image_deconv
 

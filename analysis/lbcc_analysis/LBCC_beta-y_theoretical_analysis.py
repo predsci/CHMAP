@@ -111,7 +111,7 @@ for date_index, center_date in enumerate(moving_avg_centers):
         norm_hist[zero_row_index[0]] = summed_hist[zero_row_index[0]] / row_sums[zero_row_index[0]]
 
         # separate the reference bin from the fitted bins
-        hist_ref = norm_hist[-1,]
+        hist_ref = norm_hist[-1, ]
         hist_mat = norm_hist[:-1, ]
         mu_vec = mu_bin_centers[:-1]
 

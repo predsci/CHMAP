@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 """
 outline to create combination EUV maps
 - this method doesn't automatically save individual image maps to database, bc storage
@@ -9,7 +10,8 @@ outline to create combination EUV maps
 4. Convert to Map
 5. Combine Maps and Save to DB
 """
-
+import sys
+sys.path.append("/Users/tamarervin/CH_Project/CHD")
 import os
 import numpy as np
 import datetime
@@ -21,8 +23,8 @@ import analysis.chd_analysis.CHD_pipeline_funcs as chd_funcs
 
 # -------- parameters --------- #
 # TIME RANGE FOR QUERYING
-query_time_min = datetime.datetime(2011, 8, 18, 22, 0, 0)
-query_time_max = datetime.datetime(2011, 8, 19, 2, 0, 0)
+query_time_min = datetime.datetime(2011, 5, 1, 4, 0, 0)
+query_time_max = datetime.datetime(2011, 5, 1, 7, 0, 0)
 map_freq = 2  # number of hours
 
 # INITIALIZE DATABASE CONNECTION
@@ -32,6 +34,14 @@ raw_data_dir = App.RAW_DATA_HOME
 hdf_data_dir = App.PROCESSED_DATA_HOME
 database_dir = App.DATABASE_HOME
 sqlite_filename = App.DATABASE_FNAME
+# initialize database connection
+# using mySQL
+# use_db = "mysql-Q"
+# user = "tervin"
+# password = ""
+# sqlite_path = os.path.join(database_dir, sqlite_filename)
+# db_session = db_funcs.init_db_conn(db_name=use_db, chd_base=db_class.Base, user=user, password=password)
+
 # initialize database connection
 use_db = "sqlite"
 sqlite_path = os.path.join(database_dir, sqlite_filename)
@@ -53,16 +63,17 @@ nc = 3
 iters = 1000
 
 # MINIMUM MERGE MAPPING PARAMETERS
-del_mu = None # optional between this method and mu_merge_cutoff method
+del_mu = None  # optional between this method and mu_merge_cutoff method
 mu_cutoff = 0.0  # lower mu cutoff value
 mu_merge_cutoff = 0.4  # mu cutoff in overlap areas
 
 # MAP PARAMETERS
 x_range = [0, 2 * np.pi]
 y_range = [-1, 1]
-map_nycoord = 1600
-del_y = (y_range[1] - y_range[0]) / (map_nycoord - 1)
-map_nxcoord = (np.floor((x_range[1] - x_range[0]) / del_y) + 1).astype(int)
+map_nycoord = 720
+map_nxcoord = 1800
+# del_y = (y_range[1] - y_range[0]) / (map_nycoord - 1)
+# map_nxcoord = (np.floor((x_range[1] - x_range[0]) / del_y) + 1).astype(int)
 # generate map x,y grids. y grid centered on equator, x referenced from lon=0
 map_y = np.linspace(y_range[0], y_range[1], map_nycoord, dtype='<f4')
 map_x = np.linspace(x_range[0], x_range[1], map_nxcoord, dtype='<f4')

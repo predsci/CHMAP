@@ -21,6 +21,7 @@ iit_query_time_max = datetime.datetime(2012, 6, 1, 0, 0, 0)
 plot = True
 n_images_plot = 1
 
+
 # define instruments
 inst_list = ["AIA", "EUVI-A", "EUVI-B"]
 ref_inst = "AIA"
@@ -30,7 +31,6 @@ n_mu_bins = 18
 n_intensity_bins = 200
 R0 = 1.01
 log10 = True
-lat_band = [-np.pi / 2.4, np.pi / 2.4]
 
 # define database paths
 raw_data_dir = App.RAW_DATA_HOME
@@ -50,7 +50,12 @@ password = ""           # See example109 for setting-up an encrypted password.  
 # init_db_conn() will automatically find and use your saved password. Otherwise, enter your MySQL password here.
 
 
-##### ------- nothing to update below --------- #####
+# mySQL
+# use_db = "mysql-Q"
+# user = "tervin"
+# password = ""
+
+##### -------- APPLY LBC FIT ------- ######
 # start time
 start_time = time.time()
 
@@ -96,15 +101,25 @@ for inst_index, instrument in enumerate(inst_list):
     for index in range(n_images_plot):
         row = image_pd.iloc[index]
         #### APPLY LBC CORRECTION #####
-        original_los, lbcc_image, mu_indices, use_indices,theoretic_query = lbcc_funcs.apply_lbc(db_session, hdf_data_dir,
-                                                                                 combo_query_lbc,
-                                                                                 image_row=row,
-                                                                                 n_intensity_bins=n_intensity_bins,
-                                                                                 R0=R0)
+        #### APPLY LBC CORRECTION #####
+        original_los, lbcc_image, mu_indices, use_indices, theoretic_query = lbcc_funcs.apply_lbc(db_session,
+                                                                                                  hdf_data_dir,
+                                                                                                  combo_query_lbc,
+                                                                                                  image_row=row,
+                                                                                                  n_intensity_bins=n_intensity_bins,
+                                                                                                  R0=R0)
         #### APPLY IIT CORRECTION ####
         lbcc_image, iit_image, use_indices, alpha, x = iit_funcs.apply_iit(db_session, combo_query_iit,
                                                                  lbcc_image, use_indices, original_los, R0=R0)
 
+        import matplotlib.pyplot as plt
+        plt.figure("LBCC")
+        lbc_data = lbcc_image.lbcc_data / lbcc_image.lbcc_data.sum(axis=0, keepdims=True)
+        plt.plot(lbc_data)
+
+        plt.figure("IIT")
+        iit_data = iit_image.iit_data / iit_image.iit_data.sum(axis=0, keepdims=True)
+        plt.plot(iit_data)
         if plot:
             lbcc_data = lbcc_image.lbcc_data
             corrected_iit_data = iit_image.iit_data
@@ -119,7 +134,7 @@ for inst_index, instrument in enumerate(inst_list):
             Plotting.PlotCorrectedImage(lbcc_data - corrected_iit_data, los_image=original_los,
                                         nfig=300 + inst_index * 10 + index,
                                         title="Difference Plot for " + instrument)
-
+plt.show()
 # end time
 end_time = time.time()
 print("ITT has been applied and specified images plotted.")

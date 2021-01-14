@@ -109,8 +109,13 @@ def PlotMap(map_plot, nfig=None, title=None, map_type=None):
     xticks = np.arange(x_range[0], x_range[1] + 1, 30)
 
     plt.figure(nfig)
-    plt.imshow(map_plot.data, extent=[x_range[0], x_range[1], map_plot.y.min(), map_plot.y.max()],
-               origin="lower", cmap=im_cmap, aspect=90.0, norm=norm)
+    if map_type == 'Contour':
+        x_extent = np.linspace(x_range[0], x_range[1], len(map_plot.x))
+        plt.contour(x_extent, map_plot.y, map_plot.data, origin="lower", cmap=im_cmap,
+                    extent=[x_range[0], x_range[1], map_plot.y.min(), map_plot.y.max()])
+    else:
+        plt.imshow(map_plot.data, extent=[x_range[0], x_range[1], map_plot.y.min(), map_plot.y.max()],
+                   origin="lower", cmap=im_cmap, aspect=90.0, norm=norm)
     plt.xlabel("Carrington Longitude")
     plt.ylabel("Sine Latitude")
     plt.xticks(xticks)
@@ -119,6 +124,8 @@ def PlotMap(map_plot, nfig=None, title=None, map_type=None):
         plt.title(title)
 
     plt.show(block=False)
+    plt.savefig('maps/synoptic/' + str(map_plot.image_info.date_obs[0]))
+
     return None
 
 
@@ -195,7 +202,7 @@ def Plot_LBCC_Hists(plot_hist, date_obs, instrument, intensity_bin_edges, mu_bin
 
 
 def Plot1d_Hist(norm_hist, instrument, inst_index, intensity_bin_edges, color_list, linestyle_list, figure,
-                xlabel, ylabel, title):
+                xlabel, ylabel, title, save=None):
     """
     plot 1D IIT Histogram
     @return:
@@ -211,7 +218,8 @@ def Plot1d_Hist(norm_hist, instrument, inst_index, intensity_bin_edges, color_li
     plt.title(title)
     plt.show()
     plt.legend()
-
+    if save is not None:
+        plt.savefig('maps/iit/' + save)
     return None
 
 

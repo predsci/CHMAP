@@ -122,7 +122,7 @@ for row in query_pd.iterrows():
 
 #### STEP SIX: SAVE TO DATABASE ####
 dp_funcs.save_gauss_time_maps(db_session, map_data_dir, euv_combined, chd_combined, image_info, map_info, methods_list,
-                         combined_method)
+                               combined_method)
 
 # ### TESTERS
 # # UPPER TIME SERIES

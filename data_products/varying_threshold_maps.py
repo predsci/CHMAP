@@ -88,8 +88,8 @@ for row in query_pd.iterrows():
                                                                          n_intensity_bins=n_intensity_bins, R0=R0)
     for i in range(n_samples):
         #### STEP THREE: CORONAL HOLE DETECTION ####
-        chd_image = dp_funcs.gauss_chd(db_session, inst_list, los_image, iit_image, use_indices, iit_combo_query,
-                                       thresh1=thresh1, thresh2=thresh2, nc=nc, iters=iters, sigma=sigma)
+        chd_image, FWHM = dp_funcs.gauss_chd(db_session, inst_list, los_image, iit_image, use_indices, iit_combo_query,
+                                             thresh1=thresh1, thresh2=thresh2, nc=nc, iters=iters, sigma=sigma)
 
         #### STEP FOUR: CONVERT TO MAP ####
         euv_map, chd_map = cr_funcs.create_map(iit_image, chd_image, methods_list, row, map_x=map_x, map_y=map_y, R0=R0)
@@ -100,17 +100,9 @@ for row in query_pd.iterrows():
                                                                                                chd_combined, image_info,
                                                                                                map_info,
                                                                                                mu_cutoff=mu_cutoff,
-                                                                                               mu_merge_cutoff=mu_merge_cutoff)
-
-# use gaussian varying for threshold
-# g(x) = (1/sigma*2*pi)*exp(-0.5*((x - mu)/sigma)^2)
-# from scipy.stats import norm
-# import matplotlib.pyplot as plt
-#
-# x = np.linspace(norm.ppf(0.01), norm.ppf(0.99), 100)
-# gauss_t11 = norm.pdf(x, loc=t1, scale=0.15)
-# plt.plot(x, gauss_t11)
+                                                                                               mu_merge_cutoff=
+                                                                                               mu_merge_cutoff)
 
 #### STEP SIX: SAVE TO DATABASE
 dp_funcs.save_threshold_maps(db_session, map_data_dir, euv_combined, chd_combined, image_info, map_info,
-                             methods_list, euv_combined_method, chd_combined_method, sigma)
+                             methods_list, euv_combined_method, chd_combined_method, FWHM, n_samples)

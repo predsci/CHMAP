@@ -101,6 +101,12 @@ def gauss_func(mu, sigma=0.15, bottom=None, top=None):
     return a
 
 
+def gauss_lon(lon, lon0, FWHM=10):
+    sigma = FWHM / (2 * np.sqrt(2 * np.log(2)))
+    gauss = (1 / sigma * np.sqrt(2 * np.pi)) * np.exp(-(lon - lon0)/(2 * sigma**2))
+    return gauss
+
+
 def gauss_chd(db_session, inst_list, los_image, iit_image, use_indices, iit_combo_query, thresh1=0.95, thresh2=1.35,
               nc=3, iters=1000, sigma=0.15):
     start = time.time()
@@ -122,6 +128,9 @@ def gauss_chd(db_session, inst_list, los_image, iit_image, use_indices, iit_comb
     gauss1 = gauss_func(mu=t1, sigma=sigma * t1, bottom=t1 - t1 * sigma, top=t1 + t1 * sigma)
     gauss2 = gauss_func(mu=t2, sigma=sigma * t2, bottom=t2 - t2 * sigma, top=t2 + t2 * sigma)
 
+    # full width half max
+    FWHM = 2*np.sqrt(2*np.log(2))*sigma
+
     # fortran chd algorithm
     np.seterr(divide='ignore')
     ezseg_output, iters_used = ezsegwrapper.ezseg(np.log10(image_data), use_chd, nx, ny, gauss1, gauss2, nc, iters)
@@ -136,7 +145,7 @@ def gauss_chd(db_session, inst_list, los_image, iit_image, use_indices, iit_comb
     print("Coronal Hole Detection Algorithm has been applied to image", iit_image.image_id, "in", end - start,
           "seconds.")
 
-    return chd_image
+    return chd_image, FWHM
 
 
 def chd_mu_map(euv_map, chd_map, euv_combined, chd_combined, image_info, map_info, mu_cutoff=0.0, mu_merge_cutoff=None,
@@ -200,14 +209,15 @@ def time_wgt_map(euv_map, chd_map, euv_combined, chd_combined, image_info, map_i
                                                                chd_map_list=chd_maps,
                                                                mu_cutoff=mu_cutoff)
 
+    # full width, half max
+    FWHM = 2 * np.sqrt(2 * np.log(2)) * sigma
     # combined method
     combined_method = {'meth_name': ("Gauss-Time-Weight", "Gauss-Time-Weight"), 'meth_description':
         ["Synoptic map merge based off time varied Gaussian distribution"] * 2,
-                       'var_name': ("mu_cutoff", "sigma"), 'var_description': ("lower mu cutoff value",
-                                                                               "sigma value used in "
-                                                                               "creation of gaussian "
+                       'var_name': ("mu_cutoff", "FWHM"), 'var_description': ("lower mu cutoff value",
+                                                                               "full width - half max of gaussian "
                                                                                "distribution"),
-                       'var_val': (mu_cutoff, sigma)}
+                       'var_val': (mu_cutoff, FWHM)}
 
     # append image and map info records
     image_info.append(euv_map.image_info)
@@ -299,15 +309,16 @@ def save_mu_probability_maps(db_session, map_data_dir, euv_combined, chd_combine
 
 
 def save_threshold_maps(db_session, map_data_dir, euv_combined, chd_combined, image_info, map_info, methods_list,
-                        euv_combined_method, chd_combined_method, sigma=0.15):
+                        euv_combined_method, chd_combined_method, FWHM, n_samples):
     start = time.time()
 
     # chd threshold method
-    chd_threshold = {'meth_name': ("Gaussian-Varying-CHD",), 'meth_description':
-        ["Gaussian Varying CHD Threshold Method"],
-                     'var_name': ("sigma",), 'var_description': ("sigma value used in creation of gaussian "
-                                                                 "distribution",),
-                     'var_val': (sigma,)}
+    chd_threshold = {'meth_name': ("Gaussian-Varying-CHD",) * 2, 'meth_description':
+        ["Gaussian Varying CHD Threshold Method"] * 2,
+                     'var_name': ("FWHM", "n_samples"), 'var_description': ("full width - half max of gaussian "
+                                                                 "distribution", "number of random samples used for CHD "
+                                                                                 "thresholding"),
+                     'var_val': (FWHM, n_samples)}
 
     # generate a record of the method and variable values used for interpolation
     euv_combined.append_method_info(methods_list)

@@ -142,7 +142,8 @@ class LosImage:
 
         # Partially populate a map object with grid and data info
         map_out = PsiMap(interp_result.data, interp_result.x, interp_result.y,
-                         mu=interp_result.mu_mat, origin_image=origin_image, no_data_val=no_data_val)
+                         mu=interp_result.mu_mat, map_lon=interp_result.map_lon,
+                         origin_image=origin_image, no_data_val=no_data_val)
 
         # construct map_info df to record basic map info
         map_info_df = pd.DataFrame(data=[[1, datetime.datetime.now()], ],
@@ -386,10 +387,10 @@ class PsiMap:
     Map Object is created in three ways:
         1. interpolating from an image LosImage.interp_to_map()
         2. merging other maps map_manip.combine_maps()
-        3. reading a map hdf file read_psi_map()
+        3. reading a map hdf file ---needs to be created---
     """
 
-    def __init__(self, data=None, x=None, y=None, mu=None, origin_image=None, chd=None, no_data_val=-9999.0):
+    def __init__(self, data=None, x=None, y=None, mu=None, origin_image=None, map_lon=None, chd=None, no_data_val=-9999.0):
         """
         Class to hold the standard information for a PSI map image
     for the CHD package.
@@ -448,6 +449,11 @@ class PsiMap:
             else:
                 # create placeholder
                 self.origin_image = None
+            if map_lon is not None:
+                self.map_lon = map_lon.astype(DTypes.MAP_DATA)
+            else:
+                # create placeholder
+                self.map_lon = None
             if chd is not None:
                 self.chd = chd.astype(DTypes.MAP_CHD)
             else:
@@ -500,7 +506,7 @@ class PsiMap:
             # write map to file
             psihdf.wrh5_fullmap(h5_filename, self.x, self.y, np.array([]), self.data, method_info=self.method_info,
                                 image_info=self.image_info, map_info=self.map_info,
-                                no_data_val=self.no_data_val, mu=self.mu, origin_image=self.origin_image, chd=self.chd)
+                                no_data_val=self.no_data_val, mu=self.mu, origin_image=self.origin_image)
             print("PsiMap object written to: " + h5_filename)
 
         else:
@@ -517,11 +523,11 @@ def read_psi_map(h5_file):
     :return: PsiMap object
     """
     # read the image and metadata
-    x, y, z, f, method_info, image_info, map_info, var_info, no_data_val, mu, origin_image, chd = psihdf.rdh5_fullmap(
+    x, y, z, f, method_info, image_info, map_info, var_info, no_data_val, mu, origin_image = psihdf.rdh5_fullmap(
         h5_file)
 
     # create the map structure
-    psi_map = PsiMap(f, x, y, mu=mu, origin_image=origin_image, chd=chd, no_data_val=no_data_val)
+    psi_map = PsiMap(f, x, y, mu=mu, origin_image=origin_image, no_data_val=no_data_val)
     # fill in DB meta data
     if method_info is not None:
         psi_map.append_method_info(method_info)
@@ -557,12 +563,13 @@ class InterpResult:
 
     """
 
-    def __init__(self, data, x, y, mu_mat=None):
+    def __init__(self, data, x, y, mu_mat=None, map_lon=None):
         # create the data tags
         self.data = data
         self.x = x
         self.y = y
         self.mu_mat = mu_mat
+        self.map_lon = map_lon
 
 
 class Hist:
