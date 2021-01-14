@@ -1,0 +1,1 @@
+# Techniques to detect coronal holes using neural networks and K-means algorithm
