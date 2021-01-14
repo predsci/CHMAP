@@ -8,6 +8,10 @@ The current images are in latitude longitude coordinates with the poles placed a
 
 ![](images/newprojection.png)
 
+![](images/ch_class_proj.png)
+
+![](images/orig_map.png)
+
 Input: image dimensions $(n_{\theta}, n_{\phi})$, where $\theta \in [0, \pi]$ and $\phi \in [0, 2\pi]$.
 
 
@@ -38,7 +42,11 @@ Track coronal holes between frames based on the distance to the previous list of
 
 ## Features saved to object: 
 
-1. center ($\theta$, $\phi$)
-2. contour pixel area + physical area. 
-3. frames appeared. 
-4. bounding boz coordinates (x1, x2, y1, y2)
+- centroid pixel location (x,y)
+- centroid physical location (phi, theta) - TODO.
+- contour - pixel list.
+- contour pixel area.
+- contour physical area. - TODO
+- coronal hole probability -temporal averaging -gaussian.
+- contour arc length.
+- bounding rectangle - straight and rotating.
