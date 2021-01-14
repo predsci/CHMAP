@@ -25,7 +25,9 @@ python-dateutil
 pyparsing
 pytz
 six
-h5py"
+h5py
+astropy-healpix
+mysqlclient"
 
 PYTHON_PKG_TEST_LIST=(sunpy
 drms
@@ -49,7 +51,9 @@ dateutil
 pyparsing
 pytz
 six
-h5py)
+h5py
+astropy-healpix
+mysqlclient)
 
 TSLOG=setup_python_CONDA.log
 

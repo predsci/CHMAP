@@ -3,6 +3,7 @@ Track beta-y functional fits
 for theoretical fit.
 """
 import os
+os.environ["OMP_NUM_THREADS"] = "4"  # limit number of threads numpy can spawn
 import numpy as np
 import datetime
 import time
@@ -27,8 +28,8 @@ raw_data_dir = App.RAW_DATA_HOME
 hdf_data_dir = App.PROCESSED_DATA_HOME
 
 # TIME FRAME TO QUERY HISTOGRAMS
-query_time_min = datetime.datetime(2011, 4, 1, 0, 0, 0)
-query_time_max = datetime.datetime(2012, 10, 1, 0, 0, 0)
+query_time_min = datetime.datetime(2009, 1, 1, 0, 0, 0)
+query_time_max = datetime.datetime(2011, 4, 1, 0, 0, 0)
 weekday = 0
 number_of_days = 180
 
@@ -83,12 +84,21 @@ for inst_index, instrument in enumerate(inst_list):
                          time_max=np.datetime64(range_max_date).astype(datetime.datetime),
                          instrument=query_instrument)
 
+    # check if instrument has any histograms for this timerange
+    if pd_hist.shape[0] == 0:
+        print("No histograms for", instrument, "in this time range. Skipping")
+        continue
+
     # convert the binary types back to arrays
     mu_bin_array, intensity_bin_array, full_hist = psi_d_types.binary_to_hist(pd_hist, n_mu_bins,
                                                                               n_intensity_bins)
 
     for date_index, center_date in enumerate(moving_avg_centers):
         print("Begin date " + str(center_date))
+
+        if center_date > pd_hist.date_obs.max() or center_date < pd_hist.date_obs.min():
+            print("Date is out of instrument range, skipping.")
+            continue
 
         # determine time range based off moving average centers
         min_date = center_date - moving_width/2

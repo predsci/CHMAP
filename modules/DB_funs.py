@@ -5,6 +5,7 @@ adding entries, querying, etc.
 
 import os
 import sys
+import socket
 import urllib.parse
 import pandas as pd
 import numpy as np
@@ -12,9 +13,10 @@ import astropy.time as astro_time
 import collections  # for checking if an input is iterable
 import sunpy.map
 import datetime
+import getpass
 from scipy import interpolate
 
-from sqlalchemy import create_engine, func, or_, union_all, case
+from sqlalchemy import create_engine, func, or_, union_all, case, distinct
 from sqlalchemy.orm import sessionmaker, aliased
 
 from settings.app import App
@@ -62,8 +64,24 @@ def init_db_conn(db_name, chd_base, sqlite_path="", user="", password=""):
         else:
             db_psswd = password
         url_psswd = urllib.parse.quote_plus(db_psswd)
-        connect_string = 'mysql://' + db_user + ':' + url_psswd + '@q.predsci.com:3306/chd'
-        print_string = 'mysql://' + db_user + ':****pwd****@q.predsci.com:3306/chd'
+        # connect_string = 'mysql://' + db_user + ':' + url_psswd + '@q.predsci.com:3306/chd'
+        # print_string = 'mysql://' + db_user + ':****pwd****@q.predsci.com:3306/chd'
+        if socket.gethostname() == "Q":
+            hostname = "Q"
+        else:
+            hostname = "q.predsci.com"
+        connect_string = 'mysql://' + db_user + ':' + url_psswd + '@' + hostname + ':3306/chd'
+        print_string = 'mysql://' + db_user + ':****pwd****@' + hostname + ':3306/chd'
+        print("Attempting to connect to DB server ", print_string)  # print to check
+    elif db_name == 'mysql-Q_test':
+        db_user = user
+        if password == "":
+            db_psswd = creds.recover_pwd()
+        else:
+            db_psswd = password
+        url_psswd = urllib.parse.quote_plus(db_psswd)
+        connect_string = 'mysql://' + db_user + ':' + url_psswd + '@q.predsci.com:3306/chd_test'
+        print_string = 'mysql://' + db_user + ':****pwd****@q.predsci.com:3306/chd_test'
         print("Attempting to connect to DB server ", print_string)  # print to check
     else:
         sys.exit("At this time, 'db_name' must be either 'sqlite', 'chd-db', 'mysql-Q', or 'mysql-shadow'.")
@@ -1154,6 +1172,7 @@ def update_method_existing_map(db_session, map_id, psi_map, map_path=App.MAP_FIL
     :param db_session: SQLAlchemy database session.  Used for database connection and structure info.
     :param map_id: integer from DB map table specifying the existing map record
     :param psi_map: PsiMap class. Map object MUST INCLUDE new CHD grid and detection method.
+    :param map_path: Local path to maps directory (not a complete path to the file).
     :return: flag indicating process result
                     0 - Operation success
                     1 -
@@ -1459,8 +1478,8 @@ def add_hist(db_session, histogram):
                              date_obs=histogram.date_obs,
                              instrument=histogram.instrument, wavelength=histogram.wavelength,
                              n_mu_bins=histogram.n_mu_bins, n_intensity_bins=histogram.n_intensity_bins,
-                             lat_band=histogram.lat_band, intensity_bin_edges=intensity_bin_edges, mu_bin_edges=mu_bin_edges,
-                             hist=hist)
+                             lat_band=histogram.lat_band, intensity_bin_edges=intensity_bin_edges,
+                             mu_bin_edges=mu_bin_edges, hist=hist)
         # Append to the list of rows to be added
         db_session.add(hist_add)
         print("Database row added for " + histogram.instrument + ", wavelength: " +
@@ -1503,9 +1522,9 @@ def query_inst_combo(db_session, query_time_min, query_time_max, meth_name, inst
     list_B = image_combo_instrument.combo_id[~inst_index].unique()
     # determine correct combos by determining which exist in A but not in B
     combos_keep = np.setdiff1d(list_A, list_B, assume_unique=True)
-    # return correct pandas format for back-compatibility
+    # return correct pandas format for back-compatibility (ordered by date_mean)
     combo_result = pd.read_sql(db_session.query(Image_Combos).filter(
-        Image_Combos.combo_id.in_(combos_keep.tolist())).statement, db_session.bind)
+        Image_Combos.combo_id.in_(combos_keep.tolist())).order_by(Image_Combos.date_mean).statement, db_session.bind)
 
     return combo_result
 
@@ -1543,6 +1562,13 @@ def query_var_val(db_session, meth_name, date_obs, inst_combo_query):
             (inst_combo_query['date_mean'] >= str(date_obs - datetime.timedelta(days=7))) & (
                     inst_combo_query['date_mean'] <= str(date_obs + datetime.timedelta(days=7)))]
 
+    # check for combo
+    if correct_combo.shape[0] == 0:
+        # if no combos in 2-week window, return NaN
+        var_vals = np.zeros((1, var_id[1].size))
+        var_vals.fill(np.nan)
+        return var_vals
+
     # create empty arrays
     var_vals = np.zeros((len(correct_combo.combo_id), var_id[1].size))
     date_mean = np.zeros((len(correct_combo.combo_id)))
@@ -1551,7 +1577,7 @@ def query_var_val(db_session, meth_name, date_obs, inst_combo_query):
         # query variable values
         var_val_query = pd.read_sql(db_session.query(Var_Vals).filter(Var_Vals.meth_id == method_id_info[1],
                                                                       Var_Vals.combo_id == combo_id
-                                                                      ).statement,
+                                                                      ).order_by(Var_Vals.var_id).statement,
                                     db_session.bind)
         if var_val_query.size == 0:
             var_vals[i, :] = np.nan * var_id[1].size
@@ -1935,3 +1961,95 @@ def query_lbcc_fit(db_session, image, meth_name):
             y = var_val_query.var_val[0]
 
     return beta, y
+
+
+def sync_local_filesystem(base_local_path, base_remote_path, user, raw_image=True, processed_image=True, euv_map=True,
+                          raw_mmap=True, dry_run=True, verbose=True, size_only=False):
+    """
+
+    :param base_local_path:
+    :param base_remote_path:
+    :param user:
+    :param raw_image:
+    :param processed_image:
+    :param euv_map:
+    :param raw_mmap:
+    :param dry_run:
+    :param verbose:
+    :param size_only:
+    :return:
+    TODO: rsync does not take password as an argument. This is not going to work. Just print appropriate shell commands?
+    """
+
+    # prompt user for their password
+    user_pass = getpass.getpass("Enter password for Q:")
+
+    base_rsync_string = "rsync -a"
+    if dry_run:
+        base_rsync_string = base_rsync_string + " --dry-run"
+    if verbose:
+        base_rsync_string = base_rsync_string + " -v"
+    if size_only:
+        base_rsync_string = base_rsync_string + " --size_only"
+
+    base_rsync_string = base_rsync_string + " --exclude='*.AppleDouble*' "
+
+    if raw_image:
+        remote_path = user + "@q.predsci.com" + base_remote_path + "raw_images "
+        local_path = base_local_path
+        rsync_string = base_rsync_string + remote_path + local_path
+        os.system(rsync_string)
+
+    if processed_image:
+        remote_path = user + "@q.predsci.com" + base_remote_path + "processed_images "
+        local_path = base_local_path
+        rsync_string = base_rsync_string + remote_path + local_path
+        os.system(rsync_string)
+
+    if euv_map:
+        remote_path = user + "@q.predsci.com" + base_remote_path + "maps "
+        local_path = base_local_path
+        rsync_string = base_rsync_string + remote_path + local_path
+        os.system(rsync_string)
+
+    if raw_mmap:
+        remote_path = user + "@q.predsci.com" + base_remote_path + "raw_mmaps "
+        local_path = base_local_path
+        rsync_string = base_rsync_string + remote_path + local_path
+        os.system(rsync_string)
+
+
+def combo_clean_up(db_session):
+
+    # query for used combo_ids
+    var_vals_combo_ids = pd.read_sql(db_session.query(distinct(Var_Vals.combo_id).label("combo_id")).statement,
+                                     db_session.bind)
+    var_vals_map_combo_ids = pd.read_sql(db_session.query(distinct(Var_Vals_Map.combo_id).label("combo_id")).statement,
+                                         db_session.bind)
+    euv_maps_combo_ids = pd.read_sql(db_session.query(distinct(EUV_Maps.combo_id).label("combo_id")).statement,
+                                     db_session.bind)
+    # collect a list of unique values
+    used_combos = var_vals_combo_ids.combo_id.append(var_vals_map_combo_ids.combo_id).unique()
+    used_combos = pd.Series(used_combos).append(euv_maps_combo_ids.combo_id).unique()
+
+    # query for unused combo_ids
+    unused_ids = pd.read_sql(db_session.query(Image_Combos.combo_id).filter(
+        Image_Combos.combo_id.notin_(used_combos.tolist())
+    ).statement, db_session.bind)
+    delete_ids = unused_ids.combo_id.to_list()
+
+    # delete unused combo_ids
+    if delete_ids.__len__() > 0:
+        ica_rows_removed = db_session.query(Image_Combo_Assoc).filter(
+            Image_Combo_Assoc.combo_id.in_(delete_ids)
+            ).delete(synchronize_session=False)
+        ic_rows_removed = db_session.query(Image_Combos).filter(
+            Image_Combos.combo_id.in_(delete_ids)
+            ).delete(synchronize_session=False)
+
+        db_session.commit()
+    else:
+        ica_rows_removed = 0
+        ic_rows_removed = 0
+
+    return delete_ids, ic_rows_removed, ica_rows_removed

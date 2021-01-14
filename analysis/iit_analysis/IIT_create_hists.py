@@ -15,8 +15,8 @@ import analysis.lbcc_analysis.LBCC_theoretic_funcs as lbcc_funcs
 
 ###### ------ UPDATEABLE PARAMETERS ------- #######
 # TIME RANGE FOR LBC CORRECTION AND HISTOGRAM CREATION
-lbc_query_time_min = datetime.datetime(2011, 1, 1, 0, 0, 0)
-lbc_query_time_max = datetime.datetime(2013, 1, 1, 0, 0, 0)
+lbc_query_time_min = datetime.datetime(2011, 4, 1, 0, 0, 0)
+lbc_query_time_max = datetime.datetime(2012, 10, 1, 0, 0, 0)
 
 # define instruments
 inst_list = ["AIA", "EUVI-A", "EUVI-B"]
@@ -55,7 +55,7 @@ if use_db == 'sqlite':
     sqlite_path = os.path.join(database_dir, sqlite_filename)
 
     db_session = init_db_conn(db_name=use_db, chd_base=db_class.Base, sqlite_path=sqlite_path)
-elif use_db == 'mysql-Q':
+elif use_db in ['mysql-Q', 'mysql-Q_test']:
     # setup database connection to MySQL database on Q
     db_session = init_db_conn(db_name=use_db, chd_base=db_class.Base, user=user, password=password)
 
@@ -77,11 +77,11 @@ for instrument in inst_list:
     # apply LBC
     for index, row in image_pd.iterrows():
         print("Calculating IIT histogram at time:", row.date_obs)
-        original_los, lbcc_image, mu_indices, use_indices, theoretic_query = lbcc_funcs.apply_lbc(db_session, hdf_data_dir,
-                                                                                 combo_query,
-                                                                                 image_row=row,
-                                                                                 n_intensity_bins=n_intensity_bins,
-                                                                                 R0=R0)
+        original_los, lbcc_image, mu_indices, use_indices, theoretic_query = lbcc_funcs.apply_lbc(db_session,
+                                                                                hdf_data_dir, combo_query,
+                                                                                image_row=row,
+                                                                                n_intensity_bins=n_intensity_bins,
+                                                                                R0=R0)
         # calculate IIT histogram from LBC
         hist = psi_d_types.LBCCImage.iit_hist(lbcc_image, lat_band, log10)
 

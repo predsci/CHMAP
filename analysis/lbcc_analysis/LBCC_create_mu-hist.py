@@ -3,12 +3,13 @@ construct mu-histogram and push to database for any time period
 """
 
 import os
+os.environ["OMP_NUM_THREADS"] = "4"  # limit number of threads numpy can spawn
 import time
 import datetime
 import numpy as np
 from settings.app import App
 import modules.DB_classes as db_class
-from modules.DB_funs import init_db_conn, query_euv_images, add_hist, get_method_id
+from modules.DB_funs import init_db_conn, query_euv_images, add_hist, get_method_id, query_hist
 import modules.datatypes as psi_d_types
 
 ###### ------ PARAMETERS TO UPDATE -------- ########
@@ -78,8 +79,23 @@ for instrument in inst_list:
 
     # query EUV images
     query_instrument = [instrument, ]
-    query_pd = query_euv_images(db_session=db_session, time_min=hist_query_time_min,
+    query_pd_all = query_euv_images(db_session=db_session, time_min=hist_query_time_min,
                                          time_max=hist_query_time_max, instrument=query_instrument)
+    # query LBCC histograms
+    hist_pd = query_hist(db_session, meth_id=method_id[1], n_mu_bins=n_mu_bins, n_intensity_bins=n_intensity_bins,
+                         lat_band=lat_band, time_min=hist_query_time_min, time_max=hist_query_time_max,
+                         instrument=instrument)
+
+    # compare image results to hist results based on image_id
+    in_index = query_pd_all.image_id.isin(hist_pd.image_id)
+
+    # return only images that do not have corresponding histograms
+    query_pd = query_pd_all[~in_index]
+
+    # check that images remain that need histograms
+    if query_pd.shape[0] == 0:
+        print("All" + instrument + " images in timeframe already have associated histograms.")
+        continue
 
     for index, row in query_pd.iterrows():
         print("Processing image number", row.image_id, ".")

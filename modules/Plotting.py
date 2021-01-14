@@ -168,7 +168,7 @@ def Plot_LBCC_Hists(plot_hist, date_obs, instrument, intensity_bin_edges, mu_bin
     """
     # simple plot of raw histogram
     plt.figure(figure + instrument + " " + str(100 + plot_index))
-    plt.imshow(plot_hist, aspect="auto", interpolation='nearest', origin='low',
+    plt.imshow(plot_hist, aspect="auto", interpolation='nearest', origin='lower',
                extent=[intensity_bin_edges[0], intensity_bin_edges[-2] + 1., mu_bin_edges[0],
                        mu_bin_edges[-1]])
     plt.xlabel("Pixel intensities")
@@ -184,7 +184,7 @@ def Plot_LBCC_Hists(plot_hist, date_obs, instrument, intensity_bin_edges, mu_bin
 
     # # simple plot of normed histogram
     plt.figure(figure + instrument + " " + str(200 + plot_index))
-    plt.imshow(norm_hist, aspect="auto", interpolation='nearest', origin='low',
+    plt.imshow(norm_hist, aspect="auto", interpolation='nearest', origin='lower',
                extent=[intensity_bin_edges[0], intensity_bin_edges[-1], mu_bin_edges[0],
                        mu_bin_edges[-1]])
     plt.xlabel("Pixel intensities")

@@ -11,8 +11,8 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib as mpl
 
-from settings.app_JT_Q import App
-from modules.DB_classes import *
+from settings.app import App
+import modules.DB_classes as db_class
 from modules.DB_funs import init_db_conn, query_euv_images
 
 # query parameters
@@ -22,8 +22,8 @@ wave_aia = 193
 wave_euvi = 195
 
 # Specify a vector of synchronic times
-period_start = datetime.datetime(2011, 1, 1, 0, 0, 0)
-period_end = datetime.datetime(2012, 1, 1, 0, 0, 0)
+period_start = datetime.datetime(2007, 4, 1, 0, 0, 0)
+period_end = datetime.datetime(2021, 1, 1, 0, 0, 0)
 # define target times over download period using interval_cadence
 mean_times = np.arange(period_start, period_end, interval_cadence)
 
@@ -35,11 +35,31 @@ raw_data_dir = App.RAW_DATA_HOME
 hdf_data_dir = App.PROCESSED_DATA_HOME
 db_home_dir  = App.DATABASE_HOME
 
-# setup database connection
-use_db = "sqlite"
+# INITIALIZE DATABASE CONNECTION
+# DATABASE PATHS
+database_dir = App.DATABASE_HOME
 sqlite_filename = App.DATABASE_FNAME
-sqlite_path = os.path.join(db_home_dir, sqlite_filename)
-db_session = init_db_conn(db_name=use_db, chd_base=Base, sqlite_path=sqlite_path)
+raw_data_dir = App.RAW_DATA_HOME
+hdf_data_dir = App.PROCESSED_DATA_HOME
+
+create = False
+
+# designate which database to connect to
+use_db = "mysql-Q"       # 'sqlite'  Use local sqlite file-based db
+                        # 'mysql-Q' Use the remote MySQL database on Q
+user = "turtle"         # only needed for remote databases.
+password = ""           # See example109 for setting-up an encrypted password.  In this case leave password="", and
+# init_db_conn() will automatically find and use your saved password. Otherwise, enter your MySQL password here.
+
+# connect to database
+if use_db == 'sqlite':
+    # setup database connection to local sqlite file
+    sqlite_path = os.path.join(database_dir, sqlite_filename)
+
+    db_session = init_db_conn(db_name=use_db, chd_base=db_class.Base, sqlite_path=sqlite_path)
+elif use_db == 'mysql-Q':
+    # setup database connection to MySQL database on Q
+    db_session = init_db_conn(db_name=use_db, chd_base=db_class.Base, user=user, password=password)
 
 # query a list of images in query range for each instrument. sort by time
 aia_images = query_euv_images(db_session, time_min=query_start, time_max=query_end, instrument=("AIA", ),
@@ -98,4 +118,70 @@ plt.xlabel("Synchronic DateTime")
 plt.ylabel("Consecutive missed observations")
 plt.legend(loc="upper left", labels=("AIA", "EUVI-A", "EUVI-B"))
 
+
+
+# plot Stereo A only (log y-axis)
+euvia_missed_log = euvia_missed
+euvia_missed_log[euvia_missed == 0] = .1
+
+
+plt.figure(1)
+
+plt.scatter(euvia_images.date_obs, euvia_missed_log, c='red', marker="|")
+plt.yscale("log")
+plt.ylim((10**-1.1, 10**3.4))
+plt.xlabel("Image Observation Time")
+plt.ylabel("Consecutive missed observations (trailing)")
+plt.title(r'Stereo-A EUV (195$\AA$)')
+
+plot_fname = "/Users/turtle/Dropbox/MyNACD/analysis/missing_images/StereoA.pdf"
+plt.savefig(plot_fname)
+
+plt.close(1)
+
+
+# plot Stereo B only (log y-axis)
+euvib_missed_log = euvib_missed
+euvib_missed_log[euvib_missed == 0] = .1
+
+
+plt.figure(2)
+
+plt.scatter(euvib_images.date_obs, euvib_missed_log, c='green', marker="|")
+plt.yscale("log")
+plt.ylim((10**-1.1, 10**1.5))
+plt.xlabel("Image Observation Time")
+plt.ylabel("Consecutive missed observations (trailing)")
+plt.title(r'Stereo-B EUV (195$\AA$)')
+
+plot_fname = "/Users/turtle/Dropbox/MyNACD/analysis/missing_images/StereoB.pdf"
+plt.savefig(plot_fname)
+
+plt.close(2)
+
+
+# plot AIA only (log y-axis)
+aia_missed_log = aia_missed
+aia_missed_log[aia_missed == 0] = .1
+
+
+plt.figure(3)
+
+plt.scatter(aia_images.date_obs, aia_missed_log, c='blue', marker="|")
+plt.yscale("log")
+plt.ylim((10**-1.1, 10**2.2))
+plt.xlabel("Image Observation Time")
+plt.ylabel("Consecutive missed observations (trailing)")
+plt.title(r'AIA EUV (193$\AA$)')
+
+plot_fname = "/Users/turtle/Dropbox/MyNACD/analysis/missing_images/AIA.pdf"
+plt.savefig(plot_fname)
+
+plt.close(3)
+
+
+
+
+
+db_session.close()
 

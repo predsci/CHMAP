@@ -68,12 +68,12 @@ class EUV_Maps(Base):
 #              DDL("""INSERT INTO euv_maps (map_id) VALUES(0)"""))
 
 
-def init_pop_euv_map():
-    """
-    Insert map_id = 0 record for use with variable values that do not reference a specific map
-    :return:
-    """
-    db.se
+# def init_pop_euv_map():
+#     """
+#     Insert map_id = 0 record for use with variable values that do not reference a specific map
+#     :return:
+#     """
+#     db.se
 
 
 class Image_Combos(Base):
@@ -215,7 +215,24 @@ class Histogram(Base):
     intensity_bin_edges = Column(LargeBinary)
     hist = Column(LargeBinary)
 
-    __table_args__ = (Index('hist_index', "date_obs", "instrument", "wavelength"),
+    __table_args__ = (Index('hist_index', "date_obs", "meth_id", "instrument", "wavelength"),
                       Index('hist_unique', "image_id", "meth_id", "n_mu_bins", "n_intensity_bins", "lat_band",
                             unique=True)
                       )
+
+
+class Data_Files(Base):
+    """
+    This table holds records of imported data files. The more specific EUV_Images table
+    contains an image_id which is a subset of data_id column found here.
+    """
+    __tablename__ = 'data_files'
+    data_id = Column(Integer, primary_key=True)
+    date_obs = Column(DateTime)
+    provider = Column(String(50))
+    type = Column(String(25))
+    fname_raw = Column(String(150))
+    fname_hdf = Column(String(150))
+
+    __table_args__ = (Index('file_index', "date_obs", "provider", "type"),
+                      UniqueConstraint("fname_raw"))
