@@ -798,12 +798,16 @@
 <h2 id="centroid-tracking">Centroid Tracking</h2>
 <p>Track coronal holes between frames based on the distance to the previous list of coronal hole centers. </p>
 <h2 id="features-saved-to-object">Features saved to object:</h2>
-<ol>
-<li>center (<span><span class="MathJax_Preview">\theta</span><script type="math/tex">\theta</script></span>, <span><span class="MathJax_Preview">\phi</span><script type="math/tex">\phi</script></span>)</li>
-<li>contour pixel area + physical area. </li>
-<li>frames appeared. </li>
-<li>bounding boz coordinates (x1, x2, y1, y2)</li>
-</ol>
+<ul>
+<li>centroid pixel location (x,y)</li>
+<li>centroid physical location (phi, theta) - TODO.</li>
+<li>contour - pixel list.</li>
+<li>contour pixel area.</li>
+<li>contour physical area. - TODO</li>
+<li>coronal hole probability -temporal averaging -gaussian.</li>
+<li>contour arc length.</li>
+<li>bounding rectangle - straight and rotating.</li>
+</ul>
                 
               
               
