@@ -810,6 +810,16 @@
 <li>contour arc length.</li>
 <li>bounding rectangle - straight and rotating.</li>
 </ul>
+<h1 id="january-18th-notes-updates">January 18th notes - updates</h1>
+<p>the current tracking algortihm logic: </p>
+<p>input = image dim (n_t, n_p)</p>
+<p>step 1: convert to grayscale. 
+step 2: convert grayscaled image to polar projection. 
+step 3: find contours + save ch id + color assigned + match to previous frame. 
+step 4: map back to lat-lon projection as rbg image. 
+step 5: save the new contour pixels location. 
+step 6: compute contour features (center, area, bounding box). </p>
+<p><img alt="" src="../images/CoronalHoleTracking.png" /></p>
                 
               
               
