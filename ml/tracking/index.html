@@ -813,12 +813,26 @@
 <h1 id="january-18th-notes-updates">January 18th notes - updates</h1>
 <p>the current tracking algortihm logic: </p>
 <p>input = image dim (n_t, n_p)</p>
-<p>step 1: convert to grayscale. 
-step 2: convert grayscaled image to polar projection. 
-step 3: find contours + save ch id + color assigned + match to previous frame. 
-step 4: map back to lat-lon projection as rbg image. 
-step 5: save the new contour pixels location. 
-step 6: compute contour features (center, area, bounding box). </p>
+<ul>
+<li>
+<p>step 1: convert to grayscale. </p>
+</li>
+<li>
+<p>step 2: convert grayscaled image to polar projection. </p>
+</li>
+<li>
+<p>step 3: find contours + save ch id + color assigned + match to previous frame. </p>
+</li>
+<li>
+<p>step 4: map back to lat-lon projection as rbg image. </p>
+</li>
+<li>
+<p>step 5: save the new contour pixels location. </p>
+</li>
+<li>
+<p>step 6: compute contour features (center, area, bounding box). </p>
+</li>
+</ul>
 <p><img alt="" src="../images/CoronalHoleTracking.png" /></p>
                 
               
