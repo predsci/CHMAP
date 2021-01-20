@@ -3,7 +3,6 @@
 ## Projections
 The current images are in latitude longitude coordinates with the poles placed at the top and bottom of the image. In this current projection, clustering coronal holes at the poles is challenging due to the distortion near the poles. In order to overcome this issue, we suggest a coordinate mapping placing the poles at the equator. This transformation can be done in "projection.py" module. 
 
-
 ![](images/map.png)
 
 ![](images/newprojection.png)
@@ -43,10 +42,39 @@ Track coronal holes between frames based on the distance to the previous list of
 ## Features saved to object: 
 
 - centroid pixel location (x,y)
-- centroid physical location (phi, theta) - TODO.
+- centroid physical location (phi, theta) 
 - contour - pixel list.
 - contour pixel area.
-- contour physical area. - TODO
-- coronal hole probability -temporal averaging -gaussian.
-- contour arc length.
-- bounding rectangle - straight and rotating.
+- contour physical area. 
+- bounding rectangle - straight.
+
+
+## January 18th notes - updates
+
+the current tracking algortihm logic: 
+
+input = coronal hole detection image.
+
+* step 1: convert to grayscale. 
+
+* step 2: convert grayscaled image to polar projection. 
+
+* step 3: find contours + save ch id + color assigned + match to previous frame. 
+
+* step 4: map back to lat-lon projection as rbg image. 
+
+* step 5: save the new contour pixels location. 
+
+* step 6: compute contour features (center, area, bounding box). 
+
+![](images/CoronalHoleTracking.png)
+
+
+# January 19th notes - TODO List. 
+1. Add periodicity to the tracking algorithm otherwise a coronal hole center will be falsified. 
+See figure below:
+![](images/ch_tracking_jan19.png)
+
+2. Print/save all features to a log file. 
+
+3. Match coronal holes based on previous 5 frames!

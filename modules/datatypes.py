@@ -13,7 +13,7 @@ import numpy as np
 import pandas as pd
 import sunpy.map
 import sunpy.util.metadata
-from modules.coord_manip import interp_los_image_to_map, image_grid_to_CR, interp_los_image_to_map2
+# from modules.coord_manip import interp_los_image_to_map, image_grid_to_CR, interp_los_image_to_map2
 from settings.info import DTypes
 
 

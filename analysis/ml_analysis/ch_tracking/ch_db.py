@@ -1,5 +1,5 @@
 """
-Author: Opal Issan, Jan 8th, 2021.
+Author: Opal Issan, Jan 18th, 2021.
 
 A data structure for a set of coronal hole objects.
 """
@@ -48,7 +48,7 @@ class CoronalHoleDB:
         }
 
     def add_coronal_hole(self, ch):
-        """ Insert a new coronal hole object to the db. """
+        """ Insert a new coronal hole object to the db dictionary with its unique id + add id to the database"""
         self.ch_dict[ch.id] = ch
         self.id_list.add(ch.id)
 
@@ -103,7 +103,7 @@ class CoronalHoleDB:
     @staticmethod
     def generate_ch_color():
         """ generate a random color"""
-        return np.random.rand(3, ) * 255
+        return np.random.randint(low=0, high=255, size=(3,)).tolist()  # np.random.rand(3, ) * 255
 
     def first_frame_initialize(self):
         """ match an ID and color to each coronal hole in the first frame. """
@@ -130,3 +130,120 @@ class CoronalHoleDB:
             # set the index id.
             self.add_new_coronal_hole(ch=self.p1.contour_list[ii])
 
+    @staticmethod
+    def map_new_polar_projection(gray_image):
+        """ A function to rotate a grayscaled image and project.
+         The projection steps:
+         1. transform to cartesian coordinates.
+         2. rotate about the x axis by angle=pi/2:
+                * rotation matrix = [1      0      0 ]   [1  0  0]
+                                    [0 cos(a) -sin(a)] = [0  0 -1]
+                                    [0 sin(a)  cos(a)]   [0  1  0]
+
+        3. map back to spherical coordinates. - return image in new projection.
+
+        :parameter gray_image = image matrix (n_t x n_p) dimensions.
+        Gray scaled, meaning its elements are between 0 and 255. """
+        # extract the dimensions of the grayscaled image.
+        n_t, n_p = np.shape(gray_image)
+
+        # create 1d arrays for spherical coordinates.
+        theta = np.linspace(np.pi, 0, n_t)
+        phi = np.linspace(0, 2 * np.pi, n_p)
+
+        # spacing in theta and phi.
+        delta_t = theta[1] - theta[0]
+        delta_p = phi[1] - phi[0]
+
+        # compute theta and phi grids.
+        theta_grid = np.arccos(np.outer(np.sin(theta), np.sin(phi)))
+        phi_grid = np.arctan2(np.outer(-np.cos(theta), np.ones(n_p)), np.outer(np.sin(theta), np.cos(phi)))
+
+        # Change phi range from [-pi,pi] to [0,2pi]
+        neg_phi = phi_grid < 0
+        phi_grid[neg_phi] = phi_grid[neg_phi] + 2 * np.pi
+
+        # initialize new image.
+        image = np.zeros((n_t, n_p))
+
+        # assign the new index.
+        for ii in range(0, n_t):
+            for jj in range(0, n_p):
+                image[ii, jj] = gray_image[int(np.abs(theta_grid[ii, jj]) / delta_t), int(phi_grid[ii, jj] / delta_p)]
+        return image.astype(np.uint8)
+
+    @staticmethod
+    def map_back_to_long_lat_rbg(input_image):
+        """ A function to rotate a grayscaled image and project.
+            The projection steps:
+         1. transform to cartesian coordinates.
+         2. rotate about the x axis by angle=-pi/2:
+                * rotation matrix = [1      0      0 ]   [1  0  0]
+                                    [0 cos(a) -sin(a)] = [0  0  1]
+                                    [0 sin(a)  cos(a)]   [0 -1  0]
+
+        3. map back to spherical coordinates. - return image in new projection.
+
+        :parameter input_image = image matrix (n_t x n_p) dimensions.
+        Gray scaled, meaning its elements are between 0 and 255. """
+        # extract the dimensions of the grayscaled image.
+        n_t, n_p, n_c = np.shape(input_image)
+
+        # create 1d arrays for spherical coordinates.
+        theta = np.linspace(np.pi, 0, n_t)
+        phi = np.linspace(0, 2 * np.pi, n_p)
+
+        # spacing in theta and phi.
+        delta_t = theta[1] - theta[0]
+        delta_p = phi[1] - phi[0]
+
+        # compute theta and phi grids.
+        theta_grid = np.arccos(np.outer(-np.sin(theta), np.sin(phi)))
+        phi_grid = np.arctan2(np.outer(np.cos(theta), np.ones(n_p)), np.outer(np.sin(theta), np.cos(phi)))
+
+        # Change phi range from [-pi,pi] to [0,2pi]
+        neg_phi = phi_grid < 0
+        phi_grid[neg_phi] = phi_grid[neg_phi] + 2 * np.pi
+
+        # initialize new image.
+        image = np.zeros((n_t, n_p, n_c))
+
+        # assign the new index.
+        for ii in range(0, n_t):
+            for jj in range(0, n_p):
+                image[ii, jj, :] = input_image[int(np.abs(theta_grid[ii, jj]) / delta_t),
+                                   int(phi_grid[ii, jj] / delta_p), :]
+
+        return image.astype(np.uint8)
+
+    def fill_contours(self):
+        """ fill out the contour pixels with its unique color.
+        returns the new image with filled coronal holes. """
+        # initialize image dimensions.
+        image = np.ones((Contour.n_t, Contour.n_p, 3), dtype=np.uint8) * 255
+        # loop over each contour saved.
+        for c in self.p1.contour_list:
+            # plot each contour in our current frame. cv2.FILLED colors the whole contour in its unique color.
+            cv2.drawContours(image=image, contours=[c.contour], contourIdx=0, color=c.color, thickness=cv2.FILLED)
+        return image
+
+    def update_coronal_hole_features(self, rbg_image):
+        """input image: rbg lon-lat projected.
+         This function will save all the image pixel coordinates that are assigned to each contour
+         (coronal hole) and compute the coronal hole center, area, and bounding box. """
+        # loop over each contour saved.
+        for c in self.p1.contour_list:
+            # save filled contour pixels.
+            mask = np.all(rbg_image == c.color, axis=-1)
+            # find image pixel coordinates.
+            c.contour_pixels = np.where(mask == True)
+            # update bounding box coordinates.
+            c.straight_box = Contour.compute_straight_bounding_rectangle(c)
+            # update pixel center coordinate lon-lat.
+            c.lat_lon_pixel_centroid = Contour.compute_centroid_lon_lat_location(c)
+            # update physical center coordinate lon-lat.
+            c.lat_lon_phys_centroid = Contour.centroid_lon_lat_phys_location(c)
+            # compute contour physical area.
+            c.area = Contour.contour_area(c)
+            # compute bounding straight box physical area.
+            c.box_area = Contour.straight_box_area(c)
