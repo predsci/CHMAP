@@ -23,7 +23,7 @@ def map_grid_to_image(map_x, map_y, R0=1.0, obsv_lon=0.0, obsv_lat=0.0):
     """
 
     # get map 3D spherical coords
-    map_theta = map_y #np.pi / 2 - np.arcsin(map_y)
+    map_theta = np.pi / 2 - np.arcsin(map_y)
     map_phi = map_x
 
     # get map 3D cartesian coords
