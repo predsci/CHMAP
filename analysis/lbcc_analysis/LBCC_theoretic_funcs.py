@@ -292,6 +292,52 @@ def apply_lbc(db_session, hdf_data_dir, inst_combo_query, image_row, n_intensity
     return original_los, lbcc_image, mu_indices, use_indices, theoretic_query
 
 
+def apply_lbc_2(db_session, hdf_data_dir, image_row, n_intensity_bins=200, R0=1.01):
+    """
+    Function to apply limb-brightening correction to use for IIT.
+    Version 2: removes the need to query instrument combos 'inst_combo_query' before calling
+    this function.
+    @param db_session: connected database session to query theoretic fit parameters from
+    @param hdf_data_dir: directory of processed images to plot original images
+    @param image_row: row in image query
+    @param n_intensity_bins: number of intensity bins
+    @param R0: radius
+    @return:
+    """
+
+    meth_name = "LBCC"
+    db_sesh, meth_id, var_ids = db_funcs.get_method_id(db_session, meth_name, meth_desc=None, var_names=None,
+                                                       var_descs=None, create=False)
+    intensity_bin_edges = np.linspace(0, 5, num=n_intensity_bins + 1, dtype='float')
+
+    ###### GET LOS IMAGES COORDINATES (DATA) #####
+    if image_row.fname_hdf == "":
+        print("Warning: Image # " + str(image_row.image_id) + " does not have an associated hdf file. Skipping")
+        pass
+    hdf_path = os.path.join(hdf_data_dir, image_row.fname_hdf)
+    original_los = psi_d_types.read_los_image(hdf_path)
+    original_los.get_coordinates(R0=R0)
+    # query variables for theoretic-based LBCC (interpolate between dates)
+    theoretic_query = db_funcs.get_correction_pars(db_session, meth_name, date_obs=original_los.info['date_string'],
+                                                   instrument=image_row.instrument)
+
+    # get beta and y from theoretic fit
+    ###### DETERMINE LBC CORRECTION (for valid mu values) ######
+    beta1d, y1d, mu_indices, use_indices = lbcc.get_beta_y_theoretic_continuous_1d_indices(theoretic_query,
+                                                                                           los_image=original_los)
+
+    ###### APPLY LBC CORRECTION (log10 space) ######
+    corrected_lbc_data = np.copy(original_los.data)
+    corrected_lbc_data[use_indices] = 10 ** (beta1d * np.log10(original_los.data[use_indices]) + y1d)
+
+    ###### CREATE LBCC DATATYPE ######
+    lbcc_image = psi_d_types.create_lbcc_image(original_los, corrected_lbc_data, image_id=image_row.image_id,
+                                               meth_id=meth_id, intensity_bin_edges=intensity_bin_edges)
+    psi_d_types.LosImage.get_coordinates(lbcc_image, R0=R0)
+
+    return original_los, lbcc_image, mu_indices, use_indices, theoretic_query
+
+
 ###### STEP FOUR: GENERATE PLOTS OF BETA AND Y ######
 def generate_theoretic_plots(db_session, inst_list, plot_query_time_min, plot_query_time_max, weekday, image_out_path,
                              year='2011', time_period='6 Month', plot_week=0, n_mu_bins=18):

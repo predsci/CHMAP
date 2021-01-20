@@ -87,7 +87,8 @@ class Image_Combos(Base):
     date_mean = Column(DateTime)
     date_max = Column(DateTime)
     date_min = Column(DateTime)
-    __table_args__ = (Index('mean_time', "date_mean"),
+    instrument = Column(String(10))
+    __table_args__ = (Index('mean_time', "date_mean", "meth_id", "instrument"),
                       Index('unique_combo', "meth_id", "n_images", "date_mean", "date_max", "date_min", unique=True))
 
     images = relationship("Image_Combo_Assoc")

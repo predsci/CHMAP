@@ -1,7 +1,4 @@
 #!/usr/bin/env python
-import sys
-
-sys.path.append("/Users/tamarervin/CH_Project/CHD")
 
 """
 code for creation of IIT histograms and saving to database
@@ -20,8 +17,8 @@ import analysis.lbcc_analysis.LBCC_theoretic_funcs as lbcc_funcs
 
 ###### ------ UPDATEABLE PARAMETERS ------- #######
 # TIME RANGE FOR LBC CORRECTION AND HISTOGRAM CREATION
-lbc_query_time_min = datetime.datetime(2011, 4, 1, 0, 0, 0)
-lbc_query_time_max = datetime.datetime(2012, 10, 1, 0, 0, 0)
+lbc_query_time_min = datetime.datetime(2008, 3, 1, 0, 0, 0)
+lbc_query_time_max = datetime.datetime(2008, 3, 2, 0, 0, 0)
 
 # define instruments
 inst_list = ["AIA", "EUVI-A", "EUVI-B"]
@@ -42,15 +39,10 @@ sqlite_filename = App.DATABASE_FNAME
 # setup database parameters
 create = True  # true if you want to add to database
 # designate which database to connect to
-# sqlite
-use_db = "sqlite"
-sqlite_path = os.path.join(database_dir, sqlite_filename)
-
-# mysql
-# use_db = "mysql-Q"       # 'sqlite'  Use local sqlite file-based db
+use_db = "mysql-Q"       # 'sqlite'  Use local sqlite file-based db
                         # 'mysql-Q' Use the remote MySQL database on Q
-# user = "turtle"         # only needed for remote databases.
-# password = ""           # See example109 for setting-up an encrypted password.  In this case leave password="", and
+user = "turtle"         # only needed for remote databases.
+password = ""           # See example109 for setting-up an encrypted password.  In this case leave password="", and
 # init_db_conn() will automatically find and use your saved password. Otherwise, enter your MySQL password here.
 
 ###### ------- NOTHING TO UPDATE BELOW ------- #######
@@ -77,19 +69,39 @@ for instrument in inst_list:
     print("Beginning loop for instrument:", instrument)
     # query EUV images
     query_instrument = [instrument, ]
-    image_pd = db_funcs.query_euv_images(db_session=db_session, time_min=lbc_query_time_min,
-                                         time_max=lbc_query_time_max, instrument=query_instrument)
+    image_pd_all = db_funcs.query_euv_images(db_session=db_session, time_min=lbc_query_time_min,
+                                             time_max=lbc_query_time_max, instrument=query_instrument)
+    # query LBCC histograms
+    hist_pd = db_funcs.query_hist(db_session, meth_id=method_id[1], n_mu_bins=n_mu_bins,
+                                  n_intensity_bins=n_intensity_bins, lat_band=lat_band, time_min=lbc_query_time_min,
+                                  time_max=lbc_query_time_max, instrument=instrument)
+
+    # compare image results to hist results based on image_id
+    in_index = image_pd_all.image_id.isin(hist_pd.image_id)
+
+    # return only images that do not have corresponding histograms
+    image_pd = image_pd_all[~in_index]
+
+    # check that images remain that need histograms
+    if image_pd.shape[0] == 0:
+        print("All " + instrument + " images in timeframe already have associated histograms.")
+        continue
+
     # query correct image combos
-    combo_query = db_funcs.query_inst_combo(db_session, lbc_query_time_min, lbc_query_time_max, meth_name="LBCC",
-                                            instrument=instrument)
+    # combo_query = db_funcs.query_inst_combo(db_session, lbc_query_time_min, lbc_query_time_max, meth_name="LBCC",
+    #                                         instrument=instrument)
+
     # apply LBC
     for index, row in image_pd.iterrows():
         print("Calculating IIT histogram at time:", row.date_obs)
-        original_los, lbcc_image, mu_indices, use_indices, theoretic_query = lbcc_funcs.apply_lbc(db_session,
-                                                                                hdf_data_dir, combo_query,
-                                                                                image_row=row,
-                                                                                n_intensity_bins=n_intensity_bins,
-                                                                                R0=R0)
+        # original_los, lbcc_image, mu_indices, use_indices, theoretic_query = lbcc_funcs.apply_lbc(db_session,
+        #                                                                         hdf_data_dir, combo_query,
+        #                                                                         image_row=row,
+        #                                                                         n_intensity_bins=n_intensity_bins,
+        #                                                                         R0=R0)
+        original_los, lbcc_image, mu_indices, use_indices, theoretic_query = lbcc_funcs.apply_lbc_2(
+            db_session, hdf_data_dir, image_row=row, n_intensity_bins=n_intensity_bins, R0=R0)
+
         # calculate IIT histogram from LBC
         hist = psi_d_types.LBCCImage.iit_hist(lbcc_image, lat_band, log10)
 
