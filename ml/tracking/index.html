@@ -664,6 +664,68 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#january-19th-notes-todo-list" class="md-nav__link">
+    January 19th notes - TODO List.
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#projection-analysis" class="md-nav__link">
+    Projection Analysis.
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#dilation-and-erosion-proposed-new-tracking-algorithm" class="md-nav__link">
+    Dilation and Erosion - Proposed New Tracking Algorithm
+  </a>
+  
+    <nav class="md-nav" aria-label="Dilation and Erosion - Proposed New Tracking Algorithm">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#step-1-input-image-in-lat-lon-projection" class="md-nav__link">
+    Step 1: Input image in lat-lon projection.
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-2-apply-1-iteration-erosion-on-the-whole-image-to-remove-false-small-detected-coronal-holes" class="md-nav__link">
+    Step 2: Apply 1 iteration Erosion on the whole image to remove false small detected coronal holes.
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-3-apply-a-latitude-weighted-dilation" class="md-nav__link">
+    Step 3: Apply a latitude weighted Dilation.
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-4-apply-contour-classification-on-the-dilated-image-and-save-the-coronal-hole-id-and-assigned-color" class="md-nav__link">
+    Step 4: Apply contour classification on the dilated image and save the coronal hole ID and assigned color.
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#match-the-classification-to-the-original-map-coronal-holes" class="md-nav__link">
+    Match the classification to the original map coronal holes.
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -751,6 +813,68 @@
   <a href="#january-18th-notes-updates" class="md-nav__link">
     January 18th notes - updates
   </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#january-19th-notes-todo-list" class="md-nav__link">
+    January 19th notes - TODO List.
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#projection-analysis" class="md-nav__link">
+    Projection Analysis.
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#dilation-and-erosion-proposed-new-tracking-algorithm" class="md-nav__link">
+    Dilation and Erosion - Proposed New Tracking Algorithm
+  </a>
+  
+    <nav class="md-nav" aria-label="Dilation and Erosion - Proposed New Tracking Algorithm">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#step-1-input-image-in-lat-lon-projection" class="md-nav__link">
+    Step 1: Input image in lat-lon projection.
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-2-apply-1-iteration-erosion-on-the-whole-image-to-remove-false-small-detected-coronal-holes" class="md-nav__link">
+    Step 2: Apply 1 iteration Erosion on the whole image to remove false small detected coronal holes.
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-3-apply-a-latitude-weighted-dilation" class="md-nav__link">
+    Step 3: Apply a latitude weighted Dilation.
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-4-apply-contour-classification-on-the-dilated-image-and-save-the-coronal-hole-id-and-assigned-color" class="md-nav__link">
+    Step 4: Apply contour classification on the dilated image and save the coronal hole ID and assigned color.
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#match-the-classification-to-the-original-map-coronal-holes" class="md-nav__link">
+    Match the classification to the original map coronal holes.
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -846,7 +970,7 @@
 </li>
 </ul>
 <p><img alt="" src="../images/CoronalHoleTracking.png" /></p>
-<h1 id="january-19th-notes-todo-list">January 19th notes - TODO List.</h1>
+<h2 id="january-19th-notes-todo-list">January 19th notes - TODO List.</h2>
 <ol>
 <li>
 <p>Add periodicity to the tracking algorithm otherwise a coronal hole center will be falsified. 
@@ -860,6 +984,34 @@ See figure below:
 <p>Match coronal holes based on previous 5 frames!</p>
 </li>
 </ol>
+<h2 id="projection-analysis">Projection Analysis.</h2>
+<p>In lat-lon projection:  </p>
+<ul>
+<li>z &lt; -1/2 or z &gt; 1/2. </li>
+</ul>
+<p><span><span class="MathJax_Preview">x = \rho \sin(\theta)\cos(\phi)</span><script type="math/tex">x = \rho \sin(\theta)\cos(\phi)</script></span>,
+  <span><span class="MathJax_Preview">y = \rho \sin(\theta)\sin(\phi)</span><script type="math/tex">y = \rho \sin(\theta)\sin(\phi)</script></span>,
+  <span><span class="MathJax_Preview">z = \rho \cos(\theta)</span><script type="math/tex">z = \rho \cos(\theta)</script></span>,
+  where <span><span class="MathJax_Preview">\rho = 1</span><script type="math/tex">\rho = 1</script></span>. </p>
+<p><span><span class="MathJax_Preview">\theta</span><script type="math/tex">\theta</script></span> &lt; <span><span class="MathJax_Preview">\pi/4</span><script type="math/tex">\pi/4</script></span> or  <span><span class="MathJax_Preview">\theta</span><script type="math/tex">\theta</script></span> &gt; <span><span class="MathJax_Preview">3\pi/4</span><script type="math/tex">3\pi/4</script></span>. </p>
+<p><img alt="" src="../images/projection_lat_lon.png" /></p>
+<p>In polar projection: z &lt; -1/2 or z &gt; 1/2. </p>
+<p>[1 0 0, 0 0 -1, 0 1 0] <span><span class="MathJax_Preview">\cdot</span><script type="math/tex">\cdot</script></span> [<span><span class="MathJax_Preview">\rho \sin(\theta)\cos(\phi)</span><script type="math/tex">\rho \sin(\theta)\cos(\phi)</script></span>, <span><span class="MathJax_Preview">\rho \sin(\theta)\sin(\phi)</span><script type="math/tex">\rho \sin(\theta)\sin(\phi)</script></span>, <span><span class="MathJax_Preview">\rho \cos(\theta)</span><script type="math/tex">\rho \cos(\theta)</script></span>] = 
+[ <span><span class="MathJax_Preview">\rho \sin(\theta)\cos(\phi)</span><script type="math/tex">\rho \sin(\theta)\cos(\phi)</script></span>, - <span><span class="MathJax_Preview">\rho \cos(\theta)</span><script type="math/tex">\rho \cos(\theta)</script></span>, <span><span class="MathJax_Preview">\rho \sin(\theta)\sin(\phi)</span><script type="math/tex">\rho \sin(\theta)\sin(\phi)</script></span>]. </p>
+<p>Then, <span><span class="MathJax_Preview">\rho \sin(\theta)\sin(\phi)</span><script type="math/tex">\rho \sin(\theta)\sin(\phi)</script></span> &lt; -0.5 or <span><span class="MathJax_Preview">\rho \sin(\theta)\sin(\phi)</span><script type="math/tex">\rho \sin(\theta)\sin(\phi)</script></span> &gt; 0.5</p>
+<p><img alt="" src="../images/polar_projection_distort_2.png" /></p>
+<p><img alt="" src="../images/polar_projection_distort.png" /></p>
+<h2 id="dilation-and-erosion-proposed-new-tracking-algorithm">Dilation and Erosion - Proposed New Tracking Algorithm</h2>
+<p><img alt="" src="../images/notes_de.jpg" /></p>
+<h3 id="step-1-input-image-in-lat-lon-projection">Step 1: Input image in lat-lon projection.</h3>
+<p><img alt="" src="../images/orig_map.png" /></p>
+<h3 id="step-2-apply-1-iteration-erosion-on-the-whole-image-to-remove-false-small-detected-coronal-holes">Step 2: Apply 1 iteration Erosion on the whole image to remove false small detected coronal holes.</h3>
+<p><img alt="" src="../images/Erosion.png" /></p>
+<h3 id="step-3-apply-a-latitude-weighted-dilation">Step 3: Apply a latitude weighted Dilation.</h3>
+<h3 id="step-4-apply-contour-classification-on-the-dilated-image-and-save-the-coronal-hole-id-and-assigned-color">Step 4: Apply contour classification on the dilated image and save the coronal hole ID and assigned color.</h3>
+<p><img alt="" src="../images/dilated_classification.png" /></p>
+<h3 id="match-the-classification-to-the-original-map-coronal-holes">Match the classification to the original map coronal holes.</h3>
+<p><img alt="" src="../images/final_class.png" /></p>
                 
               
               
