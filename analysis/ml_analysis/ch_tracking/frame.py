@@ -1,4 +1,4 @@
-"""Author: Opal Issan, Jan 18th, 2021.
+"""Author: Opal Issan, Feb 3rd, 2021.
 
 A data structure for a frame - consists of a list of contours.
 
@@ -37,4 +37,4 @@ class Frame:
 
     def compute_centroid_list(self):
         """save the coronal hole centers in a list. """
-        return [ch.polar_pixel_centroid for ch in self.contour_list]
+        return [ch.pixel_centroid for ch in self.contour_list]

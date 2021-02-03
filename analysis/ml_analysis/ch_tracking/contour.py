@@ -1,7 +1,7 @@
 """
 Author: Opal Issan, Feb 2nd, 2021.
 
-A data structure for a coronal hole contour in a polar projection.
+A data structure for a coronal hole contour.
 List of properties:                                         || Name of variable.
 - centroid pixel location (x,y) in spherical coordinates    || pixel_centroid
 - centroid physical location (phi, theta)                   || phys_centroid
@@ -53,6 +53,10 @@ class Contour:
         # the unique color for identification of this coronal hole rbg [r, b, g].
         self.color = None
 
+        # periodic label.
+        self.periodic_at_zero = self.is_periodic_zero()
+        self.periodic_at_2pi = self.is_periodic_2_pi()
+
     def __str__(self):
         return json.dumps(
             self.json_dict(), indent=2, default=lambda o: o.json_dict())
@@ -75,6 +79,7 @@ class Contour:
             # convert to cartesian coordinates.
             x, y, z = self._image_pixel_location_to_cartesian(t=self.contour_pixels_row, p=self.contour_pixels_column)
             # compute the mean of each coordinate and convert back to spherical coordinates.
+            # TODO: figure out why Pycharm does not like the line below.
             # noinspection PyTypeChecker
             self.phys_centroid = self._cartesian_centroid_to_spherical_coordinates(x=np.mean(x), y=np.mean(y),
                                                                                    z=np.mean(z))
@@ -204,7 +209,7 @@ class Contour:
         """ Return the latitude pixel interval where the contour pixels are 2pi longitude.
         This function is used to force periodicity.
         :return tuple (min_lat, max_lat)- pixel image coordinates"""
-        if self.is_periodic_2_pi():
+        if self.periodic_at_2pi:
             mask = (self.contour_pixels_column == int(Contour.n_p - 1))
             index = np.argwhere(mask)
             return np.min(self.contour_pixels_row[index]), np.max(self.contour_pixels_row[index])
@@ -213,9 +218,7 @@ class Contour:
         """ Return the latitude pixel interval where the contour pixels are 0 longitude.
         This function is used to force periodicity.
         :return tuple (min_lat, max_lat) - pixel image coordinates"""
-        if self.is_periodic_zero():
+        if self.periodic_at_zero:
             mask = (self.contour_pixels_column == 0)
             index = np.argwhere(mask)
             return np.min(self.contour_pixels_row[index]), np.max(self.contour_pixels_row[index])
-
-
