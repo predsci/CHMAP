@@ -9,6 +9,47 @@ import modules.datatypes as psi_dt
 import astropy_healpix
 
 
+def c2s(x, y, z):
+    """
+    convert numpy arrays of x,y,z (cartesian) to r,t,p (spherical)
+    """
+    x2 = x**2
+    y2 = y**2
+    z2 = z**2
+    r = np.sqrt(x2 + y2 + z2)
+    t = np.arctan2(np.sqrt(x2 + y2), z)
+    p = np.arctan2(y, x)
+
+    # arctan2 returns values from -pi to pi but I want 0-2pi --> use fmod
+    twopi = np.pi*2
+    p = np.fmod(p + twopi, twopi)
+
+    return r, t, p
+
+
+def s2c(r, t, p):
+    """
+    convert numpy arrays of r,t,p (spherical) to x,y,z (cartesian)
+    """
+    ct = np.cos(t)
+    st = np.sin(t)
+    cp = np.cos(p)
+    sp = np.sin(p)
+    x = r*cp*st
+    y = r*sp*st
+    z = r*ct
+    return x, y, z
+
+
+def get_arclength(chord_length, radius=1.0):
+    """
+    convert the length of the chord connecting two points on a great circle to the
+    arc length connecting them on the great circle.
+    """
+    arclength = 2*radius*np.arcsin(0.5*chord_length/radius)
+    return arclength
+
+
 def map_grid_to_image(map_x, map_y, R0=1.0, obsv_lon=0.0, obsv_lat=0.0):
     """
     Given a set of xy coordinate pairs, in map-space (x:horizontal phi axis, y:vertical sin(theta) axis, radius:R0),

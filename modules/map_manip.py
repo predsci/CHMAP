@@ -3,8 +3,125 @@ Functions to manipulate and combine maps
 """
 
 import numpy as np
+from scipy.interpolate import interp1d
+
 import modules.datatypes as psi_d_types
 from settings.info import DTypes
+from modules.coord_manip import s2c
+
+
+class MapMesh:
+    """Simple class to hold mesh information for a phi/theta map.
+
+    The purpose of this class is to facilitate map/mesh based computations such as integral
+    averaging or mesh spacing calculations.
+
+    This holds things like:
+    - the exterior (main) mesh locations.
+    - the interior (half) mesh locations.
+    - the area factors at the main mesh points (using an approximation for the edges).
+    - 2D arrays with the cartesian locations of each point (for easy averaging calculations).
+    - interpolators to get the cell index given a phi or theta value
+    - interpolators to get the local mesh spacing for a given phi or theta value
+
+    The phi and theta can be non-uniformly spaced.
+
+    This class is not as flexible/general as what is in our fortran code remesh_general
+    but it is suitable for our purposes.
+
+    We can add other interpolators / interpolation methods for maps to this later if needed.
+    """
+
+    def __init__(self, p, t):
+        """
+        Generate the mesh object based on 1D arrays of phi and theta locations
+        """
+        # define a floating point tolerance for checking if at 0, pi, or 2pi
+        eps = 2e-7
+
+        # check to see if it is periodic (ASSUME ONE REPEATED POINT)
+        periodic = False
+        if abs(p[0]) <= eps and abs(p[-1] - 2*np.pi) <= eps:
+            periodic = True
+
+        # get the 1D mesh properties for phi and theta:
+        #   this is: half mesh locations, main mesh spacing, half mesh spacing
+        ph, dp, dph = get_1d_mesh_properties(p)
+        th, dt, dth = get_1d_mesh_properties(t)
+
+        # get a special version of dp for periodic interpolation (put the whole cell width vs. half)
+        # need 2 versions since for area, you want the half cell!
+        dp_alt = np.copy(dp)
+        if periodic:
+            dp_alt[0] = dp[0] + dp[-1]
+            dp_alt[-1] = dp_alt[0]
+
+        # Get the coordinates, assuming radius = 1 (photosphere)
+        # here i want to make an array that is phi, theta ordered on purpose
+        t2d, p2d = np.meshgrid(t, p)
+        dt2d, dp2d = np.meshgrid(dt, dp)
+        r2d = np.ones_like(t2d)
+
+        # get the cartesian coordinates (for convenience in later computations)
+        x2d, y2d, z2d = s2c(r2d, t2d, p2d)
+
+        # get the area of each pixel, but modify t2d to account for polar points (shift a quarter point)
+        if abs(t[0]) <= eps:
+            t2d[:, 0] = 0.5*(t[0] + th[0])
+        if abs(t[-1] - np.pi) <= eps:
+            t2d[:, -1] = 0.5*(t[-1] + th[-1])
+        da = np.sin(t2d)*dt2d*dp2d
+
+        # now build interpolators that will be helpful
+        interp_p2index = interp1d(p, np.arange(len(p)), fill_value=(0, len(p) - 1), bounds_error=False)
+        interp_t2index = interp1d(t, np.arange(len(t)), fill_value=(0, len(t) - 1), bounds_error=False)
+        interp_p2dp = interp1d(p, dp_alt, fill_value=(dp_alt[0], dp_alt[-1]), bounds_error=False)
+        interp_t2dt = interp1d(t, dt, fill_value=(dt[0], dt[-1]), bounds_error=False)
+
+        # add these as attributes to the class
+        self.p = p
+        self.t = t
+        self.dp = dp
+        self.dt = dt
+        self.ph = ph
+        self.th = th
+        self.dph = dph
+        self.dth = dth
+        self.da = da
+        self.periodic = periodic
+        self.interp_p2index = interp_p2index
+        self.interp_t2index = interp_t2index
+        self.interp_p2dp = interp_p2dp
+        self.interp_t2dt = interp_t2dt
+        self.x2d = x2d
+        self.y2d = y2d
+        self.z2d = z2d
+
+
+def get_1d_mesh_properties(x):
+    """
+    Return mesh properties based on an array of 1D mesh locations (assume monotonic).
+
+    Assuming that the input x is the bounding exterior (main) mesh, this returns
+    the interior (half) mesh locations and the cell centered spacings for each.
+
+    The spacing BCs for cells at the boundary assume you are doing intergrals --> use half.
+
+    :param x: 1D numpy array of grid locations.
+    """
+    # Compute the interior (half) mesh positions
+    xh = 0.5*(x[1:] + x[0:-1])
+
+    # Compute the spacing centered around the interior half mesh
+    dxh = x[1:] - x[0:-1]
+
+    # Compute the spacing centered on the bounding (main) mesh, interior first
+    dx = xh[1:] - xh[0:-1]
+
+    # Add the boundary points (half spacing)
+    dx = np.concatenate([[xh[0] - x[0]], dx, [x[-1] - xh[-1]]])
+
+    return xh, dx, dxh
 
 
 def combine_maps(map_list, chd_map_list=None, mu_cutoff=0.0, mu_merge_cutoff=None, del_mu=None):
@@ -554,5 +671,3 @@ def combine_timewgt_maps(weight, sum_wgt, map_list, chd_map_list=None, mu_cutoff
             sum_wgt += weight
 
     return euv_combined, chd_combined, sum_wgt
-
-
