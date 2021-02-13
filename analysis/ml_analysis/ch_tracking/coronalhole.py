@@ -1,5 +1,5 @@
 """
-Author: Opal Issan. February 3rd, 2021
+Author: Opal Issan. February 13th, 2021.
 
 A data structure for a coronal hole.
 """
@@ -34,9 +34,28 @@ class CoronalHole:
         }
 
     def insert_number_frame(self, frame_num):
-        """ insert the frame id the coronal hole appeared. """
+        """Insert the frame id the coronal hole appeared.
+
+        Parameters
+        ----------
+        frame_num: int
+            Frame number in video/data base.
+
+        Returns
+        -------
+        None
+        """
         self.frames.append(frame_num)
 
     def insert_contour_list(self, contour):
-        """insert the contour associated with this coronal hole. """
+        """Insert the contour associated with this coronal hole.
+
+        Parameters
+        ----------
+        contour - Contour object. see contour.py
+
+        Returns
+        -------
+        None
+        """
         self.contour_list.append(contour)

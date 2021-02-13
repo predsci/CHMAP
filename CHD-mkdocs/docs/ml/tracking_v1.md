@@ -70,7 +70,7 @@ input = coronal hole detection image.
 ![](images/CoronalHoleTracking.png)
 
 
-# January 19th notes - TODO List. 
+## January 19th notes - TODO List. 
 1. Add periodicity to the tracking algorithm otherwise a coronal hole center will be falsified. 
 See figure below:
 ![](images/ch_tracking_jan19.png)
@@ -78,3 +78,31 @@ See figure below:
 2. Print/save all features to a log file. 
 
 3. Match coronal holes based on previous 5 frames!
+
+## Projection Analysis. 
+
+In lat-lon projection:  
+
+ * z < -1/2 or z > 1/2. 
+        
+  $x = \rho \sin(\theta)\cos(\phi)$,
+  $y = \rho \sin(\theta)\sin(\phi)$,
+  $z = \rho \cos(\theta)$,
+  where $\rho = 1$. 
+  
+  $\theta$ < $\pi/4$ or  $\theta$ > $3\pi/4$. 
+
+![](images/projection_lat_lon.png)
+
+In polar projection: z < -1/2 or z > 1/2. 
+
+[1 0 0, 0 0 -1, 0 1 0] $\cdot$ [$\rho \sin(\theta)\cos(\phi)$, $\rho \sin(\theta)\sin(\phi)$, $\rho \cos(\theta)$] = 
+[ $\rho \sin(\theta)\cos(\phi)$, - $\rho \cos(\theta)$, $\rho \sin(\theta)\sin(\phi)$]. 
+
+Then, $\rho \sin(\theta)\sin(\phi)$ < -0.5 or $\rho \sin(\theta)\sin(\phi)$ > 0.5
+
+![](images/polar_projection_distort_2.png)
+
+![](images/polar_projection_distort.png)
+
+

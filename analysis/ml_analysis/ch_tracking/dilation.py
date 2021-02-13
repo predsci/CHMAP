@@ -17,7 +17,7 @@ if __name__ == "__main__":
     n_t, n_p = np.shape(image)
 
     # image division.
-    nd = 10
+    nd = 1
     dt = int(np.shape(image)[0] / nd)
 
     # initialize new image.

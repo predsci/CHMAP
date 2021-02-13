@@ -20,7 +20,7 @@ class CoronalHoleDB:
     # contour binary threshold.
     BinaryThreshold = 200
     # coronal hole area threshold.
-    AreaThreshold = 1e-2
+    AreaThreshold = 1e-3
 
     def __init__(self):
         # list of Contours that are part of this CoronalHole Object.
@@ -81,7 +81,7 @@ class CoronalHoleDB:
         rows = new_index (curr)
         columns = old_index (prev)
         """
-        return dist.cdist(curr.centroid_list, prev.centroid_list)
+        return dist.cdist(curr, prev)
 
     def _create_priority_queue(self, centroid_curr, centroid_prev):
         """ arrange the coronal hole matches in order.
@@ -106,7 +106,7 @@ class CoronalHoleDB:
                 contour_list[ii] = self._assign_color_coronal_hole(ch=contour_list[ii])
                 # add Coronal Hole to database.
                 self._insert_new_contour_to_dict(contour=contour_list[ii])
-            self.p1 = Frame(contour_list=contour_list)
+            self.p1 = Frame(contour_list=contour_list, identity=self.frame_num)
 
         # match coronal holes to p1.
         else:
@@ -132,7 +132,7 @@ class CoronalHoleDB:
                 self._insert_new_contour_to_dict(contour=contour_list[ii])
 
             # save contour list
-            self.update_previous_frames(frame=Frame(contour_list=contour_list))
+            self.update_previous_frames(frame=Frame(contour_list=contour_list, identity=self.frame_num))
 
     def _insert_new_contour_to_dict(self, contour):
         """ insert a new contour to dict. """
@@ -215,13 +215,13 @@ class CoronalHoleDB:
         """
         # loop over each coronal hole and check if it is on the periodic border.
         ii = 0
-        while ii < len(contour_list) - 2:
+        while ii <= len(contour_list) - 2:
             c1 = contour_list[ii]
             # check if it overlaps phi=0.
             if c1.periodic_at_zero:
                 # check for all other periodic 2pi.
                 jj = ii + 1
-                while jj < len(contour_list) - 1:
+                while jj <= len(contour_list) - 1:
                     c2 = contour_list[jj]
                     if c2.periodic_at_2pi:
                         # get interval of latitude at 0.
@@ -235,13 +235,13 @@ class CoronalHoleDB:
                             c1 = contour_list[ii]
                             contour_list.remove(c2)
                             ii += -1
-                        jj += 1
+                    jj += 1
 
             # check if it overlaps phi=2pi.
             if c1.periodic_at_2pi:
                 # check for all other periodic 0.
                 jj = ii + 1
-                while jj < len(contour_list) - 1:
+                while jj <= len(contour_list) - 1:
                     c2 = contour_list[jj]
                     if c2.periodic_at_zero:
                         # get interval of latitude at 2pi.
@@ -254,7 +254,7 @@ class CoronalHoleDB:
                             contour_list[ii] = self._merge_contours(c1=c1, c2=c2)
                             contour_list.remove(c2)
                             ii += -1
-                        jj += 1
+                    jj += 1
             ii += 1
         return contour_list
 
@@ -272,7 +272,7 @@ class CoronalHoleDB:
         # update c1 area.
         c1.area = c1.area + c2.area
         # update c1 pixel centroid.
-        c1.pixel_centroid = c1.compute_pixel_centroid()
+        c1.pixel_centroid = c1.compute_pixel_centroid
         # update bounding box.
         c1.straight_box = np.append(c1.straight_box, c2.straight_box)
         # update bounding box area.
@@ -283,7 +283,7 @@ class CoronalHoleDB:
     def _remove_small_coronal_holes(contour_list):
         """ Remove all contours that are smaller than AreaThreshold. """
         ii = 0
-        while ii < len(contour_list) - 1:
+        while ii < len(contour_list):
             if contour_list[ii].area < CoronalHoleDB.AreaThreshold:
                 contour_list.remove(contour_list[ii])
                 ii += -1
@@ -294,4 +294,25 @@ class CoronalHoleDB:
         """ Remove small coronal holes and force periodicity. """
         contour_list = self._remove_small_coronal_holes(contour_list=contour_list)
         return self._force_periodicity(contour_list=contour_list)
+
+    @staticmethod
+    def kernel_width(t, num):
+        """ The dilation kernel width based on latitude.
+        :type t: float
+        :type num: int
+        :return int
+        """
+        # piecewise function.
+        alpha = np.arcsin(num/Contour.n_p)
+        # due to symmetry.
+        beta = np.pi - alpha
+        # loop over each interval.
+        if alpha < t < beta:
+            return int(num/np.sin(t))
+        elif 0 <= t <= alpha:
+            return Contour.n_p
+        elif beta <= t <= np.pi:
+            return Contour.n_p
+        else:
+            raise Exception("latitude value is invalid.")
 
