@@ -5,9 +5,11 @@ code for creation of IIT histograms and saving to database
 """
 
 import os
+os.environ["OMP_NUM_THREADS"] = "4"  # limit number of threads numpy can spawn
 import time
 import datetime
 import numpy as np
+
 from settings.app import App
 from modules.DB_funs import init_db_conn
 import modules.DB_funs as db_funcs
@@ -17,8 +19,8 @@ import analysis.lbcc_analysis.LBCC_theoretic_funcs as lbcc_funcs
 
 ###### ------ UPDATEABLE PARAMETERS ------- #######
 # TIME RANGE FOR LBC CORRECTION AND HISTOGRAM CREATION
-lbc_query_time_min = datetime.datetime(2008, 3, 1, 0, 0, 0)
-lbc_query_time_max = datetime.datetime(2008, 3, 2, 0, 0, 0)
+lbc_query_time_min = datetime.datetime(2011, 10, 31, 0, 0, 0)
+lbc_query_time_max = datetime.datetime(2012, 2, 2, 0, 0, 0)
 
 # define instruments
 inst_list = ["AIA", "EUVI-A", "EUVI-B"]
@@ -65,6 +67,9 @@ meth_name = "IIT"
 meth_desc = "IIT Fit Method"
 method_id = db_funcs.get_method_id(db_session, meth_name, meth_desc, var_names=None, var_descs=None, create=True)
 
+# determine date of first AIA image
+min_aia_image = db_session.query(db_class.EUV_Images.date_obs)
+
 for instrument in inst_list:
     print("Beginning loop for instrument:", instrument)
     # query EUV images
@@ -72,9 +77,9 @@ for instrument in inst_list:
     image_pd_all = db_funcs.query_euv_images(db_session=db_session, time_min=lbc_query_time_min,
                                              time_max=lbc_query_time_max, instrument=query_instrument)
     # query LBCC histograms
-    hist_pd = db_funcs.query_hist(db_session, meth_id=method_id[1], n_mu_bins=n_mu_bins,
-                                  n_intensity_bins=n_intensity_bins, lat_band=lat_band, time_min=lbc_query_time_min,
-                                  time_max=lbc_query_time_max, instrument=instrument)
+    hist_pd = db_funcs.query_hist(db_session, meth_id=method_id[1], n_intensity_bins=n_intensity_bins,
+                                  lat_band=lat_band, time_min=lbc_query_time_min,
+                                  time_max=lbc_query_time_max, instrument=query_instrument)
 
     # compare image results to hist results based on image_id
     in_index = image_pd_all.image_id.isin(hist_pd.image_id)
@@ -99,8 +104,13 @@ for instrument in inst_list:
         #                                                                         image_row=row,
         #                                                                         n_intensity_bins=n_intensity_bins,
         #                                                                         R0=R0)
+
+
         original_los, lbcc_image, mu_indices, use_indices, theoretic_query = lbcc_funcs.apply_lbc_2(
             db_session, hdf_data_dir, image_row=row, n_intensity_bins=n_intensity_bins, R0=R0)
+        # check that image load and LBCC application finished successfully
+        if original_los is None:
+            continue
 
         # calculate IIT histogram from LBC
         hist = psi_d_types.LBCCImage.iit_hist(lbcc_image, lat_band, log10)

@@ -216,7 +216,8 @@ class Histogram(Base):
     intensity_bin_edges = Column(LargeBinary)
     hist = Column(LargeBinary)
 
-    __table_args__ = (Index('hist_index', "date_obs", "meth_id", "instrument", "wavelength"),
+    __table_args__ = (Index('hist_index', "date_obs", "meth_id", "lat_band", "instrument", "n_mu_bins",
+                            "n_intensity_bins", "wavelength"),
                       Index('hist_unique', "image_id", "meth_id", "n_mu_bins", "n_intensity_bins", "lat_band",
                             unique=True)
                       )

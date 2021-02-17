@@ -15,8 +15,8 @@ import modules.datatypes as psi_d_types
 ###### ------ PARAMETERS TO UPDATE -------- ########
 
 # TIME RANGE
-hist_query_time_min = datetime.datetime(2012, 1, 1, 0, 0, 0)
-hist_query_time_max = datetime.datetime(2013, 1, 1, 0, 0, 0)
+hist_query_time_min = datetime.datetime(2020, 1, 1, 0, 0, 0)
+hist_query_time_max = datetime.datetime(2021, 1, 1, 0, 0, 0)
 
 # define instruments
 inst_list = ["AIA", "EUVI-A", "EUVI-B"]
@@ -84,7 +84,7 @@ for instrument in inst_list:
     # query LBCC histograms
     hist_pd = query_hist(db_session, meth_id=method_id[1], n_mu_bins=n_mu_bins, n_intensity_bins=n_intensity_bins,
                          lat_band=lat_band, time_min=hist_query_time_min, time_max=hist_query_time_max,
-                         instrument=instrument)
+                         instrument=query_instrument)
 
     # compare image results to hist results based on image_id
     in_index = query_pd_all.image_id.isin(hist_pd.image_id)
@@ -103,7 +103,12 @@ for instrument in inst_list:
             print("Warning: Image # " + str(row.image_id) + " does not have an associated hdf file. Skipping")
             continue
         hdf_path = os.path.join(hdf_data_dir, row.fname_hdf)
-        los_temp = psi_d_types.read_los_image(hdf_path)
+        # attempt to open and read file
+        try:
+            los_temp = psi_d_types.read_los_image(hdf_path)
+        except:
+            print("Something went wrong opening: ", hdf_path, ". Skipping")
+            continue
         # add coordinates to los object
         los_temp.get_coordinates(R0=R0)
         # perform 2D histogram on mu and image intensity

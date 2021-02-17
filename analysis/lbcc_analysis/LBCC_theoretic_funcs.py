@@ -313,9 +313,17 @@ def apply_lbc_2(db_session, hdf_data_dir, image_row, n_intensity_bins=200, R0=1.
     ###### GET LOS IMAGES COORDINATES (DATA) #####
     if image_row.fname_hdf == "":
         print("Warning: Image # " + str(image_row.image_id) + " does not have an associated hdf file. Skipping")
-        pass
+        # return None for all outputs
+        return None, None, None, None, None
     hdf_path = os.path.join(hdf_data_dir, image_row.fname_hdf)
-    original_los = psi_d_types.read_los_image(hdf_path)
+    # attempt to open and read file
+    try:
+        original_los = psi_d_types.read_los_image(hdf_path)
+    except:
+        print("Something went wrong opening: ", hdf_path, ". Skipping")
+        # return None for all outputs
+        return None, None, None, None, None
+
     original_los.get_coordinates(R0=R0)
     # query variables for theoretic-based LBCC (interpolate between dates)
     theoretic_query = db_funcs.get_correction_pars(db_session, meth_name, date_obs=original_los.info['date_string'],

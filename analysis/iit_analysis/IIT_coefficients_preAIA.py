@@ -1,18 +1,15 @@
 
 """
-code to calculate IIT correction coefficients and save to database
-    - Default behavior pre-AIA is to use first 6 months of AIA as the reference
-        for Stereo A and B.  A separate script IIT_coefficients_preAIA.py
-        deletes all pre-AIA coefficients and inserts pseudo-AIA parameters for
-        Stereo A and then fits Stereo B to the adjusted Stereo A.
-
+code to calculate IIT correction coefficients for EUVI-A and EUVI-B prior to AIA coming online
 """
 
 import os
 import time
 import datetime
 import numpy as np
+import pandas as pd
 from sqlalchemy import func
+import pickle
 
 from settings.app import App
 import modules.DB_funs as db_funcs
@@ -24,15 +21,22 @@ import modules.lbcc_funs as lbcc
 ####### -------- updateable parameters ------ #######
 
 # TIME RANGE FOR FIT PARAMETER CALCULATION
-calc_query_time_min = datetime.datetime(2007, 4, 1, 0, 0, 0)
-calc_query_time_max = datetime.datetime(2020, 8, 1, 0, 0, 0)
+# Determined automatically here
+# calc_query_time_min = datetime.datetime(2007, 4, 1, 0, 0, 0)
+# calc_query_time_max = datetime.datetime(2020, 8, 1, 0, 0, 0)
 
 weekday = 0  # start at 0 for Monday
 number_of_days = 180
 
 # define instruments
-inst_list = ["AIA", "EUVI-A", "EUVI-B"]
-ref_inst = "AIA"
+inst_list = ["EUVI-A", "EUVI-B"]
+ref_inst = "EUVI-A"
+
+# path to alpha and x values that transform EUVI-A to pseudo AIA
+IIT_pars_file2 = '/Users/turtle/Dropbox/MyNACD/analysis/iit_analysis/IIT_pseudo-AIA_pars.pkl'
+
+# choose if Stereo A alpha and x are shifted to earliest AIA fit point
+pseudo_shifted = True
 
 # declare map and binning parameters
 n_mu_bins = 18
@@ -70,10 +74,70 @@ elif use_db == 'mysql-Q':
     # setup database connection to MySQL database on Q
     db_session = db_funcs.init_db_conn(db_name=use_db, chd_base=db_class.Base, user=user, password=password)
 
+# determine first AIA LBC combo
+aia_combo_query = db_session.query(func.min(db_class.Image_Combos.date_mean),
+                                   func.max(db_class.Image_Combos.date_mean))\
+    .filter(db_class.Image_Combos.instrument == "AIA", db_class.Image_Combos.meth_id == 1)
+aia_combo_date = pd.read_sql(aia_combo_query.statement, db_session.bind)
+
+# determine first EUVI-A image
+sterA_query = db_session.query(func.min(db_class.EUV_Images.date_obs))\
+    .filter(db_class.EUV_Images.instrument == "EUVI-A")
+sterA_min_date = pd.read_sql(sterA_query.statement, db_session.bind)
+
+# load pseudo-AIA IIT pars for EUVI-A
+file = open(IIT_pars_file2, 'rb')
+iit_dict = pickle.load(file)
+file.close()
+# determine dates to evaluate
+par_dates = iit_dict['moving_avg_centers']
+par_dates_index = (par_dates >= sterA_min_date.iloc[0, 0]) &\
+                  (par_dates <= aia_combo_date.iloc[0, 0])
+moving_avg_centers = par_dates[par_dates_index]
+moving_width = datetime.timedelta(days=number_of_days)
+# extract pre-calculated alpha and x values
+if pseudo_shifted:
+    sterA_alpha = iit_dict['pseudo_alpha_shift']
+    sterA_x = iit_dict['pseudo_x_shift']
+else:
+    sterA_alpha = iit_dict['pseudo_alpha_shift']
+    sterA_x = iit_dict['pseudo_x_shift']
+sterA_alpha = sterA_alpha[par_dates_index]
+sterA_x = sterA_x[par_dates_index]
+
+calc_query_time_min = sterA_min_date.iloc[0, 0]
+calc_query_time_max = aia_combo_date.iloc[0, 0]
+
 # create IIT method
 meth_name = "IIT"
 meth_desc = "IIT Fit Method"
 method_id = db_funcs.get_method_id(db_session, meth_name, meth_desc, var_names=None, var_descs=None, create=False)
+
+# delete any existing IIT parameters in this range and in inst_list
+print("Deleting existing IIT parameters for pre-AIA timeframe.")
+combo_query = db_session.query(db_class.Image_Combos).filter(
+    db_class.Image_Combos.meth_id == method_id[1],
+    db_class.Image_Combos.date_mean.between(calc_query_time_min - datetime.timedelta(days=7),
+                                            calc_query_time_max),
+    db_class.Image_Combos.instrument.in_(inst_list)
+)
+# combo_query.count()
+del_combos = pd.read_sql(combo_query.statement, db_session.bind)
+# first, delete variables in Var_Vals table
+del_par_query = db_session.query(db_class.Var_Vals).filter(
+    db_class.Var_Vals.combo_id.in_(del_combos.combo_id))
+num_pars = del_par_query.delete(synchronize_session=False)
+db_session.commit()
+# second, delete image-combo associations
+del_query = db_session.query(db_class.Image_Combo_Assoc).filter(
+    db_class.Image_Combo_Assoc.combo_id.in_(del_combos.combo_id))
+num_assoc = del_query.delete(synchronize_session=False)
+db_session.commit()
+# finally, delete the combos
+del_combo_query = db_session.query(db_class.Image_Combos).filter(
+    db_class.Image_Combos.combo_id.in_(del_combos.combo_id))
+num_del = del_combo_query.delete(synchronize_session=False)
+db_session.commit()
 
 #### GET REFERENCE INFO FOR LATER USE ####
 # get index number of reference instrument
@@ -99,28 +163,28 @@ mu_bin_edges, intensity_bin_edges, ref_full_hist = psi_d_types.binary_to_hist(hi
                                                                               n_mu_bins=None,
                                                                               n_intensity_bins=n_intensity_bins)
 # calculate the moving average centers
-moving_avg_centers, moving_width = lbcc.moving_averages(calc_query_time_min, calc_query_time_max, weekday,
-                                                        number_of_days)
-# determine date of first AIA image
-min_ref_time = db_session.query(func.min(db_class.EUV_Images.date_obs)).filter(
-    db_class.EUV_Images.instrument == ref_inst
-).all()
-base_ref_min    = min_ref_time[0][0]
-base_ref_center = base_ref_min + datetime.timedelta(days=number_of_days)/2
-base_ref_max    = base_ref_center + datetime.timedelta(days=number_of_days)/2
-if calc_query_time_min < base_ref_center:
-    # generate histogram for first year of reference instrument
-    ref_base_hist = ref_full_hist[:, (ref_hist_pd['date_obs'] >= str(base_ref_min)) & (
-            ref_hist_pd['date_obs'] <= str(base_ref_max))]
-else:
-    ref_base_hist = None
+# moving_avg_centers, moving_width = lbcc.moving_averages(calc_query_time_min, calc_query_time_max, weekday,
+#                                                         number_of_days)
+# # determine date of first AIA image
+# min_ref_time = db_session.query(func.min(db_class.EUV_Images.date_obs)).filter(
+#     db_class.EUV_Images.instrument == ref_inst
+# ).all()
+# base_ref_min    = min_ref_time[0][0]
+# base_ref_center = base_ref_min + datetime.timedelta(days=number_of_days)/2
+# base_ref_max    = base_ref_center + datetime.timedelta(days=number_of_days)/2
+# if calc_query_time_min < base_ref_center:
+#     # generate histogram for first year of reference instrument
+#     ref_base_hist = ref_full_hist[:, (ref_hist_pd['date_obs'] >= str(base_ref_min)) & (
+#             ref_hist_pd['date_obs'] <= str(base_ref_max))]
+# else:
+#     ref_base_hist = None
 
 for inst_index, instrument in enumerate(inst_list):
     # check if this is the reference instrument
     if inst_index == ref_index:
         # calculate the moving average centers
-        moving_avg_centers, moving_width = lbcc.moving_averages(calc_query_time_min, calc_query_time_max, weekday,
-                                                                number_of_days)
+        # moving_avg_centers, moving_width = lbcc.moving_averages(calc_query_time_min, calc_query_time_max, weekday,
+        #                                                         number_of_days)
         # loop through moving average centers
         for date_index, center_date in enumerate(moving_avg_centers):
             print("Starting calculations for", instrument, ":", center_date)
@@ -137,8 +201,8 @@ for inst_index, instrument in enumerate(inst_list):
                     ref_hist_pd['date_obs'] <= str(max_date))]
 
             # save alpha/x as [1, 0] for reference instrument
-            alpha = 1
-            x = 0
+            alpha = sterA_alpha[date_index]
+            x = sterA_x[date_index]
             db_funcs.store_iit_values(db_session, ref_pd_use, meth_name, meth_desc, [alpha, x], create)
     else:
         # query euv_images for correct carrington rotation
@@ -153,14 +217,14 @@ for inst_index, instrument in enumerate(inst_list):
         inst_time_min = rot_images.date_obs.min()
         inst_time_max = rot_images.date_obs.max()
         # if Stereo A or B has images before AIA, calc IIT for those weeks
-        if inst_time_min > calc_query_time_min:
-            all_images = db_funcs.query_euv_images(db_session, time_min=calc_query_time_min,
-                                                   time_max=calc_query_time_max, instrument=query_instrument)
-            if all_images.date_obs.min() < inst_time_min:
-                inst_time_min = all_images.date_obs.min()
-
-        moving_avg_centers, moving_width = lbcc.moving_averages(inst_time_min, inst_time_max, weekday,
-                                                                number_of_days)
+        # if inst_time_min > calc_query_time_min:
+        #     all_images = db_funcs.query_euv_images(db_session, time_min=calc_query_time_min,
+        #                                            time_max=calc_query_time_max, instrument=query_instrument)
+        #     if all_images.date_obs.min() < inst_time_min:
+        #         inst_time_min = all_images.date_obs.min()
+        #
+        # moving_avg_centers, moving_width = lbcc.moving_averages(inst_time_min, inst_time_max, weekday,
+        #                                                         number_of_days)
         inst_hist_pd = db_funcs.query_hist(db_session=db_session, meth_id=method_id[1],
                                            n_intensity_bins=n_intensity_bins,
                                            lat_band=lat_band,
@@ -181,15 +245,12 @@ for inst_index, instrument in enumerate(inst_list):
             # determine time range based off moving average centers
             min_date = center_date - moving_width / 2
             max_date = center_date + moving_width / 2
-            # get proper time-range of reference histograms
-            if center_date <= base_ref_center:
-                # if date is earlier than reference (AIA) first year, use reference (AIA) first year
-                ref_hist_use = ref_base_hist
-            else:
-                # get indices for calculation of reference histogram
-                ref_hist_ind = (ref_hist_pd['date_obs'] >= str(min_date)) & (ref_hist_pd['date_obs'] <= str(max_date))
-                ref_hist_use = ref_full_hist[:, ref_hist_ind]
-
+            # get indices for calculation of reference histogram
+            ref_hist_ind = (ref_hist_pd['date_obs'] >= str(min_date)) & (ref_hist_pd['date_obs'] <= str(max_date))
+            ref_hist_use = ref_full_hist[:, ref_hist_ind]
+            # recover pseudo-AIA alpha and x
+            ref_alpha = sterA_alpha[date_index]
+            ref_x = sterA_x[date_index]
 
             # get the correct date range to use for the instrument histogram
             inst_hist_ind = (inst_hist_pd['date_obs'] >= str(min_date)) & (inst_hist_pd['date_obs'] <= str(max_date))
@@ -208,10 +269,12 @@ for inst_index, instrument in enumerate(inst_list):
             # normalize reference histogram
             ref_sum = hist_ref.sum()
             norm_hist_ref = hist_ref / ref_sum
+            # use pseudo alpha and x to transform ref_hist
+            pseudo_hist_ref = lbcc.LinTrans_1Dhist(norm_hist_ref, intensity_bin_edges, ref_alpha, ref_x)
 
             # get reference/fit peaks
-            ref_peak_index = np.argmax(norm_hist_ref)  # index of max value of hist_ref
-            ref_peak_val = norm_hist_ref[ref_peak_index]  # max value of hist_ref
+            ref_peak_index = np.argmax(pseudo_hist_ref)  # index of max value of hist_ref
+            ref_peak_val = pseudo_hist_ref[ref_peak_index]  # max value of hist_ref
             fit_peak_index = np.argmax(norm_hist_fit)  # index of max value of hist_fit
             fit_peak_val = norm_hist_fit[fit_peak_index]  # max value of hist_fit
             # estimate correction coefficients that match fit_peak to ref_peak
@@ -220,7 +283,7 @@ for inst_index, instrument in enumerate(inst_list):
             init_pars = np.asarray([alpha_est, x_est], dtype=np.float64)
 
             # calculate alpha and x
-            alpha_x_parameters = iit.optim_iit_linear(norm_hist_ref, norm_hist_fit, intensity_bin_edges,
+            alpha_x_parameters = iit.optim_iit_linear(pseudo_hist_ref, norm_hist_fit, intensity_bin_edges,
                                                       init_pars=init_pars)
             # save alpha and x to database
             db_funcs.store_iit_values(db_session, inst_pd_use, meth_name, meth_desc,
@@ -232,3 +295,5 @@ time_tot = str(datetime.timedelta(minutes=tot_time))
 
 print("Inter-instrument transformation fit parameters have been calculated and saved to the database.")
 print("Total elapsed time for IIT fit parameter calculation: " + time_tot)
+
+db_session.close()
