@@ -1,51 +1,54 @@
 """
-Author: Opal Issan, Jan 18th, 2021.
+Author: Opal Issan, Feb 13th, 2021.
 
-A data structure for a coronal hole contour in a polar projection.
+A data structure for a coronal hole contour.
 List of properties:                                         || Name of variable.
-- centroid pixel location (x,y) in polar projection.        || polar_pixel_centroid
-- centroid pixel location (x,y) in lat-lon projection.      || lat_lon_pixel_centroid
-- centroid physical location (phi, theta) - TODO.           || lat_lon_phys_centroid
-- contour - pixel list in polar projection.                 || contour
-- contour physical area. - TODO                             || area
-- bounding rectangle straight.                              || straight_box
+- centroid pixel location (x,y) in spherical coordinates    || pixel_centroid
+- centroid physical location (phi, theta)                   || phys_centroid
+- contour physical area                                     || area
+- bounding rectangle straight                               || straight_box
+
+# TODO: Compute arclength, tilt, rotated_box, etc...
+
+- periodicity (handled by several functions)
 
 * NOTE:
-- projection: "polar" or "lat-lon"
-            * "polar" projection refers to a 2d projection when the poles are at the equator.
-              see function ch_db/map_new_polar_projection for more information.
-            * "lat-lon" projection refers to a 2d projection described by longitude and latitude locations.
-
 - n_t and n_p : image dimensions.
+- Mesh : image mesh grid.
 """
 
 import numpy as np
-import cv2
 import json
 
 
 class Contour:
     """ Coronal Hole Single Contour Object Data Structure.
-    :parameter contour = cv2 object contour of the detected coronal hole in polar projection. """
+    :parameter contour_pixels = coronal hole pixel location.  """
 
     # image dimensions latitude and longitude.
     n_t, n_p = None, None
+    Mesh = None  # This will be an object of type MeshMap with information about the input image mesh grid.
 
-    def __init__(self, contour):
-        # contour points of the coronal hole in polar projection.
-        self.contour = contour
+    def __init__(self, contour_pixels):
+        # save contour inner pixels. shape: [list(row), list(column)].
+        self.contour_pixels_theta = contour_pixels[0]
+        self.contour_pixels_phi = contour_pixels[1]
 
-        # centroid pixel location in polar projection for coronal hole matching (x,y).
-        self.polar_pixel_centroid = self.polar_projection_pixel_centroid()
-
-        # centroid pixel location in lat-lon projection (x,y).
-        self.lat_lon_pixel_centroid = None
+        # contour physical area based on lat-lon contour_pixels.
+        # sum(d𝐴=𝑟^2 * sin𝜃 * d𝜙 * d𝜃)
+        self.area = np.sum(Contour.Mesh.da[self.contour_pixels_phi, self.contour_pixels_theta])
 
         # contour centroid physical location in lat-lon projection. (phi, theta)
-        self.lat_lon_phys_centroid = None
+        self.phys_centroid = None
 
-        # compute the bounding box upper left (x, y, w, h).
-        self.straight_box = None
+        # centroid pixel location in polar projection for coronal hole matching (x,y).
+        self.pixel_centroid = self.compute_pixel_centroid()
+
+        # compute the bounding box upper left corner, width, height (x, y, w, h).
+        self.straight_box = self.compute_straight_bounding_rectangle()
+
+        # contour straight bounding box physical area based on lat-lon contour_pixels.
+        self.box_area = self.compute_straight_box_area()
 
         # the unique identification number of this coronal hole (should be a natural number).
         self.id = None
@@ -53,14 +56,9 @@ class Contour:
         # the unique color for identification of this coronal hole rbg [r, b, g].
         self.color = None
 
-        # save contour inner pixels. shape: [list(y), list(x)].
-        self.contour_pixels = None
-
-        # contour physical area based on lat-lon contour_pixels.
-        self.area = 0
-
-        # contour straight bounding box physical area based on lat-lon contour_pixels.
-        self.box_area = 0
+        # periodic label.
+        self.periodic_at_zero = self.is_periodic_zero()
+        self.periodic_at_2pi = self.is_periodic_2_pi()
 
     def __str__(self):
         return json.dumps(
@@ -70,135 +68,211 @@ class Contour:
         return {
             'id': self.id,
             'color': self.color,
-            'centroid': self.lat_lon_phys_centroid,
+            'centroid_spherical': self.phys_centroid,
+            'centroid_pixel': self.pixel_centroid,
             'area': self.area,
-            'box': self.straight_box,
+            'box': self.straight_box.tolist(),
             'box_area': self.box_area
         }
 
-    def polar_projection_pixel_centroid(self):
-        """ given the object contour we can compute the pixel center in polar projection.
-         returns (x,y) pixel coordinates. """
-        x = int(np.mean(self.contour[:, :, 0]))
-        y = int(np.mean(self.contour[:, :, 1]))
-        return tuple((x, y))
+    def compute_pixel_centroid(self):
+        """ Given the coronal hole pixel location we can compute the pixel center in polar projection.
 
-    def compute_contour_pixel_perimeter(self):
-        """ compute the contour pixel arc length.
-        Second argument specify whether shape is a closed contour (if passed True), or just a curve."""
-        return cv2.arcLength(self.contour, True)
+        Returns
+        -------
+        (t, p) image pixel coordinates
+        """
+        try:
+            # convert to cartesian coordinates.
+            x = Contour.Mesh.x2d[self.contour_pixels_phi, self.contour_pixels_theta]
+            y = Contour.Mesh.y2d[self.contour_pixels_phi, self.contour_pixels_theta]
+            z = Contour.Mesh.z2d[self.contour_pixels_phi, self.contour_pixels_theta]
+
+            # access the area of each pixel of the image grid.
+            A = Contour.Mesh.da[self.contour_pixels_phi, self.contour_pixels_theta]
+
+            # compute the weighted mean of each coordinate and convert back to spherical coordinates.
+            x_mean = A*x/self.area
+            y_mean = A*y/self.area
+            z_mean = A*z/self.area
+
+            # convert back to spherical coordinates.
+            self.phys_centroid = self._cartesian_centroid_to_spherical_coordinates(x=x_mean, y=y_mean, z=z_mean)
+
+            # return image pixel coordinates.
+            return self._spherical_coordinates_to_image_coordinates(*self.phys_centroid)
+
+        except ArithmeticError:
+            raise ArithmeticError('Contour pixels are invalid. ')
+
+    def _image_pixel_location_to_cartesian(self, t, p):
+        """ Convert longitude latitude image pixel location to cartesian coordinates.
+        x = ρ sinθ cosφ
+        y = ρ sinθ sinφ
+        z = ρ cosθ
+
+        Parameters
+        ----------
+        t: list or numpy array
+        p: list or numpy array
+
+        Returns
+        -------
+        x, y, z - all numpy arrays
+        """
+        # convert image pixel location to spherical coordinates.
+        theta, phi = self._image_coordinates_to_spherical_coordinates(t=t, p=p)
+        # return x, y, z.
+        return np.sin(theta) * np.cos(phi), np.sin(theta) * np.sin(phi), np.cos(theta)
+
+    @staticmethod
+    def _cartesian_centroid_to_spherical_coordinates(x, y, z):
+        """Convert the cartesian centroid to spherical coordinates.
+        θ = arccos(z/ρ)
+        𝜙 = arctan(y/x)
+
+        Parameters
+        ----------
+        x: float
+        y: float
+        z: float
+
+        Returns
+        -------
+        list t: float , p: float
+        """
+        # convert from cartesian to spherical.
+        t = np.arccos(z/np.sqrt(np.power(x, 2) + np.power(y, 2) + np.power(z, 2)))
+        p = np.arctan2(y, x)
+        # Change phi range from [-pi,pi] to [0,2pi]
+        if p < 0:
+            p += 2 * np.pi
+        return t, p
+
+    @staticmethod
+    def _spherical_coordinates_to_image_coordinates(t, p):
+        """Convert spherical coordinates to image coordinates.
+
+        Parameters
+        ----------
+        t: float
+        p: float
+
+        Returns
+        -------
+        t, p
+        """
+        if 0 <= p <= 2 * np.pi and 0 <= t <= np.pi:
+            return int(Contour.Mesh.interp_t2index(t)), int(Contour.Mesh.interp_p2index(p))
+        else:
+            raise ValueError('When converting spherical coordinates to image coordinates,'
+                             ' 0 <= phi < 2pi and 0 <= theta <= pi.')
+
+    @staticmethod
+    def _image_coordinates_to_spherical_coordinates(t, p):
+        """Convert image coordinates to spherical coordinates.
+
+        Parameters
+        ----------
+        t: int
+        p: int
+
+        Returns
+        -------
+        row, column spherical coordinates.
+        """
+
+        if 0 <= np.all(t) <= Contour.n_t and 0 <= np.all(p) <= Contour.n_p:
+            return Contour.Mesh.t[t], Contour.Mesh.p[p]
+        else:
+            raise ValueError('Image coordinates are out of input image dimensions.')
 
     def compute_straight_bounding_rectangle(self):
-        """straight rectangle, it does not consider the rotation of the object. So area of the bounding
+        """ Straight rectangle, it does not consider the rotation of the object. So area of the bounding
          rectangle won’t be minimum. These image coordinates are in lon-lat projection.
-         returns: upper left x, y, w, h """
-        if self.contour_pixels is None:
-            return None
 
-        else:
-            y_min = np.min(self.contour_pixels[0])
-            x_min = np.min(self.contour_pixels[1])
-            y_max = np.max(self.contour_pixels[0])
-            x_max = np.max(self.contour_pixels[1])
+        Returns
+        -------
+        upper left x, y, w, h
+        """
+        try:
+            y_min = np.min(self.contour_pixels_theta)
+            x_min = np.min(self.contour_pixels_phi)
+            y_max = np.max(self.contour_pixels_theta)
+            x_max = np.max(self.contour_pixels_phi)
+            return np.array([x_min, y_min, (x_max - x_min), (y_max - y_min)])
 
-        return np.array([x_min, y_min, (x_max - x_min), (y_max - y_min)])
+        except Exception:
+            raise ArithmeticError("contour pixel locations are invalid. ")
 
-    def compute_centroid_lon_lat_location(self):
-        """ compute the pixel location of the coronal hole center of mass. """
-        y_mean = int(np.mean(self.contour_pixels[0]))
-        x_mean = int(np.mean(self.contour_pixels[1]))
-        return tuple((x_mean, y_mean))
-
-    def centroid_lon_lat_phys_location(self):
-        """ compute the physical location of the coronal hole center of mass. """
-        if self.lat_lon_pixel_centroid is None:
-            return None
-        else:
-            x, y = self.lat_lon_pixel_centroid
-            return tuple((x * np.pi * 2 / self.n_p, np.pi - y * np.pi / self.n_t))
-
-    def contour_area(self):
-        """ compute the contour's area.
-        d𝐴=𝑟^2 * sin𝜃 * d𝜙 * d𝜃, let r be in solar radii."""
-        if self.contour_pixels is None:
-            return None
-        else:
-            # access y pixel coordinates.
-            y = self.contour_pixels[0]
-            # compute delta phi and delta theta.
-            dp, dt = np.pi * 2 / self.n_p, np.pi / self.n_t
-            # convert from image coordinates to spherical coordinates.
-            t = np.pi * np.ones(len(y)) - y * dt
-            # return dA.
-            return np.sum(np.sin(t) * dt * dp)
-
-    def straight_box_area(self):
-        """ compute the contour's straight bounding box area.
+    def compute_straight_box_area(self):
+        """ Compute the contour's straight bounding box area.
         d𝐴=𝑟^2 * sin𝜃 * d𝜙 * d𝜃, let r be in solar radii.
-        A = -r^2 * [cos(t1) - cos(t2)]*(p1 - p2)"""
-        if self.straight_box is None:
-            return None
-        else:
-            # compute delta phi and delta theta.
-            dp, dt = np.pi * 2 / self.n_p, np.pi / self.n_t
+        A = (cos(𝜃1) - cos(𝜃2)) * (𝜙1 - 𝜙2)
+
+        Returns
+        -------
+        float
+        """
+        try:
             # access left corner pixel coordinates and width and height.
             x, y, w, h = self.straight_box
             # convert from image coordinates to spherical coordinates.
-            t = np.pi - y * dt
-            h = h * dt
-            w = w * dp
-            return -1 * abs(w) * (np.cos(t) - np.cos(t - h))
+            t1 = Contour.Mesh.interp_t2dt(y)
+            t2 = Contour.Mesh.interp_p2dp(y - h)
+            p1 = Contour.Mesh.interp_t2dt(x + w)
+            p2 = Contour.Mesh.interp_t2dt(x)
+            return abs((p2 - p1) * (np.cos(t1) - np.cos(t2)))
 
+        except Exception:
+            raise ArithmeticError("Straight box coordinates, weight, or height are not valid.")
 
+    def is_periodic_zero(self):
+        """If the coronal hole detected at 0 (phi)
 
-    # def convert_polar_pixel_to_lon_lat_pixel(self, x, y):
-    #     """input x and y image coordinates in polar projection
-    #      and output x y image coordinates in lon-lat projection. """
-    #     t, p = y * np.pi / self.n_t, x * 2 * np.pi / self.n_p
-    #     t_val = np.arccos(-np.sin(t) * np.sin(p))
-    #     p_val = np.arctan2(np.cos(t), np.sin(t) * np.cos(p))
-    #     # Change phi range from [-pi,pi] to [0,2pi]
-    #     if p_val < 0:
-    #         p_val += 2 * np.pi
-    #     return tuple((int(p_val * self.n_p / (np.pi * 2)), int(t_val * self.n_t / np.pi)))
+        Returns
+        -------
+        boolean
+        """
+        # check if 0 pixel is included in the contour pixels.
+        if 0 in self.contour_pixels_phi:
+            return True
+        return False
 
-    # def map_contour_to_lat_lon(self, contour):
-    #     """ if projection is "polar" we need to convert it lat-lon projection. """
-    #     if projection == "lat-lon":
-    #         return contour
-    #     elif projection == "polar":
-    #         # create 1d arrays for spherical coordinates.
-    #         theta = np.linspace(np.pi, 0, self.n_t)
-    #         phi = np.linspace(0, 2 * np.pi, self.n_p)
-    #
-    #         # spacing in theta and phi.
-    #         delta_t = abs(theta[1] - theta[0])
-    #         delta_p = abs(phi[1] - phi[0])
-    #
-    #         # initialize new contour
-    #         new_contour = np.zeros((np.shape(contour)[0], 1,  2), dtype=np.int16)
-    #
-    #         # reshape contour
-    #         reshape_contour = contour.reshape((np.shape(contour)[0], 2))
-    #
-    #         # convert pixel location.
-    #         for ii, pixel in enumerate(reshape_contour):
-    #             p, t = phi[pixel[0]], theta[pixel[1]]
-    #             t_val = np.arccos(-np.sin(t) * np.sin(p))
-    #             p_val = np.arctan2(np.cos(t), np.sin(t) * np.cos(p))
-    #             # Change phi range from [-pi,pi] to [0,2pi]
-    #             if p_val < 0:
-    #                 p_val += 2 * np.pi
-    #             # new image coordinates.
-    #             new_contour[ii, :, :] = [[int(self.n_p - p_val / delta_p), int(t_val / delta_t)]]
-    #         return new_contour
+    def is_periodic_2_pi(self):
+        """If the coronal hole detected at 2 pi (phi)
 
-    # def compute_rot_bounding_rectangle(self):
-    #     """ Here, bounding rectangle is drawn with minimum area, so it considers the rotation also. """
-    #     rect = cv2.minAreaRect(self.contour)
-    #     box = np.int0(cv2.boxPoints(rect))
-    #     # convert box coordinates to lon-lat projection.
-    #     for ii in range(4):
-    #         x, y = box[ii, :]
-    #         box[ii, 0], box[ii, 1] = self.convert_polar_pixel_to_lon_lat_pixel(x=x, y=y)
-    #     return np.int0(box)
+        Returns
+        -------
+        boolean
+        """
+        # check if 2pi pixel is included in the contour pixels.
+        if (Contour.n_p - 1) in self.contour_pixels_phi:
+            return True
+        return False
+
+    def lat_interval_at_2_pi(self):
+        """Return the latitude pixel interval where the contour pixels are 2pi longitude.
+        This function is used to force periodicity.
+
+        Returns
+        -------
+        (min_lat, max_lat)- pixel image coordinates
+        """
+        if self.periodic_at_2pi:
+            mask = (self.contour_pixels_phi == int(Contour.n_p - 1))
+            index = np.argwhere(mask)
+            return np.min(self.contour_pixels_theta[index]), np.max(self.contour_pixels_theta[index])
+
+    def lat_interval_at_zero(self):
+        """Return the latitude pixel interval where the contour pixels are 0 longitude.
+        This function is used to force periodicity.
+
+        Returns
+        -------
+        (min_lat, max_lat) - pixel image coordinates
+        """
+        if self.periodic_at_zero:
+            mask = (self.contour_pixels_phi == 0)
+            index = np.argwhere(mask)
+            return np.min(self.contour_pixels_theta[index]), np.max(self.contour_pixels_theta[index])

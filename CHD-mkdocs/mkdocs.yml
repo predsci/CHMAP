@@ -33,7 +33,9 @@ nav:
       - Database for IIT: db/iit.md
       - Database for CHD Mapping: db/map.md
   - Coronal Hole Tracking and Predictions:
-      - Tracking Algorithm: ml/tracking.md
+      - Tracking Algorithm:
+          - Polar Projection: ml/tracking_v1.md
+          - Dilation and Erosion: ml/tracking_v2.md
       - Machine Learning Detection: ml/chd.md
       - CH-Net Future Frame Predictions: ml/pred.md
 

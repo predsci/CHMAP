@@ -1,4 +1,4 @@
-"""Author: Opal Issan, Jan 18th, 2021.
+"""Author: Opal Issan, Feb 3rd, 2021.
 
 A data structure for a frame - consists of a list of contours.
 
@@ -14,7 +14,7 @@ import json
 
 class Frame:
     """ Frame data structure. """
-    def __init__(self, contour_list):
+    def __init__(self, contour_list, identity):
         # list of Contours that are part of this CoronalHole Object.
         self.contour_list = contour_list
 
@@ -22,7 +22,7 @@ class Frame:
         self.centroid_list = self.compute_centroid_list()
 
         # the unique identification number of this frame.
-        self.id = None
+        self.id = identity
 
     def __str__(self):
         return json.dumps(
@@ -36,5 +36,10 @@ class Frame:
         }
 
     def compute_centroid_list(self):
-        """save the coronal hole centers in a list. """
-        return [ch.polar_pixel_centroid for ch in self.contour_list]
+        """save the coronal hole centers in a list.
+
+        Returns
+        -------
+        list of coronal hole centroids.
+        """
+        return [ch.pixel_centroid for ch in self.contour_list]
