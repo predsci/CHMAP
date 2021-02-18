@@ -25,7 +25,9 @@ the coronal hole and its convexity.
     
 ## Convex Hull
 Measure the convexity of the coronal hole by comparing of the convex hull vs the coronal hole area.
+* Do we want this?
 
 
 ## Tilt
+* Do I compute the angle between each pixel with respect to north? Then weighted average?
 TODO... 
