@@ -36,6 +36,7 @@ nav:
       - Tracking Algorithm:
           - Polar Projection: ml/tracking_v1.md
           - Dilation and Erosion: ml/tracking_v2.md
+          - Tracking Features: ml/tracking_features.md
       - Machine Learning Detection: ml/chd.md
       - CH-Net Future Frame Predictions: ml/pred.md
 

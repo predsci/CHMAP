@@ -64,8 +64,14 @@ Future research steps: find a way to classify merges of two coronal holes based 
 
 ### *Step 5*
 * Compute coronal hole features: 
-    - bounding box coordinates
     - centroid (calculated in cartesian coordinates then map back to spherical). 
     - coronal hole area
-    - bounding box area
+    - straight bounding box corners: straight rectangle that contains the coronal hole. 
+    - straight bounding box area: computed based on image mesh spacing (in spherical coordinates). 
+    - rotated bounding box coordinates: rectangle with minimum pixel area that contains the coronal hole. 
+    - rotated bounding box area: computed based on image mesh spacing (in spherical coordinates). 
+    - rotated bounding box angle: with respect to north and largest rect side. 
+    - convex hull: measure the convexity of the coronal hole by comparing the area.
+    - tilt: TODO.. 
+    
     - etc...
