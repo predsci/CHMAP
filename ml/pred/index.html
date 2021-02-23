@@ -682,6 +682,13 @@
     <ul class="md-nav__list" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#where-we-are" class="md-nav__link">
+    Where we are
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#autoencoder" class="md-nav__link">
     Autoencoder
   </a>
@@ -726,6 +733,13 @@
     <ul class="md-nav__list" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#where-we-are" class="md-nav__link">
+    Where we are
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#autoencoder" class="md-nav__link">
     Autoencoder
   </a>
@@ -753,6 +767,27 @@
                 
                 
                 <h1 id="ch-net-future-frame-prediction">CH-Net Future Frame Prediction</h1>
+<h2 id="where-we-are">Where we are</h2>
+<ul>
+<li>autoencoder can generate decently good images<ul>
+<li>doesn't hold any scientific purpose necessarily but was more to 
+help me understand how the generator type functions work</li>
+</ul>
+</li>
+<li>created a basic GAN to generate new CHD Maps<ul>
+<li>able to create maps (still some issues with input data) but is
+very blurry</li>
+</ul>
+</li>
+<li>GOAL: generate future EUV/CHD maps based on previous maps<ul>
+<li>requires changing how the training step is set up to rather than
+look at random data, look at previous eight images</li>
+<li>https://agupubs.onlinelibrary.wiley.com/doi/full/10.1029/2020SW002478</li>
+<li>use supervised component: since we have a lot of data we can chekc the future
+prediction on the accurate image we have</li>
+</ul>
+</li>
+</ul>
 <h2 id="autoencoder">Autoencoder</h2>
 <ul>
 <li>reduces signal noise</li>

@@ -670,6 +670,13 @@
     <ul class="md-nav__list" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#where-we-are" class="md-nav__link">
+    Where we are
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#cnn-supervised-learning-to-detect-ch" class="md-nav__link">
     CNN - Supervised Learning to Detect CH
   </a>
@@ -726,15 +733,22 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#two-clusters" class="md-nav__link">
-    Two Clusters
+  <a href="#basic-clustering-v-chd" class="md-nav__link">
+    Basic Clustering v. CHD
   </a>
   
 </li>
         
           <li class="md-nav__item">
-  <a href="#five-clusters" class="md-nav__link">
-    Five Clusters
+  <a href="#chd-clustering" class="md-nav__link">
+    CHD Clustering
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#predicted-chd" class="md-nav__link">
+    Predicted CHD
   </a>
   
 </li>
@@ -799,6 +813,13 @@
     <ul class="md-nav__list" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#where-we-are" class="md-nav__link">
+    Where we are
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#cnn-supervised-learning-to-detect-ch" class="md-nav__link">
     CNN - Supervised Learning to Detect CH
   </a>
@@ -855,15 +876,22 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#two-clusters" class="md-nav__link">
-    Two Clusters
+  <a href="#basic-clustering-v-chd" class="md-nav__link">
+    Basic Clustering v. CHD
   </a>
   
 </li>
         
           <li class="md-nav__item">
-  <a href="#five-clusters" class="md-nav__link">
-    Five Clusters
+  <a href="#chd-clustering" class="md-nav__link">
+    CHD Clustering
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#predicted-chd" class="md-nav__link">
+    Predicted CHD
   </a>
   
 </li>
@@ -899,6 +927,15 @@
                 
                 
                 <h1 id="techniques-to-detect-coronal-holes-using-neural-networks-and-k-means-algorithm">Techniques to detect coronal holes using neural networks and K-means algorithm</h1>
+<h2 id="where-we-are">Where we are</h2>
+<ul>
+<li>Fortran region growing algorithm</li>
+<li>CNN Supervised Learning Algorithm<ul>
+<li>advantages: floating point</li>
+</ul>
+</li>
+<li>GOAL: unsupervised algorithm</li>
+</ul>
 <h2 id="cnn-supervised-learning-to-detect-ch">CNN - Supervised Learning to Detect CH</h2>
 <ul>
 <li>labeled image data based on Fortran two-threshold detection algorithm</li>
@@ -913,18 +950,35 @@
 <h2 id="k-means-clustering">K-Means Clustering</h2>
 <ul>
 <li>unsupervised learning method</li>
-<li>clustering algorithm to generate CH/non-CH groups</li>
+<li>centroid based clustering algorithm to generate CH/non-CH groups</li>
 </ul>
 <p>Advantages:
 * unsupervised
     * no requirement of segmentation masks or labeling
 * easy to create multiple cluster types (find AR as well)
 * can basically regenerate EUV map — use for prediction</p>
+<p>Concerns/Questions:
+* can this be trained on a lot of images??
+* can be trained on a lot of data points but thus far that seems like
+training on one image</p>
+<p>K-Nearest Neighbor:
+* this would allow us to add pixels to a class -- perhaps track a CH over time</p>
 <h3 id="example-images_1">Example Images</h3>
-<h4 id="two-clusters"><a href="../images/k2_clusters.png">Two Clusters</a></h4>
-<p><img alt="Two Clusters" src="../images/k2_clusters.png" /></p>
-<h4 id="five-clusters"><a href="../images/k5_clusters.png">Five Clusters</a></h4>
-<p><img alt="Five Clusters" src="../images/k5_clusters.png" /></p>
+<h4 id="basic-clustering-v-chd">Basic Clustering v. CHD</h4>
+<p><a href="../images/k2_clusters.png">Two Clusters</a>  </p>
+<p><img alt="Two Clusters" src="../images/k2_clusters.png" />  </p>
+<p><a href="../images/k5_clusters.png">Five Clusters</a>  </p>
+<p><img alt="Five Clusters" src="../images/k5_clusters.png" />  </p>
+<h4 id="chd-clustering">CHD Clustering</h4>
+<p><a href="../images/clustering2.png">Two Clusters</a>  </p>
+<p><img alt="Two Clusters" src="../images/clustering2.png" />  </p>
+<p><a href="../images/clustering5.png">Five Clusters</a>  </p>
+<p><img alt="Five Clusters" src="../images/clustering5.png" /> </p>
+<h4 id="predicted-chd">Predicted CHD</h4>
+<p><a href="../images/clustering2_chd.png">Two Clusters</a>  </p>
+<p><img alt="Two Clusters" src="../images/clustering2_chd.png" />  </p>
+<p><a href="../images/clustering5_chd.png">Five Clusters</a>  </p>
+<p><img alt="Five Clusters" src="../images/clustering5_chd.png" /> </p>
                 
               
               
