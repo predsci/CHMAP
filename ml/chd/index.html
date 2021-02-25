@@ -758,6 +758,13 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#w-net-unsupervised-segmentation" class="md-nav__link">
+    W-Net: Unsupervised Segmentation
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -901,6 +908,13 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#w-net-unsupervised-segmentation" class="md-nav__link">
+    W-Net: Unsupervised Segmentation
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -979,6 +993,39 @@ training on one image  </p>
 <p><img alt="Two Clusters" src="../images/clustering2_chd.png" />  </p>
 <p><a href="../images/clustering5_chd.png">Five Clusters</a>  </p>
 <p><img alt="Five Clusters" src="../images/clustering5_chd.png" /> </p>
+<h3 id="w-net-unsupervised-segmentation">W-Net: Unsupervised Segmentation</h3>
+<ul>
+<li>
+<p>built from two U-Nets</p>
+<ul>
+<li>encoder and decoder u-nets shaped as a W</li>
+<li>predicts into K classes</li>
+</ul>
+</li>
+<li>
+<p>contracting U-Net: </p>
+<ul>
+<li>9 modules</li>
+<li>each has a 2D Convolution layer (3x3)</li>
+<li>max pooling between modules</li>
+<li>normalized loss function</li>
+</ul>
+</li>
+<li>
+<p>expanding U-Net:</p>
+<ul>
+<li>9 modules</li>
+<li>upsampling convolutions to return to base size</li>
+<li>max pooling</li>
+</ul>
+</li>
+<li>
+<p>reconstruction loss function:</p>
+<ul>
+<li>minimized for W-Net in training loop</li>
+</ul>
+</li>
+</ul>
                 
               
               
