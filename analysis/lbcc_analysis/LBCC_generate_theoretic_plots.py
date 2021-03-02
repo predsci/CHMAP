@@ -25,7 +25,7 @@ inst_list = ["EUVI-A", ]
 
 # PLOT PARAMETERS
 n_mu_bins = 18
-year = "2014-15"  # used for naming plot file
+year = "AllYears-trimmed"  # used for naming plot file
 time_period = "Theoretic-6Month(2)"  # used for naming plot file
 title_time_period = "6 Month"  # used for plot titles
 plot_week = 5  # index of week you want to plot
@@ -33,8 +33,8 @@ plot_week = 5  # index of week you want to plot
 image_out_path = os.path.join(App.APP_HOME, "test_data", "analysis/lbcc_functionals/")
 image_out_path = "/Users/turtle/Dropbox/MyNACD/analysis/lbcc_functionals/"
 # TIME FRAME TO QUERY HISTOGRAMS
-query_time_min = datetime.datetime(2014, 1, 1, 0, 0, 0)
-query_time_max = datetime.datetime(2016, 3, 1, 0, 0, 0)
+query_time_min = datetime.datetime(2007, 4, 1, 0, 0, 0)
+query_time_max = datetime.datetime(2021, 1, 1, 0, 0, 0)
 weekday = 0
 number_of_days = 180
 

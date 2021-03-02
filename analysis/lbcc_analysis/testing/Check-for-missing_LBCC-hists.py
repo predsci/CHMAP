@@ -15,8 +15,8 @@ from modules.DB_funs import init_db_conn, query_euv_images, add_hist, get_method
 
 
 # TIME RANGE
-hist_query_time_min = datetime.datetime(2007, 1, 1, 0, 0, 0)
-hist_query_time_max = datetime.datetime(2020, 1, 1, 0, 0, 0)
+hist_query_time_min = datetime.datetime(2018, 1, 1, 0, 0, 0)
+hist_query_time_max = datetime.datetime(2022, 1, 1, 0, 0, 0)
 
 # define instruments
 inst_list = ["AIA", "EUVI-A", "EUVI-B"]
@@ -53,10 +53,6 @@ if use_db == 'sqlite':
     # setup database connection to local sqlite file
     sqlite_path = os.path.join(database_dir, sqlite_filename)
 
-    if os.path.exists(sqlite_path):
-        os.remove(sqlite_path)
-        print("\nPrevious file ", sqlite_filename, " deleted.\n")
-
     db_session = init_db_conn(db_name=use_db, chd_base=db_class.Base, sqlite_path=sqlite_path)
 elif use_db == 'mysql-Q':
     # setup database connection to MySQL database on Q
@@ -84,7 +80,9 @@ query_pd = query_euv_images(db_session=db_session, time_min=hist_query_time_min,
 hist_query = db_session.query(db_class.Histogram.hist_id, db_class.Histogram.image_id,
                            db_class.Histogram.meth_id, db_class.Histogram.date_obs,
                            db_class.Histogram.instrument).filter(
-    db_class.Histogram.date_obs.between(hist_query_time_min, hist_query_time_max))
+    db_class.Histogram.date_obs.between(hist_query_time_min, hist_query_time_max),
+    db_class.Histogram.meth_id == method_id[1]
+    )
 hist_pd = pd.read_sql(hist_query.statement, db_session.bind)
 
 # compare image results to hist results based on data_id
@@ -115,9 +113,115 @@ iit_hist_query = db_session.query(db_class.Histogram.hist_id, db_class.Histogram
 db_class.Histogram.meth_id == method_id[1])
 iit_hist_pd = pd.read_sql(iit_hist_query.statement, db_session.bind)
 
+# query IIT parameters
+iit_par_query = db_session.query(db_class.Var_Vals, db_class.Image_Combos).filter(
+    db_class.Image_Combos.date_mean.between(hist_query_time_min, hist_query_time_max)
+    ).filter(db_class.Var_Vals.meth_id == method_id[1]).filter(
+    db_class.Var_Vals.combo_id == db_class.Image_Combos.combo_id)
+iit_pars = pd.read_sql(iit_par_query.statement, db_session.bind)
 
 
+# safety-net against running as a script
+exit("This file not meant to be run as a script. Database deletions would result.")
 
 
+# Delete IIT histograms that use LLBC coefs from before 2011-04-01 and after 2012-09-30
+del_window_min = datetime.datetime(2012, 2, 1, 0, 0)
+del_window_max = datetime.datetime(2012, 12, 31, 0, 0)
 
-db_session.close
+del_query = db_session.query(db_class.Histogram).filter(
+    db_class.Histogram.date_obs.between(del_window_min, del_window_max),
+    db_class.Histogram.meth_id == method_id[1])
+del_query.count()
+
+num_del = del_query.delete(synchronize_session=False)
+db_session.commit()
+
+del_window_min = datetime.datetime(2011, 1, 1, 0, 0)
+del_window_max = datetime.datetime(2011, 11, 1, 0, 0)
+
+del_query = db_session.query(db_class.Histogram).filter(
+    db_class.Histogram.date_obs.between(del_window_min, del_window_max),
+    db_class.Histogram.meth_id == method_id[1])
+del_query.count()
+
+num_del = del_query.delete(synchronize_session=False)
+db_session.commit()
+
+# Delete remaining IIT histograms from previous algorithm
+del_window_min = datetime.datetime(2011, 10, 31, 0, 0)
+del_window_max = datetime.datetime(2012, 2, 2, 0, 0)
+
+del_query = db_session.query(db_class.Histogram).filter(
+    db_class.Histogram.date_obs.between(del_window_min, del_window_max),
+    db_class.Histogram.meth_id == method_id[1])
+del_query.count()
+
+num_del = del_query.delete(synchronize_session=False)
+db_session.commit()
+
+
+# Delete IIT histograms that use LLBC coefs in timeframe
+del_window_min = datetime.datetime(2019, 9, 29, 0, 0)
+del_window_max = datetime.datetime(2021, 1, 1, 0, 0)
+
+del_query = db_session.query(db_class.Histogram).filter(
+    db_class.Histogram.date_obs.between(del_window_min, del_window_max),
+    db_class.Histogram.meth_id == method_id[1])
+del_query.count()
+
+num_del = del_query.delete(synchronize_session=False)
+db_session.commit()
+
+# Delete all IIT coefficients
+del_query = db_session.query(db_class.Var_Vals).filter(
+    db_class.Var_Vals.meth_id == method_id[1])
+del_query.count()
+
+num_del = del_query.delete(synchronize_session=False)
+db_session.commit()
+
+# Delete all IIT combos
+combo_query = db_session.query(db_class.Image_Combos).filter(
+    db_class.Image_Combos.meth_id == method_id[1])
+combo_query.count()
+del_combos = pd.read_sql(combo_query.statement, db_session.bind)
+
+del_query = db_session.query(db_class.Image_Combo_Assoc).filter(
+    db_class.Image_Combo_Assoc.combo_id.in_(del_combos.combo_id))
+num_assoc = del_query.delete(synchronize_session=False)
+db_session.commit()
+del_combo_query = db_session.query(db_class.Image_Combos).filter(
+    db_class.Image_Combos.combo_id.in_(del_combos.combo_id))
+num_del = del_combo_query.delete(synchronize_session=False)
+db_session.commit()
+
+
+# Delete all IIT parameters and combos between two dates
+# del_window_min = datetime.datetime(2011, 4, 1, 0, 0)
+# del_window_max = datetime.datetime(2012, 9, 1, 0, 0)
+del_window_min = datetime.datetime(2001, 1, 1, 0, 0)
+del_window_max = datetime.datetime(2011, 4, 1, 0, 0)
+combo_query = db_session.query(db_class.Image_Combos).filter(
+    db_class.Image_Combos.meth_id == method_id[1],
+    db_class.Image_Combos.date_mean.between(del_window_min, del_window_max)
+)
+combo_query.count()
+del_combos = pd.read_sql(combo_query.statement, db_session.bind)
+
+del_par_query = db_session.query(db_class.Var_Vals).filter(
+    db_class.Var_Vals.combo_id.in_(del_combos.combo_id))
+num_pars = del_par_query.delete(synchronize_session=False)
+db_session.commit()
+
+del_query = db_session.query(db_class.Image_Combo_Assoc).filter(
+    db_class.Image_Combo_Assoc.combo_id.in_(del_combos.combo_id))
+num_assoc = del_query.delete(synchronize_session=False)
+db_session.commit()
+del_combo_query = db_session.query(db_class.Image_Combos).filter(
+    db_class.Image_Combos.combo_id.in_(del_combos.combo_id))
+num_del = del_combo_query.delete(synchronize_session=False)
+db_session.commit()
+
+
+db_session.close()

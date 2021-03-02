@@ -312,3 +312,19 @@ def construct_map_path_and_fname(base_dir, dtime, map_id, map_type, extension, i
 
     return sub_dir, fname
 
+
+def print_full_dataframe(df):
+    """
+    Helper function to print a pandas dataframe with NO truncation of rows/columns
+    This will reset the defaults after, so it can be useful for inspection without annoying
+    side effects in a script (pulled from a stack overflow example).
+    """
+    pd.set_option('display.max_rows', None)
+    pd.set_option('display.max_columns', None)
+    pd.set_option('display.width', 2000)
+    pd.set_option('display.max_colwidth', None)
+    print(df)
+    pd.reset_option('display.max_rows')
+    pd.reset_option('display.max_columns')
+    pd.reset_option('display.width')
+    pd.reset_option('display.max_colwidth')

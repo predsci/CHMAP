@@ -32,6 +32,13 @@ nav:
       - Database for LBC: db/lbc.md
       - Database for IIT: db/iit.md
       - Database for CHD Mapping: db/map.md
+  - Coronal Hole Tracking and Predictions:
+      - Tracking Algorithm:
+          - Polar Projection: ml/tracking_v1.md
+          - Dilation and Erosion: ml/tracking_v2.md
+          - Tracking Features: ml/tracking_features.md
+      - Machine Learning Detection: ml/chd.md
+      - CH-Net Future Frame Predictions: ml/pred.md
 
 # theme
 theme:
@@ -41,8 +48,6 @@ theme:
     primary: indigo
     accent: black
   logo: img/psi_logo.png
-
-
 
 # plugins
 plugins:
@@ -54,3 +59,15 @@ markdown_extensions:
   - attr_list
   - codehilite:
       linenums: true
+  - admonition
+  - pymdownx.critic
+  - pymdownx.mark
+  - pymdownx.tabbed
+  - pymdownx.arithmatex
+
+
+extra_javascript:
+  - https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js?config=TeX-MML-AM_CHTML
+  - javascripts/config.js
+  - https://polyfill.io/v3/polyfill.min.js?features=es6
+  - https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js

@@ -683,6 +683,16 @@ def get_combo_id(db_session, meth_id, data_ids, create=False):
         # record in dict object
         combo_times = {'date_mean': date_mean, 'date_max': date_max, 'date_min': date_min}
 
+        # determine instruments in combo
+        all_instruments = image_pd.instrument.unique()
+        if all_instruments.__len__() == 1:
+            # set this instrument value in 'instrument' column
+            instrument = all_instruments[0]
+        elif all_instruments.__len__() > 1:
+            instrument = "MULTIPLE"
+        else:
+            instrument = None
+
         # generate record and add to session
         combo_add = Data_Combos(meth_id=meth_id, n_images=n_images, date_mean=date_mean, date_max=date_max,
                                 date_min=date_min)
@@ -1348,7 +1358,7 @@ def safe_datetime(unknown_datetime):
     # if input is not iterable, try to make it a tuple
     if not isinstance(unknown_datetime, collections.Iterable):
         # assume that the input is a scalar and convert to tuple
-        unknown_datetime = (unknown_datetime,)
+        unknown_datetime = (unknown_datetime, )
         not_list = True
 
     # initialize output datetime.datetime() list
@@ -1387,7 +1397,7 @@ def pdseries_tohdf(pd_series):
     return f_name
 
 
-def query_hist(db_session, meth_id, n_mu_bins=None, n_intensity_bins=None, lat_band=[-np.pi / 64., np.pi / 64.],
+def query_hist(db_session, meth_id, n_mu_bins=None, n_intensity_bins=None, lat_band=None,
                time_min=None,
                time_max=None, instrument=None, wavelength=None):
     """
@@ -1403,97 +1413,100 @@ def query_hist(db_session, meth_id, n_mu_bins=None, n_intensity_bins=None, lat_b
     @param wavelength:
     @return: pandas data frame
     """
+
+    if lat_band is None:
+        # This default is not assigned in the function statement do to the problems associated
+        # with 'mutable' default arguments
+        lat_band = [-np.pi / 64., np.pi / 64.]
     # convert lat_band to float value
     lat_band_float = float(np.max(lat_band))
 
     if time_min is None and time_max is None:
         # get entire DB
-        query_out = pd.read_sql(db_session.query(Histogram).statement, db_session.bind)
+        query_out = db_session.query(Histogram)
     elif not isinstance(time_min, datetime.datetime) or not isinstance(time_max, datetime.datetime):
         sys.exit("Error: time_min and time_max must have matching entries of 'None' or of type Datetime.")
     elif wavelength is None:
         if instrument is None:
-            query_out = pd.read_sql(db_session.query(Histogram).filter(Histogram.date_obs >= time_min,
-                                                                       Histogram.date_obs <= time_max,
-                                                                       Histogram.meth_id == meth_id,
-                                                                       Histogram.n_mu_bins == n_mu_bins,
-                                                                       Histogram.n_intensity_bins == n_intensity_bins,
-                                                                       Histogram.lat_band.between(
-                                                                           (1. - 1e-4)*lat_band_float,
-                                                                           (1. + 1e-4)*lat_band_float)
-                                                                       ).statement,
-                                    db_session.bind)
+            query_out = db_session.query(Histogram).filter(Histogram.date_obs >= time_min,
+                                                           Histogram.date_obs <= time_max,
+                                                           Histogram.meth_id == meth_id,
+                                                           Histogram.n_mu_bins == n_mu_bins,
+                                                           Histogram.n_intensity_bins == n_intensity_bins,
+                                                           Histogram.lat_band.between(
+                                                               (1. - 1e-4)*lat_band_float,
+                                                               (1. + 1e-4)*lat_band_float)
+                                                           )
         elif n_mu_bins is None:
-            query_out = pd.read_sql(db_session.query(Histogram).filter(Histogram.date_obs >= time_min,
-                                                                       Histogram.date_obs <= time_max,
-                                                                       Histogram.meth_id == meth_id,
-                                                                       Histogram.instrument.in_(
-                                                                           instrument),
-                                                                       Histogram.n_intensity_bins == n_intensity_bins,
-                                                                       Histogram.lat_band.between(
-                                                                           (1. - 1e-4)*lat_band_float,
-                                                                           (1. + 1e-4)*lat_band_float)
-                                                                       ).statement,
-                                    db_session.bind)
+            query_out = db_session.query(Histogram).filter(Histogram.date_obs >= time_min,
+                                                           Histogram.date_obs <= time_max,
+                                                           Histogram.meth_id == meth_id,
+                                                           Histogram.instrument.in_(
+                                                               instrument),
+                                                           Histogram.n_intensity_bins == n_intensity_bins,
+                                                           Histogram.lat_band.between(
+                                                               (1. - 1e-4)*lat_band_float,
+                                                               (1. + 1e-4)*lat_band_float)
+                                                           )
         else:
-            query_out = pd.read_sql(db_session.query(Histogram).filter(Histogram.date_obs >= time_min,
-                                                                       Histogram.date_obs <= time_max,
-                                                                       Histogram.meth_id == meth_id,
-                                                                       Histogram.instrument.in_(
-                                                                           instrument),
-                                                                       Histogram.n_mu_bins == n_mu_bins,
-                                                                       Histogram.n_intensity_bins == n_intensity_bins,
-                                                                       Histogram.lat_band.between(
-                                                                           (1. - 1e-4)*lat_band_float,
-                                                                           (1. + 1e-4)*lat_band_float)
-                                                                       ).statement,
-                                    db_session.bind)
+            query_out = db_session.query(Histogram).filter(Histogram.date_obs >= time_min,
+                                                           Histogram.date_obs <= time_max,
+                                                           Histogram.meth_id == meth_id,
+                                                           Histogram.instrument.in_(
+                                                               instrument),
+                                                           Histogram.n_mu_bins == n_mu_bins,
+                                                           Histogram.n_intensity_bins == n_intensity_bins,
+                                                           Histogram.lat_band.between(
+                                                               (1. - 1e-4)*lat_band_float,
+                                                               (1. + 1e-4)*lat_band_float)
+                                                           )
     else:
         if instrument is None:
-            query_out = pd.read_sql(db_session.query(Histogram).filter(Histogram.date_obs >= time_min,
-                                                                       Histogram.date_obs <= time_max,
-                                                                       Histogram.meth_id == meth_id,
-                                                                       Histogram.wavelength.in_(
-                                                                           wavelength),
-                                                                       Histogram.n_mu_bins == n_mu_bins,
-                                                                       Histogram.n_intensity_bins == n_intensity_bins,
-                                                                       Histogram.lat_band.between(
-                                                                           (1. - 1e-4)*lat_band_float,
-                                                                           (1. + 1e-4)*lat_band_float)
-                                                                       ).statement,
-                                    db_session.bind)
+            query_out = db_session.query(Histogram).filter(Histogram.date_obs >= time_min,
+                                                           Histogram.date_obs <= time_max,
+                                                           Histogram.meth_id == meth_id,
+                                                           Histogram.wavelength.in_(
+                                                               wavelength),
+                                                           Histogram.n_mu_bins == n_mu_bins,
+                                                           Histogram.n_intensity_bins == n_intensity_bins,
+                                                           Histogram.lat_band.between(
+                                                               (1. - 1e-4)*lat_band_float,
+                                                               (1. + 1e-4)*lat_band_float)
+                                                           )
         elif n_mu_bins is None:
-            query_out = pd.read_sql(db_session.query(Histogram).filter(Histogram.date_obs >= time_min,
-                                                                       Histogram.date_obs <= time_max,
-                                                                       Histogram.meth_id == meth_id,
-                                                                       Histogram.instrument.in_(
-                                                                           instrument),
-                                                                       Histogram.wavelength.in_(
-                                                                           wavelength),
-                                                                       Histogram.n_intensity_bins == n_intensity_bins,
-                                                                       Histogram.lat_band.between(
-                                                                           (1. - 1e-4)*lat_band_float,
-                                                                           (1. + 1e-4)*lat_band_float)
-                                                                       ).statement,
-                                    db_session.bind)
+            query_out = db_session.query(Histogram).filter(Histogram.date_obs >= time_min,
+                                                           Histogram.date_obs <= time_max,
+                                                           Histogram.meth_id == meth_id,
+                                                           Histogram.instrument.in_(
+                                                               instrument),
+                                                           Histogram.wavelength.in_(
+                                                               wavelength),
+                                                           Histogram.n_intensity_bins == n_intensity_bins,
+                                                           Histogram.lat_band.between(
+                                                               (1. - 1e-4)*lat_band_float,
+                                                               (1. + 1e-4)*lat_band_float)
+                                                           )
 
         else:
-            query_out = pd.read_sql(db_session.query(Histogram).filter(Histogram.date_obs >= time_min,
-                                                                       Histogram.date_obs <= time_max,
-                                                                       Histogram.meth_id == meth_id,
-                                                                       Histogram.instrument.in_(
-                                                                           instrument),
-                                                                       Histogram.wavelength.in_(
-                                                                           wavelength),
-                                                                       Histogram.n_mu_bins == n_mu_bins,
-                                                                       Histogram.n_intensity_bins == n_intensity_bins,
-                                                                       Histogram.lat_band.between(
-                                                                           (1. - 1e-4)*lat_band_float,
-                                                                           (1. + 1e-4)*lat_band_float)
-                                                                       ).statement,
-                                    db_session.bind)
+            query_out = db_session.query(Histogram).filter(Histogram.date_obs >= time_min,
+                                                           Histogram.date_obs <= time_max,
+                                                           Histogram.meth_id == meth_id,
+                                                           Histogram.instrument.in_(
+                                                               instrument),
+                                                           Histogram.wavelength.in_(
+                                                               wavelength),
+                                                           Histogram.n_mu_bins == n_mu_bins,
+                                                           Histogram.n_intensity_bins == n_intensity_bins,
+                                                           Histogram.lat_band.between(
+                                                               (1. - 1e-4)*lat_band_float,
+                                                               (1. + 1e-4)*lat_band_float)
+                                                           )
+    pd_out = pd.read_sql(query_out.order_by(Histogram.instrument, Histogram.date_obs)\
+                         .with_hint(Histogram, 'USE INDEX (hist_index)').statement,
+                         db_session.bind)
+    # pd_out = pd.read_sql(query_out.statement, db_session.bind)
 
-    return query_out
+    return pd_out
 
 
 def add_hist(db_session, histogram):
@@ -1555,7 +1568,66 @@ def add_hist(db_session, histogram):
     return db_session
 
 
-def query_inst_combo(db_session, query_time_min, query_time_max, meth_name, instrument):
+def combo_bracket_date(db_session, target_date, meth_id, instrument="any"):
+
+    # method_id = get_method_id(db_session, meth_name, meth_desc=None, var_names=None, var_descs=None,
+    #                           create=True)
+
+    if instrument == "any":
+        below_query = db_session.query(Image_Combos).filter(
+            Image_Combos.date_mean <= target_date,
+            Image_Combos.meth_id == meth_id).order_by(Image_Combos.date_mean.desc())
+        above_query = db_session.query(Image_Combos).filter(
+            Image_Combos.date_mean >= target_date,
+            Image_Combos.meth_id == meth_id).order_by(Image_Combos.date_mean)
+    else:
+        below_query = db_session.query(Image_Combos).filter(
+            Image_Combos.date_mean <= target_date,
+            Image_Combos.meth_id == meth_id,
+            Image_Combos.instrument == instrument).order_by(Image_Combos.date_mean.desc())
+        above_query = db_session.query(Image_Combos).filter(
+            Image_Combos.date_mean >= target_date,
+            Image_Combos.meth_id == meth_id,
+            Image_Combos.instrument == instrument).order_by(Image_Combos.date_mean)
+
+    below_pd = pd.read_sql(below_query.limit(1).statement, db_session.bind)
+    above_pd = pd.read_sql(above_query.limit(1).statement, db_session.bind)
+
+    return below_pd, above_pd
+
+
+def query_inst_combo(db_session, query_time_min, query_time_max, meth_name, instrument="any"):
+    """
+    Query database for combos with date_mean in time range and with specific method and instrument.
+    :param db_session: database session with connection info embedded
+    :param query_time_min: datetime minimum query time for combo date_mean
+    :param query_time_max: datetime maximum query time for combo date_mean
+    :param meth_name: method name as character string
+    :param instrument: default value "any" ignores instrument column. Otherwise, acceptable values
+    include "AIA", "EUVI-A", "EUVI-B", and None.
+    :return: pandas dataframe of combos
+    """
+    method_id = get_method_id(db_session, meth_name, meth_desc=None, var_names=None, var_descs=None,
+                              create=True)
+
+    if instrument == "any":
+        combo_query = db_session.query(Image_Combos).filter(
+            Image_Combos.date_mean.between(query_time_min, query_time_max),
+            Image_Combos.meth_id == method_id[1])
+    else:
+        combo_query = db_session.query(Image_Combos).filter(
+            Image_Combos.date_mean.between(query_time_min, query_time_max),
+            Image_Combos.meth_id == method_id[1],
+            Image_Combos.instrument == instrument)
+
+    # retrieve query result (ordered by date_mean)
+    combo_result = pd.read_sql(combo_query.order_by(Image_Combos.date_mean).statement,
+                               db_session.bind)
+
+    return combo_result
+
+
+def query_inst_combo_old(db_session, query_time_min, query_time_max, meth_name, instrument):
     """
     query correct combination of image combos for certain instrument and method
     """
@@ -1663,6 +1735,51 @@ def query_var_val(db_session, meth_name, date_obs, inst_combo_query):
             var_val[i] = interp_values(date_obs_fl)
     else:
         var_val[:] = var_vals[:, :]
+    return var_val
+
+
+def get_correction_pars(db_session, meth_name, date_obs, instrument="any"):
+
+    if type(date_obs) == str:
+        date_obs = datetime.datetime.strptime(date_obs, "%Y-%m-%dT%H:%M:%S.%f")
+    # query method_defs for method id
+    method_id_info = get_method_id(db_session, meth_name, meth_desc=None, var_names=None, var_descs=None,
+                                   create=False)
+    # query var defs for variable id
+    var_id = get_var_id(db_session, method_id_info[1], var_name=None, var_desc=None, create=False)
+
+    ### find correct combo id(s) ###
+    before_combo, after_combo = combo_bracket_date(db_session, target_date=date_obs, meth_id=method_id_info[1],
+                                                   instrument=instrument)
+
+    query_combos = before_combo.append(after_combo)
+
+    # query variable values
+    var_val_query = pd.read_sql(db_session.query(Var_Vals).filter(Var_Vals.meth_id == method_id_info[1],
+                                                                  Var_Vals.combo_id.in_(query_combos.combo_id)
+                                                                  ).order_by(Var_Vals.var_id).statement,
+                                db_session.bind)
+
+    var_val = np.zeros(var_id[1].size)
+    if query_combos.shape[0] == 1:
+        var_val[:] = var_val_query.var_val
+    else:
+        # interpolate
+        v1 = var_val_query.var_val.loc[var_val_query.combo_id.eq(query_combos.combo_id.iloc[0])]
+        v1 = v1.to_list()
+        v2 = var_val_query.var_val.loc[var_val_query.combo_id.eq(query_combos.combo_id.iloc[1])]
+        v2 = v2.to_list()
+        # convert combo dates to number of seconds
+        timeutc = datetime.datetime.utcfromtimestamp(0)
+        date_means_float = [(query_combos.date_mean.iloc[0] - timeutc).total_seconds(),
+                            (query_combos.date_mean.iloc[1] - timeutc).total_seconds()]
+        # convert target date to number of seconds
+        date_obs_float = (date_obs - timeutc).total_seconds()
+
+        for ii in range(var_id[1].size):
+            interp_values = interpolate.interp1d(x=date_means_float, y=[v1[ii], v2[ii]], fill_value='extrapolate')
+            var_val[ii] = interp_values(date_obs_float)
+
     return var_val
 
 

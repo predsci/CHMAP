@@ -1,8 +1,6 @@
-"""Author: Opal Issan, Jan 8th, 2021.
+"""Author: Opal Issan, Feb 3rd, 2021.
 
 A data structure for a frame - consists of a list of contours.
-
-we might want to group disconnected contours with close proximity to be identified as 1 coronal hole.
 
 Coronal Hole properties to keep in mind:
         - on average a coronal hole exists for 2 weeks.
@@ -11,22 +9,20 @@ Video processing to avoid flickering:
         - temporal averaging - gaussian. add probability to each coronal hole.
 """
 
-
 import json
 
 
 class Frame:
     """ Frame data structure. """
-
-    def __init__(self, contour_list):
+    def __init__(self, contour_list, identity):
         # list of Contours that are part of this CoronalHole Object.
         self.contour_list = contour_list
 
-        # list of contour centers.
+        # list of contour pixel polar projection centers.
         self.centroid_list = self.compute_centroid_list()
 
         # the unique identification number of this frame.
-        self.id = None
+        self.id = identity
 
     def __str__(self):
         return json.dumps(
@@ -40,5 +36,10 @@ class Frame:
         }
 
     def compute_centroid_list(self):
-        """ compute the coronal hole centers and save them in a list. """
+        """save the coronal hole centers in a list.
+
+        Returns
+        -------
+        list of coronal hole centroids.
+        """
         return [ch.pixel_centroid for ch in self.contour_list]

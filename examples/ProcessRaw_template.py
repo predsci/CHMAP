@@ -39,7 +39,8 @@ do_all_unprocessed = True
 # search for images in database that have no processed fname
 if do_all_unprocessed:
     query_result = pd.read_sql(
-        db_session.query(DBClass.EUV_Images).filter(DBClass.EUV_Images.fname_hdf == "").statement,
+        db_session.query(DBClass.EUV_Images).filter(
+            DBClass.EUV_Images.fname_hdf == "", DBClass.EUV_Images.flag == 0).statement,
         db_session.bind)
 
     # sort it by time so that it is easy to track progression in a physical way
