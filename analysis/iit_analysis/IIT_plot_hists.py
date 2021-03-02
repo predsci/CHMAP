@@ -112,7 +112,7 @@ for inst_index, instrument in enumerate(inst_list):
                                                 instrument=instrument)
     for index, row in image_pd.iterrows():
         # apply LBC
-        print("Processing image number", row.image_id, "for Histogram Creation.")
+        print("Processing image number", row.data_id, "for Histogram Creation.")
         original_los, lbcc_image, mu_indices, use_indices, theoretic_query = lbcc_funcs.apply_lbc(db_session,
                                                                                                   hdf_data_dir,
                                                                                                   combo_query_lbc,

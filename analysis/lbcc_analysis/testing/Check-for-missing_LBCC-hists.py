@@ -7,6 +7,7 @@ import os
 import datetime
 import numpy as np
 import pandas as pd
+from sqlalchemy import func
 
 from settings.app import App
 import modules.DB_classes as db_class
@@ -86,8 +87,8 @@ hist_query = db_session.query(db_class.Histogram.hist_id, db_class.Histogram.ima
     db_class.Histogram.date_obs.between(hist_query_time_min, hist_query_time_max))
 hist_pd = pd.read_sql(hist_query.statement, db_session.bind)
 
-# compare image results to hist results based on image_id
-in_index = query_pd.image_id.isin(hist_pd.image_id)
+# compare image results to hist results based on data_id
+in_index = query_pd.data_id.isin(hist_pd.image_id)
 
 # return only images that do not have corresponding histograms
 images_no_hist = query_pd[~in_index]

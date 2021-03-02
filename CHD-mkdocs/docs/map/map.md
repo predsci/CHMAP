@@ -149,9 +149,9 @@ def create_singles_maps(inst_list, date_pd, iit_list, chd_image_list, methods_li
     """
     for inst_ind, instrument in enumerate(inst_list):
         map_list[inst_ind] = iit_list[inst_ind].interp_to_map(R0=R0, map_x=map_x, map_y=map_y,
-                                                              image_num=image_row.image_id)
+                                                              image_num=image_row.data_id)
         chd_map_list[inst_ind] = chd_image_list[inst_ind].interp_to_map(R0=R0, map_x=map_x, map_y=map_y,
-                                                              image_num=image_row.image_id)
+                                                              image_num=image_row.data_id)
         interp_method = {'meth_name': ("Im2Map_Lin_Interp_1",), 'meth_description':["Use SciPy.RegularGridInterpolator() to linearly interpolate from an Image to a Map"] * 1,
                          'var_name': ("R0",), 'var_description': ("Solar radii",), 'var_val': (R0,)}
         methods_list[inst_ind] = methods_list[inst_ind].append(pd.DataFrame(data=interp_method), sort=False)

@@ -43,7 +43,7 @@ len(test)
 test[0].combos.combo_id
 # lazyload which images the combo is made up of
 for row in test[0].combos.images:
-    print(row.image_id)
+    print(row.data_id)
 
 
 test2 = pd.read_sql(euv_map_query.statement, db_session.bind)

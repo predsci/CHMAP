@@ -110,7 +110,7 @@ for time0 in mean_times:
 
 
     print("\nDownloads complete with all images added to DB session.  \nNow commit session changes to DB.\n")
-    # commit the changes to the DB, this also assigns auto-incrementing prime-keys 'image_id'
+    # commit the changes to the DB, this also assigns auto-incrementing prime-keys 'data_id'
     db_session.commit()
 
 # query_EUV_images function:

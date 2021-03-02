@@ -25,20 +25,18 @@ class EUV_Images(Base):
      - It is an essential element of the database.
     """
     __tablename__ = 'euv_images'
-    image_id = Column(Integer, primary_key=True)
+    data_id = Column(Integer, ForeignKey('data_files.data_id'), primary_key=True)
     date_obs = Column(DateTime)
     instrument = Column(String(10))
     wavelength = Column(Integer)
-    fname_raw = Column(String(150))
-    fname_hdf = Column(String(150))
     distance = Column(Float)
     cr_lon = Column(Float)
     cr_lat = Column(Float)
     cr_rot = Column(Float)
     flag = Column(Integer, default=0)
     time_of_download = Column(DateTime)
-    __table_args__ = (Index('test_index', "date_obs", "instrument", "wavelength", unique=True),
-                      UniqueConstraint("fname_raw"))
+    __table_args__ = (Index('test_index', "date_obs", "flag", "instrument", "wavelength", unique=True),
+                      Index('rot_search', "cr_rot", "flag", "instrument", "wavelength"))
 
 
 class EUV_Maps(Base):
@@ -52,14 +50,14 @@ class EUV_Maps(Base):
     """
     __tablename__ = 'euv_maps'
     map_id = Column(Integer, primary_key=True)
-    combo_id = Column(Integer, ForeignKey('image_combos.combo_id'))
+    combo_id = Column(Integer, ForeignKey('data_combos.combo_id'))
     meth_combo_id = Column(Integer, ForeignKey('method_combos.meth_combo_id'))
     fname = Column(String(150))
     time_of_compute = Column(DateTime)
     # __table_args__ = (UniqueConstraint("fname"), )
     __table_args__ = (Index('map_file_names', "fname", unique=True), Index('maps_idx1', "combo_id", "meth_combo_id"))
 
-    combos = relationship("Image_Combos")
+    combos = relationship("Data_Combos")
     var_vals = relationship("Var_Vals_Map")
     method_combo = relationship("Method_Combos")
 
@@ -76,11 +74,11 @@ class EUV_Maps(Base):
 #     db.se
 
 
-class Image_Combos(Base):
+class Data_Combos(Base):
     """
     This table keeps info on each unique combination of images.
     """
-    __tablename__='image_combos'
+    __tablename__='data_combos'
     combo_id = Column(Integer, primary_key=True)
     meth_id = Column(Integer, ForeignKey('method_defs.meth_id'))
     n_images = Column(Integer)
@@ -90,20 +88,20 @@ class Image_Combos(Base):
     __table_args__ = (Index('mean_time', "date_mean"),
                       Index('unique_combo', "meth_id", "n_images", "date_mean", "date_max", "date_min", unique=True))
 
-    images = relationship("Image_Combo_Assoc")
+    images = relationship("Data_Combo_Assoc")
 
 
-class Image_Combo_Assoc(Base):
+class Data_Combo_Assoc(Base):
     """
     This table simply maps unique combinations of images 'combo_id' to the constituent images.
     """
-    __tablename__ = 'image_combo_assoc'
-    combo_id = Column(Integer, ForeignKey('image_combos.combo_id'), primary_key=True)
-    image_id = Column(Integer, ForeignKey('euv_images.image_id'), primary_key=True)
-    __table_args__ = (Index('image_first', "image_id"),
-                      Index('unique_assoc', "combo_id", "image_id", unique=True))
+    __tablename__ = 'data_combo_assoc'
+    combo_id = Column(Integer, ForeignKey('data_combos.combo_id'), primary_key=True)
+    data_id = Column(Integer, ForeignKey('data_files.data_id'), primary_key=True)
+    __table_args__ = (Index('data_first', "data_id"),
+                      Index('unique_assoc', "combo_id", "data_id", unique=True))
 
-    image_info = relationship("EUV_Images")
+    data_info = relationship("Data_Files")
 
 
 class Var_Vals_Map(Base):
@@ -113,7 +111,7 @@ class Var_Vals_Map(Base):
     """
     __tablename__='var_vals_map'
     map_id = Column(Integer, ForeignKey('euv_maps.map_id'), primary_key=True)
-    combo_id = Column(Integer, ForeignKey('image_combos.combo_id'), primary_key=True)
+    combo_id = Column(Integer, ForeignKey('data_combos.combo_id'), primary_key=True)
     meth_id = Column(Integer, ForeignKey('method_defs.meth_id'))
     var_id = Column(Integer, ForeignKey('var_defs.var_id'), primary_key=True)
     var_val = Column(Float)
@@ -122,7 +120,7 @@ class Var_Vals_Map(Base):
 
     var_info = relationship("Var_Defs")
     meth_info = relationship("Method_Defs")
-    combo_info = relationship("Image_Combos")
+    combo_info = relationship("Data_Combos")
 
 
 class Method_Defs(Base):
@@ -185,14 +183,14 @@ class Var_Vals(Base):
     Could save var_val as both a Float and a String or exact-valued Numeric.
     """
     __tablename__ = 'var_vals'
-    combo_id = Column(Integer, ForeignKey('image_combos.combo_id'), primary_key=True)
+    combo_id = Column(Integer, ForeignKey('data_combos.combo_id'), primary_key=True)
     meth_id = Column(Integer, ForeignKey('method_defs.meth_id'))
     var_id = Column(Integer, ForeignKey('var_defs.var_id'), primary_key=True)
     var_val = Column(Float)
 
     var_info = relationship("Var_Defs")
     meth_info = relationship("Method_Defs")
-    combo_info = relationship("Image_Combos")
+    combo_info = relationship("Data_Combos")
 
     __table_args__ = (Index('var_vals_index', "combo_id", "meth_id", "var_id", unique=True),)
 
@@ -203,7 +201,7 @@ class Histogram(Base):
     """
     __tablename__ = 'histogram'
     hist_id = Column(Integer, primary_key=True)
-    image_id = Column(Integer, ForeignKey('euv_images.image_id'))
+    image_id = Column(Integer, ForeignKey('euv_images.data_id'))
     meth_id = Column(Integer, ForeignKey('method_defs.meth_id'))
     date_obs = Column(DateTime)
     instrument = Column(String(10))
@@ -224,7 +222,7 @@ class Histogram(Base):
 class Data_Files(Base):
     """
     This table holds records of imported data files. The more specific EUV_Images table
-    contains an image_id which is a subset of data_id column found here.
+    contains more information about a subset of these data.
     """
     __tablename__ = 'data_files'
     data_id = Column(Integer, primary_key=True)
@@ -233,6 +231,7 @@ class Data_Files(Base):
     type = Column(String(25))
     fname_raw = Column(String(150))
     fname_hdf = Column(String(150))
+    flag = Column(Integer, default=0)
 
     __table_args__ = (Index('file_index', "date_obs", "provider", "type"),
                       UniqueConstraint("fname_raw"))

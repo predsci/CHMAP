@@ -124,11 +124,11 @@ if keepgoing:
     map_list = [None]*len(los_list)
     for ii in range(len(los_list)):
         # use fixed map resolution
-        map_list[ii] = los_list[ii].interp_to_map(R0=R0, map_x=map_x, map_y=map_y, image_num=query_pd.image_id[ii])
+        map_list[ii] = los_list[ii].interp_to_map(R0=R0, map_x=map_x, map_y=map_y, image_num=query_pd.data_id[ii])
         # Alternatively, we could have resolution determined from image
         # map_list[ii] = los_list[ii].interp_to_map(R0=R0)
         # record image info
-        map_list[ii].append_image_info(query_pd.iloc[ii])
+        map_list[ii].append_data_info(query_pd.iloc[ii])
 
         # generate a record of the method and variable values used for interpolation
         new_method = {'meth_name': ("Im2Map_Lin_Interp_1", ), 'meth_description':
@@ -176,7 +176,7 @@ if keepgoing:
     # # method is new to the DB. Add method definition before adding map
     # new_method = True
     # # in practice image_df will usually be the output of query_euv_images(), but here
-    # # we show that only the image_id column is needed for map record creation
+    # # we show that only the data_id column is needed for map record creation
     # image_df = selected_images
     # # variable values must be a DataFrame with columns var_name and var_val. These should
     # # collected over steps 2-6 as necessary.

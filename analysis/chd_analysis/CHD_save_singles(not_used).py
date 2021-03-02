@@ -97,7 +97,7 @@ for inst_index, instrument in enumerate(inst_list):
     instrument_pd = query_pd[hist_inst == instrument]
 
     for index, row in instrument_pd.iterrows():
-        print("Processing image number", row.image_id, "for LBC and IIT Corrections.")
+        print("Processing image number", row.data_id, "for LBC and IIT Corrections.")
         # apply LBC
         original_los, lbcc_image, mu_indices, use_indices, theoretic_query = lbcc_funcs.apply_lbc(db_session, hdf_data_dir,
                                                                                  lbc_combo_query, image_row=row,
@@ -115,11 +115,11 @@ for inst_index, instrument in enumerate(inst_list):
          #   pass
 
         # use fixed map resolution
-        map_image = iit_image.interp_to_map(R0=R0, map_x=map_x, map_y=map_y, image_num=row.image_id)
+        map_image = iit_image.interp_to_map(R0=R0, map_x=map_x, map_y=map_y, image_num=row.data_id)
         # Alternatively, we could have resolution determined from image
         # map_list[ii] = los_list[ii].interp_to_map(R0=R0)
         # record image info
-        map_image.append_image_info(row)
+        map_image.append_data_info(row)
 
         # generate a record of the method and variable values used for interpolation
         new_method = {'meth_name': ("Im2Map_Lin_Interp_1",), 'meth_description':
@@ -141,7 +141,7 @@ moving_avg_centers = np.array(
 
 for index, center in enumerate(moving_avg_centers):
     date_time = np.datetime64(center).astype(datetime.datetime)
-    map_info, image_info, method_info, map_list = db_funcs.query_euv_map_list(db_session, mean_time_range=[date_time - datetime.timedelta(hours=1),
+    map_info, data_info, method_info, map_list = db_funcs.query_euv_map_list(db_session, mean_time_range=[date_time - datetime.timedelta(hours=1),
                                                                                                            date_time + datetime.timedelta(hours=1)], n_images=1)
     if len(map_list) == 0:
         continue
@@ -152,7 +152,7 @@ for index, center in enumerate(moving_avg_centers):
         ["Minimum intensity merge version 1"] * 1,
                   'var_name': ("del_mu",), 'var_description': ("max acceptable mu range",), 'var_val': (del_mu,)}
     combined_map.append_method_info(pd.DataFrame(data=new_method))
-    combined_map.append_image_info(image_info)
+    combined_map.append_data_info(data_info)
     combined_map.append_map_info(map_info)
     EasyPlot.PlotMap(combined_map, nfig="Combined map for: " + str(center), title="Minimum Intensity Merge Map\nDate: "
                                                                                + str(center))

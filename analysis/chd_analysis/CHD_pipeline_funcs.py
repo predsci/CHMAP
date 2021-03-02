@@ -127,7 +127,7 @@ def apply_ipp(db_session, center_date, query_pd, inst_list, hdf_data_dir, lbc_co
             else:
                 image_row = inst_image.iloc[0]
                 index = np.where(date_pd['instrument'] == instrument)[0][0]
-                print("Processing image number", image_row.image_id, "for LBC and IIT Corrections.")
+                print("Processing image number", image_row.data_id, "for LBC and IIT Corrections.")
                 # apply LBC
                 los_list[inst_ind], lbcc_image, mu_indices, use_ind, theoretic_query = lbcc_funcs.apply_lbc(db_session,
                                                                                                             hdf_data_dir,
@@ -228,7 +228,7 @@ def create_singles_maps(inst_list, date_pd, iit_list, chd_image_list, methods_li
     @return: list of euv maps, list of chd maps, methods list, image info, and map info
     """
     start = time.time()
-    image_info = []
+    data_info = []
     map_info = []
     map_list = [datatypes.PsiMap()] * len(inst_list)
     chd_map_list = [datatypes.PsiMap()] * len(inst_list)
@@ -241,14 +241,14 @@ def create_singles_maps(inst_list, date_pd, iit_list, chd_image_list, methods_li
             image_row = inst_image.iloc[0]
             # EUV map
             map_list[inst_ind] = iit_list[inst_ind].interp_to_map(R0=R0, map_x=map_x, map_y=map_y,
-                                                                  image_num=image_row.image_id)
+                                                                  image_num=image_row.data_id)
             # CHD map
             chd_map_list[inst_ind] = chd_image_list[inst_ind].interp_to_map(R0=R0, map_x=map_x, map_y=map_y,
-                                                                            image_num=image_row.image_id)
+                                                                            image_num=image_row.data_id)
             # record image and map info
-            chd_map_list[inst_ind].append_image_info(image_row)
-            map_list[inst_ind].append_image_info(image_row)
-            image_info.append(image_row)
+            chd_map_list[inst_ind].append_data_info(image_row)
+            map_list[inst_ind].append_data_info(image_row)
+            data_info.append(image_row)
             map_info.append(map_list[inst_ind].map_info)
 
             # generate a record of the method and variable values used for interpolation
@@ -264,12 +264,12 @@ def create_singles_maps(inst_list, date_pd, iit_list, chd_image_list, methods_li
 
     end = time.time()
     print("Images interpolated to maps in", end - start, "seconds.")
-    return map_list, chd_map_list, methods_list, image_info, map_info
+    return map_list, chd_map_list, methods_list, data_info, map_info
 
 
 #### STEP FIVE: CREATE COMBINED MAPS AND SAVE TO DB ####
 def create_combined_maps(db_session, map_data_dir, map_list, chd_map_list, methods_list,
-                         image_info, map_info, mu_merge_cutoff=None, del_mu=None, mu_cutoff=0.0):
+                         data_info, map_info, mu_merge_cutoff=None, del_mu=None, mu_cutoff=0.0):
     """
     function to create combined EUV and CHD maps and save to database with associated method information
     @param db_session: database session to save maps to
@@ -277,7 +277,7 @@ def create_combined_maps(db_session, map_data_dir, map_list, chd_map_list, metho
     @param map_list: list of EUV maps
     @param chd_map_list: list of CHD maps
     @param methods_list: methods list
-    @param image_info: image info list
+    @param data_info: image info list
     @param map_info: map info list
     @param mu_merge_cutoff: cutoff mu value for overlap areas
     @param del_mu: maximum mu threshold value
@@ -314,22 +314,22 @@ def create_combined_maps(db_session, map_data_dir, map_list, chd_map_list, metho
     # generate a record of the method and variable values used for interpolation
     euv_combined.append_method_info(methods_list)
     euv_combined.append_method_info(pd.DataFrame(data=combined_method))
-    euv_combined.append_image_info(image_info)
+    euv_combined.append_data_info(data_info)
     euv_combined.append_map_info(map_info)
     chd_combined.append_method_info(methods_list)
     chd_combined.append_method_info(pd.DataFrame(data=combined_method))
-    chd_combined.append_image_info(image_info)
+    chd_combined.append_data_info(data_info)
     chd_combined.append_map_info(map_info)
 
     # plot maps
-    Plotting.PlotMap(euv_combined, nfig="EUV Combined Map for: " + str(euv_combined.image_info.date_obs[0]),
-                     title="Minimum Intensity Merge EUV Map\nDate: " + str(euv_combined.image_info.date_obs[0]),
+    Plotting.PlotMap(euv_combined, nfig="EUV Combined Map for: " + str(euv_combined.data_info.date_obs[0]),
+                     title="Minimum Intensity Merge EUV Map\nDate: " + str(euv_combined.data_info.date_obs[0]),
                      map_type='EUV')
-    Plotting.PlotMap(chd_combined, nfig="CHD Combined Map for: " + str(chd_combined.image_info.date_obs[0]),
-                     title="Minimum Intensity Merge CHD Map\nDate: " + str(chd_combined.image_info.date_obs[0]),
+    Plotting.PlotMap(chd_combined, nfig="CHD Combined Map for: " + str(chd_combined.data_info.date_obs[0]),
+                     title="Minimum Intensity Merge CHD Map\nDate: " + str(chd_combined.data_info.date_obs[0]),
                      map_type='CHD')
-    #     Plotting.PlotMap(chd_combined, nfig="CHD Contour Map for: " + str(chd_combined.image_info.date_obs[0]),
-    #                      title="Minimum Intensity Merge CHD Contour Map\nDate: " + str(chd_combined.image_info.date_obs[0]),
+    #     Plotting.PlotMap(chd_combined, nfig="CHD Contour Map for: " + str(chd_combined.data_info.date_obs[0]),
+    #                      title="Minimum Intensity Merge CHD Contour Map\nDate: " + str(chd_combined.data_info.date_obs[0]),
     #                      map_type='Contour')
 
     # save EUV and CHD maps to database

@@ -1,7 +1,3 @@
-#!/usr/bin/env python
-import sys
-
-sys.path.append("/Users/tamarervin/CH_Project/CHD")
 
 """
 code for creation of IIT histograms and saving to database
@@ -42,15 +38,10 @@ sqlite_filename = App.DATABASE_FNAME
 # setup database parameters
 create = True  # true if you want to add to database
 # designate which database to connect to
-# sqlite
-use_db = "sqlite"
-sqlite_path = os.path.join(database_dir, sqlite_filename)
-
-# mysql
-# use_db = "mysql-Q"       # 'sqlite'  Use local sqlite file-based db
+use_db = "mysql-Q"       # 'sqlite'  Use local sqlite file-based db
                         # 'mysql-Q' Use the remote MySQL database on Q
-# user = "turtle"         # only needed for remote databases.
-# password = ""           # See example109 for setting-up an encrypted password.  In this case leave password="", and
+user = "turtle"         # only needed for remote databases.
+password = ""           # See example109 for setting-up an encrypted password.  In this case leave password="", and
 # init_db_conn() will automatically find and use your saved password. Otherwise, enter your MySQL password here.
 
 ###### ------- NOTHING TO UPDATE BELOW ------- #######

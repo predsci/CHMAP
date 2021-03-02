@@ -279,7 +279,7 @@ class LBCCImage(LosImage):
     Class that holds limb-brightening corrected data
     """
 
-    def __init__(self, los_image, lbcc_data, image_id, meth_id, intensity_bin_edges):
+    def __init__(self, los_image, lbcc_data, data_id, meth_id, intensity_bin_edges):
 
         super().__init__(los_image.data, los_image.x, los_image.y, los_image.info)
         date_format = "%Y-%m-%dT%H:%M:%S.%f"
@@ -290,7 +290,7 @@ class LBCCImage(LosImage):
 
         # definitions
         self.lbcc_data = lbcc_data
-        self.image_id = image_id
+        self.data_id = data_id
         self.meth_id = meth_id
         self.n_intensity_bins = len(intensity_bin_edges) - 1
         self.intensity_bin_edges = intensity_bin_edges
@@ -325,9 +325,9 @@ class LBCCImage(LosImage):
         return mu_array, lat_array, lbcc_data
 
 
-def create_lbcc_image(los_image, corrected_data, image_id, meth_id, intensity_bin_edges):
+def create_lbcc_image(los_image, corrected_data, data_id, meth_id, intensity_bin_edges):
     # create LBCC Image structure
-    lbcc = LBCCImage(los_image, corrected_data, image_id, meth_id, intensity_bin_edges)
+    lbcc = LBCCImage(los_image, corrected_data, data_id, meth_id, intensity_bin_edges)
     return lbcc
 
 
@@ -348,9 +348,9 @@ class IITImage(LBCCImage):
     def __init__(self, los_image, lbcc_image, iit_corrected_data, meth_id):
         # LBCC inherited definitions
         corrected_data = lbcc_image.lbcc_data
-        image_id = lbcc_image.image_id
+        data_id = lbcc_image.data_id
         intensity_bin_edges = lbcc_image.intensity_bin_edges
-        super().__init__(los_image, corrected_data, image_id, meth_id, intensity_bin_edges)
+        super().__init__(los_image, corrected_data, data_id, meth_id, intensity_bin_edges)
 
         # IIT specific stuff
         self.iit_data = iit_corrected_data
@@ -404,7 +404,7 @@ class PsiMap:
             dimensions identical to 'data'.
 
         Initialization also uses database definitions to generate empty dataframes
-        for metadata: method_info, image_info, map_info, and var_info
+        for metadata: method_info, data_info, map_info, and var_info
         """
         ### initialize class to create map list
         if data is None:
@@ -412,10 +412,18 @@ class PsiMap:
         else:
             # --- Initialize empty dataframes based on Table schema ---
             # create the data tags (all pandas dataframes?)
-            self.image_info = init_df_from_declarative_base(db.EUV_Images)
+            # self.data_info = init_df_from_declarative_base(db.EUV_Images)
+            euv_image_cols = []
+            for column in db.EUV_Images.__table__.columns:
+                euv_image_cols.append(column.key)
+            data_files_cols = []
+            for column in db.Data_Files.__table__.columns:
+                data_files_cols.append(column.key)
+            data_cols = set().union(euv_image_cols, data_files_cols)
+            self.data_info = pd.DataFrame(data=None, columns=data_cols)
             # map_info will be a combination of Image_Combos and EUV_Maps
             image_columns = []
-            for column in db.Image_Combos.__table__.columns:
+            for column in db.Data_Combos.__table__.columns:
                 image_columns.append(column.key)
             map_columns = []
             for column in db.EUV_Maps.__table__.columns:
@@ -472,8 +480,8 @@ class PsiMap:
     # def append_var_info(self, var_info_df):
     #     self.var_info = self.var_info.append(var_info_df, sort=False, ignore_index=True)
 
-    def append_image_info(self, image_df):
-        self.image_info = self.image_info.append(image_df, sort=False, ignore_index=True)
+    def append_data_info(self, image_df):
+        self.data_info = self.data_info.append(image_df, sort=False, ignore_index=True)
 
     def write_to_file(self, base_path, map_type=None, filename=None, db_session=None):
         """
@@ -505,7 +513,7 @@ class PsiMap:
             h5_filename = os.path.join(base_path, rel_path)
             # write map to file
             psihdf.wrh5_fullmap(h5_filename, self.x, self.y, np.array([]), self.data, method_info=self.method_info,
-                                image_info=self.image_info, map_info=self.map_info,
+                                data_info=self.data_info, map_info=self.map_info,
                                 no_data_val=self.no_data_val, mu=self.mu, origin_image=self.origin_image)
             print("PsiMap object written to: " + h5_filename)
 
@@ -523,16 +531,16 @@ def read_psi_map(h5_file):
     :return: PsiMap object
     """
     # read the image and metadata
-    x, y, z, f, method_info, image_info, map_info, var_info, no_data_val, mu, origin_image = psihdf.rdh5_fullmap(
+    x, y, z, f, method_info, data_info, map_info, var_info, no_data_val, mu, origin_image, chd = psihdf.rdh5_fullmap(
         h5_file)
 
     # create the map structure
-    psi_map = PsiMap(f, x, y, mu=mu, origin_image=origin_image, no_data_val=no_data_val)
+    psi_map = PsiMap(f, x, y, mu=mu, origin_image=origin_image, no_data_val=no_data_val, chd=chd)
     # fill in DB meta data
     if method_info is not None:
         psi_map.append_method_info(method_info)
-    if image_info is not None:
-        psi_map.append_image_info(image_info)
+    if data_info is not None:
+        psi_map.append_data_info(data_info)
     if map_info is not None:
         psi_map.append_map_info(map_info)
 
@@ -640,7 +648,7 @@ def create_iit_hist(lbcc_image, meth_id, lat_band, iit_hist):
     function to create IIT type histogram
     """
     # definitions
-    image_id = lbcc_image.image_id
+    image_id = lbcc_image.data_id
     date_obs = lbcc_image.date_obs
     instrument = lbcc_image.instrument
     wavelength = lbcc_image.wavelength

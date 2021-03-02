@@ -110,13 +110,13 @@ for date_ind, center in enumerate(moving_avg_centers):
         chd_image_list = chd_funcs.chd(iit_list, los_list, use_indices, inst_list, thresh1, thresh2, ref_alpha, ref_x,
                                        nc, iters)
         #### STEP FOUR: CONVERT TO MAP ####
-        map_list, chd_map_list, methods_list, image_info, map_info = chd_funcs.create_singles_maps(inst_list, date_pd,
+        map_list, chd_map_list, methods_list, data_info, map_info = chd_funcs.create_singles_maps(inst_list, date_pd,
                                                                                                    iit_list,
                                                                                                    chd_image_list,
                                                                                                    methods_list, map_x,
                                                                                                    map_y, R0)
         #### STEP FIVE: CREATE COMBINED MAPS AND SAVE TO DB ####
         euv_combined, chd_combined = chd_funcs.create_combined_maps(db_session, map_data_dir, map_list, chd_map_list,
-                                                                    methods_list, image_info, map_info,
+                                                                    methods_list, data_info, map_info,
                                                                     mu_merge_cutoff=mu_merge_cutoff, mu_cutoff=mu_cutoff)
 

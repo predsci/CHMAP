@@ -118,7 +118,7 @@ for index, date in enumerate(query_times):
                                           thresh2,
                                           ref_alpha, ref_x, nc, iters)
                 #### STEP FOUR: CONVERT TO MAP ####
-                map_list, chd_map_list, methods_list, image_info, map_info = chd_funcs.create_singles_maps(inst_list,
+                map_list, chd_map_list, methods_list, data_info, map_info = chd_funcs.create_singles_maps(inst_list,
                                                                                                            date_pd,
                                                                                                            iit_list,
                                                                                                            chd_image,
@@ -162,11 +162,11 @@ for index, date in enumerate(query_times):
                 # generate a record of the method and variable values used for interpolation
                 euv_combined.append_method_info(methods_list)
                 euv_combined.append_method_info(pd.DataFrame(data=combined_method))
-                euv_combined.append_image_info(image_info)
+                euv_combined.append_data_info(data_info)
                 euv_combined.append_map_info(map_info)
                 chd_combined.append_method_info(methods_list)
                 chd_combined.append_method_info(pd.DataFrame(data=combined_method))
-                chd_combined.append_image_info(image_info)
+                chd_combined.append_data_info(data_info)
                 chd_combined.append_map_info(map_info)
 
                 # plot maps

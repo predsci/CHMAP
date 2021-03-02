@@ -90,7 +90,7 @@ for index, row in query_result.iterrows():
     print(f'Working on file {ifile} of {len(query_result)}')
     print('---------------------------------------------------------')
     print(f'  query row index:  {index}')
-    print(f'  database image_id:  {row.image_id}')
+    print(f'  database data_id:  {row.data_id}')
     print('  Raw File:  ' + raw_data_file)
     subdir, fname, los = prep.prep_euv_image(
         raw_data_file, App.PROCESSED_DATA_HOME, write=write, idl_session=idl_session, deconvolve=deconvolve)

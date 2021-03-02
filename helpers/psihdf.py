@@ -120,7 +120,7 @@ def rdh5_meta(h5_filename):
     return (x, y, z, f, chd_meta, sunpy_meta)
 
 
-def wrh5_fullmap(h5_filename, x, y, z, f, method_info=None, image_info=None, map_info=None,
+def wrh5_fullmap(h5_filename, x, y, z, f, method_info=None, data_info=None, map_info=None,
              var_info=None, no_data_val=None, mu=None, origin_image=None, chd=None):
     """
     Write an hdf5 file similar to the standard PSI format + secondary data + json metadata
@@ -130,7 +130,7 @@ def wrh5_fullmap(h5_filename, x, y, z, f, method_info=None, image_info=None, map
 
     - x, y, z are the corresponding 1D scales
 
-    - method_info, image_info, map_info, and var_info are optional
+    - method_info, data_info, map_info, and var_info are optional
       pandas dataframes of metadata that will be converted to a json string.
       no_data_val is an optional scalar metadata.
       - they are intended to hold descriptive info, not big arrays.
@@ -187,8 +187,8 @@ def wrh5_fullmap(h5_filename, x, y, z, f, method_info=None, image_info=None, map
     # Convert the metadata to a json string, save it as an "attribute"
     if method_info is not None:
         h5file.attrs['method_info'] = method_info.to_json(orient="split")
-    if image_info is not None:
-        h5file.attrs['image_info'] = image_info.to_json(orient="split")
+    if data_info is not None:
+        h5file.attrs['data_info'] = data_info.to_json(orient="split")
     if map_info is not None:
         h5file.attrs['map_info'] = map_info.to_json(orient="split")
     if var_info is not None:
@@ -209,7 +209,7 @@ def rdh5_fullmap(h5_filename):
 
     - x, y, z are the corresponding 1D scales
 
-    - method_info, image_info, map_info, and var_info are optional
+    - method_info, data_info, map_info, and var_info are optional
       pandas dataframes of metadata that will have been saved as
       json strings.
       no_data_val is an optional scalar metadata.
@@ -262,10 +262,15 @@ def rdh5_fullmap(h5_filename):
         method_info = pd.read_json(h5file.attrs['method_info'], orient="split")
     else:
         method_info = None
-    if 'image_info' in h5file.attrs:
-        image_info = pd.read_json(h5file.attrs['image_info'], orient="split")
+    if 'data_info' in h5file.attrs:
+        data_info = pd.read_json(h5file.attrs['data_info'], orient="split")
+    elif 'image_info' in h5file.attrs:
+        # for backwards compatibility, look for image_info entry
+        data_info = pd.read_json(h5file.attrs['image_info'], orient="split")
+        # rename column
+        data_info.rename(columns={'image_id': 'data_id'}, inplace=True)
     else:
-        image_info = None
+        data_info = None
     if 'map_info' in h5file.attrs:
         map_info = pd.read_json(h5file.attrs['map_info'], orient="split")
     else:
@@ -281,11 +286,11 @@ def rdh5_fullmap(h5_filename):
 
     h5file.close()
 
-    return (x, y, z, f, method_info, image_info, map_info, var_info,
+    return (x, y, z, f, method_info, data_info, map_info, var_info,
             no_data_val, mu, origin_image, chd)
 
 
-def wrh5_map(h5_filename, x, y, z, f, method_info=None, image_info=None, map_info=None,
+def wrh5_map(h5_filename, x, y, z, f, method_info=None, data_info=None, map_info=None,
              var_info=None, no_data_val=None):
     """
     Write an hdf5 file in the standard PSI format + json metadata. This
@@ -297,7 +302,7 @@ def wrh5_map(h5_filename, x, y, z, f, method_info=None, image_info=None, map_inf
 
     - x, y, z are the corresponding 1D scales
 
-    - method_info, image_info, map_info, and var_info are optional
+    - method_info, data_info, map_info, and var_info are optional
       pandas dataframes of metadata that will be converted to a json string.
       no_data_val is an optional scalar metadata.
       - they are intended to hold descriptive info, not big arrays.
@@ -335,8 +340,8 @@ def wrh5_map(h5_filename, x, y, z, f, method_info=None, image_info=None, map_inf
     # Convert the metadata to a json string, save it as an "attribute"
     if method_info != None:
         h5file.attrs['method_info'] = method_info.to_json(orient="split")
-    if image_info != None:
-        h5file.attrs['image_info'] = image_info.to_json(orient="split")
+    if data_info != None:
+        h5file.attrs['data_info'] = data_info.to_json(orient="split")
     if map_info != None:
         h5file.attrs['map_info'] = map_info.to_json(orient="split")
     if var_info != None:
@@ -358,7 +363,7 @@ def rdh5_map(h5_filename):
 
     - x, y, z are the corresponding 1D scales
 
-    - method_info, image_info, map_info, and var_info are optional
+    - method_info, data_info, map_info, and var_info are optional
       pandas dataframes of metadata that will have been saved as
       json strings.
       no_data_val is an optional scalar metadata.
@@ -395,10 +400,10 @@ def rdh5_map(h5_filename):
         method_info = pd.read_json(h5file.attrs['method_info'], orient="split")
     else:
         method_info = None
-    if 'image_info' in h5file.attrs:
-        image_info = pd.read_json(h5file.attrs['image_info'], orient="split")
+    if 'data_info' in h5file.attrs:
+        data_info = pd.read_json(h5file.attrs['data_info'], orient="split")
     else:
-        image_info = None
+        data_info = None
     if 'map_info' in h5file.attrs:
         map_info = pd.read_json(h5file.attrs['map_info'], orient="split")
     else:
@@ -414,5 +419,5 @@ def rdh5_map(h5_filename):
 
     h5file.close()
 
-    return (x, y, z, f, method_info, image_info, map_info, var_info,
+    return (x, y, z, f, method_info, data_info, map_info, var_info,
             no_data_val)

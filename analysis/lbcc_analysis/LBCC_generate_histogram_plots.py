@@ -94,7 +94,7 @@ for instrument in inst_list:
             hdf_path = os.path.join(hdf_data_dir, row.fname_hdf)
             temp_hist = psi_d_types.LosImage.mu_hist(lbcc_image, intensity_bin_edges, mu_bin_edges, lat_band=lat_band,
                                                      log10=log10)
-            hist_lbcc = psi_d_types.create_lbcc_hist(hdf_path, row.image_id, method_id[1], mu_bin_edges,
+            hist_lbcc = psi_d_types.create_lbcc_hist(hdf_path, row.data_id, method_id[1], mu_bin_edges,
                                                      intensity_bin_edges, lat_band, temp_hist)
             #### PLOT NEW HISTOGRAMS ####
             # definitions

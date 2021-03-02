@@ -93,7 +93,7 @@ norm_dist = dp_funcs.gauss_time(query_pd, sigma)
 #### LOOP THROUGH IMAGES ####
 euv_combined = None
 chd_combined = None
-image_info = []
+data_info = []
 map_info = []
 sum_wgt = 0
 for row in query_pd.iterrows():
@@ -116,12 +116,12 @@ for row in query_pd.iterrows():
 
     #### STEP FIVE: CREATE COMBINED MAPS ####
     euv_combined, chd_combined, sum_wgt, combined_method = dp_funcs.time_wgt_map(euv_map, chd_map, euv_combined,
-                                                                                 chd_combined, image_info, map_info,
+                                                                                 chd_combined, data_info, map_info,
                                                                                  weight, sum_wgt, sigma, mu_cutoff)
 
 
 #### STEP SIX: SAVE TO DATABASE ####
-dp_funcs.save_gauss_time_maps(db_session, map_data_dir, euv_combined, chd_combined, image_info, map_info, methods_list,
+dp_funcs.save_gauss_time_maps(db_session, map_data_dir, euv_combined, chd_combined, data_info, map_info, methods_list,
                                combined_method)
 
 # ### TESTERS

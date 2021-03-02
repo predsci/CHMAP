@@ -66,7 +66,7 @@ def apply_ipp(db_session, hdf_data_dir, inst_list, row, methods_list, lbc_combo_
 
     end = time.time()
     print("Image Pre-Processing Corrections (Limb-Brightening and Inter-Instrument Transformation) have been "
-          "applied to image", image_row.image_id, "in", end - start, "seconds.")
+          "applied to image", image_row.data_id, "in", end - start, "seconds.")
 
     return los_image, iit_image, methods_list, use_indices
 
@@ -101,7 +101,7 @@ def chd(db_session, inst_list, los_image, iit_image, use_indices, iit_combo_quer
     chd_image.get_coordinates()
 
     end = time.time()
-    print("Coronal Hole Detection Algorithm has been applied to image", iit_image.image_id, "in", end - start,
+    print("Coronal Hole Detection Algorithm has been applied to image", iit_image.data_id, "in", end - start,
           "seconds.")
 
     return chd_image
@@ -113,12 +113,12 @@ def create_map(iit_image, chd_image, methods_list, row, map_x=None, map_y=None, 
     index = row[0]
     image_row = row[1]
     # EUV map
-    euv_map = iit_image.interp_to_map(R0=R0, map_x=map_x, map_y=map_y, image_num=image_row.image_id)
+    euv_map = iit_image.interp_to_map(R0=R0, map_x=map_x, map_y=map_y, image_num=image_row.data_id)
     # CHD map
-    chd_map = chd_image.interp_to_map(R0=R0, map_x=map_x, map_y=map_y, image_num=image_row.image_id)
+    chd_map = chd_image.interp_to_map(R0=R0, map_x=map_x, map_y=map_y, image_num=image_row.data_id)
     # record image and map info
-    euv_map.append_image_info(image_row)
-    chd_map.append_image_info(image_row)
+    euv_map.append_data_info(image_row)
+    chd_map.append_data_info(image_row)
 
     # generate a record of the method and variable values used for interpolation
     interp_method = {'meth_name': ("Im2Map_Lin_Interp_1",), 'meth_description':
@@ -132,13 +132,13 @@ def create_map(iit_image, chd_image, methods_list, row, map_x=None, map_y=None, 
     chd_map.append_method_info(methods_list[index])
 
     end = time.time()
-    print("Image number", iit_image.image_id, "has been interpolated to map(s) in", end - start, "seconds.")
+    print("Image number", iit_image.data_id, "has been interpolated to map(s) in", end - start, "seconds.")
 
     return euv_map, chd_map
 
 
 #### STEP FIVE: CREATE COMBINED MAPS ####
-def cr_map(euv_map, chd_map, euv_combined, chd_combined, image_info, map_info, mu_cutoff=0.0, mu_merge_cutoff=None,
+def cr_map(euv_map, chd_map, euv_combined, chd_combined, data_info, map_info, mu_cutoff=0.0, mu_merge_cutoff=None,
            del_mu=None):
     start = time.time()
     # create map lists
@@ -149,7 +149,7 @@ def cr_map(euv_map, chd_map, euv_combined, chd_combined, image_info, map_info, m
     if chd_combined is not None:
         chd_maps.append(chd_combined)
     # determine number of images already in combined map
-    n_images = len(image_info)
+    n_images = len(data_info)
 
     # combine maps with minimum intensity merge
     if del_mu is not None:
@@ -173,18 +173,18 @@ def cr_map(euv_map, chd_map, euv_combined, chd_combined, image_info, map_info, m
     chd_combined_method = {'meth_name': ("Prob-CR-CHD-Merge",), 'meth_description': ["Probability Merge for CR CHD Maps"]}
 
     # append image and map info records
-    image_info.append(euv_map.image_info)
+    data_info.append(euv_map.data_info)
     map_info.append(euv_map.map_info)
 
     end = time.time()
-    print("Image number", euv_map.image_info.image_id[0], "has been added to the combined CR map in", end - start,
+    print("Image number", euv_map.data_info.data_id[0], "has been added to the combined CR map in", end - start,
           "seconds.")
 
     return euv_combined, chd_combined, combined_method, chd_combined_method
 
 
 #### STEP SIX: PLOT COMBINED MAP AND SAVE TO DATABASE ####
-def save_maps(db_session, map_data_dir, euv_combined, chd_combined, image_info, map_info, methods_list,
+def save_maps(db_session, map_data_dir, euv_combined, chd_combined, data_info, map_info, methods_list,
               combined_method, chd_combined_method):
     start = time.time()
     # generate a record of the method and variable values used for interpolation
@@ -194,17 +194,17 @@ def save_maps(db_session, map_data_dir, euv_combined, chd_combined, image_info, 
     chd_combined.append_method_info(pd.DataFrame(data=chd_combined_method))
 
     # generate record of image and map info
-    euv_combined.append_image_info(image_info)
+    euv_combined.append_data_info(data_info)
     euv_combined.append_map_info(map_info)
-    chd_combined.append_image_info(image_info)
+    chd_combined.append_data_info(data_info)
     chd_combined.append_map_info(map_info)
 
     # plot maps
     Plotting.PlotMap(euv_combined, nfig="CR EUV Map", title="Minimum Intensity Merge CR EUV Map\nTime Min: " + str(
-        euv_combined.image_info.iloc[0].date_obs) + "\nTime Max: " + str(euv_combined.image_info.iloc[-1].date_obs))
+        euv_combined.data_info.iloc[0].date_obs) + "\nTime Max: " + str(euv_combined.data_info.iloc[-1].date_obs))
     # Plotting.PlotMap(euv_combined, nfig="CR CHD Map", title="Minimum Intensity CR CHD Merge Map")
     Plotting.PlotMap(chd_combined, nfig="CR CHD Map", title="CHD Probability Merge Map\nTime Min: " + str(
-        chd_combined.image_info.iloc[0].date_obs) + "\nTime Max: " + str(chd_combined.image_info.iloc[-1].date_obs),
+        chd_combined.data_info.iloc[0].date_obs) + "\nTime Max: " + str(chd_combined.data_info.iloc[-1].date_obs),
                      map_type='CHD')
 
     # save EUV and CHD maps to database

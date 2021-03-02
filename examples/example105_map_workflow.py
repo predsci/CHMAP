@@ -1,4 +1,8 @@
 """
+WARNING: This script requires updating to run correctly.
+Functionality has been replaced by DB_funs.add_EUV_map() as demonstrated in
+examples/Create_map_outline.py
+
 This example demonstrates the process of adding a map to the database.
     1. Create a test SQLite database
     2. create minimal 'Map' object from method, var_vals, image associations, and map filename
@@ -51,8 +55,8 @@ meth_name = "meth_101"
 # method is new to the DB. Add method definition before adding map
 new_method = True
 # in practice image_df will usually be the output of query_euv_images(), but here
-# we show that only the image_id column is needed for map record creation
-image_df = pd.DataFrame(data=[1, 2, 3], columns=["image_id", ])
+# we show that only the data_id column is needed for map record creation
+image_df = pd.DataFrame(data=[1, 2, 3], columns=["data_id", ])
 # variable values must be a DataFrame with columns var_name and var_val
 var_vals = pd.DataFrame(data=[['x1', 1], ['x2', 10.1]], columns=["var_name", "var_val"])
 
@@ -90,9 +94,9 @@ mean_time_range = [datetime.datetime(2000, 1, 1, 1, 1, 1), datetime.datetime(202
 # For example search for all maps over a large time range.  For demonstration, all query options are listed
 # query_par=None.  In practice, they default to None and do not need to be entered in the function call.  Ranges
 # are expected as a list with length 2; others expect lists and use the IN() operator.
-map_info, image_info, var_info, method_info = query_euv_maps(db_session, mean_time_range=mean_time_range,
+map_info, data_info, var_info, method_info = query_euv_maps(db_session, mean_time_range=mean_time_range,
                                                              extrema_time_range=None, n_images=None,
-                                                             image_ids=None, methods=None, var_val_range=None,
+                                                             data_ids=None, methods=None, var_val_range=None,
                                                              wavelength=None)
 # print("Querying for all maps in a large time range: \n" + str(mean_time_range) + ", \nReturns a list of maps of length "
 #       + str(len(map_list)) + ".\n")

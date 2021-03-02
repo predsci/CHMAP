@@ -225,7 +225,7 @@ class PsiMap:
             dimensions identical to 'data'.
 
         Initialization also uses database definitions to generate empty dataframes
-        for metadata: method_info, image_info, map_info, and var_info
+        for metadata: method_info, data_info, map_info, and var_info
         """
         # --- Initialize empty dataframes based on Table schema ---
         # create the data tags (all pandas dataframes?)
