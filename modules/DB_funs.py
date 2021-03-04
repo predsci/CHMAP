@@ -695,7 +695,7 @@ def get_combo_id(db_session, meth_id, data_ids, create=False):
 
         # generate record and add to session
         combo_add = Data_Combos(meth_id=meth_id, n_images=n_images, date_mean=date_mean, date_max=date_max,
-                                date_min=date_min)
+                                date_min=date_min, instrument=instrument)
         db_session.add(combo_add)
         # Add record to DB
         db_session.commit()
@@ -1574,21 +1574,21 @@ def combo_bracket_date(db_session, target_date, meth_id, instrument="any"):
     #                           create=True)
 
     if instrument == "any":
-        below_query = db_session.query(Image_Combos).filter(
-            Image_Combos.date_mean <= target_date,
-            Image_Combos.meth_id == meth_id).order_by(Image_Combos.date_mean.desc())
-        above_query = db_session.query(Image_Combos).filter(
-            Image_Combos.date_mean >= target_date,
-            Image_Combos.meth_id == meth_id).order_by(Image_Combos.date_mean)
+        below_query = db_session.query(Data_Combos).filter(
+            Data_Combos.date_mean <= target_date,
+            Data_Combos.meth_id == meth_id).order_by(Data_Combos.date_mean.desc())
+        above_query = db_session.query(Data_Combos).filter(
+            Data_Combos.date_mean >= target_date,
+            Data_Combos.meth_id == meth_id).order_by(Data_Combos.date_mean)
     else:
-        below_query = db_session.query(Image_Combos).filter(
-            Image_Combos.date_mean <= target_date,
-            Image_Combos.meth_id == meth_id,
-            Image_Combos.instrument == instrument).order_by(Image_Combos.date_mean.desc())
-        above_query = db_session.query(Image_Combos).filter(
-            Image_Combos.date_mean >= target_date,
-            Image_Combos.meth_id == meth_id,
-            Image_Combos.instrument == instrument).order_by(Image_Combos.date_mean)
+        below_query = db_session.query(Data_Combos).filter(
+            Data_Combos.date_mean <= target_date,
+            Data_Combos.meth_id == meth_id,
+            Data_Combos.instrument == instrument).order_by(Data_Combos.date_mean.desc())
+        above_query = db_session.query(Data_Combos).filter(
+            Data_Combos.date_mean >= target_date,
+            Data_Combos.meth_id == meth_id,
+            Data_Combos.instrument == instrument).order_by(Data_Combos.date_mean)
 
     below_pd = pd.read_sql(below_query.limit(1).statement, db_session.bind)
     above_pd = pd.read_sql(above_query.limit(1).statement, db_session.bind)
@@ -1611,17 +1611,17 @@ def query_inst_combo(db_session, query_time_min, query_time_max, meth_name, inst
                               create=True)
 
     if instrument == "any":
-        combo_query = db_session.query(Image_Combos).filter(
-            Image_Combos.date_mean.between(query_time_min, query_time_max),
-            Image_Combos.meth_id == method_id[1])
+        combo_query = db_session.query(Data_Combos).filter(
+            Data_Combos.date_mean.between(query_time_min, query_time_max),
+            Data_Combos.meth_id == method_id[1])
     else:
-        combo_query = db_session.query(Image_Combos).filter(
-            Image_Combos.date_mean.between(query_time_min, query_time_max),
-            Image_Combos.meth_id == method_id[1],
-            Image_Combos.instrument == instrument)
+        combo_query = db_session.query(Data_Combos).filter(
+            Data_Combos.date_mean.between(query_time_min, query_time_max),
+            Data_Combos.meth_id == method_id[1],
+            Data_Combos.instrument == instrument)
 
     # retrieve query result (ordered by date_mean)
-    combo_result = pd.read_sql(combo_query.order_by(Image_Combos.date_mean).statement,
+    combo_result = pd.read_sql(combo_query.order_by(Data_Combos.date_mean).statement,
                                db_session.bind)
 
     return combo_result

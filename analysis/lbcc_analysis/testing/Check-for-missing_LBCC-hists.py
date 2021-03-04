@@ -92,10 +92,10 @@ in_index = query_pd.data_id.isin(hist_pd.image_id)
 images_no_hist = query_pd[~in_index]
 
 # return all LBCC parameters
-lbcc_par_query = db_session.query(db_class.Var_Vals, db_class.Image_Combos).filter(
-    db_class.Image_Combos.date_mean.between(hist_query_time_min, hist_query_time_max)
+lbcc_par_query = db_session.query(db_class.Var_Vals, db_class.Data_Combos).filter(
+    db_class.Data_Combos.date_mean.between(hist_query_time_min, hist_query_time_max)
     ).filter(db_class.Var_Vals.meth_id == method_id[1]).filter(
-    db_class.Var_Vals.combo_id == db_class.Image_Combos.combo_id)
+    db_class.Var_Vals.combo_id == db_class.Data_Combos.combo_id)
 lbcc_pars = pd.read_sql(lbcc_par_query.statement, db_session.bind)
 
 
@@ -114,10 +114,10 @@ db_class.Histogram.meth_id == method_id[1])
 iit_hist_pd = pd.read_sql(iit_hist_query.statement, db_session.bind)
 
 # query IIT parameters
-iit_par_query = db_session.query(db_class.Var_Vals, db_class.Image_Combos).filter(
-    db_class.Image_Combos.date_mean.between(hist_query_time_min, hist_query_time_max)
+iit_par_query = db_session.query(db_class.Var_Vals, db_class.Data_Combos).filter(
+    db_class.Data_Combos.date_mean.between(hist_query_time_min, hist_query_time_max)
     ).filter(db_class.Var_Vals.meth_id == method_id[1]).filter(
-    db_class.Var_Vals.combo_id == db_class.Image_Combos.combo_id)
+    db_class.Var_Vals.combo_id == db_class.Data_Combos.combo_id)
 iit_pars = pd.read_sql(iit_par_query.statement, db_session.bind)
 
 
@@ -182,17 +182,17 @@ num_del = del_query.delete(synchronize_session=False)
 db_session.commit()
 
 # Delete all IIT combos
-combo_query = db_session.query(db_class.Image_Combos).filter(
-    db_class.Image_Combos.meth_id == method_id[1])
+combo_query = db_session.query(db_class.Data_Combos).filter(
+    db_class.Data_Combos.meth_id == method_id[1])
 combo_query.count()
 del_combos = pd.read_sql(combo_query.statement, db_session.bind)
 
-del_query = db_session.query(db_class.Image_Combo_Assoc).filter(
-    db_class.Image_Combo_Assoc.combo_id.in_(del_combos.combo_id))
+del_query = db_session.query(db_class.Data_Combo_Assoc).filter(
+    db_class.Data_Combo_Assoc.combo_id.in_(del_combos.combo_id))
 num_assoc = del_query.delete(synchronize_session=False)
 db_session.commit()
-del_combo_query = db_session.query(db_class.Image_Combos).filter(
-    db_class.Image_Combos.combo_id.in_(del_combos.combo_id))
+del_combo_query = db_session.query(db_class.Data_Combos).filter(
+    db_class.Data_Combos.combo_id.in_(del_combos.combo_id))
 num_del = del_combo_query.delete(synchronize_session=False)
 db_session.commit()
 
@@ -202,9 +202,9 @@ db_session.commit()
 # del_window_max = datetime.datetime(2012, 9, 1, 0, 0)
 del_window_min = datetime.datetime(2001, 1, 1, 0, 0)
 del_window_max = datetime.datetime(2011, 4, 1, 0, 0)
-combo_query = db_session.query(db_class.Image_Combos).filter(
-    db_class.Image_Combos.meth_id == method_id[1],
-    db_class.Image_Combos.date_mean.between(del_window_min, del_window_max)
+combo_query = db_session.query(db_class.Data_Combos).filter(
+    db_class.Data_Combos.meth_id == method_id[1],
+    db_class.Data_Combos.date_mean.between(del_window_min, del_window_max)
 )
 combo_query.count()
 del_combos = pd.read_sql(combo_query.statement, db_session.bind)
@@ -214,12 +214,12 @@ del_par_query = db_session.query(db_class.Var_Vals).filter(
 num_pars = del_par_query.delete(synchronize_session=False)
 db_session.commit()
 
-del_query = db_session.query(db_class.Image_Combo_Assoc).filter(
-    db_class.Image_Combo_Assoc.combo_id.in_(del_combos.combo_id))
+del_query = db_session.query(db_class.Data_Combo_Assoc).filter(
+    db_class.Data_Combo_Assoc.combo_id.in_(del_combos.combo_id))
 num_assoc = del_query.delete(synchronize_session=False)
 db_session.commit()
-del_combo_query = db_session.query(db_class.Image_Combos).filter(
-    db_class.Image_Combos.combo_id.in_(del_combos.combo_id))
+del_combo_query = db_session.query(db_class.Data_Combos).filter(
+    db_class.Data_Combos.combo_id.in_(del_combos.combo_id))
 num_del = del_combo_query.delete(synchronize_session=False)
 db_session.commit()
 

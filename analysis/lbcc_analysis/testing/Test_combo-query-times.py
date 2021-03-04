@@ -129,8 +129,8 @@ image_max_query = db_session.query(db_class.EUV_Images).filter(
     ))
 ).all()
 
-combo_min_query = db_session.query(db_class.Image_Combos).filter(
-    db_class.Image_Combos.combo_id == db_class.Image_Combo_Assoc.combo_id,
+combo_min_query = db_session.query(db_class.Data_Combos).filter(
+    db_class.Data_Combos.combo_id == db_class.Data_Combo_Assoc.combo_id,
     db_class.EUV_Images.date_obs
 )
 

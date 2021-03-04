@@ -88,17 +88,17 @@ for instrument in inst_list:
             db_class.Var_Vals.combo_id.in_(del_combos.combo_id.to_list())
         ).delete(synchronize_session=False)
         # Then delete from image_combo_assoc
-        nassoc = db_session.query(db_class.Image_Combo_Assoc).filter(
-            db_class.Image_Combo_Assoc.combo_id.in_(del_combos.combo_id.to_list())
+        nassoc = db_session.query(db_class.Data_Combo_Assoc).filter(
+            db_class.Data_Combo_Assoc.combo_id.in_(del_combos.combo_id.to_list())
         ).delete(synchronize_session=False)
         # Last delete from image_combos
-        ncombos = db_session.query(db_class.Image_Combos).filter(
-            db_class.Image_Combos.combo_id.in_(del_combos.combo_id.to_list())
+        ncombos = db_session.query(db_class.Data_Combos).filter(
+            db_class.Data_Combos.combo_id.in_(del_combos.combo_id.to_list())
         ).delete(synchronize_session=False)
 
         # commit changes to DB
         db_session.commit()
-        print("Image_Combos deleted from DB: ", ncombos)
+        print("Data_Combos deleted from DB: ", ncombos)
 
     # delete LBCCs after upper_trim_min ------------
     del_combos = query_inst_combo(db_session, query_time_min=upper_trim_min,
@@ -111,17 +111,17 @@ for instrument in inst_list:
             db_class.Var_Vals.combo_id.in_(del_combos.combo_id.to_list())
         ).delete(synchronize_session=False)
         # Then delete from image_combo_assoc
-        nassoc = db_session.query(db_class.Image_Combo_Assoc).filter(
-            db_class.Image_Combo_Assoc.combo_id.in_(del_combos.combo_id.to_list())
+        nassoc = db_session.query(db_class.Data_Combo_Assoc).filter(
+            db_class.Data_Combo_Assoc.combo_id.in_(del_combos.combo_id.to_list())
         ).delete(synchronize_session=False)
         # Last delete from image_combos
-        ncombos = db_session.query(db_class.Image_Combos).filter(
-            db_class.Image_Combos.combo_id.in_(del_combos.combo_id.to_list())
+        ncombos = db_session.query(db_class.Data_Combos).filter(
+            db_class.Data_Combos.combo_id.in_(del_combos.combo_id.to_list())
         ).delete(synchronize_session=False)
 
         # commit changes to DB
         db_session.commit()
-        print("Image_Combos deleted from DB: ", ncombos)
+        print("Data_Combos deleted from DB: ", ncombos)
 
 # delete LBCCs in Stereo A gap ------------
 instrument = "EUVI-A"
@@ -134,14 +134,14 @@ if del_combos.shape[0] > 0:
         db_class.Var_Vals.combo_id.in_(del_combos.combo_id.to_list())
     ).delete(synchronize_session=False)
     # Then delete from image_combo_assoc
-    nassoc = db_session.query(db_class.Image_Combo_Assoc).filter(
-        db_class.Image_Combo_Assoc.combo_id.in_(del_combos.combo_id.to_list())
+    nassoc = db_session.query(db_class.Data_Combo_Assoc).filter(
+        db_class.Data_Combo_Assoc.combo_id.in_(del_combos.combo_id.to_list())
     ).delete(synchronize_session=False)
     # Last delete from image_combos
-    ncombos = db_session.query(db_class.Image_Combos).filter(
-        db_class.Image_Combos.combo_id.in_(del_combos.combo_id.to_list())
+    ncombos = db_session.query(db_class.Data_Combos).filter(
+        db_class.Data_Combos.combo_id.in_(del_combos.combo_id.to_list())
     ).delete(synchronize_session=False)
 
     # commit changes to DB
     db_session.commit()
-    print("Image_Combos deleted from DB: ", ncombos)
+    print("Data_Combos deleted from DB: ", ncombos)

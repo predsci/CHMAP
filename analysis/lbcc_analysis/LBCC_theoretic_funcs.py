@@ -312,7 +312,7 @@ def apply_lbc_2(db_session, hdf_data_dir, image_row, n_intensity_bins=200, R0=1.
 
     ###### GET LOS IMAGES COORDINATES (DATA) #####
     if image_row.fname_hdf == "":
-        print("Warning: Image # " + str(image_row.image_id) + " does not have an associated hdf file. Skipping")
+        print("Warning: Image # " + str(image_row.data_id) + " does not have an associated hdf file. Skipping")
         # return None for all outputs
         return None, None, None, None, None
     hdf_path = os.path.join(hdf_data_dir, image_row.fname_hdf)
@@ -339,7 +339,7 @@ def apply_lbc_2(db_session, hdf_data_dir, image_row, n_intensity_bins=200, R0=1.
     corrected_lbc_data[use_indices] = 10 ** (beta1d * np.log10(original_los.data[use_indices]) + y1d)
 
     ###### CREATE LBCC DATATYPE ######
-    lbcc_image = psi_d_types.create_lbcc_image(original_los, corrected_lbc_data, image_id=image_row.image_id,
+    lbcc_image = psi_d_types.create_lbcc_image(original_los, corrected_lbc_data, data_id=image_row.data_id,
                                                meth_id=meth_id, intensity_bin_edges=intensity_bin_edges)
     psi_d_types.LosImage.get_coordinates(lbcc_image, R0=R0)
 

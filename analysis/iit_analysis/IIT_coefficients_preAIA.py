@@ -75,9 +75,9 @@ elif use_db == 'mysql-Q':
     db_session = db_funcs.init_db_conn(db_name=use_db, chd_base=db_class.Base, user=user, password=password)
 
 # determine first AIA LBC combo
-aia_combo_query = db_session.query(func.min(db_class.Image_Combos.date_mean),
-                                   func.max(db_class.Image_Combos.date_mean))\
-    .filter(db_class.Image_Combos.instrument == "AIA", db_class.Image_Combos.meth_id == 1)
+aia_combo_query = db_session.query(func.min(db_class.Data_Combos.date_mean),
+                                   func.max(db_class.Data_Combos.date_mean))\
+    .filter(db_class.Data_Combos.instrument == "AIA", db_class.Data_Combos.meth_id == 1)
 aia_combo_date = pd.read_sql(aia_combo_query.statement, db_session.bind)
 
 # determine first EUVI-A image
@@ -115,11 +115,11 @@ method_id = db_funcs.get_method_id(db_session, meth_name, meth_desc, var_names=N
 
 # delete any existing IIT parameters in this range and in inst_list
 print("Deleting existing IIT parameters for pre-AIA timeframe.")
-combo_query = db_session.query(db_class.Image_Combos).filter(
-    db_class.Image_Combos.meth_id == method_id[1],
-    db_class.Image_Combos.date_mean.between(calc_query_time_min - datetime.timedelta(days=7),
+combo_query = db_session.query(db_class.Data_Combos).filter(
+    db_class.Data_Combos.meth_id == method_id[1],
+    db_class.Data_Combos.date_mean.between(calc_query_time_min - datetime.timedelta(days=7),
                                             calc_query_time_max),
-    db_class.Image_Combos.instrument.in_(inst_list)
+    db_class.Data_Combos.instrument.in_(inst_list)
 )
 # combo_query.count()
 del_combos = pd.read_sql(combo_query.statement, db_session.bind)
@@ -129,13 +129,13 @@ del_par_query = db_session.query(db_class.Var_Vals).filter(
 num_pars = del_par_query.delete(synchronize_session=False)
 db_session.commit()
 # second, delete image-combo associations
-del_query = db_session.query(db_class.Image_Combo_Assoc).filter(
-    db_class.Image_Combo_Assoc.combo_id.in_(del_combos.combo_id))
+del_query = db_session.query(db_class.Data_Combo_Assoc).filter(
+    db_class.Data_Combo_Assoc.combo_id.in_(del_combos.combo_id))
 num_assoc = del_query.delete(synchronize_session=False)
 db_session.commit()
 # finally, delete the combos
-del_combo_query = db_session.query(db_class.Image_Combos).filter(
-    db_class.Image_Combos.combo_id.in_(del_combos.combo_id))
+del_combo_query = db_session.query(db_class.Data_Combos).filter(
+    db_class.Data_Combos.combo_id.in_(del_combos.combo_id))
 num_del = del_combo_query.delete(synchronize_session=False)
 db_session.commit()
 

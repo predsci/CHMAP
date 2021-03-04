@@ -24,8 +24,8 @@ import modules.lbcc_funs as lbcc
 ####### -------- updateable parameters ------ #######
 
 # TIME RANGE FOR FIT PARAMETER CALCULATION
-calc_query_time_min = datetime.datetime(2007, 4, 1, 0, 0, 0)
-calc_query_time_max = datetime.datetime(2020, 8, 1, 0, 0, 0)
+calc_query_time_min = datetime.datetime(2011, 4, 1, 0, 0, 0)
+calc_query_time_max = datetime.datetime(2012, 9, 1, 0, 0, 0)
 
 weekday = 0  # start at 0 for Monday
 number_of_days = 180
@@ -50,6 +50,7 @@ sqlite_filename = App.DATABASE_FNAME
 # setup database parameters
 create = True  # true if you want to add to database
 # designate which database to connect to
+# use_db = "mysql-Q_test"
 use_db = "mysql-Q"       # 'sqlite'  Use local sqlite file-based db
                         # 'mysql-Q' Use the remote MySQL database on Q
 user = "turtle"         # only needed for remote databases.
@@ -66,7 +67,7 @@ if use_db == 'sqlite':
     sqlite_path = os.path.join(database_dir, sqlite_filename)
 
     db_session = db_funcs.init_db_conn(db_name=use_db, chd_base=db_class.Base, sqlite_path=sqlite_path)
-elif use_db == 'mysql-Q':
+elif use_db in ['mysql-Q', 'mysql-Q_test']:
     # setup database connection to MySQL database on Q
     db_session = db_funcs.init_db_conn(db_name=use_db, chd_base=db_class.Base, user=user, password=password)
 
@@ -108,7 +109,7 @@ min_ref_time = db_session.query(func.min(db_class.EUV_Images.date_obs)).filter(
 base_ref_min    = min_ref_time[0][0]
 base_ref_center = base_ref_min + datetime.timedelta(days=number_of_days)/2
 base_ref_max    = base_ref_center + datetime.timedelta(days=number_of_days)/2
-if calc_query_time_min < base_ref_center:
+if (calc_query_time_min - datetime.timedelta(days=7)) < base_ref_center:
     # generate histogram for first year of reference instrument
     ref_base_hist = ref_full_hist[:, (ref_hist_pd['date_obs'] >= str(base_ref_min)) & (
             ref_hist_pd['date_obs'] <= str(base_ref_max))]

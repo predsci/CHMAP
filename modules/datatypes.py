@@ -421,7 +421,7 @@ class PsiMap:
                 data_files_cols.append(column.key)
             data_cols = set().union(euv_image_cols, data_files_cols)
             self.data_info = pd.DataFrame(data=None, columns=data_cols)
-            # map_info will be a combination of Image_Combos and EUV_Maps
+            # map_info will be a combination of Data_Combos and EUV_Maps
             image_columns = []
             for column in db.Data_Combos.__table__.columns:
                 image_columns.append(column.key)
