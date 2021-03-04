@@ -18,7 +18,7 @@
     
     
       
-        <title>Machine Learning Detection - Coronal Hole Detection Project</title>
+        <title>Tracking Features - Coronal Hole Detection Project</title>
       
     
     
@@ -66,7 +66,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#techniques-to-detect-coronal-holes-using-neural-networks-and-k-means-algorithm" class="md-skip">
+        <a href="#centroid" class="md-skip">
           Skip to content
         </a>
       
@@ -97,7 +97,7 @@
         <div class="md-header-nav__topic">
           <span class="md-ellipsis">
             
-              Machine Learning Detection
+              Tracking Features
             
           </span>
         </div>
@@ -604,12 +604,14 @@
           
 
 
+  
+
 
   
-  <li class="md-nav__item md-nav__item--nested">
+  <li class="md-nav__item md-nav__item--active md-nav__item--nested">
     
     
-      <input class="md-nav__toggle md-toggle" data-md-toggle="nav-8-1" type="checkbox" id="nav-8-1" >
+      <input class="md-nav__toggle md-toggle" data-md-toggle="nav-8-1" type="checkbox" id="nav-8-1" checked>
     
     <label class="md-nav__link" for="nav-8-1">
       Tracking Algorithm
@@ -654,11 +656,94 @@
           
 
 
+  
 
-  <li class="md-nav__item">
-    <a href="../tracking_features/" class="md-nav__link">
+
+  <li class="md-nav__item md-nav__item--active">
+    
+    <input class="md-nav__toggle md-toggle" data-md-toggle="toc" type="checkbox" id="__toc">
+    
+    
+      <label class="md-nav__link md-nav__link--active" for="__toc">
+        Tracking Features
+        <span class="md-nav__icon md-icon"></span>
+      </label>
+    
+    <a href="./" class="md-nav__link md-nav__link--active">
       Tracking Features
     </a>
+    
+      
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#centroid" class="md-nav__link">
+    Centroid
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#area" class="md-nav__link">
+    Area
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#straight-bounding-box" class="md-nav__link">
+    Straight bounding box
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#rotated-bounding-box" class="md-nav__link">
+    Rotated bounding box
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#convex-hull" class="md-nav__link">
+    Convex Hull
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#best-fit-line" class="md-nav__link">
+    Best Fit Line?
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#tilt" class="md-nav__link">
+    Tilt
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#arclength" class="md-nav__link">
+    Arclength
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+    
   </li>
 
         
@@ -685,62 +770,11 @@
           
 
 
-  
 
-
-  <li class="md-nav__item md-nav__item--active">
-    
-    <input class="md-nav__toggle md-toggle" data-md-toggle="toc" type="checkbox" id="__toc">
-    
-      
-    
-    
-      <label class="md-nav__link md-nav__link--active" for="__toc">
-        Machine Learning Detection
-        <span class="md-nav__icon md-icon"></span>
-      </label>
-    
-    <a href="./" class="md-nav__link md-nav__link--active">
+  <li class="md-nav__item">
+    <a href="../chd/" class="md-nav__link">
       Machine Learning Detection
     </a>
-    
-      
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#cnn-supervised-learning-to-detect-ch" class="md-nav__link">
-    CNN - Supervised Learning to Detect CH
-  </a>
-  
-    <nav class="md-nav" aria-label="CNN - Supervised Learning to Detect CH">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#example-images" class="md-nav__link">
-    Example Images
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-    
   </li>
 
         
@@ -777,8 +811,6 @@
 <nav class="md-nav md-nav--secondary" aria-label="Table of contents">
   
   
-    
-  
   
     <label class="md-nav__title" for="__toc">
       <span class="md-nav__icon md-icon"></span>
@@ -787,22 +819,58 @@
     <ul class="md-nav__list" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#cnn-supervised-learning-to-detect-ch" class="md-nav__link">
-    CNN - Supervised Learning to Detect CH
-  </a>
-  
-    <nav class="md-nav" aria-label="CNN - Supervised Learning to Detect CH">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#example-images" class="md-nav__link">
-    Example Images
+  <a href="#centroid" class="md-nav__link">
+    Centroid
   </a>
   
 </li>
-        
-      </ul>
-    </nav>
+      
+        <li class="md-nav__item">
+  <a href="#area" class="md-nav__link">
+    Area
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#straight-bounding-box" class="md-nav__link">
+    Straight bounding box
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#rotated-bounding-box" class="md-nav__link">
+    Rotated bounding box
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#convex-hull" class="md-nav__link">
+    Convex Hull
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#best-fit-line" class="md-nav__link">
+    Best Fit Line?
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#tilt" class="md-nav__link">
+    Tilt
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#arclength" class="md-nav__link">
+    Arclength
+  </a>
   
 </li>
       
@@ -818,20 +886,59 @@
             <article class="md-content__inner md-typeset">
               
                 
-                  <a href="https://github.com/predsci/CHD/blob/master/CHD-mkdocs/docs/ml/chd.md" title="Edit this page" class="md-content__button md-icon">
+                  <a href="https://github.com/predsci/CHD/blob/master/CHD-mkdocs/docs/ml/tracking_features.md" title="Edit this page" class="md-content__button md-icon">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20.71 7.04c.39-.39.39-1.04 0-1.41l-2.34-2.34c-.37-.39-1.02-.39-1.41 0l-1.84 1.83 3.75 3.75M3 17.25V21h3.75L17.81 9.93l-3.75-3.75L3 17.25z"/></svg>
                   </a>
                 
                 
-                <h1 id="techniques-to-detect-coronal-holes-using-neural-networks-and-k-means-algorithm">Techniques to detect coronal holes using neural networks and K-means algorithm</h1>
-<h2 id="cnn-supervised-learning-to-detect-ch">CNN - Supervised Learning to Detect CH</h2>
+                  <h1>Tracking Features</h1>
+                
+                <h2 id="centroid">Centroid</h2>
+<p>Computed in cartesian coordinates and then map back to spherical (weighted average with respect to mesh grid).</p>
+<h2 id="area">Area</h2>
+<p>The sum of all pixels area contained in coronal hole. </p>
+<h2 id="straight-bounding-box">Straight bounding box</h2>
+<p>Bounding rectangle perpendicular to image axis. This feature can measure how the object spreads over time.</p>
+<ol>
+<li>
+<p>straight bounding box corners</p>
+</li>
+<li>
+<p>straight bounding box area</p>
+</li>
+</ol>
+<h2 id="rotated-bounding-box">Rotated bounding box</h2>
+<p>Rectangle with minimum pixel area that contains the coronal hole. This can tell us the approximate tilt of 
+the coronal hole and its convexity.</p>
+<ol>
+<li>
+<p>rotated bounding box corners</p>
+</li>
+<li>
+<p>rotated bounding box area</p>
+</li>
+<li>
+<p>rotated bounding box angle - angle with respect to north and largest side. </p>
+</li>
+</ol>
+<p><img alt="" height="50%" src="../images/rot_rect_angle.png" width="50%" /></p>
+<h2 id="convex-hull">Convex Hull</h2>
+<p>Measure the convexity of the coronal hole by comparing of the convex hull vs the coronal hole area.</p>
 <ul>
-<li>labeled image data based on Fortran two-threshold detection algorithm</li>
-<li>U-Net Convolutional Network </li>
-<li>built using tensorflow</li>
+<li>Do we want this?</li>
 </ul>
-<h3 id="example-images">Example Images</h3>
-<p><a href="../img/chd">Test Data</a></p>
+<h2 id="best-fit-line">Best Fit Line?</h2>
+<p>For tilt?</p>
+<h2 id="tilt">Tilt</h2>
+<ul>
+<li>Do I compute the angle between each pixel with respect to north? Then weighted average?
+TODO... </li>
+</ul>
+<h2 id="arclength">Arclength</h2>
+<ul>
+<li>Do we want this?
+TODO...</li>
+</ul>
                 
               
               
@@ -850,7 +957,7 @@
     <div class="md-footer-nav">
       <nav class="md-footer-nav__inner md-grid" aria-label="Footer">
         
-          <a href="../tracking_match/" class="md-footer-nav__link md-footer-nav__link--prev" rel="prev">
+          <a href="../tracking_v2/" class="md-footer-nav__link md-footer-nav__link--prev" rel="prev">
             <div class="md-footer-nav__button md-icon">
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"/></svg>
             </div>
@@ -859,19 +966,19 @@
                 <span class="md-footer-nav__direction">
                   Previous
                 </span>
-                CH Frame Matching
+                Dilation and Erosion
               </div>
             </div>
           </a>
         
         
-          <a href="../pred/" class="md-footer-nav__link md-footer-nav__link--next" rel="next">
+          <a href="../tracking_match/" class="md-footer-nav__link md-footer-nav__link--next" rel="next">
             <div class="md-footer-nav__title">
               <div class="md-ellipsis">
                 <span class="md-footer-nav__direction">
                   Next
                 </span>
-                CH-Net Future Frame Predictions
+                CH Frame Matching
               </div>
             </div>
             <div class="md-footer-nav__button md-icon">

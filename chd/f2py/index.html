@@ -1,6 +1,4 @@
 
-
-
 <!doctype html>
 <html lang="en" class="no-js">
   <head>
@@ -14,8 +12,9 @@
       
         <meta name="author" content="Tamar Ervin">
       
+      
       <link rel="shortcut icon" href="../../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.1.2, mkdocs-material-5.4.0">
+      <meta name="generator" content="mkdocs-1.1.2, mkdocs-material-6.2.4">
     
     
       
@@ -23,20 +22,22 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.fe0cca5b.min.css">
-      
-        <link rel="stylesheet" href="../../assets/stylesheets/palette.a46bcfb3.min.css">
-      
+      <link rel="stylesheet" href="../../assets/stylesheets/main.15aa0b43.min.css">
       
         
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.75751829.min.css">
         
-        <meta name="theme-color" content="#3f51b5">
+          
+          
+          <meta name="theme-color" content="#4051b5">
+        
       
     
     
     
       
-        <link href="https://fonts.gstatic.com" rel="preconnect" crossorigin>
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
         <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,400i,700%7CRoboto+Mono&display=fallback">
         <style>body,input{font-family:"Roboto",-apple-system,BlinkMacSystemFont,Helvetica,Arial,sans-serif}code,kbd,pre{font-family:"Roboto Mono",SFMono-Regular,Consolas,Menlo,monospace}</style>
       
@@ -53,7 +54,10 @@
     
     
     
+    
+    
     <body dir="ltr" data-md-color-scheme="" data-md-color-primary="indigo" data-md-color-accent="black">
+      
   
     
     <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
@@ -71,7 +75,9 @@
       
     </div>
     
-      <header class="md-header" data-md-component="header">
+      
+
+<header class="md-header" data-md-component="header">
   <nav class="md-header-nav md-grid" aria-label="Header">
     <a href="../.." title="Coronal Hole Detection Project" class="md-header-nav__button md-logo" aria-label="Coronal Hole Detection Project">
       
@@ -82,18 +88,20 @@
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2z"/></svg>
     </label>
     <div class="md-header-nav__title" data-md-component="header-title">
-      
-        <div class="md-header-nav__ellipsis">
-          <span class="md-header-nav__topic md-ellipsis">
+      <div class="md-header-nav__ellipsis">
+        <div class="md-header-nav__topic">
+          <span class="md-ellipsis">
             Coronal Hole Detection Project
           </span>
-          <span class="md-header-nav__topic md-ellipsis">
+        </div>
+        <div class="md-header-nav__topic">
+          <span class="md-ellipsis">
             
               Fortran to Python
             
           </span>
         </div>
-      
+      </div>
     </div>
     
       <label class="md-header-nav__button md-icon" for="__search">
@@ -104,7 +112,7 @@
   <label class="md-search__overlay" for="__search"></label>
   <div class="md-search__inner" role="search">
     <form class="md-search__form" name="search">
-      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" data-md-state="active">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" data-md-state="active" required>
       <label class="md-search__icon md-icon" for="__search">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0116 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 019.5 16 6.5 6.5 0 013 9.5 6.5 6.5 0 019.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5z"/></svg>
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"/></svg>
@@ -145,8 +153,6 @@
     
     <div class="md-container" data-md-component="container">
       
-        
-      
       
         
       
@@ -154,10 +160,16 @@
         <div class="md-main__inner md-grid">
           
             
-              <div class="md-sidebar md-sidebar--primary" data-md-component="navigation">
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="navigation" >
                 <div class="md-sidebar__scrollwrap">
                   <div class="md-sidebar__inner">
-                    <nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+                    
+
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
     <a href="../.." title="Coronal Hole Detection Project" class="md-nav__button md-logo" aria-label="Coronal Hole Detection Project">
       
@@ -187,8 +199,9 @@
       
 
 
+
   <li class="md-nav__item">
-    <a href="../.." title="Home" class="md-nav__link">
+    <a href="../.." class="md-nav__link">
       Home
     </a>
   </li>
@@ -199,8 +212,9 @@
       
 
 
+
   <li class="md-nav__item">
-    <a href="../../about/" title="About the Project" class="md-nav__link">
+    <a href="../../about/" class="md-nav__link">
       About the Project
     </a>
   </li>
@@ -211,21 +225,20 @@
       
 
 
+
+  
   <li class="md-nav__item md-nav__item--nested">
     
-      <input class="md-nav__toggle md-toggle" data-md-toggle="nav-3" type="checkbox" id="nav-3">
+    
+      <input class="md-nav__toggle md-toggle" data-md-toggle="nav-3" type="checkbox" id="nav-3" >
     
     <label class="md-nav__link" for="nav-3">
       Image Pre-Processing
-      <span class="md-nav__icon md-icon">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M8.59 16.58L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.42z"/></svg>
-      </span>
+      <span class="md-nav__icon md-icon"></span>
     </label>
     <nav class="md-nav" aria-label="Image Pre-Processing" data-md-level="1">
       <label class="md-nav__title" for="nav-3">
-        <span class="md-nav__icon md-icon">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"/></svg>
-        </span>
+        <span class="md-nav__icon md-icon"></span>
         Image Pre-Processing
       </label>
       <ul class="md-nav__list" data-md-scrollfix>
@@ -236,8 +249,9 @@
           
 
 
+
   <li class="md-nav__item">
-    <a href="../../ipp/psf/" title="PSF Deconvolution" class="md-nav__link">
+    <a href="../../ipp/psf/" class="md-nav__link">
       PSF Deconvolution
     </a>
   </li>
@@ -248,8 +262,9 @@
           
 
 
+
   <li class="md-nav__item">
-    <a href="../../ipp/lbc/" title="Limb-Brightening Correction" class="md-nav__link">
+    <a href="../../ipp/lbc/" class="md-nav__link">
       Limb-Brightening Correction
     </a>
   </li>
@@ -260,8 +275,9 @@
           
 
 
+
   <li class="md-nav__item">
-    <a href="../../ipp/iit/" title="Inter-Instrument Transformation" class="md-nav__link">
+    <a href="../../ipp/iit/" class="md-nav__link">
       Inter-Instrument Transformation
     </a>
   </li>
@@ -276,24 +292,23 @@
       
       
 
+
   
 
 
+  
   <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+    
     
       <input class="md-nav__toggle md-toggle" data-md-toggle="nav-4" type="checkbox" id="nav-4" checked>
     
     <label class="md-nav__link" for="nav-4">
       Coronal Hole Detection
-      <span class="md-nav__icon md-icon">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M8.59 16.58L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.42z"/></svg>
-      </span>
+      <span class="md-nav__icon md-icon"></span>
     </label>
     <nav class="md-nav" aria-label="Coronal Hole Detection" data-md-level="1">
       <label class="md-nav__title" for="nav-4">
-        <span class="md-nav__icon md-icon">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"/></svg>
-        </span>
+        <span class="md-nav__icon md-icon"></span>
         Coronal Hole Detection
       </label>
       <ul class="md-nav__list" data-md-scrollfix>
@@ -302,6 +317,7 @@
           
           
           
+
 
   
 
@@ -313,12 +329,10 @@
     
       <label class="md-nav__link md-nav__link--active" for="__toc">
         Fortran to Python
-        <span class="md-nav__icon md-icon">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 9h14V7H3v2m0 4h14v-2H3v2m0 4h14v-2H3v2m16 0h2v-2h-2v2m0-10v2h2V7h-2m0 6h2v-2h-2v2z"/></svg>
-        </span>
+        <span class="md-nav__icon md-icon"></span>
       </label>
     
-    <a href="./" title="Fortran to Python" class="md-nav__link md-nav__link--active">
+    <a href="./" class="md-nav__link md-nav__link--active">
       Fortran to Python
     </a>
     
@@ -328,9 +342,7 @@
   
   
     <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"/></svg>
-      </span>
+      <span class="md-nav__icon md-icon"></span>
       Table of contents
     </label>
     <ul class="md-nav__list" data-md-scrollfix>
@@ -354,8 +366,9 @@
           
 
 
+
   <li class="md-nav__item">
-    <a href="../chd/" title="CH Detection" class="md-nav__link">
+    <a href="../chd/" class="md-nav__link">
       CH Detection
     </a>
   </li>
@@ -371,21 +384,20 @@
       
 
 
+
+  
   <li class="md-nav__item md-nav__item--nested">
     
-      <input class="md-nav__toggle md-toggle" data-md-toggle="nav-5" type="checkbox" id="nav-5">
+    
+      <input class="md-nav__toggle md-toggle" data-md-toggle="nav-5" type="checkbox" id="nav-5" >
     
     <label class="md-nav__link" for="nav-5">
       Mapping
-      <span class="md-nav__icon md-icon">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M8.59 16.58L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.42z"/></svg>
-      </span>
+      <span class="md-nav__icon md-icon"></span>
     </label>
     <nav class="md-nav" aria-label="Mapping" data-md-level="1">
       <label class="md-nav__title" for="nav-5">
-        <span class="md-nav__icon md-icon">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"/></svg>
-        </span>
+        <span class="md-nav__icon md-icon"></span>
         Mapping
       </label>
       <ul class="md-nav__list" data-md-scrollfix>
@@ -396,8 +408,9 @@
           
 
 
+
   <li class="md-nav__item">
-    <a href="../../map/map/" title="Mapping Pipeline" class="md-nav__link">
+    <a href="../../map/map/" class="md-nav__link">
       Mapping Pipeline
     </a>
   </li>
@@ -408,8 +421,9 @@
           
 
 
+
   <li class="md-nav__item">
-    <a href="../../map/int/" title="Interpolation" class="md-nav__link">
+    <a href="../../map/int/" class="md-nav__link">
       Interpolation
     </a>
   </li>
@@ -420,8 +434,9 @@
           
 
 
+
   <li class="md-nav__item">
-    <a href="../../map/cmb/" title="Combining Maps" class="md-nav__link">
+    <a href="../../map/cmb/" class="md-nav__link">
       Combining Maps
     </a>
   </li>
@@ -437,21 +452,20 @@
       
 
 
+
+  
   <li class="md-nav__item md-nav__item--nested">
     
-      <input class="md-nav__toggle md-toggle" data-md-toggle="nav-6" type="checkbox" id="nav-6">
+    
+      <input class="md-nav__toggle md-toggle" data-md-toggle="nav-6" type="checkbox" id="nav-6" >
     
     <label class="md-nav__link" for="nav-6">
       Data Products
-      <span class="md-nav__icon md-icon">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M8.59 16.58L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.42z"/></svg>
-      </span>
+      <span class="md-nav__icon md-icon"></span>
     </label>
     <nav class="md-nav" aria-label="Data Products" data-md-level="1">
       <label class="md-nav__title" for="nav-6">
-        <span class="md-nav__icon md-icon">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"/></svg>
-        </span>
+        <span class="md-nav__icon md-icon"></span>
         Data Products
       </label>
       <ul class="md-nav__list" data-md-scrollfix>
@@ -462,8 +476,9 @@
           
 
 
+
   <li class="md-nav__item">
-    <a href="../../dp/cr/" title="Synoptic Maps" class="md-nav__link">
+    <a href="../../dp/cr/" class="md-nav__link">
       Synoptic Maps
     </a>
   </li>
@@ -474,8 +489,9 @@
           
 
 
+
   <li class="md-nav__item">
-    <a href="../../dp/qm/" title="Quality Maps" class="md-nav__link">
+    <a href="../../dp/qm/" class="md-nav__link">
       Quality Maps
     </a>
   </li>
@@ -486,8 +502,9 @@
           
 
 
+
   <li class="md-nav__item">
-    <a href="../../dp/ed/" title="Ensemble Detection" class="md-nav__link">
+    <a href="../../dp/ed/" class="md-nav__link">
       Ensemble Detection
     </a>
   </li>
@@ -498,8 +515,9 @@
           
 
 
+
   <li class="md-nav__item">
-    <a href="../../dp/vt/" title="Varying Threshold Maps" class="md-nav__link">
+    <a href="../../dp/vt/" class="md-nav__link">
       Varying Threshold Maps
     </a>
   </li>
@@ -515,21 +533,20 @@
       
 
 
+
+  
   <li class="md-nav__item md-nav__item--nested">
     
-      <input class="md-nav__toggle md-toggle" data-md-toggle="nav-7" type="checkbox" id="nav-7">
+    
+      <input class="md-nav__toggle md-toggle" data-md-toggle="nav-7" type="checkbox" id="nav-7" >
     
     <label class="md-nav__link" for="nav-7">
       Database
-      <span class="md-nav__icon md-icon">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M8.59 16.58L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.42z"/></svg>
-      </span>
+      <span class="md-nav__icon md-icon"></span>
     </label>
     <nav class="md-nav" aria-label="Database" data-md-level="1">
       <label class="md-nav__title" for="nav-7">
-        <span class="md-nav__icon md-icon">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"/></svg>
-        </span>
+        <span class="md-nav__icon md-icon"></span>
         Database
       </label>
       <ul class="md-nav__list" data-md-scrollfix>
@@ -540,8 +557,9 @@
           
 
 
+
   <li class="md-nav__item">
-    <a href="../../db/db/" title="Database Basics" class="md-nav__link">
+    <a href="../../db/db/" class="md-nav__link">
       Database Basics
     </a>
   </li>
@@ -552,8 +570,9 @@
           
 
 
+
   <li class="md-nav__item">
-    <a href="../../db/lbc/" title="Database for LBC" class="md-nav__link">
+    <a href="../../db/lbc/" class="md-nav__link">
       Database for LBC
     </a>
   </li>
@@ -564,8 +583,9 @@
           
 
 
+
   <li class="md-nav__item">
-    <a href="../../db/iit/" title="Database for IIT" class="md-nav__link">
+    <a href="../../db/iit/" class="md-nav__link">
       Database for IIT
     </a>
   </li>
@@ -576,8 +596,9 @@
           
 
 
+
   <li class="md-nav__item">
-    <a href="../../db/map/" title="Database for CHD Mapping" class="md-nav__link">
+    <a href="../../db/map/" class="md-nav__link">
       Database for CHD Mapping
     </a>
   </li>
@@ -593,21 +614,20 @@
       
 
 
+
+  
   <li class="md-nav__item md-nav__item--nested">
     
-      <input class="md-nav__toggle md-toggle" data-md-toggle="nav-8" type="checkbox" id="nav-8">
+    
+      <input class="md-nav__toggle md-toggle" data-md-toggle="nav-8" type="checkbox" id="nav-8" >
     
     <label class="md-nav__link" for="nav-8">
       Coronal Hole Tracking and Predictions
-      <span class="md-nav__icon md-icon">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M8.59 16.58L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.42z"/></svg>
-      </span>
+      <span class="md-nav__icon md-icon"></span>
     </label>
     <nav class="md-nav" aria-label="Coronal Hole Tracking and Predictions" data-md-level="1">
       <label class="md-nav__title" for="nav-8">
-        <span class="md-nav__icon md-icon">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"/></svg>
-        </span>
+        <span class="md-nav__icon md-icon"></span>
         Coronal Hole Tracking and Predictions
       </label>
       <ul class="md-nav__list" data-md-scrollfix>
@@ -618,21 +638,20 @@
           
 
 
+
+  
   <li class="md-nav__item md-nav__item--nested">
     
-      <input class="md-nav__toggle md-toggle" data-md-toggle="nav-8-1" type="checkbox" id="nav-8-1">
+    
+      <input class="md-nav__toggle md-toggle" data-md-toggle="nav-8-1" type="checkbox" id="nav-8-1" >
     
     <label class="md-nav__link" for="nav-8-1">
       Tracking Algorithm
-      <span class="md-nav__icon md-icon">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M8.59 16.58L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.42z"/></svg>
-      </span>
+      <span class="md-nav__icon md-icon"></span>
     </label>
     <nav class="md-nav" aria-label="Tracking Algorithm" data-md-level="2">
       <label class="md-nav__title" for="nav-8-1">
-        <span class="md-nav__icon md-icon">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"/></svg>
-        </span>
+        <span class="md-nav__icon md-icon"></span>
         Tracking Algorithm
       </label>
       <ul class="md-nav__list" data-md-scrollfix>
@@ -643,8 +662,9 @@
           
 
 
+
   <li class="md-nav__item">
-    <a href="../../ml/tracking_v1/" title="Polar Projection" class="md-nav__link">
+    <a href="../../ml/tracking_v1/" class="md-nav__link">
       Polar Projection
     </a>
   </li>
@@ -655,9 +675,36 @@
           
 
 
+
   <li class="md-nav__item">
-    <a href="../../ml/tracking_v2/" title="Dilation and Erosion" class="md-nav__link">
+    <a href="../../ml/tracking_v2/" class="md-nav__link">
       Dilation and Erosion
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+
+  <li class="md-nav__item">
+    <a href="../../ml/tracking_features/" class="md-nav__link">
+      Tracking Features
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+
+  <li class="md-nav__item">
+    <a href="../../ml/tracking_match/" class="md-nav__link">
+      CH Frame Matching
     </a>
   </li>
 
@@ -672,8 +719,9 @@
           
 
 
+
   <li class="md-nav__item">
-    <a href="../../ml/chd/" title="Machine Learning Detection" class="md-nav__link">
+    <a href="../../ml/chd/" class="md-nav__link">
       Machine Learning Detection
     </a>
   </li>
@@ -684,8 +732,9 @@
           
 
 
+
   <li class="md-nav__item">
-    <a href="../../ml/pred/" title="CH-Net Future Frame Predictions" class="md-nav__link">
+    <a href="../../ml/pred/" class="md-nav__link">
       CH-Net Future Frame Predictions
     </a>
   </li>
@@ -703,7 +752,8 @@
               </div>
             
             
-              <div class="md-sidebar md-sidebar--secondary" data-md-component="toc">
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="toc" >
                 <div class="md-sidebar__scrollwrap">
                   <div class="md-sidebar__inner">
                     
@@ -712,9 +762,7 @@
   
   
     <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"/></svg>
-      </span>
+      <span class="md-nav__icon md-icon"></span>
       Table of contents
     </label>
     <ul class="md-nav__list" data-md-scrollfix>
@@ -741,9 +789,6 @@
                   <a href="https://github.com/predsci/CHD/blob/master/CHD-mkdocs/docs/chd/f2py.md" title="Edit this page" class="md-content__button md-icon">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20.71 7.04c.39-.39.39-1.04 0-1.41l-2.34-2.34c-.37-.39-1.02-.39-1.41 0l-1.84 1.83 3.75 3.75M3 17.25V21h3.75L17.81 9.93l-3.75-3.75L3 17.25z"/></svg>
                   </a>
-                
-                
-                  
                 
                 
                   <h1>Fortran to Python</h1>
@@ -785,7 +830,7 @@
     <div class="md-footer-nav">
       <nav class="md-footer-nav__inner md-grid" aria-label="Footer">
         
-          <a href="../../ipp/iit/" title="Inter-Instrument Transformation" class="md-footer-nav__link md-footer-nav__link--prev" rel="prev">
+          <a href="../../ipp/iit/" class="md-footer-nav__link md-footer-nav__link--prev" rel="prev">
             <div class="md-footer-nav__button md-icon">
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"/></svg>
             </div>
@@ -800,7 +845,7 @@
           </a>
         
         
-          <a href="../chd/" title="CH Detection" class="md-footer-nav__link md-footer-nav__link--next" rel="next">
+          <a href="../chd/" class="md-footer-nav__link md-footer-nav__link--next" rel="next">
             <div class="md-footer-nav__title">
               <div class="md-ellipsis">
                 <span class="md-footer-nav__direction">
@@ -833,15 +878,15 @@
       
     </div>
     
-      <script src="../../assets/javascripts/vendor.d710d30a.min.js"></script>
-      <script src="../../assets/javascripts/bundle.b39636ac.min.js"></script><script id="__lang" type="application/json">{"clipboard.copy": "Copy to clipboard", "clipboard.copied": "Copied to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.result.placeholder": "Type to start searching", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents"}</script>
+      <script src="../../assets/javascripts/vendor.93c04032.min.js"></script>
+      <script src="../../assets/javascripts/bundle.83e5331e.min.js"></script><script id="__lang" type="application/json">{"clipboard.copy": "Copy to clipboard", "clipboard.copied": "Copied to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.placeholder": "Search", "search.result.placeholder": "Type to start searching", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.term.missing": "Missing"}</script>
       
       <script>
         app = initialize({
           base: "../..",
           features: [],
           search: Object.assign({
-            worker: "../../assets/javascripts/worker/search.a68abb33.min.js"
+            worker: "../../assets/javascripts/worker/search.8c7e0a7e.min.js"
           }, typeof search !== "undefined" && search)
         })
       </script>
