@@ -1,5 +1,5 @@
 """
-Author: Opal Issan, Feb 3rd, 2021.
+Author: Opal Issan, Feb 13th, 2021.
 
 A data structure for a set of coronal hole objects.
 
@@ -51,7 +51,17 @@ class CoronalHoleDB:
         }
 
     def _assign_id_coronal_hole(self, ch):
-        """ Assign a unique ID number to coronal hole """
+        """Assign a unique ID number to coronal hole "
+
+        Parameters
+        ----------
+        ch CoronalHole object
+
+        Returns
+        -------
+        ch with assigned id.
+        """
+
         # set the index id.
         ch.id = self.total_num_of_coronal_holes + 1
         # update coronal hole holder.
@@ -59,17 +69,44 @@ class CoronalHoleDB:
         return ch
 
     def _assign_color_coronal_hole(self, ch):
-        """ Assign a unique color to coronal hole"""
+        """Assign a unique color to coronal hole"
+
+        Parameters
+        ----------
+        ch CoronalHole object
+
+        Returns
+        -------
+        ch with assigned color.
+        """
         ch.color = self.generate_ch_color()
         return ch
 
     def _add_coronal_hole_to_dict(self, ch):
-        """ Add coronal hole to dictionary, assign id and color. """
+        """Add coronal hole to dictionary, assign id and color.
+
+        Parameters
+        ----------
+        ch CoronalHole object
+
+        Returns
+        -------
+        None
+        """
         # add to database.
         self.ch_dict[ch.id] = ch
 
     def update_previous_frames(self, frame):
-        """ Update previous frame holders. """
+        """Update 5 previous frame holders.
+
+        Parameters
+        ----------
+        frame: new frame object Frame() in frame.py
+
+        Returns
+        -------
+        None
+        """
         self.p5 = self.p4
         self.p4 = self.p3
         self.p2 = self.p1
@@ -78,8 +115,15 @@ class CoronalHoleDB:
     @staticmethod
     def _compute_distance(curr, prev):
         """ compute the distance between each element in two arrays containing the coronal hole centroids.
-        rows = new_index (curr)
-        columns = old_index (prev)
+
+        Parameters
+        ----------
+        curr: new_index
+        prev: old_index
+
+        Returns
+        -------
+        new_index, old_index
         """
         return dist.cdist(curr, prev)
 
@@ -92,13 +136,32 @@ class CoronalHoleDB:
         return list(zip(rows, cols))
 
     def _priority_queue_remove_duplicates(self, centroid_curr, centroid_prev):
-        """ remove duplicates from the priority queue. such as:
-        [(0,1), (1, 1), (2, 2)] --> [(0, 1), (2, 2)]"""
+        """remove duplicates from the priority queue. such as:
+                [(0,1), (1, 1), (2, 2)] --> [(0, 1), (2, 2)]
+
+        Parameters
+        ----------
+        centroid_curr: list of current frame centroids.
+        centroid_prev: list of previous frame centroids.
+
+        Returns
+        -------
+        modified queue list.
+        """
         queue = self._create_priority_queue(centroid_curr, centroid_prev)
         return [(a, b) for i, [a, b] in enumerate(queue) if not any(c == b for _, c in queue[:i])]
 
     def match_coronal_holes(self, contour_list):
-        """ Match coronal holes to previous 5 frames. """
+        """Match coronal holes to previous 5 frames.
+
+        Parameters
+        ----------
+        contour_list: current frame Contour() list.
+
+        Returns
+        -------
+        None
+        """
         # if this is the first image in the sequence then just save coronal holes.
         if self.frame_num == 1:
             for ii in range(len(contour_list)):
@@ -124,7 +187,9 @@ class CoronalHoleDB:
             index_list = np.arange(0, len(contour_list))
             index_list = np.delete(index_list, [a for a, b in queue])
 
-            # add all new coronal holes.
+            # add all leftover coronal holes are in index_list.
+            # check if they match to previous
+
             for ii in index_list:
                 # set the index id and color.
                 contour_list[ii] = self._assign_id_coronal_hole(ch=contour_list[ii])
@@ -135,7 +200,16 @@ class CoronalHoleDB:
             self.update_previous_frames(frame=Frame(contour_list=contour_list, identity=self.frame_num))
 
     def _insert_new_contour_to_dict(self, contour):
-        """ insert a new contour to dict. """
+        """insert a new contour to dict.
+
+        Parameters
+        ----------
+        contour: Contour() object
+
+        Returns
+        -------
+        None
+        """
         coronal_hole = CoronalHole(identity=contour.id)
         coronal_hole.insert_contour_list(contour=contour)
         coronal_hole.insert_number_frame(frame_num=self.frame_num)
@@ -143,13 +217,20 @@ class CoronalHoleDB:
 
     @staticmethod
     def _interval_overlap(t1, t2, t3, t4):
-        """ check if two intervals overlap.
+        """check if two intervals overlap.
+
+        Parameters
+        ----------
+        t1: int
+        t2: int
+        t3: int
+        t4: int
+
+        Returns
+        -------
+        Boolean
         The two intervals are built from [t1,t2] and [t3,t4] assuming t1 <= t2 and t3 <=t4.
         If the two intervals overlap: return True, otherwise False.
-        :type t1: int
-        :type t2: int
-        :type t3: int
-        :type t4: int
         """
         if t1 <= t3 <= t2:
             return True
@@ -163,9 +244,17 @@ class CoronalHoleDB:
 
     @staticmethod
     def save_contour_pixel_locations(rbg_image, color_list):
-        """ input image: rbg lon-lat classified coronal hole image.
-         This function will save all the image pixel coordinates that are assigned to each coronal hole.
-         :return: coronal hole list of Contour object. """
+        """This function will save all the image pixel coordinates that are assigned to each coronal hole.
+
+        Parameters
+        ----------
+        rbg_image: rbg lon-lat classified coronal hole image.
+        color_list: list of contour unique colors.
+
+        Returns
+        -------
+        coronal_hole_list : coronal hole list of Contour object.
+        """
         # loop over each contour saved.
         coronal_hole_list = []
         for color in color_list:
@@ -178,14 +267,23 @@ class CoronalHoleDB:
         return coronal_hole_list
 
     def plot_dilated_contours(self, contours):
+        """Draw filled contours of dilated greyscale input image.
+
+        Parameters
+        ----------
+        contours: opencv contours.
+
+        Returns
+        -------
+        rbg: image where each contour has a unique color
+        color_list: list of unique contour colors.
         """
-        Draw filled contours of dilated greyscale input image.
-        :return: rbg image where each contour has a unique color, list of unique colors.
-        """
-        # initialize rbg
+        # initialize RBG image.
         rbg = np.zeros((Contour.n_t, Contour.n_p, 3), dtype=np.uint8)
+        # initialize contour color list.
         color_list = np.zeros((len(contours), 3))
-        # draw contours.
+
+        # draw contours on rbg.
         for ii, contour in enumerate(contours):
             color_list[ii] = self.generate_ch_color()
             cv2.drawContours(image=rbg, contours=[contour], contourIdx=0, color=color_list[ii],
@@ -193,9 +291,17 @@ class CoronalHoleDB:
         return rbg, color_list.astype(int)
 
     def find_contours(self, image):
-        """ find contours contours of a greyscale image above threshold denoted by CoronalHoleDB.BinaryThreshold.
-        :type image - gray scaled image.
-        :return rbg image, list of unique colors. """
+        """Find contours contours of a greyscale image.
+
+        Parameters
+        ----------
+        image - gray scaled image.
+
+        Returns
+        -------
+        rbg image
+        list of unique colors.
+        """
         # create binary threshold.
         ret, thresh = cv2.threshold(image, CoronalHoleDB.BinaryThreshold, 255, 0)
         # find contours using opencv function.
@@ -205,13 +311,24 @@ class CoronalHoleDB:
 
     @staticmethod
     def generate_ch_color():
-        """ generate a random color
-        :return list of 3 integers between 0 and 255. """
+        """generate a random color
+
+        Returns
+        -------
+        list of 3 integers between 0 and 255.
+        """
         return np.random.randint(low=0, high=255, size=(3,)).tolist()
 
     def _force_periodicity(self, contour_list):
-        """ Force periodicity.
-        :return updated contour list.
+        """Force periodicity.
+
+        Parameters
+        ----------
+        contour_list: list of all contours.
+
+        Returns
+        -------
+        updated contour list.
         """
         # loop over each coronal hole and check if it is on the periodic border.
         ii = 0
@@ -260,28 +377,53 @@ class CoronalHoleDB:
 
     @staticmethod
     def _merge_contours(c1, c2):
-        """ Merge c2 onto c1.
-        :return updated c1"""
+        """Merge c2 onto c1.
+
+        Parameters
+        ----------
+        c1: Contour
+        c2: Contour
+
+        Returns
+        -------
+        c1 modified.
+        """
         # append c2 pixel locations to c1.
-        c1.contour_pixels = np.append(c2.contour_pixels, c1.contour_pixels)
+        c1.contour_pixels_theta = np.append(c2.contour_pixels_theta, c1.contour_pixels_theta)
+        c1.contour_pixels_phi = np.append(c2.contour_pixels_phi, c1.contour_pixels_phi)
+
         # update c1 periodic label.
         if c2.periodic_at_2pi:
             c1.periodic_at_2pi = True
         if c2.periodic_at_zero:
             c1.periodic_at_zero = True
+
         # update c1 area.
         c1.area = c1.area + c2.area
+
         # update c1 pixel centroid.
-        c1.pixel_centroid = c1.compute_pixel_centroid
+        c1.pixel_centroid = c1.compute_pixel_centroid()
+
         # update bounding box.
         c1.straight_box = np.append(c1.straight_box, c2.straight_box)
+
         # update bounding box area.
-        c2.box_area = c1.box_area + c2.box_area
+        c2.straight_box_area = c1.straight_box_area + c2.straight_box_area
+
         return c1
 
     @staticmethod
     def _remove_small_coronal_holes(contour_list):
-        """ Remove all contours that are smaller than AreaThreshold. """
+        """Remove all contours that are smaller than AreaThreshold.
+
+        Parameters
+        ----------
+        contour_list: list of all contours.
+
+        Returns
+        -------
+        pruned contour list.
+        """
         ii = 0
         while ii < len(contour_list):
             if contour_list[ii].area < CoronalHoleDB.AreaThreshold:
@@ -291,24 +433,42 @@ class CoronalHoleDB:
         return contour_list
 
     def prune_coronal_hole_list(self, contour_list):
-        """ Remove small coronal holes and force periodicity. """
+        """Remove small coronal holes and force periodicity.
+
+        Parameters
+        ----------
+        contour_list: list of all contours.
+
+        Returns
+        -------
+        pruned contour list.
+        """
+        # remove small coronal holes.
         contour_list = self._remove_small_coronal_holes(contour_list=contour_list)
+        # force periodicity.
         return self._force_periodicity(contour_list=contour_list)
 
     @staticmethod
-    def kernel_width(t, num):
-        """ The dilation kernel width based on latitude.
-        :type t: float
-        :type num: int
-        :return int
+    def kernel_width(t, gamma):
+        """The dilation kernel width based on latitude.
+
+        Parameters
+        ----------
+        t: float
+            theta latitude
+        gamma: int
+            constant param of kernel width at the equator.
+        Returns
+        -------
+            kernel width: int
         """
         # piecewise function.
-        alpha = np.arcsin(num/Contour.n_p)
+        alpha = np.arcsin(gamma / Contour.n_p)
         # due to symmetry.
         beta = np.pi - alpha
         # loop over each interval.
         if alpha < t < beta:
-            return int(num/np.sin(t))
+            return int(gamma / np.sin(t))
         elif 0 <= t <= alpha:
             return Contour.n_p
         elif beta <= t <= np.pi:
