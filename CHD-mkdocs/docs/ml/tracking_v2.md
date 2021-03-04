@@ -55,23 +55,11 @@ where $\alpha = \arcsin(\frac{\gamma}{n_{p}})$ and $\beta = \pi - \alpha$ (from 
 
 ### *Step 3*
 * Find contours using a binary threshold. 
+* [Compute coronal hole features](tracking_features.md)
 * Remove coronal holes that are too small. 
 * Force periodicity. 
 
 ### *Step 4*
-* Classify coronal hole unique ID and color. Match to previous coronal holes by centroid location.
+* Classify coronal hole unique ID and color. [Match](tracking_match.md) to previous coronal holes by centroid location.
 Future research steps: find a way to classify merges of two coronal holes based on previous pixel location.
 
-### *Step 5*
-* Compute coronal hole features: 
-    - centroid (calculated in cartesian coordinates then map back to spherical). 
-    - coronal hole area
-    - straight bounding box corners: straight rectangle that contains the coronal hole. 
-    - straight bounding box area: computed based on image mesh spacing (in spherical coordinates). 
-    - rotated bounding box coordinates: rectangle with minimum pixel area that contains the coronal hole. 
-    - rotated bounding box area: computed based on image mesh spacing (in spherical coordinates). 
-    - rotated bounding box angle: with respect to north and largest rect side. 
-    - convex hull: measure the convexity of the coronal hole by comparing the area.
-    - tilt: TODO.. 
-    
-    - etc...
