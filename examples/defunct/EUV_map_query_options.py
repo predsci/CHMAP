@@ -30,10 +30,10 @@ query_time_min = datetime.datetime(2000, 1, 1, 1, 0, 0)
 query_time_max = datetime.datetime(2019, 1, 1, 1, 0, 0)
 mean_time_range = [query_time_min, query_time_max]
 
-combo_query = db_session.query(Image_Combos.combo_id).filter(Image_Combos.date_mean.between(mean_time_range[0],
+combo_query = db_session.query(Data_Combos.combo_id).filter(Data_Combos.date_mean.between(mean_time_range[0],
                                                                                             mean_time_range[1]))
 euv_map_query = db_session.query(EUV_Maps).filter(EUV_Maps.combo_id.in_(combo_query))
-euv_map_query_join = db_session.query(EUV_Maps, Image_Combos).filter(EUV_Maps.combo_id.in_(combo_query))
+euv_map_query_join = db_session.query(EUV_Maps, Data_Combos).filter(EUV_Maps.combo_id.in_(combo_query))
 euv_map_rel_join = db_session.query(EUV_Maps).options(joinedload(EUV_Maps.combos)).filter(EUV_Maps.combo_id.in_(combo_query))
 test = euv_map_query.all()
 
@@ -43,7 +43,7 @@ len(test)
 test[0].combos.combo_id
 # lazyload which images the combo is made up of
 for row in test[0].combos.images:
-    print(row.image_id)
+    print(row.data_id)
 
 
 test2 = pd.read_sql(euv_map_query.statement, db_session.bind)

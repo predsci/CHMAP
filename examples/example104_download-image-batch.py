@@ -52,7 +52,7 @@ if use_db == 'sqlite':
     sqlite_path = os.path.join(database_dir, sqlite_filename)
 
     db_session = init_db_conn(db_name=use_db, chd_base=DBClass.Base, sqlite_path=sqlite_path)
-elif use_db == 'mysql-Q':
+elif use_db in ['mysql-Q', 'mysql-Q_test']:
     # setup database connection to MySQL database on Q
     db_session = init_db_conn(db_name=use_db, chd_base=DBClass.Base, user=user, password=password)
 

@@ -124,7 +124,7 @@ def PlotMap(map_plot, nfig=None, title=None, map_type=None):
         plt.title(title)
 
     plt.show(block=False)
-    plt.savefig('maps/synoptic/' + str(map_plot.image_info.date_obs[0]))
+    plt.savefig('maps/synoptic/' + str(map_plot.data_info.date_obs[0]))
 
     return None
 

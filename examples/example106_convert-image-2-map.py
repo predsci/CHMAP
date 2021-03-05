@@ -72,7 +72,7 @@ map_y = np.linspace(y_range[0], y_range[1], map_nycoord.astype(int))
 map_x = np.linspace(x_range[0], x_range[1], map_nxcoord.astype(int))
 
 # test LosImage function interp_to_map()
-test_map = test_los.interp_to_map(R0=R0, map_x=map_x, map_y=map_y, image_num=selected_image.image_id)
+test_map = test_los.interp_to_map(R0=R0, map_x=map_x, map_y=map_y, image_num=selected_image.data_id)
 
 # compare test image to test map
 EasyPlot.PlotImage(test_los, nfig=9)

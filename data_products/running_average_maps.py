@@ -105,7 +105,7 @@ for time_ind, timescale in enumerate(timescales):
     methods_list = db_funcs.generate_methdf(query_pd)
 
     #### LOOP THROUGH IMAGES ####
-    image_info = []
+    data_info = []
     map_info = []
     for row in query_pd.iterrows():
         #### STEP TWO: APPLY PRE-PROCESSING CORRECTIONS ####
@@ -126,11 +126,11 @@ for time_ind, timescale in enumerate(timescales):
         euv_timescale[time_ind], chd_timescale[time_ind], combined_method, chd_combined_method = cr_funcs.cr_map(euv_map, chd_map,
                                                                                             euv_timescale[time_ind],
                                                                                             chd_timescale[time_ind],
-                                                                                            image_info,
+                                                                                            data_info,
                                                                                             map_info,
                                                                                             mu_cutoff=mu_cutoff,
                                                                                             mu_merge_cutoff=mu_merge_cutoff)
-    image_info_timescale[time_ind] = image_info
+    image_info_timescale[time_ind] = data_info
     map_info_timescale[time_ind] = map_info
 
 #### STEP SIX: COMBINE TIMESCALE MAPS ####

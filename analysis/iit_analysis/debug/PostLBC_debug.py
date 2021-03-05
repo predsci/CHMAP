@@ -125,13 +125,13 @@ image_add = db_class.EUV_Images(date_obs=iit_hist.date_obs, instrument=iit_hist.
                        fname_hdf="abcd", distance=0, cr_lon=0,
                        cr_lat=0, cr_rot=0,
                        time_of_download=datetime.datetime.now())
-# Push to DB and record new image_id
+# Push to DB and record new data_id
 db_session.add(image_add)
 db_session.flush()
-new_image_id = image_add.image_id
+new_data_id = image_add.data_id
 db_session.commit()
 
-iit_hist.image_id = new_image_id
+iit_hist.data_id = new_data_id
 
 # write newly calc'd histogram to DB with date 1985
 db_funcs.add_hist(db_session, iit_hist)
@@ -155,11 +155,11 @@ ax.legend(loc='upper right', title="")
 
 # clean-up DB
 # remove test histogram record
-db_session.query(db_class.Histogram).filter(db_class.Histogram.image_id == new_image_id,
+db_session.query(db_class.Histogram).filter(db_class.Histogram.image_id == new_data_id,
                                             db_class.Histogram.meth_id == iit_hist.meth_id
                                             ).delete()
 # remove bogus image record
-db_session.query(db_class.EUV_Images).filter(db_class.EUV_Images.image_id == new_image_id
+db_session.query(db_class.EUV_Images).filter(db_class.EUV_Images.data_id == new_data_id
                                              ).delete()
 
 # close connection

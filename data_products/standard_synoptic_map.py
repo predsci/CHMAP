@@ -90,7 +90,7 @@ lbc_combo_query, iit_combo_query = chd_funcs.get_inst_combos(db_session, inst_li
 #### LOOP THROUGH IMAGES ####
 euv_combined = None
 chd_combined = None
-image_info = []
+data_info = []
 map_info = []
 for row in query_pd.iterrows():
     #### STEP TWO: APPLY PRE-PROCESSING CORRECTIONS ####
@@ -108,13 +108,13 @@ for row in query_pd.iterrows():
 
     #### STEP FIVE: CREATE COMBINED MAPS ####
     euv_combined, chd_combined, combined_method, chd_combined_method = cr_funcs.cr_map(euv_map, chd_map, euv_combined,
-                                                                                       chd_combined, image_info,
+                                                                                       chd_combined, data_info,
                                                                                        map_info,
                                                                                        mu_cutoff=mu_cutoff,
                                                                                        mu_merge_cutoff=mu_merge_cutoff)
 
 #### STEP SIX: PLOT COMBINED MAP AND SAVE TO DATABASE ####
-cr_funcs.save_maps(db_session, map_data_dir, euv_combined, chd_combined, image_info, map_info, methods_list,
+cr_funcs.save_maps(db_session, map_data_dir, euv_combined, chd_combined, data_info, map_info, methods_list,
                    combined_method, chd_combined_method)
 
 #### CREATE QUALITY MAPS

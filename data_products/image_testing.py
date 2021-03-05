@@ -50,18 +50,18 @@ db_session = init_db_conn(db_name=use_db, chd_base=db_class.Base, sqlite_path=sq
 
 #### FUNCTIONS
 # remove image from "bad data" list
-def remove_image(image_ids, bad_data):
-    for image_id in image_ids:
-        index = np.where(bad_data.image_id == int(image_id))
+def remove_image(data_ids, bad_data):
+    for data_id in data_ids:
+        index = np.where(bad_data.data_id == int(data_id))
         bad_data = bad_data.drop(index[0][0])
     return bad_data
 
 
 # create list of image ids to flag
-def flag_image(image_ids, bad_data):
+def flag_image(data_ids, bad_data):
     bad_images = pd.DataFrame()
-    for image_id in image_ids:
-        index = np.where(bad_data.image_id == int(image_id))
+    for data_id in data_ids:
+        index = np.where(bad_data.data_id == int(data_id))
         print(index)
         bad_images = bad_images.append(bad_data.iloc[index[0][0]])
     return bad_images
@@ -87,9 +87,9 @@ def find_anomalies(data):
 # plot bad images
 def plot_bad_images(hdf_dir, data):
     for im_ind, im_row in data.iterrows():
-        print("Plotting image number", im_row.image_id, ".")
+        print("Plotting image number", im_row.data_id, ".")
         if im_row.fname_hdf == "":
-            print("Warning: Image # " + str(im_row.image_id) + " does not have an associated hdf file. Skipping")
+            print("Warning: Image # " + str(im_row.data_id) + " does not have an associated hdf file. Skipping")
             continue
         hdf = os.path.join(hdf_dir, im_row.fname_hdf)
         los_image = psi_d_types.read_los_image(hdf)
@@ -108,12 +108,12 @@ def plot_bad_images(hdf_dir, data):
         plot_arr[plot_arr < .001] = .001
 
         # plot the initial image
-        plt.figure(im_row.image_id)
+        plt.figure(im_row.data_id)
         plt.imshow(plot_arr, extent=[los_image.x.min(), los_image.x.max(), los_image.y.min(), los_image.y.max()],
                    origin="lower", cmap=im_cmap, aspect="equal", norm=norm)
         plt.xlabel("x (solar radii)")
         plt.ylabel("y (solar radii)")
-        plt.title(im_row.image_id)
+        plt.title(im_row.data_id)
     plt.show()
 
 
@@ -128,9 +128,9 @@ for inst_index, instrument in enumerate(inst_list):
                                 time_max=query_time_max, instrument=query_instrument)
     hist_list = np.zeros((len(query_pd), n_intensity_bins))
     for index, row in query_pd.iterrows():
-        print("Processing image number", row.image_id, ".")
+        print("Processing image number", row.data_id, ".")
         if row.fname_hdf == "":
-            print("Warning: Image # " + str(row.image_id) + " does not have an associated hdf file. Skipping")
+            print("Warning: Image # " + str(row.data_id) + " does not have an associated hdf file. Skipping")
             continue
         hdf_path = os.path.join(hdf_data_dir, row.fname_hdf)
         los_temp = psi_d_types.read_los_image(hdf_path)

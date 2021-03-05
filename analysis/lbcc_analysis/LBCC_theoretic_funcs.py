@@ -55,9 +55,9 @@ def save_histograms(db_session, hdf_data_dir, inst_list, hist_query_time_min, hi
                                              time_max=hist_query_time_max, instrument=query_instrument)
 
         for index, row in query_pd.iterrows():
-            print("Processing image number", row.image_id, ".")
+            print("Processing image number", row.data_id, ".")
             if row.fname_hdf == "":
-                print("Warning: Image # " + str(row.image_id) + " does not have an associated hdf file. Skipping")
+                print("Warning: Image # " + str(row.data_id) + " does not have an associated hdf file. Skipping")
                 continue
             hdf_path = os.path.join(hdf_data_dir, row.fname_hdf)
             los_temp = psi_d_types.read_los_image(hdf_path)
@@ -65,7 +65,7 @@ def save_histograms(db_session, hdf_data_dir, inst_list, hist_query_time_min, hi
             los_temp.get_coordinates(R0=R0)
             # perform 2D histogram on mu and image intensity
             temp_hist = los_temp.mu_hist(image_intensity_bin_edges, mu_bin_edges, lat_band=lat_band, log10=log10)
-            hist_lbcc = psi_d_types.create_lbcc_hist(hdf_path, row.image_id, method_id[1], mu_bin_edges,
+            hist_lbcc = psi_d_types.create_lbcc_hist(hdf_path, row.data_id, method_id[1], mu_bin_edges,
                                                      image_intensity_bin_edges, lat_band, temp_hist)
 
             # add this histogram and meta data to database
@@ -223,7 +223,7 @@ def apply_lbc_correction(db_session, hdf_data_dir, inst_list, lbc_query_time_min
         for index in range(n_images_plot):
             print(index)
             row = image_pd.iloc[index]
-            print("Processing image number", row.image_id, "for LB Correction.")
+            print("Processing image number", row.data_id, "for LB Correction.")
             original_los, lbcc_image, mu_indices, use_indices, theoretic_query = apply_lbc(db_session, hdf_data_dir,
                                                                                            combo_query, image_row=row,
                                                                                            n_intensity_bins=n_intensity_bins,
@@ -267,7 +267,7 @@ def apply_lbc(db_session, hdf_data_dir, inst_combo_query, image_row, n_intensity
 
     ###### GET LOS IMAGES COORDINATES (DATA) #####
     if image_row.fname_hdf == "":
-        print("Warning: Image # " + str(image_row.image_id) + " does not have an associated hdf file. Skipping")
+        print("Warning: Image # " + str(image_row.data_id) + " does not have an associated hdf file. Skipping")
         pass
     hdf_path = os.path.join(hdf_data_dir, image_row.fname_hdf)
     original_los = psi_d_types.read_los_image(hdf_path)
@@ -285,7 +285,7 @@ def apply_lbc(db_session, hdf_data_dir, inst_combo_query, image_row, n_intensity
     corrected_lbc_data[use_indices] = 10 ** (beta1d * np.log10(original_los.data[use_indices]) + y1d)
 
     ###### CREATE LBCC DATATYPE ######
-    lbcc_image = psi_d_types.create_lbcc_image(original_los, corrected_lbc_data, image_id=image_row.image_id,
+    lbcc_image = psi_d_types.create_lbcc_image(original_los, corrected_lbc_data, data_id=image_row.data_id,
                                                meth_id=meth_id, intensity_bin_edges=intensity_bin_edges)
     psi_d_types.LosImage.get_coordinates(lbcc_image, R0=R0)
 
@@ -312,7 +312,7 @@ def apply_lbc_2(db_session, hdf_data_dir, image_row, n_intensity_bins=200, R0=1.
 
     ###### GET LOS IMAGES COORDINATES (DATA) #####
     if image_row.fname_hdf == "":
-        print("Warning: Image # " + str(image_row.image_id) + " does not have an associated hdf file. Skipping")
+        print("Warning: Image # " + str(image_row.data_id) + " does not have an associated hdf file. Skipping")
         # return None for all outputs
         return None, None, None, None, None
     hdf_path = os.path.join(hdf_data_dir, image_row.fname_hdf)
@@ -339,7 +339,7 @@ def apply_lbc_2(db_session, hdf_data_dir, image_row, n_intensity_bins=200, R0=1.
     corrected_lbc_data[use_indices] = 10 ** (beta1d * np.log10(original_los.data[use_indices]) + y1d)
 
     ###### CREATE LBCC DATATYPE ######
-    lbcc_image = psi_d_types.create_lbcc_image(original_los, corrected_lbc_data, image_id=image_row.image_id,
+    lbcc_image = psi_d_types.create_lbcc_image(original_los, corrected_lbc_data, data_id=image_row.data_id,
                                                meth_id=meth_id, intensity_bin_edges=intensity_bin_edges)
     psi_d_types.LosImage.get_coordinates(lbcc_image, R0=R0)
 
@@ -572,7 +572,7 @@ def generate_histogram_plots(db_session, hdf_data_dir, inst_list, hist_plot_quer
                 temp_hist = psi_d_types.LosImage.mu_hist(lbcc_image, intensity_bin_edges, mu_bin_edges,
                                                          lat_band=lat_band,
                                                          log10=log10)
-                hist_lbcc = psi_d_types.create_lbcc_hist(hdf_path, row.image_id, method_id[1], mu_bin_edges,
+                hist_lbcc = psi_d_types.create_lbcc_hist(hdf_path, row.data_id, method_id[1], mu_bin_edges,
                                                          intensity_bin_edges, lat_band, temp_hist)
                 #### PLOT NEW HISTOGRAMS ####
                 # definitions

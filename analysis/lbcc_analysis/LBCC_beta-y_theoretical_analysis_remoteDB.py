@@ -30,6 +30,7 @@ hdf_data_dir = App.PROCESSED_DATA_HOME
 # TIME FRAME TO QUERY HISTOGRAMS
 query_time_min = datetime.datetime(2009, 1, 1, 0, 0, 0)
 query_time_max = datetime.datetime(2011, 4, 1, 0, 0, 0)
+
 weekday = 0
 number_of_days = 180
 
@@ -54,7 +55,7 @@ if use_db == 'sqlite':
     sqlite_path = os.path.join(database_dir, sqlite_filename)
 
     db_session = init_db_conn(db_name=use_db, chd_base=db_class.Base, sqlite_path=sqlite_path)
-elif use_db == 'mysql-Q':
+elif use_db in ['mysql-Q', 'mysql-Q_test']:
     # setup database connection to MySQL database on Q
     db_session = init_db_conn(db_name=use_db, chd_base=db_class.Base, user=user, password=password)
 

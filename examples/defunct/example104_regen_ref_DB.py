@@ -70,10 +70,10 @@ for var_id in var_ids:
 for map_info in map_list:
     # Get combo_id. Create if it doesn't already exist.
     image_ids = map_info['images']
-    db_session, combo_id = get_combo_id(db_session=db_session, image_ids=image_ids, create=True)
+    db_session, combo_id = get_combo_id(db_session=db_session, data_ids=image_ids, create=True)
     # add combo-image associations
     for image in image_ids:
-        db_session, exit_flag = add_combo_image_assoc(db_session=db_session, combo_id=combo_id, image_id=image)
+        db_session, exit_flag = add_combo_image_assoc(db_session=db_session, combo_id=combo_id, data_id=image)
 
     # Add EUV_map record
     db_session, exit_status, map_id = add_euv_map(db_session=db_session, combo_id=combo_id, meth_id=meth_id,

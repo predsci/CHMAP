@@ -24,7 +24,7 @@ def quality_map(db_session, map_data_dir, inst_list, query_pd, euv_combined, chd
     euv_origins = np.unique(euv_origin_image)
     euv_image = np.empty(euv_origin_image.shape, dtype=object)
     for euv_id in euv_origins:
-        query_ind = np.where(query_pd['image_id'] == euv_id)
+        query_ind = np.where(query_pd['data_id'] == euv_id)
         instrument = query_pd['instrument'].iloc[query_ind[0]]
         if len(instrument) != 0:
             euv_image = np.where(euv_origin_image != euv_id, euv_image, instrument.iloc[0])
@@ -35,7 +35,7 @@ def quality_map(db_session, map_data_dir, inst_list, query_pd, euv_combined, chd
         chd_origins = np.unique(chd_origin_image)
         chd_image = np.empty(chd_origin_image.shape, dtype=object)
         for chd_id in chd_origins:
-            query_ind = np.where(query_pd['image_id'] == chd_id)
+            query_ind = np.where(query_pd['data_id'] == chd_id)
             instrument = query_pd['instrument'].iloc[query_ind[0]]
             if len(instrument) != 0:
                 chd_image = np.where(euv_origin_image != chd_id, chd_image, instrument.iloc[0])

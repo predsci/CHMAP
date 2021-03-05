@@ -39,10 +39,10 @@ test_pal = ["#1b9e77", "#d95f02", "#7570b3"]
 
 # path to save plots to
 image_out_path = os.path.join(App.APP_HOME, "test_data", "analysis/iit_analysis/")
-image_out_path = "/Users/turtle/Dropbox/MyNACD/analysis/iit_analysis/"
+# image_out_path = "/Users/turtle/Dropbox/MyNACD/analysis/iit_analysis/test/"
 # TIME FRAME TO QUERY HISTOGRAMS
-query_time_min = datetime.datetime(2007, 4, 1, 0, 0, 0)
-query_time_max = datetime.datetime(2021, 1, 1, 0, 0, 0)
+query_time_min = datetime.datetime(2011, 4, 1, 0, 0, 0)
+query_time_max = datetime.datetime(2012, 9, 1, 0, 0, 0)
 weekday = 0
 # Histogram characteristics
 number_of_days = 180
@@ -65,6 +65,7 @@ database_dir = App.DATABASE_HOME
 sqlite_filename = App.DATABASE_FNAME
 
 # designate which database to connect to
+# use_db = "mysql-Q_test"
 use_db = "mysql-Q"       # 'sqlite'  Use local sqlite file-based db
                         # 'mysql-Q' Use the remote MySQL database on Q
 user = "turtle"         # only needed for remote databases.
@@ -81,7 +82,7 @@ if use_db == 'sqlite':
     sqlite_path = os.path.join(database_dir, sqlite_filename)
 
     db_session = db_funs.init_db_conn(db_name=use_db, chd_base=db_class.Base, sqlite_path=sqlite_path)
-elif use_db == 'mysql-Q':
+elif use_db in ['mysql-Q', 'mysql-Q_test']:
     # setup database connection to MySQL database on Q
     db_session = db_funs.init_db_conn(db_name=use_db, chd_base=db_class.Base, user=user, password=password)
 

@@ -58,9 +58,9 @@ for instrument in inst_list:
     # read hdf file(s) to LOS objects and generate mu histograms
     full_hist = np.full((n_mu_bins, n_intensity_bins, query_pd.__len__()), 0, dtype=np.int32)  # query_pd.__len__()
     for index, row in query_pd.iterrows():
-        print("Processing image number", row.image_id, ".")
+        print("Processing image number", row.data_id, ".")
         if row.fname_hdf == "":
-            print("Warning: Image # " + str(row.image_id) + " does not have an associated hdf file. Skipping")
+            print("Warning: Image # " + str(row.data_id) + " does not have an associated hdf file. Skipping")
             continue
         hdf_path = os.path.join(hdf_data_dir, row.fname_hdf)
         los_temp = psi_d_types.read_los_image(hdf_path)
@@ -74,7 +74,7 @@ for instrument in inst_list:
 
 
     # create object for saving
-    hist_struct = {'image_id': query_pd.image_id.to_numpy(), 'date_obs': query_pd.date_obs.to_numpy(), 'mu_bin_edges':
+    hist_struct = {'image_id': query_pd.data_id.to_numpy(), 'date_obs': query_pd.date_obs.to_numpy(), 'mu_bin_edges':
         mu_bin_edges, 'intensity_bin_edges': image_intensity_bin_edges,
                    'all_hists': full_hist}
 

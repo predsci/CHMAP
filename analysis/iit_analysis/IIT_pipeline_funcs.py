@@ -244,7 +244,7 @@ def apply_iit_correction(db_session, hdf_data_dir, iit_query_time_min, iit_query
         # apply LBC
         for index in range(n_images_plot):
             row = image_pd.iloc[index]
-            print("Processing image number", row.image_id, "for IIT Correction.")
+            print("Processing image number", row.data_id, "for IIT Correction.")
             #### APPLY LBC CORRECTION #####
             original_los, lbcc_image, mu_indices, use_indices, theoretic_query = lbcc_funcs.apply_lbc(db_session,
                                                                                                       hdf_data_dir,

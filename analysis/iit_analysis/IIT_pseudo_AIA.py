@@ -61,9 +61,9 @@ aia_query = db_session.query(func.min(db_class.EUV_Images.date_obs))\
     .filter(db_class.EUV_Images.instrument == "AIA")
 aia_min_date = pd.read_sql(aia_query.statement, db_session.bind)
 # determine first AIA LBC combo
-aia_combo_query = db_session.query(func.min(db_class.Image_Combos.date_mean),
-                                   func.max(db_class.Image_Combos.date_mean))\
-    .filter(db_class.Image_Combos.instrument == "AIA", db_class.Image_Combos.meth_id == 1)
+aia_combo_query = db_session.query(func.min(db_class.Data_Combos.date_mean),
+                                   func.max(db_class.Data_Combos.date_mean))\
+    .filter(db_class.Data_Combos.instrument == "AIA", db_class.Data_Combos.meth_id == 1)
 aia_combo_date = pd.read_sql(aia_combo_query.statement, db_session.bind)
 
 stereoA_min = aia_combo_date.iloc[0, 0].to_pydatetime()

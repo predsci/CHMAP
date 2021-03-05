@@ -56,9 +56,9 @@ for inst_index, instrument in enumerate(inst_list):
 
 ###### GET LOS IMAGES COORDINATES (DATA) #####
     for index, row in image_pd.iterrows():
-        print("Processing image number", row.image_id, ".")
+        print("Processing image number", row.data_id, ".")
         if row.fname_hdf == "":
-            print("Warning: Image # " + str(row.image_id) + " does not have an associated hdf file. Skipping")
+            print("Warning: Image # " + str(row.data_id) + " does not have an associated hdf file. Skipping")
             continue
         hdf_path = os.path.join(hdf_data_dir, row.fname_hdf)
         los_temp = psi_d_types.read_los_image(hdf_path)

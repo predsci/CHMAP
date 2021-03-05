@@ -148,7 +148,7 @@ def synchronic_euv_download(synch_times, raw_data_dir, db_session, download=True
 
 
         print("\nDownloads complete with all images added to DB session.  \nNow commit session changes to DB.\n")
-        # commit the changes to the DB, this also assigns auto-incrementing prime-keys 'image_id'
+        # commit the changes to the DB, this also assigns auto-incrementing prime-keys 'data_id'
         db_session.commit()
         # record download outcomes to dataframe
         download_result = download_result.append(new_rows)

@@ -20,7 +20,7 @@ create = True  # true if you want to add to database
 # designate which database to connect to
 
 # mysql
-use_db = "mysql-Q"      # 'sqlite'  Use local sqlite file-based db
+use_db = "mysql-Q_test"      # 'sqlite'  Use local sqlite file-based db
                         # 'mysql-Q' Use the remote MySQL database on Q
 user = "turtle"         # only needed for remote databases.
 password = ""           # See example109 for setting-up an encrypted password.  In this case leave password="", and
@@ -39,16 +39,16 @@ elif use_db in ['mysql-Q', 'mysql-Q_test']:
     db_session = init_db_conn(db_name=use_db, chd_base=db_class.Base, user=user, password=password)
 
 # query all combos
-image_combos = pd.read_sql(db_session.query(db_class.Image_Combos).statement, db_session.bind)
+image_combos = pd.read_sql(db_session.query(db_class.Data_Combos).statement, db_session.bind)
 
 total_combos = image_combos.shape[0]
 
 for index, row in image_combos.iterrows():
-    print("Updating", index, "of", total_combos, "combos.")
+    print("Updating", index+1, "of", total_combos, "combos.")
     # join all images/instruments to this combo
-    image_inst_join = db_session.query(db_class.Image_Combo_Assoc, db_class.EUV_Images.instrument).join(
-        db_class.EUV_Images).filter(
-        db_class.Image_Combo_Assoc.combo_id == row.combo_id)
+    image_inst_join = db_session.query(db_class.Data_Combo_Assoc, db_class.EUV_Images.instrument).filter(
+        db_class.Data_Combo_Assoc.combo_id == row.combo_id, db_class.Data_Combo_Assoc.data_id ==
+        db_class.EUV_Images.data_id)
     join_query = pd.read_sql(image_inst_join.statement, db_session.bind)
 
     all_instruments = join_query.instrument.unique()
@@ -62,9 +62,9 @@ for index, row in image_combos.iterrows():
 
     if set_val is not None:
         # write to database
-        db_session.query(db_class.Image_Combos).filter(
-            db_class.Image_Combos.combo_id == row.combo_id).update(
-            {db_class.Image_Combos.instrument: set_val}, synchronize_session=False
+        db_session.query(db_class.Data_Combos).filter(
+            db_class.Data_Combos.combo_id == row.combo_id).update(
+            {db_class.Data_Combos.instrument: set_val}, synchronize_session=False
         )
         # commit change
         db_session.commit()

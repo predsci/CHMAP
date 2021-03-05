@@ -58,7 +58,7 @@ if use_db == 'sqlite':
         print("\nPrevious file ", sqlite_filename, " deleted.\n")
 
     db_session = init_db_conn(db_name=use_db, chd_base=db_class.Base, sqlite_path=sqlite_path)
-elif use_db == 'mysql-Q':
+elif use_db in ['mysql-Q', 'mysql-Q_test']:
     # setup database connection to MySQL database on Q
     db_session = init_db_conn(db_name=use_db, chd_base=db_class.Base, user=user, password=password)
 
@@ -87,7 +87,7 @@ for instrument in inst_list:
                          instrument=query_instrument)
 
     # compare image results to hist results based on image_id
-    in_index = query_pd_all.image_id.isin(hist_pd.image_id)
+    in_index = query_pd_all.data_id.isin(hist_pd.image_id)
 
     # return only images that do not have corresponding histograms
     query_pd = query_pd_all[~in_index]
@@ -98,9 +98,9 @@ for instrument in inst_list:
         continue
 
     for index, row in query_pd.iterrows():
-        print("Processing image number", row.image_id, ".")
+        print("Processing image number", row.data_id, ".")
         if row.fname_hdf == "":
-            print("Warning: Image # " + str(row.image_id) + " does not have an associated hdf file. Skipping")
+            print("Warning: Image # " + str(row.data_id) + " does not have an associated hdf file. Skipping")
             continue
         hdf_path = os.path.join(hdf_data_dir, row.fname_hdf)
         # attempt to open and read file
@@ -113,7 +113,7 @@ for instrument in inst_list:
         los_temp.get_coordinates(R0=R0)
         # perform 2D histogram on mu and image intensity
         temp_hist = los_temp.mu_hist(image_intensity_bin_edges, mu_bin_edges, lat_band=lat_band, log10=log10)
-        hist_lbcc = psi_d_types.create_lbcc_hist(hdf_path, row.image_id, method_id[1], mu_bin_edges,
+        hist_lbcc = psi_d_types.create_lbcc_hist(hdf_path, row.data_id, method_id[1], mu_bin_edges,
                                                  image_intensity_bin_edges, lat_band, temp_hist)
 
         # add this histogram and meta data to database

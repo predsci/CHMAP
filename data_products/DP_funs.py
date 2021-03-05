@@ -32,7 +32,7 @@ def quality_map(db_session, map_data_dir, inst_list, query_pd, euv_combined, chd
 
     # function to determine which image id corresponds to what instrument
     for euv_id in euv_origins:
-        query_ind = np.where(query_pd['image_id'] == euv_id)
+        query_ind = np.where(query_pd['data_id'] == euv_id)
         instrument = query_pd['instrument'].iloc[query_ind[0]]
         if len(instrument) != 0:
             euv_image = np.where(euv_origin_image != euv_id, euv_image, instrument.iloc[0])
@@ -41,21 +41,21 @@ def quality_map(db_session, map_data_dir, inst_list, query_pd, euv_combined, chd
     Plotting.PlotQualityMap(euv_combined, euv_image, inst_list, color_list,
                             nfig='EUV Quality Map',
                             title='EUV Quality Map: Mu Dependent\nTime Min: ' + str(
-                                euv_combined.image_info.date_obs[0]) + "\nTime Max: "
-                                  + str(euv_combined.image_info.date_obs.iloc[-1]))
+                                euv_combined.data_info.date_obs[0]) + "\nTime Max: "
+                                  + str(euv_combined.data_info.date_obs.iloc[-1]))
     # repeat for CHD map,      if applicable
     if chd_combined is not None:
         chd_origin_image = chd_combined.origin_image
         chd_origins = np.unique(chd_origin_image)
         chd_image = np.empty(chd_origin_image.shape, dtype=object)
         for chd_id in chd_origins:
-            query_ind = np.where(query_pd['image_id'] == chd_id)
+            query_ind = np.where(query_pd['data_id'] == chd_id)
             instrument = query_pd['instrument'].iloc[query_ind[0]]
             if len(instrument) != 0:
                 chd_image = np.where(euv_origin_image != chd_id, chd_image, instrument.iloc[0])
         Plotting.PlotQualityMap(chd_combined, chd_image, inst_list, color_list,
-                                nfig='CHD Quality Map ' + str(chd_combined.image_info.date_obs[0]),
-                                title='CHD Quality Map: Mu Dependent\n' + str(chd_combined.image_info.date_obs[0]),
+                                nfig='CHD Quality Map ' + str(chd_combined.data_info.date_obs[0]),
+                                title='CHD Quality Map: Mu Dependent\n' + str(chd_combined.data_info.date_obs[0]),
                                 map_type='CHD')
 
     # save these maps to database
@@ -82,9 +82,9 @@ def create_timescale_maps(euv_map_list, chd_map_list, timescale_weights, image_i
 
     # append image and map info records
     # TODO: check this works
-    image_info = [info for sublist in image_info_timescale for info in sublist]
+    data_info = [info for sublist in image_info_timescale for info in sublist]
     map_info = [info for sublist in map_info_timescale for info in sublist]
-    image_info.append(euv_time_combined.image_info)
+    data_info.append(euv_time_combined.data_info)
     map_info.append(euv_time_combined.map_info)
 
     end = time.time()
@@ -142,13 +142,13 @@ def gauss_chd(db_session, inst_list, los_image, iit_image, use_indices, iit_comb
     chd_image.get_coordinates()
 
     end = time.time()
-    print("Coronal Hole Detection Algorithm has been applied to image", iit_image.image_id, "in", end - start,
+    print("Coronal Hole Detection Algorithm has been applied to image", iit_image.data_id, "in", end - start,
           "seconds.")
 
     return chd_image, FWHM
 
 
-def chd_mu_map(euv_map, chd_map, euv_combined, chd_combined, image_info, map_info, mu_cutoff=0.0, mu_merge_cutoff=None,
+def chd_mu_map(euv_map, chd_map, euv_combined, chd_combined, data_info, map_info, mu_cutoff=0.0, mu_merge_cutoff=None,
                del_mu=None):
     start = time.time()
     # create map lists
@@ -159,7 +159,7 @@ def chd_mu_map(euv_map, chd_map, euv_combined, chd_combined, image_info, map_inf
     if chd_combined is not None:
         chd_maps.append(chd_combined)
     # determine number of images already in combined map
-    n_images = len(image_info)
+    n_images = len(data_info)
 
     # combine maps with minimum intensity merge
     if del_mu is not None:
@@ -184,17 +184,17 @@ def chd_mu_map(euv_map, chd_map, euv_combined, chd_combined, image_info, map_inf
     chd_combined_method = {'meth_name': ("MuDep-Prob-CHD-Merge",), 'meth_description':
         ["Mu Dependent Probability Merge for CH Maps"]}
     # append image and map info records
-    image_info.append(euv_map.image_info)
+    data_info.append(euv_map.data_info)
     map_info.append(euv_map.map_info)
 
     end = time.time()
-    print("Image number", euv_map.image_info.image_id[0], "has been added to the combined CR map in", end - start,
+    print("Image number", euv_map.data_info.data_id[0], "has been added to the combined CR map in", end - start,
           "seconds.")
 
     return euv_combined, chd_combined, euv_combined_method, chd_combined_method
 
 
-def time_wgt_map(euv_map, chd_map, euv_combined, chd_combined, image_info, map_info,
+def time_wgt_map(euv_map, chd_map, euv_combined, chd_combined, data_info, map_info,
                  weight, sum_wgt, sigma=0.15, mu_cutoff=0.0):
     # create map lists
     euv_maps = [euv_map, ]
@@ -220,7 +220,7 @@ def time_wgt_map(euv_map, chd_map, euv_combined, chd_combined, image_info, map_i
                        'var_val': (mu_cutoff, FWHM)}
 
     # append image and map info records
-    image_info.append(euv_map.image_info)
+    data_info.append(euv_map.data_info)
     map_info.append(euv_map.map_info)
 
     return euv_combined, chd_combined, sum_wgt, combined_method
@@ -240,7 +240,7 @@ def save_timescale_maps(db_session, map_data_dir, euv_combined, chd_combined, im
     start = time.time()
 
     # create image and map info lists
-    image_info = [info for sublist in image_info_timescale for info in sublist]
+    data_info = [info for sublist in image_info_timescale for info in sublist]
     map_info = [info for sublist in map_info_timescale for info in sublist]
 
     # generate a record of the method and variable values used for interpolation
@@ -252,21 +252,21 @@ def save_timescale_maps(db_session, map_data_dir, euv_combined, chd_combined, im
     chd_combined.append_method_info(pd.DataFrame(data=timescale_method))
 
     # generate record of image and map info
-    euv_combined.append_image_info(image_info)
+    euv_combined.append_data_info(data_info)
     euv_combined.append_map_info(map_info)
-    chd_combined.append_image_info(image_info)
+    chd_combined.append_data_info(data_info)
     chd_combined.append_map_info(map_info)
 
     # plot maps
     # TODO: this doesn't give max and min times, better way to find minimum time.
     Plotting.PlotMap(euv_combined, nfig="EUV Map Timescale Weighted",
-                     title="EUV Map Running Average Times\nTime Min: " + str(euv_combined.image_info.iloc[0].date_obs)
+                     title="EUV Map Running Average Times\nTime Min: " + str(euv_combined.data_info.iloc[0].date_obs)
                            + "\nTime Max: " + str(
-                         euv_combined.image_info.iloc[-1].date_obs))
+                         euv_combined.data_info.iloc[-1].date_obs))
     Plotting.PlotMap(chd_combined, nfig="CHD Map Timescale Weighted",
-                     title="CHD Map Running Average Times\nTime Min: " + str(euv_combined.image_info.iloc[0].date_obs)
+                     title="CHD Map Running Average Times\nTime Min: " + str(euv_combined.data_info.iloc[0].date_obs)
                            + "\nTime Max: " + str(
-                         euv_combined.image_info.iloc[-1].date_obs), map_type='CHD')
+                         euv_combined.data_info.iloc[-1].date_obs), map_type='CHD')
 
     # save EUV and CHD maps to database
     euv_combined.write_to_file(map_data_dir, map_type='runavg_euv', filename=None, db_session=db_session)
@@ -277,7 +277,7 @@ def save_timescale_maps(db_session, map_data_dir, euv_combined, chd_combined, im
           end - start, "seconds.")
 
 
-def save_mu_probability_maps(db_session, map_data_dir, euv_combined, chd_combined, image_info, map_info, methods_list,
+def save_mu_probability_maps(db_session, map_data_dir, euv_combined, chd_combined, data_info, map_info, methods_list,
                              euv_combined_method, chd_combined_method):
     start = time.time()
     # generate a record of the method and variable values used for interpolation
@@ -287,17 +287,17 @@ def save_mu_probability_maps(db_session, map_data_dir, euv_combined, chd_combine
     chd_combined.append_method_info(pd.DataFrame(data=chd_combined_method))
 
     # generate record of image and map info
-    euv_combined.append_image_info(image_info)
+    euv_combined.append_data_info(data_info)
     euv_combined.append_map_info(map_info)
-    chd_combined.append_image_info(image_info)
+    chd_combined.append_data_info(data_info)
     chd_combined.append_map_info(map_info)
 
     # plot maps
     Plotting.PlotMap(euv_combined, nfig="EUV Map", title="Minimum Intensity Merge EUV Map\nTime Min: " + str(
-        euv_combined.image_info.iloc[0].date_obs) + "\nTime Max: " + str(euv_combined.image_info.iloc[-1].date_obs))
+        euv_combined.data_info.iloc[0].date_obs) + "\nTime Max: " + str(euv_combined.data_info.iloc[-1].date_obs))
     Plotting.PlotMap(chd_combined, nfig="Mu Dependent CHD Probability Map", title="Mu Dependent CHD Probability "
                                                                                   "Map\nTime Min: " + str(
-        chd_combined.image_info.iloc[0].date_obs) + "\nTime Max: " + str(chd_combined.image_info.iloc[-1].date_obs),
+        chd_combined.data_info.iloc[0].date_obs) + "\nTime Max: " + str(chd_combined.data_info.iloc[-1].date_obs),
                      map_type='CHD')
 
     # save EUV and CHD maps to database
@@ -308,7 +308,7 @@ def save_mu_probability_maps(db_session, map_data_dir, euv_combined, chd_combine
     print("Combined Mu-Dependent Synoptic Maps have been plotted and saved to the database in", end - start, "seconds.")
 
 
-def save_threshold_maps(db_session, map_data_dir, euv_combined, chd_combined, image_info, map_info, methods_list,
+def save_threshold_maps(db_session, map_data_dir, euv_combined, chd_combined, data_info, map_info, methods_list,
                         euv_combined_method, chd_combined_method, FWHM, n_samples):
     start = time.time()
 
@@ -329,19 +329,19 @@ def save_threshold_maps(db_session, map_data_dir, euv_combined, chd_combined, im
     chd_combined.append_method_info(pd.DataFrame(data=chd_threshold))
 
     # generate record of image and map info
-    euv_combined.append_image_info(image_info)
+    euv_combined.append_data_info(data_info)
     euv_combined.append_map_info(map_info)
-    chd_combined.append_image_info(image_info)
+    chd_combined.append_data_info(data_info)
     chd_combined.append_map_info(map_info)
 
     # plot maps
     Plotting.PlotMap(euv_combined, nfig="Varying Threshold EUV Map", title="Minimum Intensity Merge CR EUV Map\nTime "
                                                                            "Min: " + str(
-        euv_combined.image_info.iloc[0].date_obs) + "\nTime Max: " + str(euv_combined.image_info.iloc[-1].date_obs))
+        euv_combined.data_info.iloc[0].date_obs) + "\nTime Max: " + str(euv_combined.data_info.iloc[-1].date_obs))
     Plotting.PlotMap(chd_combined, nfig="Varying Threshold CHD Map", title="CHD Merge Map with "
                                                                            "Gaussian Varying Threshold Values\nTime "
                                                                            "Min: " + str(
-        chd_combined.image_info.iloc[0].date_obs) + "\nTime Max: " + str(chd_combined.image_info.iloc[-1].date_obs),
+        chd_combined.data_info.iloc[0].date_obs) + "\nTime Max: " + str(chd_combined.data_info.iloc[-1].date_obs),
                      map_type='CHD')
 
     # save EUV and CHD maps to database
@@ -355,7 +355,7 @@ def save_threshold_maps(db_session, map_data_dir, euv_combined, chd_combined, im
     return None
 
 
-def save_gauss_time_maps(db_session, map_data_dir, euv_combined, chd_combined, image_info, map_info, methods_list,
+def save_gauss_time_maps(db_session, map_data_dir, euv_combined, chd_combined, data_info, map_info, methods_list,
                          combined_method):
     start = time.time()
     # generate a record of the method and variable values used for interpolation
@@ -365,22 +365,22 @@ def save_gauss_time_maps(db_session, map_data_dir, euv_combined, chd_combined, i
     chd_combined.append_method_info(pd.DataFrame(data=combined_method))
 
     # generate record of image and map info
-    euv_combined.append_image_info(image_info)
+    euv_combined.append_data_info(data_info)
     euv_combined.append_map_info(map_info)
-    chd_combined.append_image_info(image_info)
+    chd_combined.append_data_info(data_info)
     chd_combined.append_map_info(map_info)
 
     # plot maps
     Plotting.PlotMap(euv_combined, nfig="EUV Map Timescale Weighted",
                      title="EUV Map Gaussian Timescale Weighted\nTime Min: " + str(
-                         euv_combined.image_info.iloc[0].date_obs)
+                         euv_combined.data_info.iloc[0].date_obs)
                            + "\nTime Max: " + str(
-                         euv_combined.image_info.iloc[-1].date_obs))
+                         euv_combined.data_info.iloc[-1].date_obs))
     Plotting.PlotMap(chd_combined, nfig="CHD Map Timescale Weighted",
                      title="CHD Map Gaussian Timescale Weighted\nTime Min: " + str(
-                         euv_combined.image_info.iloc[0].date_obs)
+                         euv_combined.data_info.iloc[0].date_obs)
                            + "\nTime Max: " + str(
-                         euv_combined.image_info.iloc[-1].date_obs), map_type='CHD')
+                         euv_combined.data_info.iloc[-1].date_obs), map_type='CHD')
 
     # save EUV and CHD maps to database
     euv_combined.write_to_file(map_data_dir, map_type='timewgt_euv', filename=None, db_session=db_session)
