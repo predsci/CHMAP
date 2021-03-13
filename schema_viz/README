@@ -13,16 +13,25 @@ The basic process is this:
 2. Generate an instance of the new format.
       - Probably easiest to delete test_data/dbtest.db and then run
         example001_DB-workflow.py to create a sample SQLite DB.
+      - Update: we now have an instance of the database running all
+	the time on Q, so probably easiest to follow the 'For MySQL'
+	instructions in step 3 below.
 3. Run schemaspy to generate the new documentation.
       - For SQLite:
         $ cd sqlite
-        $ java -jar ../schemaspy-6.1.0.jar
+        $ java -jar ../schemaspy-6.1.0.jar -dp sqlite-jdbc-3.27.2.1.jar
         This will use the files sqlite/schemaspy.properties and 
         sqlite/sqlite.properties files to set properties.  Alter 
         schemaspy.properties to change the DB or output paths.
 
       - For MySQL:
-        Haven't set this up yet.
+        $ cd mysql
+	$ java -jar ../schemaspy-6.1.0.jar -dp mysql-connector-java-8.0.12.jar 
+	  -u my_username -pfp
+	This still uses properties files mysql/schemaspy.properties and 
+	mysql/mysql.properties, but you will need to enter your username
+	as an argument in the command line. It will then prompt for 
+	password. 
 
 4. View results
       - In the output/ directory, open index.html. The subdirectories of 

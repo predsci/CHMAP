@@ -13,7 +13,12 @@ settings/e_cred.bin
 setup.conf
 setup_*
 
-# ignore the output folders in schema_viz
+# ignore the output folders in schema_viz (except schema diagrams)
 schema_viz/mysql/output/*
+!schema_viz/mysql/output/diagrams
+schema_viz/mysql/output/diagrams/*
+!schema_viz/mysql/output/diagrams/summary
 schema_viz/sqlite/output/*
-
+!schema_viz/sqlite/output/diagrams
+schema_viz/sqlite/output/diagrams/*
+!schema_viz/sqlite/output/diagrams/summary
