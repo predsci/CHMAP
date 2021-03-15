@@ -20,6 +20,7 @@ import numpy as np
 from analysis.ml_analysis.ch_tracking.contour import Contour
 import pickle
 from scipy import ndimage
+import json
 from modules.map_manip import MapMesh
 import matplotlib.pyplot as plt
 from analysis.ml_analysis.ch_tracking.ch_db import CoronalHoleDB
@@ -47,7 +48,7 @@ while ch_lib.frame_num <= 25:
     # cut out the image axis and title.
     image = img[t:b, r:l, :]
 
-    image = cv2.imread('example_vid/various_shapes_0.jpg')
+    # image = cv2.imread('example_vid/various_shapes_0.jpg')
     # ================================================================================================================
     # Step 2: Convert Image to Greyscale.
     # ================================================================================================================
@@ -168,9 +169,17 @@ while ch_lib.frame_num <= 25:
         plt.title("Final Image, Frame #" + str(ch_lib.frame_num))
         plt.show()
         # wait time between frames.
-        cv2.waitKey(10000)
+        cv2.waitKey(1000)
 
     # iterate over frame number.
     ch_lib.frame_num += 1
+
+# save ch library to json file.
+# with open('results/first_frame_test.json', 'w') as f:
+#     f.write(ch_lib.__str__())
+
+# save object to pickle file.
+with open('results/first_frame_test.pkl', 'wb') as f:
+    pickle.dump(ch_lib, f)
 
 cv2.waitKey(0)

@@ -38,10 +38,13 @@ class Contour:
     n_t, n_p = None, None
     Mesh = None  # This will be an object of type MeshMap with information about the input image mesh grid.
 
-    def __init__(self, contour_pixels):
+    def __init__(self, contour_pixels, frame_num=None):
         # save contour inner pixels. shape: [list(row), list(column)].
         self.contour_pixels_theta = contour_pixels[0]
         self.contour_pixels_phi = contour_pixels[1]
+
+        # frame number id.
+        self.frame_num = frame_num
 
         # contour physical area based on lat-lon contour_pixels.
         # sum(d𝐴=𝑟^2 * sin𝜃 * d𝜙 * d𝜃)
@@ -49,9 +52,6 @@ class Contour:
 
         # contour centroid physical location in lat-lon projection. (t, p)
         self.phys_centroid = None
-
-        # compute the contour tilt
-        self.tilt = None
 
         # centroid pixel location in polar projection for coronal hole matching (x,y).
         self.pixel_centroid = self.compute_pixel_centroid()
@@ -75,10 +75,17 @@ class Contour:
             # compute the rotate box area.
             self.rot_box_area = self.compute_rot_box_area()
 
+            # compute the rotated box perimeter.
+            # self.rot_box_perimeter = self.compute_rot_perimeter()
+
             # compute convex hull.
             self.convex_hull = self.compute_convex_hull()
 
-            self.pca_tilt, self.sig_tilt = self.pca_v2()
+            # compute convex hull perimeter on a sphere.
+            # self.convex_hull_perimeter = self.compute_convex_hull_perimeter()
+
+            # compute the tilt of the coronal hole in spherical coordinates using PCA.
+            self.pca_tilt, self.sig_tilt = self.compute_coronal_hole_tilt_pca()
 
         # the unique identification number of this coronal hole (should be a natural number).
         self.id = None
@@ -92,12 +99,13 @@ class Contour:
 
     def __str__(self):
         return json.dumps(
-            self.json_dict(), indent=2, default=lambda o: o.json_dict())
+            self.json_dict(), indent=4, default=lambda o: o.json_dict())
 
     def json_dict(self):
         return {
             'id': self.id,
             'color': self.color,
+            'frame_num': self.frame_num,
             'centroid_spherical': self.phys_centroid,
             'centroid_pixel': self.pixel_centroid,
             'area': self.area,
@@ -105,9 +113,9 @@ class Contour:
             'straight_box_area': self.straight_box_area,
             'rotated_box_area': self.rot_box_area,
             'rotated_box_angle': self.rot_box_angle,
-            'tilt': self.tilt,
+            # 'rotated_box_perimeter': self.rot_box_perimeter,
             'pca_tilt': self.pca_tilt,
-            'significance_of_tilt': self.sig_tilt
+            'significance_of_tilt': self.sig_tilt,
         }
 
     def compute_pixel_centroid(self):
@@ -131,9 +139,6 @@ class Contour:
             y_mean = np.dot(A, y) / self.area
             z_mean = np.dot(A, z) / self.area
 
-            if len(x) != 1:
-                self.tilt = self._compute_tilt(x, y, z, x_mean, y_mean, z_mean, A)
-
             # convert back to spherical coordinates.
             self.phys_centroid = self._cartesian_centroid_to_spherical_coordinates(x=x_mean, y=y_mean, z=z_mean)
 
@@ -143,50 +148,14 @@ class Contour:
         except ArithmeticError:
             raise ArithmeticError('Contour pixels are invalid. ')
 
-    def _compute_tilt(self, x, y, z, x_mean, y_mean, z_mean, A):
-        """ TODO: Not sure this is accurate.
-        Compute the contours tilt with respect to north.
-        This is done by averaging the angle between all vectors starting from the origin to [0, 0, 1] (z-axis).
-
-        Parameters
-        ----------
-        x - array
-            x cartesian
-        y - array
-            y cartesian
-        z - array
-            z cartesian
-        x_mean - float
-            x cartesian weighted average
-        y_mean - float
-            y cartesian weighted average
-        z_mean - float
-            z cartesian weighted average
-        A - Area of image grid.
+    def compute_coronal_hole_tilt_pca(self):
+        """Compute the tilt of the coronal hole with respect to north using PCA method.
+        If eigenvalue ratio is close to 1 then the coronal hole tilt is insignificant.
+        Otherwise, when the eigenvalue ratio>>1 then the coronal hole shape has an apparent tilt.
 
         Returns
         -------
-        Angle in degrees.
-        """
-        # center around centroid.
-        xc = x - x_mean
-        yc = y - y_mean
-        zc = z - z_mean
-
-        # find magnitude.
-        mag = np.sqrt(np.power(xc, 2) + np.power(yc, 2) + np.power(zc, 2))
-        # mag[mag == 0] = 1
-        dot_prod = zc / mag
-        ang = np.arccos(dot_prod)
-        # weighted average.
-        ang[xc < 0] = -ang[xc < 0]
-        return (np.dot(A, ang) / self.area) * (180 / np.pi)
-
-    def pca(self):
-        """TODO: needs help.
-
-        Returns
-        -------
+            Tuple: (Angle, eigenvalue ratio)
 
         """
         # theta, phi coordinates.
@@ -200,10 +169,8 @@ class Contour:
         pc = phi - self.phys_centroid[1]
         tc = theta - self.phys_centroid[0]
 
-        # phi diff vector gets multiplied by area.
-        # pc = pc * A
-        # difference from the mean as an arc length TODO: Figure out if this is correct.
-        # pc = pc * np.sin(theta)
+        # difference from the mean as an arc length
+        pc = pc * np.sin(theta)
 
         # feature matrix 2 by n. (n is number of pixels)
         X = np.array([pc, tc])
@@ -217,54 +184,20 @@ class Contour:
         # find most dominant eigenvector with largest eigenvalue
         if evals[0] > evals[1]:
             x_v1, y_v1 = evecs[:, 0]
-            sig = evals[0] / evals[1]
+            # compute the ratio between the eigenvalues.
+            # avoid dividing by zero.
+            if evals[1] == 0.:
+                sig = np.inf
+            else:
+                sig = evals[0] / evals[1]
         else:
             x_v1, y_v1 = evecs[:, 1]
-            sig = evals[1] / evals[0]
-
-        angle = np.arctan2(x_v1, y_v1)
-        return (180 / np.pi * angle), sig
-
-    def pca_v2(self):
-        """TODO: PCA version 2.0 with weights as # of additional points needs help.
-
-        Returns
-        -------
-
-        """
-        # theta, phi coordinates.
-        phi = Contour.Mesh.p[self.contour_pixels_phi]
-        theta = Contour.Mesh.t[self.contour_pixels_theta]
-
-        # access the area of each pixel of the image grid.
-        A = Contour.Mesh.da[self.contour_pixels_phi, self.contour_pixels_theta]
-
-        A_frequency = np.array((A / np.min(A)), dtype="int")
-
-        # recenter around weighted mean.
-        pc = phi - self.phys_centroid[1]
-        tc = theta - self.phys_centroid[0]
-
-        # # new pc and tc
-        # for ii in range(len(pc)):
-        #     pc = np.append(pc, np.ones(int(A[ii])) * pc[ii])
-        #     tc = np.append(tc, np.ones(int(A[ii])) * tc[ii])
-
-        # feature matrix 2 by n. (n is number of pixels)
-        X = np.array([pc, tc])
-
-        npcov = np.cov(X, rowvar=True, fweights=A_frequency, ddof=0)
-
-        # eigenvalue decomposition.
-        evals, evecs = np.linalg.eig(npcov)
-
-        # find most dominant eigenvector with largest eigenvalue
-        if evals[0] > evals[1]:
-            x_v1, y_v1 = evecs[:, 0]
-            sig = evals[0] / evals[1]
-        else:
-            x_v1, y_v1 = evecs[:, 1]
-            sig = evals[1] / evals[0]
+            # compute the ratio between the eigenvalues.
+            # avoid dividing by zero.
+            if evals[0] == 0.:
+                sig = np.inf
+            else:
+                sig = evals[1] / evals[0]
 
         angle = np.arctan2(x_v1, y_v1)
         return (180 / np.pi * angle), sig
@@ -458,13 +391,102 @@ class Contour:
         else:
             return None
 
-    def compute_rotated_rect(self):
-        """Find the bounding rectangle with the minimum pixel area.
+    def compute_rot_perimeter(self):
+        """Compute the rotated box perimeter on a sphere using the haversine metric.
 
         Returns
         -------
-         center (x,y), (width, height), angle of rotation
+            float: perimeter on a sphere.
         """
+        if self.rot_box_corners is None:
+            return None
+        else:
+            # compute the distance on a sphere between each consecutive points on the rotated box.
+
+            # initialize the perimeter holder.
+            perimeter = 0
+
+            # loop over each consecutive pair of points and compute its distance on a sphere
+            # using the haversine metric.
+            for ii in range(4):
+
+                # compute the distance between the first and the last point.
+                if ii == 3:
+                    ii = -1
+
+                # convert the two consecutive points from pixel coordinates to spherical coordinates.
+                p1 = self._image_coordinates_to_spherical_coordinates(t=self.rot_box_corners[ii][1],
+                                                                      p=self.rot_box_corners[ii][0])
+                p2 = self._image_coordinates_to_spherical_coordinates(t=self.rot_box_corners[ii + 1][1],
+                                                                      p=self.rot_box_corners[ii + 1][0])
+                perimeter += self.haversine(p1=p1, p2=p2)
+
+            return perimeter
+
+    def compute_convex_hull_perimeter(self):
+        """Compute the convex hull perimeter on a sphere using the haversine metric.
+
+        Returns
+        -------
+            float: perimeter on a sphere.
+        """
+        if self.convex_hull is None:
+            return None
+
+        elif len(self.convex_hull) < 3:
+            return None
+
+        else:
+            # compute the distance on a sphere between each consecutive points on the convex hull.
+
+            # initialize the perimeter holder.
+            perimeter = 0
+
+            # loop over each consecutive pair of points and compute its distance on a sphere
+            # using the haversine metric.
+            for ii in range(len(self.convex_hull)):
+
+                # compute the distance between the first and the last point.
+                if ii == len(self.convex_hull) - 1:
+                    ii = -1
+
+                # convert the two consecutive points from pixel coordinates to spherical coordinates.
+                p1 = self._image_coordinates_to_spherical_coordinates(t=self.convex_hull[ii][0][0],
+                                                                      p=self.convex_hull[ii][0][1])
+                p2 = self._image_coordinates_to_spherical_coordinates(t=self.convex_hull[ii + 1][0][0],
+                                                                      p=self.convex_hull[ii + 1][0][1])
+                perimeter += self.haversine(p1=p1, p2=p2)
+
+            return perimeter
+
+    @staticmethod
+    def haversine(p1, p2):
+        """ Compute the distance of two points on a sphere. Assuming the input point coordinates are spherical
+        ordered as follows: (phi, theta) or (longitude, latitude) in radians.
+
+        Returns
+        -------
+            distance on a sphere in RS (Solar Radii)
+        """
+        # read in the two points location in spherical coordinates.
+        theta1, phi1 = p1
+        theta2, phi2 = p2
+
+        # haversine formula.
+        dlon = phi2 - phi1
+        dlat = theta2 - theta1
+
+        # geometric calculations.
+        a = np.sin(dlat / 2) ** 2 + np.cos(theta1) * np.cos(theta2) * np.sin(dlon / 2) ** 2
+        return 2 * np.arcsin(np.sqrt(a))
+
+    def compute_rotated_rect(self):
+        """Find the bounding rectangle with the minimum pixel area.
+
+            Returns
+            -------
+             center (x,y), (width, height), angle of rotation
+            """
         if len(self.contour_pixels_theta) > 1 and len(self.contour_pixels_phi) > 1:
             # access contour pixels.
             points = self.open_cv_pixels_format()

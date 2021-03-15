@@ -41,7 +41,7 @@ class CoronalHoleDB:
 
     def __str__(self):
         return json.dumps(
-            self.json_dict(), indent=2, default=lambda o: o.json_dict())
+            self.json_dict(), indent=4, default=lambda o: o.json_dict())
 
     def json_dict(self):
         return {
@@ -242,8 +242,7 @@ class CoronalHoleDB:
             return True
         return False
 
-    @staticmethod
-    def save_contour_pixel_locations(rbg_image, color_list):
+    def save_contour_pixel_locations(self, rbg_image, color_list):
         """This function will save all the image pixel coordinates that are assigned to each coronal hole.
 
         Parameters
@@ -263,7 +262,7 @@ class CoronalHoleDB:
             # find image pixel coordinates.
             contour_pixel = np.asarray(np.where(mask))
             # save contour in a list if its not zero.
-            coronal_hole_list.append(Contour(contour_pixels=contour_pixel))
+            coronal_hole_list.append(Contour(contour_pixels=contour_pixel, frame_num=self.frame_num))
         return coronal_hole_list
 
     def plot_dilated_contours(self, contours):
@@ -475,4 +474,3 @@ class CoronalHoleDB:
             return Contour.n_p
         else:
             raise Exception("latitude value is invalid.")
-

@@ -26,7 +26,7 @@ class Frame:
 
     def __str__(self):
         return json.dumps(
-            self.json_dict(), indent=2, default=lambda o: o.json_dict())
+            self.json_dict(), indent=4, default=lambda o: o.json_dict())
 
     def json_dict(self):
         return {
