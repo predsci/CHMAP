@@ -121,7 +121,7 @@ def get_1d_mesh_properties(x):
     # Add the boundary points (half spacing)
     dx = np.concatenate([[xh[0] - x[0]], dx, [x[-1] - xh[-1]]])
 
-    return xh, dx, dxh
+    return xh, np.abs(dx), np.abs(dxh)
 
 
 def combine_maps(map_list, mu_cutoff=0.0, mu_merge_cutoff=None, del_mu=None):

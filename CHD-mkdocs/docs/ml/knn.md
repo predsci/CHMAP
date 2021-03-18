@@ -38,7 +38,7 @@ $$
 # Example of KNN classification of *Coronal Holes*
 
 
-## 1. weighted nearest neighbour classifier
+## 1. weighted nearest neighbor classifier
 
 The coronal holes identified in the previous frame will have a larger **weight** than the coronal holes found in the previous 
 say 5th frame. The total training data will be composed of the previous 10 frames (this number can be changed as we test it on the images). 

@@ -21,6 +21,9 @@ class Frame:
         # list of contour pixel polar projection centers.
         self.centroid_list = self.compute_centroid_list()
 
+        # coronal hole id list
+        self.label_list = self.save_corresponding_labels()
+
         # the unique identification number of this frame.
         self.id = identity
 
@@ -42,4 +45,13 @@ class Frame:
         -------
         list of coronal hole centroids.
         """
-        return [ch.pixel_centroid for ch in self.contour_list]
+        return [ch.phys_centroid for ch in self.contour_list]
+
+    def save_corresponding_labels(self):
+        """save coronal hole ID in a list
+
+        Returns
+        -------
+        list of coronal hole IDs.
+        """
+        return [ch.id for ch in self.contour_list]

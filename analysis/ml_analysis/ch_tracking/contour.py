@@ -103,8 +103,8 @@ class Contour:
 
     def json_dict(self):
         return {
-            'id': self.id,
-            'color': self.color,
+        #    'ch_id': self.id,
+        #    'color': self.color,
             'frame_num': self.frame_num,
             'centroid_spherical': self.phys_centroid,
             'centroid_pixel': self.pixel_centroid,
@@ -113,7 +113,6 @@ class Contour:
             'straight_box_area': self.straight_box_area,
             'rotated_box_area': self.rot_box_area,
             'rotated_box_angle': self.rot_box_angle,
-            # 'rotated_box_perimeter': self.rot_box_perimeter,
             'pca_tilt': self.pca_tilt,
             'significance_of_tilt': self.sig_tilt,
         }

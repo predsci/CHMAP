@@ -10,7 +10,7 @@ Tracking Algorithm steps:
 4. multiply mask on original binary image.
 5. delete small contours.
 6. force periodicity.
-7. match coronal holes to previous coronal holes in 5 consecutive frames. TODO: This is done by centroid distance and
+7. match coronal holes to previous coronal holes in *window consecutive frames. TODO: This is done by centroid distance and
 TODO: can also be done by using another feature such as area or bounding box.
 8. add contours to database - which can be saved to JSON file.
 """
@@ -62,20 +62,7 @@ while ch_lib.frame_num <= 25:
     # Step 3: Latitude Weighted Dilation.
     # ================================================================================================================
     # pass one extra erode and dilate before latitude weighted dilation.
-    # img = cv2.erode(image, np.ones((3, 3), dtype=np.uint8), iterations=1)
-    # img = cv2.dilate(img, np.ones((3, 3), dtype=np.uint8), iterations=4)
-    img = np.zeros(image.shape, dtype=np.uint8)
-
-    # theta array.
-    theta = np.linspace(0, np.pi, Contour.n_t)
-
-    # latitude weighted dilation.
-    for ii in range(Contour.n_t):
-        # build the flat structuring element.
-        width = ch_lib.kernel_width(t=theta[ii], gamma=1) #int(Contour.n_p * 0.05))
-        kernel = np.ones(width, dtype=np.uint8)
-        # save dilated strip.
-        img[ii, :] = np.reshape(cv2.dilate(image[ii, :], kernel, iterations=1), Contour.n_p)
+    img = ch_lib.lat_weighted_dilation(grey_scale_image=image)
 
     # ================================================================================================================
     # Step 4: Plot the contours found in the dilated image and multiply mask.
@@ -101,14 +88,14 @@ while ch_lib.frame_num <= 25:
     # ================================================================================================================
     # Step 6: Match coronal holes detected to previous frame detections.
     # ================================================================================================================
-    ch_lib.match_coronal_holes(contour_list=contour_list_pruned)
+    ch_lib.assign_new_coronal_holes(contour_list=contour_list_pruned)
 
     # ================================================================================================================
     # Step 7: Plot results.
     # ================================================================================================================
     # iterate over each coronal hole and plot its color + id number.
     final_image = np.ones(classified_img.shape, dtype=np.uint8) * 255
-    for c in ch_lib.p1.contour_list:
+    for c in ch_lib.window_holder[-1].contour_list:
         # plot contour pixels.
         final_image[c.contour_pixels_theta, c.contour_pixels_phi, :] = c.color
         # plot the contours center.
@@ -169,9 +156,9 @@ while ch_lib.frame_num <= 25:
         plt.title("Final Image, Frame #" + str(ch_lib.frame_num))
         plt.show()
         # wait time between frames.
-        cv2.waitKey(1000)
+    cv2.waitKey(1000)
 
-    # iterate over frame number.
+    # # iterate over frame number.
     ch_lib.frame_num += 1
 
 # save ch library to json file.
@@ -179,7 +166,7 @@ while ch_lib.frame_num <= 25:
 #     f.write(ch_lib.__str__())
 
 # save object to pickle file.
-with open('results/first_frame_test.pkl', 'wb') as f:
-    pickle.dump(ch_lib, f)
+# with open('results/first_frame_test_knn.pkl', 'wb') as f:
+#    pickle.dump(ch_lib, f)
 
 cv2.waitKey(0)
