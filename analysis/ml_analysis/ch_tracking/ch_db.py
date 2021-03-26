@@ -1,5 +1,5 @@
 """
-Author: Opal Issan, Feb 13th, 2021.
+Author: Opal Issan, March 25th, 2021.
 
 A data structure for a set of coronal hole objects.
 
@@ -8,7 +8,6 @@ A data structure for a set of coronal hole objects.
 import json
 import cv2
 import numpy as np
-from scipy.spatial import distance as dist
 from analysis.ml_analysis.ch_tracking.frame import Frame
 from analysis.ml_analysis.ch_tracking.contour import Contour
 from analysis.ml_analysis.ch_tracking.coronalhole import CoronalHole
@@ -24,11 +23,11 @@ class CoronalHoleDB:
     # coronal hole area threshold.
     AreaThreshold = 5e-3
     # window to match coronal holes.
-    window = 5
+    window = 10
     # parameter for dilation. (this should be changed for larger images.
     gamma = 10
     # area overlap threshold for matching coronal holes.
-    area_thresh = 0.5
+    area_thresh = 0.4
 
     def __init__(self):
         # list of Contours that are part of this CoronalHole Object.
@@ -115,97 +114,6 @@ class CoronalHoleDB:
         self.window_holder.pop(0)
         # append the new frame to the end of the list.
         self.window_holder.append(frame)
-
-    # @staticmethod
-    # def _compute_distance(curr, prev):
-    #     """ compute the distance between each element in two arrays containing the coronal hole centroids.
-    #
-    #     Parameters
-    #     ----------
-    #     curr: new_index
-    #     prev: old_index
-    #     TODO : REMOVE THIS
-    #
-    #     Returns
-    #     -------
-    #     new_index, old_index
-    #     """
-    #     return dist.cdist(curr, prev)
-    #
-    # def _create_priority_queue(self, centroid_curr, centroid_prev):
-    #     """ arrange the coronal hole matches in order.
-    #     [(new_index, old_index)]
-    #     TODO: REMOVE THIS """
-    #     distance = self._compute_distance(curr=centroid_curr, prev=centroid_prev)
-    #     rows = distance.min(axis=1).argsort()
-    #     cols = distance.argmin(axis=1)[rows]
-    #     return list(zip(rows, cols))
-    #
-    # def _priority_queue_remove_duplicates(self, centroid_curr, centroid_prev):
-    #     """remove duplicates from the priority queue. such as:
-    #             [(0,1), (1, 1), (2, 2)] --> [(0, 1), (2, 2)]
-    #
-    #     Parameters
-    #     ----------
-    #     centroid_curr: list of current frame centroids.
-    #     centroid_prev: list of previous frame centroids.
-    #
-    #     Returns
-    #     -------
-    #     modified queue list.
-    #     TODO: REMOVE THIS
-    #     """
-    #     queue = self._create_priority_queue(centroid_curr, centroid_prev)
-    #     return [(a, b) for i, [a, b] in enumerate(queue) if not any(c == b for _, c in queue[:i])]
-
-    # def match_coronal_holes(self, contour_list):
-    #     """Match coronal holes to previous *window* frames.
-    #
-    #     Parameters
-    #     ----------
-    #     contour_list: current frame Contour() list.
-    #
-    #     Returns
-    #     -------
-    #     None
-    #     TODO: FIX THIS.
-    #     """
-    #     # if this is the first image in the sequence then just save coronal holes.
-    #     if self.frame_num == 1:
-    #         for ii in range(len(contour_list)):
-    #             contour_list[ii] = self._assign_id_coronal_hole(ch=contour_list[ii])
-    #             contour_list[ii] = self._assign_color_coronal_hole(ch=contour_list[ii])
-    #             # add Coronal Hole to database.
-    #             self._insert_new_contour_to_dict(contour=contour_list[ii])
-    #         self.p1 = Frame(contour_list=contour_list, identity=self.frame_num)
-    #
-    #     # match coronal holes to p1.
-    #     else:
-    #         centroid_curr = [ch.pixel_centroid for ch in contour_list]
-    #         queue = self._priority_queue_remove_duplicates(centroid_curr=centroid_curr,
-    #                                                        centroid_prev=self.p1.centroid_list)
-    #         for curr_index, prev_index in queue:
-    #             # set the match
-    #             contour_list[curr_index].id = self.p1.contour_list[prev_index].id
-    #             contour_list[curr_index].color = self.p1.contour_list[prev_index].color
-    #             self.ch_dict[contour_list[curr_index].id].insert_contour_list(contour=contour_list[curr_index])
-    #             self.ch_dict[contour_list[curr_index].id].insert_number_frame(frame_num=self.frame_num)
-    #
-    #         # mark the index matched
-    #         index_list = np.arange(0, len(contour_list))
-    #         index_list = np.delete(index_list, [a for a, b in queue])
-    #
-    #         # add all leftover coronal holes are in index_list.
-    #         # check if they match to previous
-    #
-    #         for ii in index_list:
-    #             # set the index id and color.
-    #             contour_list[ii] = self._assign_id_coronal_hole(ch=contour_list[ii])
-    #             contour_list[ii] = self._assign_color_coronal_hole(ch=contour_list[ii])
-    #             self._insert_new_contour_to_dict(contour=contour_list[ii])
-    #
-    #         # save contour list
-    #         self.update_previous_frames(frame=Frame(contour_list=contour_list, identity=self.frame_num))
 
     def _insert_new_contour_to_dict(self, contour):
         """insert a new contour to dict.
@@ -385,7 +293,7 @@ class CoronalHoleDB:
     @staticmethod
     def _merge_contours(c1, c2):
         """Merge c2 onto c1.
-
+            # TODO: update all features computed.
         Parameters
         ----------
         c1: Contour
@@ -415,7 +323,21 @@ class CoronalHoleDB:
         c1.straight_box = np.append(c1.straight_box, c2.straight_box)
 
         # update bounding box area.
-        c2.straight_box_area = c1.straight_box_area + c2.straight_box_area
+        c1.straight_box_area = c1.straight_box_area + c2.straight_box_area
+
+        c1.rot_box = np.append(c1.rot_box, c2.rot_box)
+
+        # save rot box corners.
+        c1.rot_box_corners = np.append(c1.rot_box_corners, c2.rot_box_corners)
+
+        # save rot box angle with respect to north.
+        c1.rot_box_angle = np.append(c1.rot_box_angle, c2.rot_box_angle)
+
+        # compute the rotate box area.
+        c1.rot_box_area = c1.rot_box_area + c2.rot_box_area
+
+        # compute the tilt of the coronal hole in spherical coordinates using PCA.
+        c1.pca_tilt, c1.sig_tilt = c1.compute_coronal_hole_tilt_pca()
 
         return c1
 
@@ -531,7 +453,7 @@ class CoronalHoleDB:
 
         else:
             # match coronal holes to previous *window* frames.
-            matching_results = self.global_match_coronal_holes_algorithm(contour_list=contour_list)
+            matching_results, contour_list = self.global_match_coronal_holes_algorithm(contour_list=contour_list)
 
             for ii in range(len(contour_list)):
                 # new coronal hole
@@ -576,12 +498,58 @@ class CoronalHoleDB:
         area_overlap_results = self.area_overlap_results(area_check_list=area_check_list, contour_list=contour_list)
 
         # return list of coronal holes corresponding unique ID.
-        return self.get_coronal_hole_id(area_check_list=area_check_list, area_overlap_results=area_overlap_results)
+        match_list = self.get_coronal_hole_id(area_check_list=area_check_list, area_overlap_results=area_overlap_results)
+
+        # check if there multiple contours mapped to the same class.
+        return match_list
+
+    def merge_repeating_coronal_holes(self, match_list, contour_list):
+        """If there are multiple contours in the latest frame assigned to the same class, then we merge the
+         two contours. Meaning, matching is unique.
+
+         TODO: Do we even want this?
+
+        Parameters
+        ----------
+        match_list: list of corresponding ID.
+            type: numpy array
+        contour_list: list of contours.
+            type: list
+        Returns
+        -------
+            updated match_list, updated contour_list
+        """
+        # # check if there are repeating IDs *that are not zero*
+        if len(match_list[match_list != 0]) != len(set(match_list[match_list != 0])):
+            # there are duplicates.
+            # values - list of unique values.
+            # counts - list of corresponding counts. (appearance in
+            values, counts = np.unique(match_list, return_counts=True)
+
+            for ii, c in enumerate(counts, start=0):
+                # check if id appeared more than once in the list and if the id is not zero
+                if c > 1 and values[ii] != 0:
+                    # there is a duplication. merge is needed.
+                    index = np.where(match_list == values[ii])[0]
+                    # loop over every instance of this duplication
+                    # initialize iterator
+                    jj = 0
+                    while jj < len(index) - 1:
+                        # merge the first contour with the next.
+                        contour_list[index[jj]] = self._merge_contours(c1=contour_list[index[jj]],
+                                                                       c2=contour_list[index[jj + 1]])
+                        # delete duplicated contours from list.
+                        contour_list.pop(index[jj + 1])
+                        match_list = np.delete(match_list, index[jj + 1])
+                        index = np.delete(index, index[jj + 1])
+                        jj += 1
+
+        return match_list, contour_list
 
     @staticmethod
     def get_coronal_hole_id(area_check_list, area_overlap_results):
         """ Return the result based on area overlap.
-        TODO: is classification unique??
+        TODO: is classification unique?? NO.
 
         Returns
         -------
@@ -660,3 +628,4 @@ class CoronalHoleDB:
             proba_mat.append(prob_list)
 
         return classification_results(area_overlap_list=proba_mat, thresh=self.area_thresh)
+

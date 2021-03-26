@@ -13,6 +13,10 @@ Tracking Algorithm steps:
 7. match coronal holes to previous coronal holes in *window consecutive frames. TODO: This is done by centroid distance and
 TODO: can also be done by using another feature such as area or bounding box.
 8. add contours to database - which can be saved to JSON file.
+
+# TODO: How can we group multiple contours associated to the same coronal hole class in the same frame?
+--> area should be combined. Box area should be combined, create some type of holder "multcontour=true" for plotting
+purposes.
 """
 
 import cv2
@@ -38,7 +42,7 @@ ch_lib = CoronalHoleDB()
 ch_lib.frame_num = 1
 
 # loop over each frame.
-while ch_lib.frame_num <= 25:
+while ch_lib.frame_num <= 40:
     # ================================================================================================================
     # Step 1: Read in first frame.
     # ================================================================================================================
@@ -100,7 +104,7 @@ while ch_lib.frame_num <= 25:
         final_image[c.contour_pixels_theta, c.contour_pixels_phi, :] = c.color
         # plot the contours center.
         cv2.circle(img=final_image, center=(c.pixel_centroid[1], c.pixel_centroid[0]),
-                   radius=3, color=(0, 0, 0), thickness=-1)
+                   radius=4, color=(0, 0, 0), thickness=-1)
         # check if its has multiple bounding boxes.
         ii = 0
         while ii < len(c.straight_box) / 4:
@@ -115,29 +119,29 @@ while ch_lib.frame_num <= 25:
         cv2.drawContours(final_image, [c.rot_box_corners], 0, (0, 0, 255), 2)
 
         # plot the contour's ID number.
-        cv2.putText(img=final_image, text="ch #" + str(c.id),
-                    org=tuple(np.add((c.pixel_centroid[1], c.pixel_centroid[0]), (-10, 15))),
-                    fontFace=cv2.Formatter_FMT_DEFAULT, fontScale=0.3, color=(0, 0, 0), thickness=1)
+        cv2.putText(img=final_image, text="#" + str(c.id),
+                    org=tuple(np.add((c.pixel_centroid[1], c.pixel_centroid[0]), (-15, 15))),
+                    fontFace=cv2.FONT_HERSHEY_TRIPLEX, fontScale=0.5, color=(0, 0, 0), thickness=1)
 
-        # rotated box angle.
-        cv2.putText(img=final_image, text="a=" + str(round(c.pca_tilt, 2)),
-                    org=tuple(np.add((c.pixel_centroid[1], c.pixel_centroid[0]), (30, 10))),
-                    fontFace=cv2.Formatter_FMT_DEFAULT, fontScale=0.3, color=(0, 0, 0), thickness=1)
+        # # rotated box angle.
+        # cv2.putText(img=final_image, text="a=" + str(round(c.pca_tilt, 2)),
+        #             org=tuple(np.add((c.pixel_centroid[1], c.pixel_centroid[0]), (30, 10))),
+        #             fontFace=cv2.Formatter_FMT_DEFAULT, fontScale=0.3, color=(0, 0, 0), thickness=1)
+        #
+        # # rotated box corners
+        # cv2.putText(img=final_image, text="0",
+        #             org=(c.rot_box_corners[0][0], c.rot_box_corners[0][1]),
+        #             fontFace=cv2.Formatter_FMT_DEFAULT, fontScale=0.5, color=(255, 0, 0), thickness=1)
+        #
+        # cv2.putText(img=final_image, text="1",
+        #             org=(c.rot_box_corners[1][0], c.rot_box_corners[1][1]),
+        #             fontFace=cv2.Formatter_FMT_DEFAULT, fontScale=0.5, color=(255, 0, 0), thickness=1)
+        #
+        # cv2.putText(img=final_image, text="2",
+        #             org=(c.rot_box_corners[2][0], c.rot_box_corners[2][1]),
+        #             fontFace=cv2.Formatter_FMT_DEFAULT, fontScale=0.5, color=(255, 0, 0), thickness=1)
 
-        # rotated box corners
-        cv2.putText(img=final_image, text="0",
-                    org=(c.rot_box_corners[0][0], c.rot_box_corners[0][1]),
-                    fontFace=cv2.Formatter_FMT_DEFAULT, fontScale=0.5, color=(255, 0, 0), thickness=1)
-
-        cv2.putText(img=final_image, text="1",
-                    org=(c.rot_box_corners[1][0], c.rot_box_corners[1][1]),
-                    fontFace=cv2.Formatter_FMT_DEFAULT, fontScale=0.5, color=(255, 0, 0), thickness=1)
-
-        cv2.putText(img=final_image, text="2",
-                    org=(c.rot_box_corners[2][0], c.rot_box_corners[2][1]),
-                    fontFace=cv2.Formatter_FMT_DEFAULT, fontScale=0.5, color=(255, 0, 0), thickness=1)
-
-    if 1 <= ch_lib.frame_num <= 9:
+    if 1 <= ch_lib.frame_num <= 40:
         # print ch_lib.
         print(ch_lib)
         # show tracking image.
@@ -153,8 +157,23 @@ while ch_lib.frame_num <= 25:
         # in order to access the zoom feature of an image, we can also plot using matplotlib gui.
         # plot using matplotlib.
         plt.imshow(final_image)
-        plt.title("Final Image, Frame #" + str(ch_lib.frame_num))
-        plt.show()
+
+        # pixel coordinates + set ticks.
+        p_pixel = np.linspace(0, Contour.n_p, 5)
+        t_pixel = np.linspace(0, Contour.n_t, 5)
+
+        plt.xticks(p_pixel, ["0", "$90$", "$180$", "$270$", "$360$"])
+        plt.yticks(t_pixel, ["1", "$\dfrac{1}{2}$", "$0$", "-$\dfrac{1}{2}$", "-$1$"])
+
+        # axis label.
+        plt.xlabel("Longitude (Deg.)")
+        plt.ylabel("Sin(Lat.)")
+
+        # title
+        plt.title("Coronal Hole Tracking, Frame #" + str(ch_lib.frame_num))
+        # plt.show()
+        # plt.savefig("results/images/tester/frames/" + "frame_" + str(ch_lib.frame_num) + ".png")
+
         # wait time between frames.
     cv2.waitKey(1000)
 
@@ -165,7 +184,7 @@ while ch_lib.frame_num <= 25:
 # with open('results/first_frame_test.json', 'w') as f:
 #     f.write(ch_lib.__str__())
 
-# save object to pickle file.
+# # save object to pickle file.
 # with open('results/first_frame_test_knn.pkl', 'wb') as f:
 #    pickle.dump(ch_lib, f)
 

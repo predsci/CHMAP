@@ -1,6 +1,8 @@
 """
 This module is an implementation of KNN (K- Nearest Neighbors) Algorithm (see mkdocs website for more information
 about knn). This is used to match coronal holes between frames based on their centroid location.
+
+Author: Opal Issan, last updated March 25th, 2021.
 """
 
 import numpy as np
@@ -12,7 +14,7 @@ import json
 class KNN:
     """ K Nearest Neighbor DataStructure. """
 
-    def __init__(self, X_train, Y_train, X_test, K=6, thresh=0.2):
+    def __init__(self, X_train, Y_train, X_test, K=6, thresh=0.1):
         # X train contains a list of coronal hole centroid (theta, phi) or (lat, lon) of previous frames.
         self.X_train = X_train
 

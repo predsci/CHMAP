@@ -22,3 +22,4 @@ schema_viz/sqlite/output/*
 !schema_viz/sqlite/output/diagrams
 schema_viz/sqlite/output/diagrams/*
 !schema_viz/sqlite/output/diagrams/summary
+/analysis/ml_analysis/ch_tracking/results/

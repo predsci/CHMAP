@@ -26,17 +26,41 @@ Verbose = True
 ReadFile = True
 
 if ReadFile:
-    file_name = "results/first_frame_test.pkl"
+    file_name = "results/first_frame_test_knn.pkl"
     ch_db = pickle.load(open(file_name, "rb"))
     if Verbose:
         print(ch_db)
+
+# ======================================================================================================================
+# Plot the feature evaluation of coronal hole 1 and 5.
+# ======================================================================================================================
+ID = 4
+ch_list = ch_db.ch_dict[ID].contour_list
+
+frame_list, area_list = [], []
+for ch in ch_list:
+    # plot feature.
+    if frame_list.count(ch.frame_num) > 0:
+        area_list[-1] += ch.area
+    else:
+        frame_list.append(ch.frame_num)
+        area_list.append(ch.area)
+
+plt.scatter(frame_list, area_list, c="b")
+plt.plot(frame_list, area_list, c="k")
+plt.xlabel("Frame")
+plt.ylabel("Area")
+plt.title("Coronal Hole # " + str(ID))
+
+plt.savefig("figures/" + "ch_area_" + str(ID) + ".png")
+plt.show()
 
 # ======================================================================================================================
 # save png files to create a video of coronal hole #1.
 # ======================================================================================================================
 SavePng = False
 # coronal hole ID number
-ID = 5
+ID = 1
 
 # image size (n_t, n_p)
 n_t = 398
@@ -62,10 +86,11 @@ SaveVid = False
 if SaveVid:
     # choose codec according to format needed
     fourcc = cv2.VideoWriter_fourcc(*'mp4v')
-    video = cv2.VideoWriter("results/images/testervid/coronalhole" + str(ID) + ".mov", fourcc, 1, (640, 480))
+    #video = cv2.VideoWriter("results/images/testervid/coronalhole" + str(ID) + ".mov", fourcc, 1, (640, 480))
+    video = cv2.VideoWriter("results/images/testervid/tracking_vid_" + str(ID) + ".mov", fourcc, 1, (640, 480))
 
-    for j in range(1, 20):
-        filename = "results/images/tester/" + "ch_" + str(ID) + "_frame_" + str(j)
+    for j in range(1, 40):
+        filename = "results/images/tester/frames/" + "frame_" + str(j)
         img = cv2.imread(filename + '.png')
         video.write(img)
 
@@ -76,123 +101,126 @@ if SaveVid:
 # Save Coronal Holes centroid and label.
 # ======================================================================================================================
 # frame number treated as "new frame"
-frame_number = 5
-# window size.
-window = 4
+testKNN = False
 
-# initialize the X and Y lists with centroid location and label respectively.
-# X spherical location is (theta, phi) or (lat, lon)
-X_train = []
-Y_train = []
+if testKNN:
+    frame_number = 5
+    # window size.
+    window = 4
 
-X_test = []
+    # initialize the X and Y lists with centroid location and label respectively.
+    # X spherical location is (theta, phi) or (lat, lon)
+    X_train = []
+    Y_train = []
 
-# save first and second frame.
-for ch_class, ch_list in ch_db.ch_dict.items():
-    for ch in ch_list.contour_list:
-        if ch.frame_num == 1:
-            X_train.append(ch.phys_centroid)
-            Y_train.append(ch.id)
-        if ch.frame_num == 2:
-            X_train.append(ch.phys_centroid)
-            Y_train.append(ch.id)
-        if ch.frame_num == 3:
-            X_test.append(ch.phys_centroid)
+    X_test = []
 
-plot = False
+    # save first and second frame.
+    for ch_class, ch_list in ch_db.ch_dict.items():
+        for ch in ch_list.contour_list:
+            if ch.frame_num == 1:
+                X_train.append(ch.phys_centroid)
+                Y_train.append(ch.id)
+            if ch.frame_num == 2:
+                X_train.append(ch.phys_centroid)
+                Y_train.append(ch.id)
+            if ch.frame_num == 3:
+                X_test.append(ch.phys_centroid)
 
-if plot:
-    ii = 0
-    for t, p in X_train:
-        plt.scatter(p, t, label=str(Y_train[ii]), s=5)
-        ii += 1
+    plot = False
 
-    for t, p in X_test:
-        plt.scatter(p, t, c="k", s=5)
+    if plot:
+        ii = 0
+        for t, p in X_train:
+            plt.scatter(p, t, label=str(Y_train[ii]), s=5)
+            ii += 1
 
-    plt.scatter(p, t, label="Frame2", c="k", s=5)
+        for t, p in X_test:
+            plt.scatter(p, t, c="k", s=5)
 
-    plt.legend()
-    plt.gca().invert_yaxis()
-    plt.title("Match Centroid using KNN")
-    plt.savefig("figures/knn_test.png")
+        plt.scatter(p, t, label="Frame2", c="k", s=5)
 
-# ======================================================================================================================
-#  Apply KNN algorithm to classify the coronal holes based n their centroid proximity.
-#
-#  * Note, for WKNN (weighted based on distance 1/d) small perturbations in the hyper-parameter
-#  (K) will barely effect the results.
-#
-#  See knn.py for implementation.
-# ======================================================================================================================
+        plt.legend()
+        plt.gca().invert_yaxis()
+        plt.title("Match Centroid using KNN")
+        plt.savefig("figures/knn_test.png")
 
-# apply KNN Algorithm and analyze the results.
-classifier = KNN(X_train=X_train, X_test=X_test, Y_train=Y_train, K=6, thresh=0.2)
+    # ======================================================================================================================
+    #  Apply KNN algorithm to classify the coronal holes based n their centroid proximity.
+    #
+    #  * Note, for WKNN (weighted based on distance 1/d) small perturbations in the hyper-parameter
+    #  (K) will barely effect the results.
+    #
+    #  See knn.py for implementation.
+    # ======================================================================================================================
 
-# probability results.
-res = classifier.X_test_results
+    # apply KNN Algorithm and analyze the results.
+    classifier = KNN(X_train=X_train, X_test=X_test, Y_train=Y_train, K=6, thresh=0.2)
 
-# if proba > thresh check its overlap of pixels area.
-area_check_list = classifier.check_list
+    # probability results.
+    res = classifier.X_test_results
 
-if Verbose:
-    print("label list = ", Y_train)
-    print("results = ", res)
-    print("Area check list = ", area_check_list)
+    # if proba > thresh check its overlap of pixels area.
+    area_check_list = classifier.check_list
 
-# ======================================================================================================================
-#  Based on the results above (knn), find the area overlap between the new coronal holes and the coronal holes that
-#  have a high probability to be associated with. This operation can be computationally expensive, therefore, it is
-#  preferred to compare the overlapping regions with as few coronal holes as possible. Therefore, we will pick the
-#  latest say m frames (approximately 5 to 10) and compare the area overlap in that domain.
-#
-#  * See areaoverlap.py for functions implementation.
-# ======================================================================================================================
+    if Verbose:
+        print("label list = ", Y_train)
+        print("results = ", res)
+        print("Area check list = ", area_check_list)
 
-# area matrix
-mesh = MapMesh(p=np.linspace(0, 2*np.pi, n_p), t=np.linspace(0, np.pi, n_t))
-da = mesh.da
+    # ======================================================================================================================
+    #  Based on the results above (knn), find the area overlap between the new coronal holes and the coronal holes that
+    #  have a high probability to be associated with. This operation can be computationally expensive, therefore, it is
+    #  preferred to compare the overlapping regions with as few coronal holes as possible. Therefore, we will pick the
+    #  latest say m frames (approximately 5 to 10) and compare the area overlap in that domain.
+    #
+    #  * See areaoverlap.py for functions implementation.
+    # ======================================================================================================================
 
-if plot:
-    plt.matshow(da.T)
-    plt.colorbar()
-    plt.title("$\Delta A$")
-    plt.show()
+    # area matrix
+    mesh = MapMesh(p=np.linspace(0, 2*np.pi, n_p), t=np.linspace(0, np.pi, n_t))
+    da = mesh.da
 
-
-# initialize probability matrix
-proba_mat = []
-
-# prepare data-set
-X_test = []
-X_train = []
-for ch_class, ch_list in ch_db.ch_dict.items():
-    for ch in ch_list.contour_list:
-        if ch.frame_num == 1:
-            X_train.append(ch)
-        if ch.frame_num == 2:
-            X_train.append(ch)
-        if ch.frame_num == 3:
-            X_test.append(ch)
+    if plot:
+        plt.matshow(da.T)
+        plt.colorbar()
+        plt.title("$\Delta A$")
+        plt.show()
 
 
-for ii, ch_list in enumerate(area_check_list):
-    prob_list = []
-    for id in ch_list:
-        coronal_hole_list = ch_db.ch_dict[id]
-        p = []
-        for ch in coronal_hole_list.contour_list:
-            p1, p2 = area_overlap(ch1=ch, ch2=X_test[ii], da=da)
-            p.append((p1+p2)/2)
-        prob_list.append(np.mean(p))
-    proba_mat.append(prob_list)
+    # initialize probability matrix
+    proba_mat = []
 
-print(proba_mat)
+    # prepare data-set
+    X_test = []
+    X_train = []
+    for ch_class, ch_list in ch_db.ch_dict.items():
+        for ch in ch_list.contour_list:
+            if ch.frame_num == 1:
+                X_train.append(ch)
+            if ch.frame_num == 2:
+                X_train.append(ch)
+            if ch.frame_num == 3:
+                X_test.append(ch)
 
 
-# ======================================================================================================================
-#  Based on the results above (area-overlap) we will decide if the new identified coronal hole is of an existing class
-#  or a new identified coronal hole in database.
-# ======================================================================================================================
+    for ii, ch_list in enumerate(area_check_list):
+        prob_list = []
+        for id in ch_list:
+            coronal_hole_list = ch_db.ch_dict[id]
+            p = []
+            for ch in coronal_hole_list.contour_list:
+                p1, p2 = area_overlap(ch1=ch, ch2=X_test[ii], da=da)
+                p.append((p1+p2)/2)
+            prob_list.append(np.mean(p))
+        proba_mat.append(prob_list)
 
-print(classification_results(area_overlap_list=proba_mat, thresh=0.5))
+    print(proba_mat)
+
+
+    # ======================================================================================================================
+    #  Based on the results above (area-overlap) we will decide if the new identified coronal hole is of an existing class
+    #  or a new identified coronal hole in database.
+    # ======================================================================================================================
+
+    print(classification_results(area_overlap_list=proba_mat, thresh=0.5))

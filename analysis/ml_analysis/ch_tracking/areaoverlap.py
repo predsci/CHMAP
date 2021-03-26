@@ -1,12 +1,10 @@
 """Match Coronal Holes based on their area overlap. """
 
 import numpy as np
-from analysis.ml_analysis.ch_tracking.contour import Contour
 
 
 def area_overlap(ch1, ch2, da):
     """Area overlap of two coronal holes.
-    TODO: Optimize.
 
     Parameters
     ----------
@@ -20,24 +18,20 @@ def area_overlap(ch1, ch2, da):
     -------
         areaoverlap/ch1area, areaoverlap/ch2area
     """
-    # create a dummy matrix
-    mat1 = np.zeros(da.shape)
-    mat2 = np.zeros(da.shape)
+    # zip ch1 pixel location.
+    ch1_location = list(zip(ch1.contour_pixels_phi, ch1.contour_pixels_theta))
 
-    # create ch1 mat
-    mat1[ch1.contour_pixels_phi, ch1.contour_pixels_theta] = 1
+    # zip ch2 pixel location.
+    ch2_location = set(zip(ch2.contour_pixels_phi, ch2.contour_pixels_theta))
 
-    # create ch2 mat
-    mat2[ch2.contour_pixels_phi, ch2.contour_pixels_theta] = 1
+    # find intersection - [phi, theta].
+    pixel_intersection = np.array(list(ch2_location.intersection(ch1_location)))
 
-    # multiply mask
-    overlap = np.multiply(mat1, mat2)
-
-    # where is the overlapping region.
-    index = np.where(overlap)
-
-    # compute the area on a sphere of the overlapped region.
-    intersection = np.sum(da[index[0], index[1]])
+    if len(pixel_intersection) == 0:
+        intersection = 0
+    else:
+        # area of intersection on a sphere.
+        intersection = np.sum(da[pixel_intersection[:, 0], pixel_intersection[:, 1]])
 
     return intersection / ch1.area, intersection / ch2.area
 

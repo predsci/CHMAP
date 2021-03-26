@@ -75,17 +75,17 @@ class Contour:
             # compute the rotate box area.
             self.rot_box_area = self.compute_rot_box_area()
 
-            # compute the rotated box perimeter.
-            # self.rot_box_perimeter = self.compute_rot_perimeter()
+        # compute the rotated box perimeter.
+        # self.rot_box_perimeter = self.compute_rot_perimeter()
 
-            # compute convex hull.
-            self.convex_hull = self.compute_convex_hull()
+        # compute convex hull.
+        # self.convex_hull = self.compute_convex_hull()
 
-            # compute convex hull perimeter on a sphere.
-            # self.convex_hull_perimeter = self.compute_convex_hull_perimeter()
+        # compute convex hull perimeter on a sphere.
+        # self.convex_hull_perimeter = self.compute_convex_hull_perimeter()
 
-            # compute the tilt of the coronal hole in spherical coordinates using PCA.
-            self.pca_tilt, self.sig_tilt = self.compute_coronal_hole_tilt_pca()
+        # compute the tilt of the coronal hole in spherical coordinates using PCA.
+        self.pca_tilt, self.sig_tilt = self.compute_coronal_hole_tilt_pca()
 
         # the unique identification number of this coronal hole (should be a natural number).
         self.id = None
@@ -97,9 +97,13 @@ class Contour:
         self.periodic_at_zero = self.is_periodic_zero()
         self.periodic_at_2pi = self.is_periodic_2_pi()
 
+    # def __str__(self):
+    # TODO: Fix this for Graph Matplotlib plots.
+    #     return json.dumps(
+    #         self.json_dict(), indent=4, default=lambda o: o.json_dict())
+
     def __str__(self):
-        return json.dumps(
-            self.json_dict(), indent=4, default=lambda o: o.json_dict())
+        return str(self.id)
 
     def json_dict(self):
         return {
