@@ -107,11 +107,20 @@ if __name__ == '__main__':
 
     fig = plt.figure()
     ax = plt.axes()
-    ax.imshow(singularity_lat_lon, extent=extent)
-    ax.set_xlabel("$\phi$")
-    ax.set_ylabel("$\Theta$")
-    ax.set_title('Lat-lon distortion region ')
+    plt.imshow(image)
 
+    # pixel coordinates + set ticks.
+    p_pixel = np.linspace(0, n_p, 5)
+    t_pixel = np.linspace(0, n_t, 5)
+
+    plt.xticks(p_pixel, ["0", "$90$", "$180$", "$270$", "$360$"])
+    plt.yticks(t_pixel, ["1", "$\dfrac{1}{2}$", "$0$", "-$\dfrac{1}{2}$", "-$1$"])
+
+    # axis label.
+    plt.xlabel("Longitude (Deg.)")
+    plt.ylabel("Sin(Lat.)")
+
+    ax.set_title('Original Image')
 
     singularity_polar = np.zeros((n_t, n_p))
 

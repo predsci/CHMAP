@@ -3,6 +3,9 @@ Author: Opal Issan, March 25th, 2021.
 
 A data structure for a set of coronal hole objects.
 
+
+# TODO LIST:
+            1. create a test function to create graphs.
 """
 
 import json
@@ -13,6 +16,7 @@ from analysis.ml_analysis.ch_tracking.contour import Contour
 from analysis.ml_analysis.ch_tracking.coronalhole import CoronalHole
 from analysis.ml_analysis.ch_tracking.knn import KNN
 from analysis.ml_analysis.ch_tracking.areaoverlap import area_overlap, classification_results
+from analysis.ml_analysis.ch_tracking.graph import CoronalHoleGraph
 import matplotlib.pyplot as plt
 
 
@@ -27,11 +31,16 @@ class CoronalHoleDB:
     # parameter for dilation. (this should be changed for larger images.
     gamma = 10
     # area overlap threshold for matching coronal holes.
-    area_thresh = 0.4
+    area_thresh = 0.5
+    # connectivity threshold.
+    connectivity_thresh = 0.1
 
     def __init__(self):
         # list of Contours that are part of this CoronalHole Object.
         self.ch_dict = dict()
+
+        # connectivity graph.
+        self.Graph = CoronalHoleGraph()
 
         # the unique identification number of for each coronal hole in the db.
         self.total_num_of_coronal_holes = 0
@@ -54,17 +63,16 @@ class CoronalHoleDB:
         }
 
     def _assign_id_coronal_hole(self, ch):
-        """Assign a unique ID number to coronal hole "
+        """Assign a *unique* ID number to coronal hole "
 
         Parameters
         ----------
-        ch CoronalHole object
+        ch: CoronalHole() object see coronalhole.py
 
         Returns
         -------
-        ch with assigned id.
+        ch: with assigned id.
         """
-
         # set the index id.
         ch.id = self.total_num_of_coronal_holes + 1
         # update coronal hole holder.
@@ -76,11 +84,11 @@ class CoronalHoleDB:
 
         Parameters
         ----------
-        ch CoronalHole object
+        ch: CoronalHole() object see coronalhole.py
 
         Returns
         -------
-        ch with assigned color.
+        ch: with assigned color.
         """
         ch.color = self.generate_ch_color()
         return ch
@@ -90,11 +98,11 @@ class CoronalHoleDB:
 
         Parameters
         ----------
-        ch CoronalHole object
+        ch: CoronalHole() object see coronalhole.py
 
         Returns
         -------
-        None
+            N/A
         """
         # add to database.
         self.ch_dict[ch.id] = ch
@@ -104,7 +112,7 @@ class CoronalHoleDB:
 
         Parameters
         ----------
-        frame: new frame object Frame() in frame.py
+        frame: new frame object Frame() see frame.py
 
         Returns
         -------
@@ -116,15 +124,15 @@ class CoronalHoleDB:
         self.window_holder.append(frame)
 
     def _insert_new_contour_to_dict(self, contour):
-        """insert a new contour to dict.
+        """Insert a new contour to dict.
 
         Parameters
         ----------
-        contour: Contour() object
+        contour: Contour() object see contour.py
 
         Returns
         -------
-        None
+            N/A
         """
         coronal_hole = CoronalHole(identity=contour.id)
         coronal_hole.insert_contour_list(contour=contour)
@@ -498,16 +506,16 @@ class CoronalHoleDB:
         area_overlap_results = self.area_overlap_results(area_check_list=area_check_list, contour_list=contour_list)
 
         # return list of coronal holes corresponding unique ID.
-        match_list = self.get_coronal_hole_id(area_check_list=area_check_list, area_overlap_results=area_overlap_results)
+        match_list = self.get_coronal_hole_id(area_check_list=area_check_list,
+                                              area_overlap_results=area_overlap_results)
 
-        # check if there multiple contours mapped to the same class.
-        return match_list
+        # check if there multiple contours mapped to the same class, if so, assign a count number for graph plotting
+        # purposes (x-axis).
+        return self.assign_count_number_to_coronal_hole(match_list=match_list, contour_list=contour_list)
 
-    def merge_repeating_coronal_holes(self, match_list, contour_list):
-        """If there are multiple contours in the latest frame assigned to the same class, then we merge the
-         two contours. Meaning, matching is unique.
-
-         TODO: Do we even want this?
+    @staticmethod
+    def assign_count_number_to_coronal_hole(match_list, contour_list):
+        """Assign a count number to each contour object based on the number of times it appeared in match_list.
 
         Parameters
         ----------
@@ -515,34 +523,22 @@ class CoronalHoleDB:
             type: numpy array
         contour_list: list of contours.
             type: list
+
         Returns
         -------
-            updated match_list, updated contour_list
+            updated contour_list
         """
-        # # check if there are repeating IDs *that are not zero*
-        if len(match_list[match_list != 0]) != len(set(match_list[match_list != 0])):
-            # there are duplicates.
-            # values - list of unique values.
-            # counts - list of corresponding counts. (appearance in
-            values, counts = np.unique(match_list, return_counts=True)
+        # values - list of unique values.
+        # counts - list of corresponding counts. (appearance in
+        values, counts = np.unique(match_list, return_counts=True)
 
-            for ii, c in enumerate(counts, start=0):
-                # check if id appeared more than once in the list and if the id is not zero
-                if c > 1 and values[ii] != 0:
-                    # there is a duplication. merge is needed.
-                    index = np.where(match_list == values[ii])[0]
-                    # loop over every instance of this duplication
-                    # initialize iterator
-                    jj = 0
-                    while jj < len(index) - 1:
-                        # merge the first contour with the next.
-                        contour_list[index[jj]] = self._merge_contours(c1=contour_list[index[jj]],
-                                                                       c2=contour_list[index[jj + 1]])
-                        # delete duplicated contours from list.
-                        contour_list.pop(index[jj + 1])
-                        match_list = np.delete(match_list, index[jj + 1])
-                        index = np.delete(index, index[jj + 1])
-                        jj += 1
+        # if count > 1 assign a index number to each coronal hole.
+        for ii, c in enumerate(counts, start=0):
+            if c > 1:
+                # there are multiple coronal holes assigned to the same class in the latest frame.
+                index_list = np.where(match_list == values[ii])[0]
+                for counter, idx in enumerate(index_list, start=1):
+                    contour_list[idx].count = counter
 
         return match_list, contour_list
 
@@ -629,3 +625,46 @@ class CoronalHoleDB:
 
         return classification_results(area_overlap_list=proba_mat, thresh=self.area_thresh)
 
+    #
+    # def merge_repeating_coronal_holes(self, match_list, contour_list):
+    #     """If there are multiple contours in the latest frame assigned to the same class, then we merge the
+    #      two contours. Meaning, matching is unique.
+    #
+    #      TODO: Do we even want this?
+    #
+    #     Parameters
+    #     ----------
+    #     match_list: list of corresponding ID.
+    #         type: numpy array
+    #     contour_list: list of contours.
+    #         type: list
+    #     Returns
+    #     -------
+    #         updated match_list, updated contour_list
+    #     """
+    #     # # check if there are repeating IDs *that are not zero*
+    #     if len(match_list[match_list != 0]) != len(set(match_list[match_list != 0])):
+    #         # there are duplicates.
+    #         # values - list of unique values.
+    #         # counts - list of corresponding counts. (appearance in
+    #         values, counts = np.unique(match_list, return_counts=True)
+    #
+    #         for ii, c in enumerate(counts, start=0):
+    #             # check if id appeared more than once in the list and if the id is not zero
+    #             if c > 1 and values[ii] != 0:
+    #                 # there is a duplication. merge is needed.
+    #                 index = np.where(match_list == values[ii])[0]
+    #                 # loop over every instance of this duplication
+    #                 # initialize iterator
+    #                 jj = 0
+    #                 while jj < len(index) - 1:
+    #                     # merge the first contour with the next.
+    #                     contour_list[index[jj]] = self._merge_contours(c1=contour_list[index[jj]],
+    #                                                                    c2=contour_list[index[jj + 1]])
+    #                     # delete duplicated contours from list.
+    #                     contour_list.pop(index[jj + 1])
+    #                     match_list = np.delete(match_list, index[jj + 1])
+    #                     index = np.delete(index, index[jj + 1])
+    #                     jj += 1
+    #
+    #     return match_list, contour_list

@@ -22,6 +22,9 @@ List of properties:                                         || Name of variable.
 * NOTE:
 - n_t and n_p : image dimensions.
 - Mesh : image mesh grid.
+
+
+# TODO: REMOVE MESHMAP FROM CLASS PARAMETERS ITS EXPENSIVE TO STORE AND DOES NOT MAKE SENSE TO FO SO FOR EVERY CONTOUR..
 """
 
 import numpy as np
@@ -65,16 +68,16 @@ class Contour:
         # compute the rotated bounding box with min pixel area.
         self.rot_box = self.compute_rotated_rect()
 
-        if self.rot_box is not None:
-            # save rot box corners.
-            self.rot_box_corners = self.rotated_rect_corners()
+        # save rot box corners.
+        self.rot_box_corners = self.rotated_rect_corners()
 
-            # save rot box angle with respect to north.
-            self.rot_box_angle = self.compute_rot_box_angle()
+        # save rot box angle with respect to north.
+        self.rot_box_angle = self.compute_rot_box_angle()
 
-            # compute the rotate box area.
-            self.rot_box_area = self.compute_rot_box_area()
+        # compute the rotate box area.
+        self.rot_box_area = self.compute_rot_box_area()
 
+        # TODO: Do we want to compute the following features?
         # compute the rotated box perimeter.
         # self.rot_box_perimeter = self.compute_rot_perimeter()
 
@@ -93,17 +96,16 @@ class Contour:
         # the unique color for identification of this coronal hole rbg [r, b, g].
         self.color = None
 
+        # count number in the identified frame.
+        self.count = 0
+
         # periodic label.
         self.periodic_at_zero = self.is_periodic_zero()
         self.periodic_at_2pi = self.is_periodic_2_pi()
 
-    # def __str__(self):
-    # TODO: Fix this for Graph Matplotlib plots.
-    #     return json.dumps(
-    #         self.json_dict(), indent=4, default=lambda o: o.json_dict())
-
     def __str__(self):
-        return str(self.id)
+        return json.dumps(
+            self.json_dict(), indent=4, default=lambda o: o.json_dict())
 
     def json_dict(self):
         return {
@@ -514,7 +516,7 @@ class Contour:
         -------
         (x1, y1), (x2, y2), (x3, y3), (x4, y4)
         """
-        if len(self.contour_pixels_theta) > 1 and len(self.contour_pixels_phi) > 1:
+        if len(self.contour_pixels_theta) > 1 and len(self.contour_pixels_phi) > 1 and self.rot_box is not None:
             box = cv.boxPoints(self.rot_box)
             return np.int0(box)
         else:
@@ -528,26 +530,29 @@ class Contour:
         -------
         rotating angle in degrees.
         """
-        p0, p1, p2 = self.rot_box_corners[:3]
-        vec1 = p0 - p1
-        vec2 = p2 - p1
-        norm1 = np.sqrt(vec1[0] ** 2 + vec1[1] ** 2)
-        norm2 = np.sqrt(vec2[0] ** 2 + vec2[1] ** 2)
-        if norm1 != 0 and norm2 != 0:
-            if norm1 < norm2:
-                ang = np.arccos(vec2[1] / norm2)
-                if vec2[0] != 0:
-                    if vec2[1] / vec2[0] > 0:
-                        ang = - ang
-            else:
-                ang = np.arccos(vec1[1] / norm1)
-                if vec1[0] != 0:
-                    if vec1[1] / vec1[0] > 0:
-                        ang = - ang
+        if self.rot_box is not None:
+            p0, p1, p2 = self.rot_box_corners[:3]
+            vec1 = p0 - p1
+            vec2 = p2 - p1
+            norm1 = np.sqrt(vec1[0] ** 2 + vec1[1] ** 2)
+            norm2 = np.sqrt(vec2[0] ** 2 + vec2[1] ** 2)
+            if norm1 != 0 and norm2 != 0:
+                if norm1 < norm2:
+                    ang = np.arccos(vec2[1] / norm2)
+                    if vec2[0] != 0:
+                        if vec2[1] / vec2[0] > 0:
+                            ang = - ang
+                else:
+                    ang = np.arccos(vec1[1] / norm1)
+                    if vec1[0] != 0:
+                        if vec1[1] / vec1[0] > 0:
+                            ang = - ang
 
-            return 180 / np.pi * ang
+                return 180 / np.pi * ang
+            else:
+                return 0
         else:
-            return 0
+            return None
 
     def compute_rot_box_area(self):
         """Compute rotated box area.
@@ -556,11 +561,12 @@ class Contour:
         -------
         float rotated box area.
         """
-        # create a mask the size of our original image.
-        mask = np.zeros((Contour.n_t, Contour.n_p), dtype=np.uint8)
-        # find all the pixels inside the rotated rectangle and mark them 1.
-        cv.fillPoly(img=mask, pts=[self.rot_box_corners], color=1)
-        # find pixel location of the mask.
-        mask_location = np.where(mask)
-        # multiply the mask by the area.
-        return np.sum(Contour.Mesh.da[mask_location[1], mask_location[0]])
+        if self.rot_box is not None:
+            # create a mask the size of our original image.
+            mask = np.zeros((Contour.n_t, Contour.n_p), dtype=np.uint8)
+            # find all the pixels inside the rotated rectangle and mark them 1.
+            cv.fillPoly(img=mask, pts=[self.rot_box_corners], color=1)
+            # find pixel location of the mask.
+            mask_location = np.where(mask)
+            # multiply the mask by the area.
+            return np.sum(Contour.Mesh.da[mask_location[1], mask_location[0]])

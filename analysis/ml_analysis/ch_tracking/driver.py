@@ -4,19 +4,14 @@ Assumptions:
 -------------------
 Tracking Algorithm steps:
 
-1. Input image in lat -lon projection
+1. Input image in lat-lon projection
 2. latitude weighted dilation.
 3. find contours + color the areas arbitrarily - TODO: verify that they are unique by using a uniform vector.
 4. multiply mask on original binary image.
 5. delete small contours.
 6. force periodicity.
-7. match coronal holes to previous coronal holes in *window consecutive frames. TODO: This is done by centroid distance and
-TODO: can also be done by using another feature such as area or bounding box.
+7. match coronal holes to previous coronal holes in *window* consecutive frames.
 8. add contours to database - which can be saved to JSON file.
-
-# TODO: How can we group multiple contours associated to the same coronal hole class in the same frame?
---> area should be combined. Box area should be combined, create some type of holder "multcontour=true" for plotting
-purposes.
 """
 
 import cv2
