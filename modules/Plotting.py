@@ -79,7 +79,8 @@ def PlotCorrectedImage(corrected_data, los_image, nfig=None, title=None):
     return None
 
 
-def PlotMap(map_plot, nfig=None, title=None, map_type=None):
+def PlotMap(map_plot, nfig=None, title=None, map_type=None, save_map=False,
+            save_dir='maps/synoptic/'):
     """
     Super simple plotting routine for PsiMap objects.
     imshow() should be replaced with pcolormesh() for generalizing to non-uniform rectilinear grids
@@ -90,9 +91,11 @@ def PlotMap(map_plot, nfig=None, title=None, map_type=None):
         # norm = mpl.colors.LogNorm(vmin=0.01, vmax=np.nanmax(map_plot.data))
         im_cmap = plt.get_cmap('Greys')
         norm = mpl.colors.LogNorm(vmin=0.01, vmax=1)
+        plot_mat = map_plot.chd
     else:
         norm = mpl.colors.LogNorm(vmin=1.0, vmax=np.nanmax(map_plot.data))
         im_cmap = plt.get_cmap('sohoeit195')
+        plot_mat = map_plot.data
 
     # plot the initial image
     if nfig is None:
@@ -114,7 +117,7 @@ def PlotMap(map_plot, nfig=None, title=None, map_type=None):
         plt.contour(x_extent, map_plot.y, map_plot.data, origin="lower", cmap=im_cmap,
                     extent=[x_range[0], x_range[1], map_plot.y.min(), map_plot.y.max()])
     else:
-        plt.imshow(map_plot.data, extent=[x_range[0], x_range[1], map_plot.y.min(), map_plot.y.max()],
+        plt.imshow(plot_mat, extent=[x_range[0], x_range[1], map_plot.y.min(), map_plot.y.max()],
                    origin="lower", cmap=im_cmap, aspect=90.0, norm=norm)
     plt.xlabel("Carrington Longitude")
     plt.ylabel("Sine Latitude")
@@ -124,7 +127,8 @@ def PlotMap(map_plot, nfig=None, title=None, map_type=None):
         plt.title(title)
 
     plt.show(block=False)
-    plt.savefig('maps/synoptic/' + str(map_plot.data_info.date_obs[0]))
+    if save_map:
+        plt.savefig(save_dir + str(map_plot.data_info.date_obs[0]))
 
     return None
 

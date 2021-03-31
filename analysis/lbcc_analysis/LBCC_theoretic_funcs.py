@@ -19,7 +19,7 @@ import modules.Plotting as Plotting
 
 ####### STEP ONE: CREATE AND SAVE HISTOGRAMS #######
 def save_histograms(db_session, hdf_data_dir, inst_list, hist_query_time_min, hist_query_time_max, n_mu_bins=18,
-                    n_intensity_bins=200, lat_band=[-np.pi / 64., np.pi / 64.], log10=True, R0=1.01):
+                    n_intensity_bins=200, lat_band=[-np.pi / 64., np.pi / 64.], log10=True, R0=1.01, wavelengths=None):
     """
     create and save (to database) mu-histograms from EUV images
     @param db_session: connected db session for querying EUV images and saving histograms
@@ -52,7 +52,8 @@ def save_histograms(db_session, hdf_data_dir, inst_list, hist_query_time_min, hi
         # query EUV images
         query_instrument = [instrument, ]
         query_pd = db_funcs.query_euv_images(db_session=db_session, time_min=hist_query_time_min,
-                                             time_max=hist_query_time_max, instrument=query_instrument)
+                                             time_max=hist_query_time_max, instrument=query_instrument,
+                                             wavelength=wavelengths)
 
         for index, row in query_pd.iterrows():
             print("Processing image number", row.data_id, ".")
@@ -81,7 +82,8 @@ def save_histograms(db_session, hdf_data_dir, inst_list, hist_query_time_min, hi
 
 ###### STEP TWO: CALCULATE AND SAVE THEORETIC FIT PARAMETERS #######
 def calc_theoretic_fit(db_session, inst_list, calc_query_time_min, calc_query_time_max, weekday=0, number_of_days=180,
-                       n_mu_bins=18, n_intensity_bins=200, lat_band=[-np.pi / 64., np.pi / 64.], create=False):
+                       n_mu_bins=18, n_intensity_bins=200, lat_band=[-np.pi / 64., np.pi / 64.], create=False,
+                       wavelengths=None):
     """
     calculate and save (to database) theoretic LBC fit parameters
     @param db_session: connected database session to query histograms from and save fit parameters
@@ -123,11 +125,10 @@ def calc_theoretic_fit(db_session, inst_list, calc_query_time_min, calc_query_ti
             # query the histograms for time range based off moving average centers
             query_instrument = [instrument, ]
             pd_hist = db_funcs.query_hist(db_session=db_session, meth_id=method_id[1], n_mu_bins=n_mu_bins,
-                                          n_intensity_bins=n_intensity_bins,
-                                          lat_band=lat_band,
+                                          n_intensity_bins=n_intensity_bins, lat_band=lat_band,
                                           time_min=np.datetime64(min_date).astype(datetime.datetime),
                                           time_max=np.datetime64(max_date).astype(datetime.datetime),
-                                          instrument=query_instrument)
+                                          instrument=query_instrument, wavelength=wavelengths)
             print(pd_hist)
             # convert the binary types back to arrays
             mu_bin_array, intensity_bin_array, full_hist = psi_d_types.binary_to_hist(pd_hist, n_mu_bins,
@@ -192,7 +193,7 @@ def calc_theoretic_fit(db_session, inst_list, calc_query_time_min, calc_query_ti
 
 ###### STEP THREE: APPLY CORRECTION AND PLOT IMAGES #######
 def apply_lbc_correction(db_session, hdf_data_dir, inst_list, lbc_query_time_min, lbc_query_time_max,
-                         n_intensity_bins=200, R0=1.01, n_images_plot=1, plot=False):
+                         n_intensity_bins=200, R0=1.01, n_images_plot=1, plot=False, wavelengths=None):
     """
     function to apply limb-brightening correction and plot images within a certain time frame
     @param db_session: connected database session to query theoretic fit parameters from
@@ -215,7 +216,8 @@ def apply_lbc_correction(db_session, hdf_data_dir, inst_list, lbc_query_time_min
     for inst_index, instrument in enumerate(inst_list):
         query_instrument = [instrument, ]
         image_pd = db_funcs.query_euv_images(db_session=db_session, time_min=lbc_query_time_min,
-                                             time_max=lbc_query_time_max, instrument=query_instrument)
+                                             time_max=lbc_query_time_max, instrument=query_instrument,
+                                             wavelength=wavelengths)
         # query correct image combos
         combo_query = db_funcs.query_inst_combo(db_session, lbc_query_time_min, lbc_query_time_max, meth_name,
                                                 instrument)

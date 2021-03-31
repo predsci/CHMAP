@@ -40,7 +40,7 @@ def LinTrans_1Dhist(hist, bins, a, b):
 
 def hist_integration(hist, old_bins, new_bins):
     """
-    Given a histogram 'hist' with bin edges defined as 'bins', integrate into 'new_bins'
+    Given a histogram 'hist' with bin edges defined as 'old_bins', integrate into 'new_bins'
     and return the resulting new_hist
     :param hist: list with original histogram values (normalized)
     :param old_bins: list of original bin edges (ascending)

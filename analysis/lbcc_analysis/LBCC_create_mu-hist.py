@@ -18,8 +18,9 @@ import modules.datatypes as psi_d_types
 hist_query_time_min = datetime.datetime(2020, 1, 1, 0, 0, 0)
 hist_query_time_max = datetime.datetime(2021, 1, 1, 0, 0, 0)
 
-# define instruments
+# define instruments and wavelengths to include
 inst_list = ["AIA", "EUVI-A", "EUVI-B"]
+wavelengths = [193, 195]
 
 # define number of bins
 n_mu_bins = 18
@@ -76,15 +77,15 @@ method_id = get_method_id(db_session, meth_name, meth_desc, var_names=None, var_
 
 # loop over instrument
 for instrument in inst_list:
-
     # query EUV images
     query_instrument = [instrument, ]
     query_pd_all = query_euv_images(db_session=db_session, time_min=hist_query_time_min,
-                                         time_max=hist_query_time_max, instrument=query_instrument)
+                                    time_max=hist_query_time_max, instrument=query_instrument,
+                                    wavelength=wavelengths)
     # query LBCC histograms
     hist_pd = query_hist(db_session, meth_id=method_id[1], n_mu_bins=n_mu_bins, n_intensity_bins=n_intensity_bins,
                          lat_band=lat_band, time_min=hist_query_time_min, time_max=hist_query_time_max,
-                         instrument=query_instrument)
+                         instrument=query_instrument, wavelength=wavelengths)
 
     # compare image results to hist results based on image_id
     in_index = query_pd_all.data_id.isin(hist_pd.image_id)

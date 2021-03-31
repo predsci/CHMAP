@@ -22,6 +22,7 @@ from modules.map_manip import combine_maps
 import modules.datatypes as datatypes
 import analysis.lbcc_analysis.LBCC_theoretic_funcs as lbcc_funcs
 import analysis.iit_analysis.IIT_pipeline_funcs as iit_funcs
+from modules.misc_funs import cluster_meth_1
 
 
 #### STEP ONE: SELECT IMAGES ####
@@ -169,6 +170,82 @@ def apply_ipp(db_session, center_date, query_pd, inst_list, hdf_data_dir, lbc_co
     return date_pd, los_list, iit_list, use_indices, methods_list, ref_alpha, ref_x
 
 
+def apply_ipp_2(db_session, center_date, query_pd, inst_list, hdf_data_dir,
+                n_intensity_bins=200, R0=1.01):
+    """
+    Function to apply image pre-processing (limb-brightening, inter-instrument transformation) corrections
+    to EUV images for creation of maps. Three major differences from original function:
+        1. Expects query_pd to contain all images that should be corrected. No temporal
+           selection of images in this function.
+        2. Queries the DB directly for previous/next IIT and LBC values. No need to input
+           combo-query results.
+        3. methods_list is generated internally and outputted to be appended to an existing
+           list as appropriate.
+    @param db_session: database session from which to query correction variable values
+    @param center_date: date for querying
+    @param query_pd: pandas dataframe of euv_images
+    @param inst_list: instrument list
+    @param hdf_data_dir: directory of hdf5 files
+    @param n_intensity_bins: number of intensity bins
+    @param R0: radius
+    @return: image dataframe (identical to input 'query_pd', but retained for backward compatibility),
+             list of los images,
+             list of iit images,
+             indices used for correction,
+             methods list,
+             ref alpha, ref x
+    """
+    start = time.time()
+    # create image lists
+    n_images = query_pd.shape[0]
+    los_list = [None] * n_images
+    iit_list = [None] * n_images
+    methods_list = db_funcs.generate_methdf(query_pd)
+    use_indices = [np.full((2048, 2048), True, dtype=bool)] * len(inst_list)
+    # convert date to correct format
+    print("\nStarting corrections for", center_date, "images:")
+    date_time = np.datetime64(center_date).astype(datetime.datetime)
+    # alpha, x for threshold
+    euvia_iit = db_funcs.get_correction_pars(db_session, meth_name="IIT",
+                                             date_obs=date_time, instrument='EUVI-A')
+    ref_alpha = euvia_iit[0]
+    ref_x = euvia_iit[1]
+
+    # create dataframe for date
+    date_pd = query_pd
+    if len(date_pd) == 0:
+        print("No Images to Process for this date.")
+    else:
+        for index in range(date_pd.shape[0]):
+            # get image row
+            image_row = date_pd.iloc[index]
+            print("Processing image number", image_row.data_id, "for LBC and IIT Corrections.")
+            # apply LBC
+            los_list[index], lbcc_image, mu_indices, use_ind, theoretic_query = \
+                lbcc_funcs.apply_lbc_2(db_session, hdf_data_dir, image_row=image_row,
+                                       n_intensity_bins=n_intensity_bins, R0=R0)
+            # update method with LBCC parameter values? Would need to associate each LBCC
+            #   parameter set with an image # and store in DB. For now, simply record method
+            #   without values. Same for IIT below.
+            # apply IIT
+            lbcc_image, iit_list[index], use_indices[index], alpha, x = \
+                iit_funcs.apply_iit_2(db_session, lbcc_image, use_ind,
+                                      los_list[index], R0=R0)
+
+            # add methods to dataframe
+            ipp_method = {'meth_name': ("LBCC", "IIT"), 'meth_description': ["LBCC Theoretic Fit Method",
+                                                                             "IIT Fit Method"],
+                          'var_name': ("LBCC", "IIT"), 'var_description': (" ", " ")}
+            methods_list[index] = methods_list[index].append(pd.DataFrame(data=ipp_method), sort=False)
+            # methods_list[inst_ind] = pd.DataFrame(data=ipp_method)
+        end = time.time()
+        print("Image Pre-Processing Corrections (Limb-Brightening and Inter-Instrument Transformation) have been "
+              "applied "
+              " in", end - start, "seconds.")
+
+    return date_pd, los_list, iit_list, use_indices, methods_list, ref_alpha, ref_x
+
+
 #### STEP THREE: CORONAL HOLE DETECTION ####
 def chd(iit_list, los_list, use_indices, inst_list, thresh1, thresh2, ref_alpha, ref_x, nc, iters):
     """
@@ -199,6 +276,9 @@ def chd(iit_list, los_list, use_indices, inst_list, thresh1, thresh2, ref_alpha,
             t1 = thresh1 * ref_alpha + ref_x
             t2 = thresh2 * ref_alpha + ref_x
 
+            # we will only use 'use_chd' pixels, but to avoid warnings on np.log10(image_data)
+            image_data[image_data <= 0.] = 1e-8
+
             # fortran CHD algorithm
             ezseg_output, iters_used = ezsegwrapper.ezseg(np.log10(image_data), use_chd, nx, ny, t1, t2, nc, iters)
             chd_result = np.logical_and(ezseg_output == 0, use_chd == 1)
@@ -207,6 +287,54 @@ def chd(iit_list, los_list, use_indices, inst_list, thresh1, thresh2, ref_alpha,
             # create CHD image
             chd_image_list[inst_ind] = datatypes.create_chd_image(los_list[inst_ind], chd_result)
             chd_image_list[inst_ind].get_coordinates()
+    end = time.time()
+    print("Coronal Hole Detection algorithm implemented in", end - start, "seconds.")
+
+    return chd_image_list
+
+
+def chd_2(iit_list, los_list, use_indices, thresh1, thresh2, ref_alpha, ref_x, nc, iters):
+    """
+    Function to create CHD Images from IIT Images.
+
+    New in version 2: will do a coronal hole detection for all images in iit_list, rather
+    than assuming that each list entry corresponds to an instrument.
+    @param iit_list: list of iit images
+    @param los_list: list of los images
+    @param use_indices: viable indices for detection
+    @param thresh1: lower threshold - seed placement
+    @param thresh2: upper threshold - stopping criteria
+    @param ref_alpha: reference IIT scale factor to calculate threshold parameters
+    @param ref_x: reference IIT offset to calculate threshold parameters
+    @param nc: pixel connectivity parameter
+    @param iters: maximum number of iterations
+    @return: list of chd images
+    """
+    start = time.time()
+    chd_image_list = [datatypes.CHDImage()] * len(iit_list)
+    for iit_ind in range(iit_list.__len__()):
+        if iit_list[iit_ind] is not None:
+            # define CHD parameters
+            image_data = iit_list[iit_ind].iit_data
+            use_chd = use_indices[iit_ind].astype(int)
+            use_chd = np.where(use_chd == 1, use_chd, -9999)
+            nx = iit_list[iit_ind].x.size
+            ny = iit_list[iit_ind].y.size
+            # calculate new threshold parameters based off reference (AIA) instrument
+            t1 = thresh1 * ref_alpha + ref_x
+            t2 = thresh2 * ref_alpha + ref_x
+
+            # we will only use 'use_chd' pixels, but to avoid warnings on np.log10(image_data)
+            image_data[image_data <= 0.] = 1e-8
+
+            # fortran CHD algorithm
+            ezseg_output, iters_used = ezsegwrapper.ezseg(np.log10(image_data), use_chd, nx, ny, t1, t2, nc, iters)
+            chd_result = np.logical_and(ezseg_output == 0, use_chd == 1)
+            chd_result = chd_result.astype(int)
+
+            # create CHD image
+            chd_image_list[iit_ind] = datatypes.create_chd_image(los_list[iit_ind], chd_result)
+            chd_image_list[iit_ind].get_coordinates()
     end = time.time()
     print("Coronal Hole Detection algorithm implemented in", end - start, "seconds.")
 
@@ -258,9 +386,76 @@ def create_singles_maps(inst_list, date_pd, iit_list, chd_image_list, methods_li
             # add to the methods dataframe for this map
             methods_list[index] = methods_list[index].append(pd.DataFrame(data=interp_method), sort=False)
 
+            # also record a method for map grid size
+            grid_method = {'meth_name': ("GridSize_sinLat", "GridSize_sinLat"), 'meth_description':
+                           ["Map number of grid points: phi x sin(lat)"] * 2, 'var_name': ("n_phi", "n_SinLat"),
+                           'var_description': ("Number of grid points in phi", "Number of grid points in sin(lat)"),
+                           'var_val': (len(map_x), len(map_y))}
+            methods_list[index] = methods_list[index].append(pd.DataFrame(data=grid_method), sort=False)
+
             # incorporate the methods dataframe into the map object
             map_list[inst_ind].append_method_info(methods_list[index])
             chd_map_list[inst_ind].append_method_info(methods_list[index])
+
+    end = time.time()
+    print("Images interpolated to maps in", end - start, "seconds.")
+    return map_list, chd_map_list, methods_list, data_info, map_info
+
+
+def create_singles_maps_2(date_pd, iit_list, chd_image_list, methods_list, map_x=None, map_y=None, R0=1.01):
+    """
+    Function to map single images to a Carrington map.
+
+    New in version 2: will do a coronal hole detection for all images in iit_list, rather
+    than assuming that each list entry corresponds to an instrument.
+    @param date_pd: dataframe of EUV Images for specific date time
+    @param iit_list: list of IIT Images for mapping
+    @param chd_image_list: list of CHD Images for mapping
+    @param methods_list: methods dataframe list
+    @param map_x: 1D array of x coordinates
+    @param map_y: 1D array of y coordinates
+    @param R0: radius
+    @return: list of euv maps, list of chd maps, methods list, image info, and map info
+    """
+    start = time.time()
+    data_info = []
+    map_info = []
+    map_list = [datatypes.PsiMap()] * len(iit_list)
+    chd_map_list = [datatypes.PsiMap()] * len(iit_list)
+
+    for iit_ind in range(iit_list.__len__()):
+        if iit_list[iit_ind] is not None:
+            # query correct image combos
+            image_row = date_pd.iloc[iit_ind]
+            # EUV map
+            map_list[iit_ind] = iit_list[iit_ind].interp_to_map(R0=R0, map_x=map_x, map_y=map_y,
+                                                                  image_num=image_row.data_id)
+            # CHD map
+            chd_map_list[iit_ind] = chd_image_list[iit_ind].interp_to_map(R0=R0, map_x=map_x, map_y=map_y,
+                                                                            image_num=image_row.data_id)
+            # record image and map info
+            chd_map_list[iit_ind].append_data_info(image_row)
+            map_list[iit_ind].append_data_info(image_row)
+            data_info.append(image_row)
+            map_info.append(map_list[iit_ind].map_info)
+
+            # generate a record of the method and variable values used for interpolation
+            interp_method = {'meth_name': ("Im2Map_Lin_Interp_1",), 'meth_description':
+                ["Use SciPy.RegularGridInterpolator() to linearly interpolate from an Image to a Map"] * 1,
+                             'var_name': ("R0",), 'var_description': ("Solar radii",), 'var_val': (R0,)}
+            # add to the methods dataframe for this map
+            methods_list[iit_ind] = methods_list[iit_ind].append(pd.DataFrame(data=interp_method), sort=False)
+
+            # also record a method for map grid size
+            grid_method = {'meth_name': ("GridSize_sinLat", "GridSize_sinLat"), 'meth_description':
+                           ["Map number of grid points: phi x sin(lat)"] * 2, 'var_name': ("n_phi", "n_SinLat"),
+                           'var_description': ("Number of grid points in phi", "Number of grid points in sin(lat)"),
+                           'var_val': (len(map_x), len(map_y))}
+            methods_list[iit_ind] = methods_list[iit_ind].append(pd.DataFrame(data=grid_method), sort=False)
+
+            # incorporate the methods dataframe into the map object
+            map_list[iit_ind].append_method_info(methods_list[iit_ind])
+            chd_map_list[iit_ind].append_method_info(methods_list[iit_ind])
 
     end = time.time()
     print("Images interpolated to maps in", end - start, "seconds.")
@@ -340,3 +535,120 @@ def create_combined_maps(db_session, map_data_dir, map_list, chd_map_list, metho
     end = time.time()
     print("Combined EUV and CHD Maps created and saved to the database in", end - start, "seconds.")
     return euv_combined, chd_combined
+
+
+def create_combined_maps_2(map_list, mu_merge_cutoff=None, del_mu=None, mu_cutoff=0.0):
+    """
+    Function to create combined EUV and CHD maps.
+
+    New in version 2: - function does not try to save to the database.
+                      - assumes that EUV and CHD are in the same map object
+    @param map_list: list of EUV maps
+    @param mu_merge_cutoff: float
+                            cutoff mu value for overlap areas
+    @param del_mu: float
+                   maximum mu threshold value
+    @param mu_cutoff: float
+                      lower mu value
+    @return: PsiMap object
+             Minimum Intensity Merge (MIM) euv map, MIM chd map, and merged
+             map meta data.
+    """
+    # start time
+    start = time.time()
+    # create chd dummy-maps (for function back-compatibility)
+    chd_maps = []
+    for ii in range(len(map_list)):
+        chd_maps.append(map_list[ii])
+        chd_maps[ii].data = chd_maps[ii].chd
+    if del_mu is not None:
+        euv_combined = combine_maps(map_list, del_mu=del_mu, mu_cutoff=mu_cutoff)
+        chd_combined = combine_maps(chd_maps, del_mu=del_mu, mu_cutoff=mu_cutoff)
+        combined_method = {'meth_name': ["Min-Int-Merge-del_mu"] * 3, 'meth_description':
+            ["Minimum intensity merge for synchronic map: using del mu"] * 3,
+             'var_name': ("mu_cutoff", "del_mu", "mu_merge_cutoff"),
+             'var_description': ("lower mu cutoff value", "max acceptable mu range",
+                                 "mu cutoff value in areas of overlap"),
+             'var_val': (mu_cutoff, del_mu, None)}
+    else:
+        euv_combined = combine_maps(map_list, mu_merge_cutoff=mu_merge_cutoff,
+                                    mu_cutoff=mu_cutoff)
+        chd_combined = combine_maps(chd_maps, mu_merge_cutoff=mu_merge_cutoff,
+                                    mu_cutoff=mu_cutoff)
+        combined_method = {'meth_name': ["Min-Int-Merge-del_mu"] * 3, 'meth_description':
+            ["Minimum intensity merge for synchronic map: using del mu"] * 3,
+             'var_name': ("mu_cutoff", "del_mu", "mu_merge_cutoff"),
+             'var_description': ("lower mu cutoff value", "max acceptable mu range",
+                                 "mu cutoff value in areas of overlap"),
+                           'var_val': (mu_cutoff, None, mu_merge_cutoff)}
+
+    euv_combined.chd = chd_combined.data
+    # merge map meta data
+    for ii in range(len(map_list)):
+        euv_combined.append_method_info(map_list[ii].method_info)
+        euv_combined.append_data_info(map_list[ii].data_info)
+        # euv_combined.append_map_info(map_list[ii].map_info)
+    euv_combined.append_method_info(pd.DataFrame(data=combined_method))
+    # combining maps produces duplicate methods. drop duplicates
+    euv_combined.method_info = euv_combined.method_info.drop_duplicates()
+    # for completeness, also drop duplicate data/image info
+    euv_combined.data_info = euv_combined.data_info.drop_duplicates()
+    # record compute time
+    euv_combined.append_map_info(pd.DataFrame({'time_of_compute':
+                                                   [datetime.datetime.now(), ]}))
+
+    # end time
+    end = time.time()
+    print("Minimum Intensity EUV and CHD Maps created in", end - start, "seconds.")
+    return euv_combined
+
+
+def select_synchronic_images(center_time, del_interval, image_pd, inst_list):
+    """
+    Select PSI-database images for synchronic map generation, consistent with the way we select
+    images for download.
+
+    Parameters
+    ----------
+    center_time - numpy.datetime64
+    del_interval - numpy.timedelta64
+    image_pd - pandas.DataFrame
+    inst_list - list
+
+    Returns
+    -------
+    synch_images pandas.DataFrame
+
+    """
+    jd0 = pd.DatetimeIndex([center_time, ]).to_julian_date().item()
+    # choose which images to use at this datetime
+    interval_max = center_time + del_interval
+    interval_min = center_time - del_interval
+    f_list = []
+    image_list = []
+    for instrument in inst_list:
+        # find instrument images in interval
+        inst_images_index = image_pd.date_obs.between(interval_min, interval_max) & \
+                            image_pd.instrument.eq(instrument)
+        inst_images = image_pd[inst_images_index]
+        if inst_images.__len__() > 0:
+            f_list_pd = pd.DataFrame({'date_obs': inst_images.date_obs,
+                                      'jd': pd.DatetimeIndex(inst_images.date_obs).to_julian_date(),
+                                      'instrument': inst_images.instrument})
+            f_list.append(f_list_pd)
+            image_list.append(inst_images)
+
+    if f_list.__len__() == 0:
+        print("No instrument images in time range around ", center_time, ".\n")
+        # return None
+        return None
+
+    # Now loop over all the image pairs to select the "perfect" group of images.
+    cluster_index = cluster_meth_1(f_list=f_list, jd0=jd0)
+    # combine selected image-rows into a dataframe
+    synch_images = image_list[0].iloc[cluster_index[0]]
+    if cluster_index.__len__() > 1:
+        for ii in range(1, cluster_index.__len__()):
+            synch_images = synch_images.append(image_list[ii].iloc[cluster_index[ii]])
+
+    return synch_images

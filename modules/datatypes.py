@@ -390,7 +390,8 @@ class PsiMap:
         3. reading a map hdf file ---needs to be created---
     """
 
-    def __init__(self, data=None, x=None, y=None, mu=None, origin_image=None, map_lon=None, chd=None, no_data_val=-9999.0):
+    def __init__(self, data=None, x=None, y=None, mu=None, origin_image=None,
+                 map_lon=None, chd=None, no_data_val=-9999.0):
         """
         Class to hold the standard information for a PSI map image
     for the CHD package.
@@ -482,6 +483,15 @@ class PsiMap:
 
     def append_data_info(self, image_df):
         self.data_info = self.data_info.append(image_df, sort=False, ignore_index=True)
+
+    def __copy__(self):
+        out = PsiMap.__init__(data=self.data, x=self.x, y=self.y, mu=self.mu,
+                              origin_image=self.origin_image, map_lon=self.map_lon,
+                              chd=self.chd, no_data_val=self.no_data_val)
+        out.append_map_info(self.map_info)
+        out.append_data_info(self.data_info)
+        out.append_method_info(self.method_info)
+        return out
 
     def write_to_file(self, base_path, map_type=None, filename=None, db_session=None):
         """

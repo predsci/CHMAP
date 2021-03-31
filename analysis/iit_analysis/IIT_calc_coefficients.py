@@ -33,6 +33,7 @@ number_of_days = 180
 # define instruments
 inst_list = ["AIA", "EUVI-A", "EUVI-B"]
 ref_inst = "AIA"
+wavelengths = [193, 195]
 
 # declare map and binning parameters
 n_mu_bins = 18
@@ -82,18 +83,17 @@ ref_index = inst_list.index(ref_inst)
 # query euv images to get carrington rotation range
 ref_instrument = [ref_inst, ]
 euv_images = db_funcs.query_euv_images(db_session, time_min=calc_query_time_min, time_max=calc_query_time_max,
-                                       instrument=ref_instrument)
+                                       instrument=ref_instrument, wavelength=wavelengths)
 # get min and max carrington rotation
 rot_max = euv_images.cr_rot.max()
 rot_min = euv_images.cr_rot.min()
 
 # query histograms
 ref_hist_pd = db_funcs.query_hist(db_session=db_session, meth_id=method_id[1],
-                                  n_intensity_bins=n_intensity_bins,
-                                  lat_band=lat_band,
+                                  n_intensity_bins=n_intensity_bins, lat_band=lat_band,
                                   time_min=calc_query_time_min - datetime.timedelta(days=number_of_days),
                                   time_max=calc_query_time_max + datetime.timedelta(days=number_of_days),
-                                  instrument=ref_instrument)
+                                  instrument=ref_instrument, wavelength=wavelengths)
 
 # convert binary to histogram data
 mu_bin_edges, intensity_bin_edges, ref_full_hist = psi_d_types.binary_to_hist(hist_binary=ref_hist_pd,
@@ -146,7 +146,7 @@ for inst_index, instrument in enumerate(inst_list):
         query_instrument = [instrument, ]
 
         rot_images = db_funcs.query_euv_images_rot(db_session, rot_min=rot_min, rot_max=rot_max,
-                                                   instrument=query_instrument)
+                                                   instrument=query_instrument, wavelength=wavelengths)
         if rot_images.shape[0] == 0:
             print("No images in timeframe for ", instrument, ". Skipping")
             continue
@@ -156,18 +156,18 @@ for inst_index, instrument in enumerate(inst_list):
         # if Stereo A or B has images before AIA, calc IIT for those weeks
         if inst_time_min > calc_query_time_min:
             all_images = db_funcs.query_euv_images(db_session, time_min=calc_query_time_min,
-                                                   time_max=calc_query_time_max, instrument=query_instrument)
+                                                   time_max=calc_query_time_max, instrument=query_instrument,
+                                                   wavelength=wavelengths)
             if all_images.date_obs.min() < inst_time_min:
                 inst_time_min = all_images.date_obs.min()
 
         moving_avg_centers, moving_width = lbcc.moving_averages(inst_time_min, inst_time_max, weekday,
                                                                 number_of_days)
         inst_hist_pd = db_funcs.query_hist(db_session=db_session, meth_id=method_id[1],
-                                           n_intensity_bins=n_intensity_bins,
-                                           lat_band=lat_band,
+                                           n_intensity_bins=n_intensity_bins, lat_band=lat_band,
                                            time_min=inst_time_min - datetime.timedelta(days=number_of_days),
                                            time_max=inst_time_max + datetime.timedelta(days=number_of_days),
-                                           instrument=query_instrument)
+                                           instrument=query_instrument, wavelength=wavelengths)
         # convert binary to histogram data
         mu_bin_edges, intensity_bin_edges, inst_full_hist = psi_d_types.binary_to_hist(
             hist_binary=inst_hist_pd, n_mu_bins=None, n_intensity_bins=n_intensity_bins)

@@ -24,6 +24,7 @@ lbc_query_time_max = datetime.datetime(2013, 1, 7, 0, 0, 0)
 
 # define instruments
 inst_list = ["AIA", "EUVI-A", "EUVI-B"]
+wavelengths = [193, 195]
 
 # declare map and binning parameters
 n_mu_bins = 18
@@ -75,11 +76,13 @@ for instrument in inst_list:
     # query EUV images
     query_instrument = [instrument, ]
     image_pd_all = db_funcs.query_euv_images(db_session=db_session, time_min=lbc_query_time_min,
-                                             time_max=lbc_query_time_max, instrument=query_instrument)
+                                             time_max=lbc_query_time_max, instrument=query_instrument,
+                                             wavelength=wavelengths)
     # query LBCC histograms
     hist_pd = db_funcs.query_hist(db_session, meth_id=method_id[1], n_intensity_bins=n_intensity_bins,
                                   lat_band=lat_band, time_min=lbc_query_time_min,
-                                  time_max=lbc_query_time_max, instrument=query_instrument)
+                                  time_max=lbc_query_time_max, instrument=query_instrument,
+                                  wavelength=wavelengths)
 
     if hist_pd.shape[0] == 0:
         # use all images in range
