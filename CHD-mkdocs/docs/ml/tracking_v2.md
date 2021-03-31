@@ -60,6 +60,6 @@ where $\alpha = \arcsin(\frac{\gamma}{n_{p}})$ and $\beta = \pi - \alpha$ (from 
 * Force periodicity. 
 
 ### *Step 4*
-* Classify coronal hole unique ID and color. [Match](tracking_match.md) to previous coronal holes by centroid location.
+* Classify coronal hole unique ID and color. [Match](knn.md) to previous coronal holes by centroid location.
 Future research steps: find a way to classify merges of two coronal holes based on previous pixel location.
 
