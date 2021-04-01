@@ -764,19 +764,6 @@
     Implementation
   </a>
   
-    <nav class="md-nav" aria-label="Implementation">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#important-networkx-functions" class="md-nav__link">
-    Important Networkx functions
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
 </li>
       
     </ul>
@@ -851,19 +838,6 @@
     Implementation
   </a>
   
-    <nav class="md-nav" aria-label="Implementation">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#important-networkx-functions" class="md-nav__link">
-    Important Networkx functions
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
 </li>
       
     </ul>
@@ -902,17 +876,9 @@ there is a class called CoronalHoleGraph() . This class is the data structure th
 contours and their connectivity. For plotting purposes, each contour will be associated with a frame number (y-axis) 
 and count (x-axis) in case of repetition in the same frame. Connectivity is determined by the area overlap of two contours. </p>
 <ul>
-<li>Q: Should we connect the contour with the previously identified contour from the same class or to declare and edge with any contour saved in the latest "window" frame that has an area overlap? - Can be discussed on Thursday🙂</li>
+<li>Q: Connectivity should only depend on previous frame? How do we identify an edge? - Can be discussed on Thursday🙂</li>
 </ul>
-<h3 id="important-networkx-functions">Important Networkx functions</h3>
-<ul>
-<li>
-<p><em>nx.connected_component_subgraphs(G)</em> - Extract all isolated connected subgraphs and plot each subgraph separately. </p>
-</li>
-<li>
-<p><em>nx.draw()</em> - Plot the Graph using Matplotlib. </p>
-</li>
-</ul>
+<p>!<img alt="" src="../images/connectivity_frame9.png" /></p>
                 
               
               

@@ -832,7 +832,7 @@ of background into foreground. Both are tools in image processing to remove nois
 <p><a href="https://docs.scipy.org/doc/scipy/reference/generated/scipy.ndimage.grey_dilation.html?highlight=scipy%20ndimage%20morphology%20grey_dilation">Example code</a> using Scipy library in Python. </p>
 <h1 id="implementation">Implementation</h1>
 <h3 id="input"><em>Input</em></h3>
-<p>Input image in lat-lon projection - greyscaled or binary image (greyscale if we use <a href="ml/chd.md">Tamar's CNN</a> results).
+<p>Input image in lat-lon projection - greyscaled or binary image (greyscale if we use <a href="../chd/">Tamar's CNN</a> results).
 Therefore, dilation and erosion are done using greyscale formula (inf/sup). </p>
 <h3 id="latitude-weighted-dilation"><em>Latitude Weighted Dilation</em></h3>
 <p>Apply a latitude weighted dilation to overcome spherical coordinate projection distortion near the poles. By dilating the original 
