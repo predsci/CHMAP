@@ -17,6 +17,7 @@ import modules.DB_classes as db_class
 
 # INSTRUMENT LIST
 inst_list = ["AIA", "EUVI-A", "EUVI-B"]
+wavelengths = [193, 195]
 
 # HISTOGRAM PARAMETERS TO UPDATE
 n_mu_bins = 18  # number of mu bins
@@ -79,11 +80,10 @@ for inst_index, instrument in enumerate(inst_list):
     # query the histograms
     query_instrument = [instrument, ]
     pd_hist = query_hist(db_session=db_session, meth_id=method_id[1], n_mu_bins=n_mu_bins,
-                         n_intensity_bins=n_intensity_bins,
-                         lat_band=lat_band,
+                         n_intensity_bins=n_intensity_bins, lat_band=lat_band,
                          time_min=np.datetime64(range_min_date).astype(datetime.datetime),
                          time_max=np.datetime64(range_max_date).astype(datetime.datetime),
-                         instrument=query_instrument)
+                         instrument=query_instrument, wavelength=wavelengths)
 
     # check if instrument has any histograms for this timerange
     if pd_hist.shape[0] == 0:

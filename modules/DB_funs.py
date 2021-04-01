@@ -500,7 +500,18 @@ def add_euv_map(db_session, psi_map, base_path=None, map_type=None):
              exit_status: 1 - filename or map already exists. Delete existing record before
              adding a new one. 0 - record successfully added,
              map_id: the appropriate map_id
+    TODO: EUV_map uniqueness should be enforced by a combination of combo_id,
+        meth_combo_id, and the associated set of var_vals from the var_vals_map
+        table. Programmatically, this is fairly straightforward to implement, but
+        a little kludgy (Done).  The difficulty of implementing this in SQL is that
+        the var_vals column must transform from a data column to a unique indexing
+        column.  Then check that the SET of var_vals is distinct from any other
+        set of var_vals. Not sure this can be done within SQL.
+          Related to this issue: generate unique filenames for maps with different
+        var_vals. Ex: same map with two different final resolutions.
     """
+    # set a floating point epsilon (relative)
+    rel_eps = 1E-6
 
     time_of_compute = psi_map.map_info.loc[0, 'time_of_compute'].to_pydatetime()
     fname = psi_map.map_info.loc[0, 'fname']
@@ -509,7 +520,7 @@ def add_euv_map(db_session, psi_map, base_path=None, map_type=None):
     combo_id = psi_map.map_info.loc[valid_combo_ind, 'combo_id'].__int__()
     meth_combo_id = psi_map.map_info.loc[0, 'meth_combo_id'].__int__()
 
-    if fname is not None:
+    if fname is not None and ~np.isnan(fname):
         # check if filename already exists in DB
         existing_fname = pd.read_sql(db_session.query(EUV_Maps.map_id).filter(EUV_Maps.fname == fname).statement,
                                      db_session.bind)
@@ -534,12 +545,20 @@ def add_euv_map(db_session, psi_map, base_path=None, map_type=None):
             no_match = False
             # check variable values
             for index, row in psi_map.method_info.iterrows():
+                if np.isnan(row.var_id) or row.var_id is None or \
+                        row.var_val is None or np.isnan(row.var_val):
+                    # some methods have no associated variable, others have no-value variables,
+                    # do not consider these
+                    continue
+
+                float_range = [row.var_val*(1 - rel_eps), row.var_val*(1 + rel_eps)]
                 var_query = db_session.query(Var_Vals_Map.map_id).filter(Var_Vals_Map.map_id.in_(map_matches.map_id),
                                                                          Var_Vals_Map.var_id == row.var_id,
-                                                                         Var_Vals_Map.var_val == row.var_val)
-                map_matches = pd.read_sql(var_query.statement, db_session.bind)
-                if len(map_matches) == 0:
-                    # this map does not exist in the DB
+                                                                         Var_Vals_Map.var_val.between(
+                                                                             float_range[0], float_range[1]))
+                query_result = pd.read_sql(var_query.statement, db_session.bind)
+                if len(query_result) == 0:
+                    # if any variable is different, this map does not exist in the DB
                     no_match = True
                     break
         else:
@@ -1135,8 +1154,13 @@ def add_map_dbase_record(db_session, psi_map, base_path=None, map_type=None):
     :param map_type:
     :return:
     """
+    # add generic Map - Data combo method
+    psi_map.append_method_info(pd.DataFrame(data={'meth_name': ["Map - Data combo", ],
+            'meth_description': ["Generic method for a map's combo_id", ],
+            'var_name': ["combo_id", ], 'var_description':
+            ["combo_id placeholder", ], 'var_val': [0, ]}))
     # generate method dataframes
-    psi_map.method_info = psi_map.method_info.drop_duplicates(subset="var_name").copy()
+    psi_map.method_info = psi_map.method_info.drop_duplicates()
     methods_df = psi_map.method_info.drop_duplicates(subset="meth_name")
     methods_df_cp = methods_df.copy()
     # extract/create method_id(s)
@@ -1159,11 +1183,13 @@ def add_map_dbase_record(db_session, psi_map, base_path=None, map_type=None):
             if temp_var_ids is not None:
                 psi_map.method_info.loc[var_index, 'var_id'] = temp_var_ids
             # add method id back to psi_map.method_info
-            new_index = np.arange(0, len(psi_map.method_info))
-            psi_map.method_info = psi_map.method_info.reindex(new_index)
-            for index2, row2 in psi_map.method_info.iterrows():
-                if row2.meth_name == row.meth_name:
-                    psi_map.method_info.loc[index2, 'meth_id'] = temp_meth_id
+            if temp_meth_id is not None:
+                psi_map.method_info.loc[var_index, 'meth_id'] = temp_meth_id
+            # new_index = np.arange(0, len(psi_map.method_info))
+            # psi_map.method_info = psi_map.method_info.reindex(new_index)
+            # for index2, row2 in psi_map.method_info.iterrows():
+            #     if row2.meth_name == row.meth_name:
+            #         psi_map.method_info.loc[index2, 'meth_id'] = temp_meth_id
         else:
             # do nothing. method id is already defined
             pass
@@ -1171,29 +1197,21 @@ def add_map_dbase_record(db_session, psi_map, base_path=None, map_type=None):
     # Get method combo_id. Create if it doesn't already exist
     meth_ids = methods_df_cp.meth_id.to_list()
     meth_ids = list(dict.fromkeys(meth_ids))
-    var_vals = methods_df_cp.var_val.to_list()
-    var_vals = list(dict.fromkeys(var_vals))
     db_session, meth_combo_id = get_method_combo_id(db_session, meth_ids, create=True)
     psi_map.map_info.loc[:, "meth_combo_id"] = meth_combo_id
 
     # Get image combo_id. Create if it doesn't already exist.
     data_ids = psi_map.data_info.data_id.to_list()
     data_ids = tuple(data_ids)
-    for ind, meth_id in enumerate(meth_ids):
-        if np.isnan(var_vals[ind]):
-            pass
-        else:
-            db_session, combo_id, combo_times = get_combo_id(db_session=db_session, meth_id=meth_id,
-                                                             data_ids=data_ids, create=True)
-            psi_map.map_info.loc[ind, "combo_id"] = combo_id
-            psi_map.map_info.loc[ind, "date_mean"] = combo_times['date_mean']
-            psi_map.map_info.loc[ind, "date_max"] = combo_times['date_max']
-            psi_map.map_info.loc[ind, "date_min"] = combo_times['date_min']
-            # add combo-image associations
-                # this is now done inside get_combo_id()
-            # for image in data_ids:
-            #     db_session, exit_flag = add_combo_image_assoc(db_session=db_session, combo_id=combo_id,
-            #                                                   data_id=image)
+    combo_meth_id = get_method_id(db_session, meth_name="Map - Data combo", create=False)
+    db_session, combo_id, combo_times = get_combo_id(
+        db_session=db_session, meth_id=combo_meth_id[1], data_ids=data_ids, create=True)
+    # record data_combo info in map object
+    psi_map.map_info.loc[:, "combo_id"] = combo_id
+    psi_map.map_info.loc[:, "date_mean"] = combo_times['date_mean']
+    psi_map.map_info.loc[:, "date_max"] = combo_times['date_max']
+    psi_map.map_info.loc[:, "date_min"] = combo_times['date_min']
+
     db_session, exit_status, psi_map = add_euv_map(db_session=db_session, psi_map=psi_map,
                                                    base_path=base_path,
                                                    map_type=map_type)

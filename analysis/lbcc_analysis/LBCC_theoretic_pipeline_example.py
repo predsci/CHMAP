@@ -44,6 +44,7 @@ n_hist_plots = 1  # number of histograms to plot
 
 # INSTRUMENTS
 inst_list = ["AIA", "EUVI-A", "EUVI-B"]
+wavelengths = [193, 195]
 
 # MAP AND BINNING PARAMETERS
 n_mu_bins = 18
@@ -74,12 +75,13 @@ image_out_path = os.path.join(App.APP_HOME, "test_data", "analysis/lbcc_function
 
 ####### STEP ONE: CREATE AND SAVE HISTOGRAMS #######
 lbcc_funcs.save_histograms(db_session, hdf_data_dir, inst_list, hist_query_time_min, hist_query_time_max, n_mu_bins=18,
-                           n_intensity_bins=n_intensity_bins, lat_band=lat_band, log10=log10, R0=R0)
+                           n_intensity_bins=n_intensity_bins, lat_band=lat_band, log10=log10, R0=R0,
+                           wavelengths=wavelengths)
 
 ###### STEP TWO: CALCULATE AND SAVE THEORETIC FIT PARAMETERS #######
 lbcc_funcs.calc_theoretic_fit(db_session, inst_list, calc_query_time_min, calc_query_time_max, weekday=weekday_calc,
                               number_of_days=days, n_mu_bins=n_mu_bins, n_intensity_bins=n_intensity_bins,
-                              lat_band=lat_band, create=create)
+                              lat_band=lat_band, create=create, wavelengths=wavelengths)
 
 end_time_tot = time.time()
 tot_time = end_time_tot - start_time_tot

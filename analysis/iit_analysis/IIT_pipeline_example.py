@@ -34,6 +34,7 @@ hist_query_time_max = datetime.datetime(2011, 10, 1, 0, 0, 0)
 # INSTRUMENTS
 inst_list = ["AIA", "EUVI-A", "EUVI-B"]
 ref_inst = "AIA"  # reference instrument to fit histograms to
+wavelengths = [193, 195]
 
 # declare map and binning parameters
 n_mu_bins = 18
@@ -58,12 +59,13 @@ db_session = init_db_conn(db_name=use_db, chd_base=db_class.Base, sqlite_path=sq
 
 ##### STEP ONE: CREATE 1D HISTOGRAMS AND SAVE TO DATABASE ######
 iit_funcs.create_histograms(db_session, inst_list, lbc_query_time_min, lbc_query_time_max, hdf_data_dir,
-                            n_intensity_bins=n_intensity_bins, lat_band=lat_band, log10=log10, R0=R0)
+                            n_intensity_bins=n_intensity_bins, lat_band=lat_band, log10=log10, R0=R0,
+                            wavelengths=wavelengths)
 
 ##### STEP TWO: CALCULATE INTER-INSTRUMENT TRANSFORMATION COEFFICIENTS AND SAVE TO DATABASE ######
 iit_funcs.calc_iit_coefficients(db_session, inst_list, ref_inst, calc_query_time_min, calc_query_time_max,
                                 weekday=weekday, number_of_days=number_of_days, n_intensity_bins=n_intensity_bins,
-                                lat_band=lat_band, create=create)
+                                lat_band=lat_band, create=create, wavelengths=wavelengths)
 
 ##### STEP THREE: APPLY TRANSFORMATION AND PLOT NEW IMAGES ######
 iit_funcs.apply_iit_correction(db_session, hdf_data_dir, iit_query_time_min, iit_query_time_max, inst_list, ref_inst,

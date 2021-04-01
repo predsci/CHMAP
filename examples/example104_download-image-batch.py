@@ -16,8 +16,8 @@ from modules.DB_funs import init_db_conn
 from modules.image_download import synchronic_euv_download
 
 # Specify a vector of synchronic times
-period_start = Time('2014-10-01T00:00:00.000', scale='utc')
-period_end = Time('2015-01-01T00:00:00.000', scale='utc')
+period_start = Time('2020-12-25T00:00:00.000', scale='utc')
+period_end = Time('2021-01-01T00:00:00.000', scale='utc')
 # define image search interval cadence and width
 interval_cadence = 2*u.hour
 del_interval = 30*u.minute

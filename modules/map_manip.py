@@ -4,10 +4,14 @@ Functions to manipulate and combine maps
 
 import numpy as np
 from scipy.interpolate import interp1d
+from skimage.measure import block_reduce
+import time
 
 import modules.datatypes as psi_d_types
 from settings.info import DTypes
 from modules.coord_manip import s2c
+import modules.lbcc_funs as lbcc_funs
+
 
 
 class MapMesh:
@@ -622,3 +626,541 @@ def combine_timewgt_maps(weight, sum_wgt, map_list, mu_cutoff=0.0):
             sum_wgt += weight
 
     return euv_combined, sum_wgt
+
+
+def downsamp_mean_unifgrid(map, new_y_size, new_x_size, chd_flag=True):
+
+    # calculate block size
+    x_block_size = np.ceil(map.x.len()/new_x_size)
+    y_block_size = np.ceil(map.y.len()/new_y_size)
+    block_size = (x_block_size, y_block_size)
+    # replace no-data-vals with NaNs
+
+    # use the mean to downsample
+    new_data = block_reduce(map.data, block_size=block_size, func=np.nanmean,
+                            cval=np.nan)
+    # convert NaNs back to no-data-vals
+
+    # calculate new x and y centers
+
+    # generate a copy of the map and update values
+
+    if chd_flag:
+        # also downsample the coronal hole detection grid
+        # replace no-data-vals with NaNs
+
+        # use the mean to downsample
+        new_data = block_reduce(map.data, block_size=block_size, func=np.nanmean,
+                                cval=np.nan)
+        # convert NaNs back to no-data-vals
+
+        # update map
+
+    else:
+        # assign downsampled map.chd to Null
+        pass
+
+    return new_map
+
+
+def downsamp_reg_grid_orig(map, new_y, new_x, image_method=0, chd_method=0, periodic_x=False):
+    # Input a PSI-map object and re-sample to the new x, y coords
+    # Assume grids are regular, but non-uniform
+
+    # check that new coord range does not exceed old coord range
+    x_in_range = (map.x.min() <= new_x.min()) & (map.x.max() >= new_x.max())
+    y_in_range = (map.y.min() <= new_y.min()) & (map.y.max() >= new_y.max())
+    if not x_in_range or not y_in_range:
+        raise ValueError("The new grid defined by 'new_x' and 'new_y' exceeds the"
+                         "range of the existing grid defined by map.x and map.y.")
+
+    # generate MapMesh object for both grids
+    new_mesh = MapMesh(new_x, np.arcsin(new_y))
+    old_mesh = MapMesh(map.x, np.arcsin(map.y))
+    # generate bin edges for each grid
+    new_y_interior_edges = (new_y[0:-1]+new_y[1:])/2
+    # new_y_edges = np.concatenate([[new_y[0] - (new_y[1]-new_y[0])/2], new_y_interior_edges,
+    #                              [new_y[-1] + (new_y[-1]-new_y[-2])/2]])
+    new_y_edges = np.concatenate([[new_y[0]], new_y_interior_edges, [new_y[-1]]])
+    new_x_interior_edges = (new_x[0:-1] + new_x[1:])/2
+    # new_x_edges = np.concatenate([[new_x[0] - (new_x[1]-new_x[0])/2], new_x_interior_edges,
+    #                              [new_x[-1] + (new_x[-1]-new_x[-2])/2]])
+    new_x_edges = np.concatenate([[new_x[0]], new_x_interior_edges, [new_x[-1]]])
+    old_y_interior_edges = (map.y[0:-1] + map.y[1:])/2
+    # old_y_edges = np.concatenate([[map.y[0] - (map.y[1]-map.y[0])/2], old_y_interior_edges,
+    #                               [map.y[-1] + (map.y[-1]-map.y[-2])/2]])
+    old_y_edges = np.concatenate([[map.y[0]], old_y_interior_edges, [map.y[-1]]])
+    old_x_interior_edges = (map.x[0:-1] + map.x[1:])/2
+    # old_x_edges = np.concatenate([[map.x[0] - (map.x[1]-map.x[0])/2], old_x_interior_edges,
+    #                               [map.x[-1] + (map.x[-1]-map.x[-2])/2]])
+    old_x_edges = np.concatenate([[map.x[0]], old_x_interior_edges, [map.x[-1]]])
+
+    # determine overlap weights for each row and column of new grid
+    #   include area-weighting in row associations
+    new_y_n = len(new_y)
+    old_y_n = len(map.y)
+    start_time = time.time()
+    row_weight_mat = np.ndarray((new_y_n, old_y_n), dtype=float)
+    row_weight_info = {'index': np.zeros(1), 'weights': np.zeros(1)}
+    row_weight_list = [row_weight_info, ] * new_y_n
+    for new_y_index in range(new_y_n):
+        # determine linear row-weighting of original pixels to new pixels
+        new_hist = np.ones(1)
+        temp_edges = new_y_edges[new_y_index:(new_y_index+2)]
+        old_hist = lbcc_funs.hist_integration(new_hist, temp_edges, old_y_edges)
+        bin_indices = np.where(old_hist > 0.)
+        bin_weights = old_hist[bin_indices]
+        # also weight by pixel area on surface of sphere
+        area_weights = old_mesh.da[0, bin_indices]
+        bin_weights = bin_weights*area_weights
+        # normalize
+        bin_weights = bin_weights/bin_weights.sum()
+        # store indices and weights for each row
+        row_weight_mat[new_y_index, bin_indices] = bin_weights
+        row_weight_list[new_y_index] = {'index': bin_indices, 'weights': bin_weights}
+
+    end_time = time.time()
+
+    # repeat for columns
+    new_x_n = len(new_x)
+    old_x_n = len(map.x)
+    start_time = time.time()
+    col_weight_info = {'index': np.zeros(1), 'weights': np.zeros(1)}
+    col_weight_list = [col_weight_info, ]*new_x_n
+    column_weight_mat = np.ndarray((old_x_n, new_x_n), dtype=float)
+    for new_x_index in range(new_x_n):
+        # determine linear row-weighting of original pixels to new pixels
+        # new_hist = np.zeros(new_x_n)
+        # new_hist[new_x_index] = 1
+        # old_hist = lbcc_funs.hist_integration(new_hist, new_x_edges, old_x_edges)
+        new_hist = np.ones(1)
+        temp_edges = new_x_edges[new_x_index:(new_x_index + 2)]
+        old_hist = lbcc_funs.hist_integration(new_hist, temp_edges, old_x_edges)
+        bin_indices = np.where(old_hist > 0.)
+        bin_weights = old_hist[bin_indices]
+        # normalize
+        bin_weights = bin_weights/bin_weights.sum()
+        # store indices and weights for each column
+        column_weight_mat[bin_indices, new_x_index] = bin_weights
+        # col_weight_list[new_x_index]['index'] = bin_indices
+        # col_weight_list[new_x_index]['weights'] = bin_weights
+        col_weight_list[new_x_index] = {'index': bin_indices, 'weights': bin_weights}
+    end_time = time.time()
+
+    # prepare (de-linked) data for weighted-averaging
+    full_data = map.data.copy()
+    full_data[full_data == map.no_data_val] = np.nan
+    # Method 1: apply the row and column reduction by matrix multiplication
+    #   - does not work with NaNs or no_data_vals
+    row_reduced_data = np.matmul(row_weight_mat, map.data)
+    reduced_data = np.matmul(row_reduced_data, column_weight_mat)
+
+    # Method 2: loop through new pixels to do np.nanmean on each
+    start_time = time.time()
+    new_data = np.zeros((new_y_n, new_x_n))
+    for new_y_index in range(new_y_n):
+        y_indices = row_weight_list[new_y_index]['index']
+        y_weights = row_weight_list[new_y_index]['weights']
+        for new_x_index in range(new_x_n):
+            x_indices = col_weight_list[new_x_index]['index']
+            x_weights = col_weight_list[new_x_index]['weights']
+            outer_weights = np.outer(y_weights, x_weights)
+            temp_data = full_data[y_indices[0]:(y_indices[-1]+1),
+                                  x_indices[0]:(x_indices[-1]+1)]
+            nan_index = np.isnan(temp_data)
+            if np.any(nan_index):
+                outer_weights[nan_index] = 0.
+                sum_weights = outer_weights.sum()
+                if sum_weights < 0.5:
+                    # consider this point to be 'outside' existing data boundary
+                    new_data[new_y_index, new_x_index] = np.nan
+                else:
+                    # re-normalize weights matrix
+                    outer_weights = outer_weights/outer_weights.sum()
+                    # complete weighted average by dot product and sum
+                    new_data[new_y_index, new_x_index] = \
+                        np.multiply(outer_weights, temp_data).sum()
+            else:
+                # complete weighted average by element-wise product and sum
+                new_data[new_y_index, new_x_index] = \
+                    np.multiply(outer_weights, temp_data).sum()
+
+    end_time = time.time()
+    print(end_time-start_time, " seconds elapsed.\n")
+    # quick plot testing (remove at clean-up)
+    import matplotlib.pyplot as plt
+    plt.figure(0)
+    plt.imshow(full_data, origin='lower')
+    plt.title("Original Map")
+    plt.figure(1)
+    plt.imshow(new_data, origin='lower')
+    plt.title("Reduced Map")
+
+    # reset NaNs to no_data_val
+    new_data[np.isnan(new_data)] = map.no_data_val
+
+    # generate new map object and fill
+    new_map = psi_d_types.PsiMap(data=reduced_data, x=new_x, y=new_y, mu=None,
+                                 origin_image=None, map_lon=None, chd=None,
+                                 no_data_val=map.no_data_val)
+
+
+def downsamp_reg_grid(map, new_y, new_x, image_method=0, chd_method=0, periodic_x=True,
+                      y_units='sinlat', uniform_poles=True, single_origin_image=None,
+                      uniform_no_data=True):
+    """
+    Input a PSI-map object (full_map) and re-sample to the new x, y coords.
+    Assumes grids are regular, but non-uniform.
+
+    :param map: PsiMap object
+                The full-map (covers full sphere) to be downsampled
+    :param new_y: Array like
+                  Vector of pixel centers. Units can be specified with y_units.
+                  Default is sin(lat).
+    :param new_x: Array like
+                  Vector of pixel centers. Currently only support longitude in
+                  radians (phi).
+    :param image_method: integer
+                         0 - Average across overlapped pixels to downsample
+                         1 - Use random sampling to downsample (not yet supported)
+    :param chd_method: integer
+                       0 - Average across overlapped pixels to downsample
+    :param periodic_x: True/False
+                       Should the left and right edge be treated as periodic
+    :param y_units: character string
+                    Latitude units: 'sinlat', 'lat_rad', 'lat_deg', 'theta'
+    :param uniform_poles: True/False
+                          Enforce uniformity at the north and south pole (across
+                          the top and bottom edge of the map)
+    :param single_origin_image: integer (default: None)
+                                If the map contains information from only one image,
+                                this value will be used to fill 'origin_image' in
+                                the output map. If None, 'origin_image' will be set
+                                to None.
+    :param uniform_no_data: True/False
+                            The algorithm is significantly sped-up if 'no_data' pixel
+                            locations are consistent across all map grids (data, chd,
+                            mu).  When 'no_data' pixels vary from grid to grid, set
+                            to False.
+    :return: PsiMap object
+             The new map object with grid defined by new_x and new_y.
+    """
+    #
+
+    # check that new coord range does not exceed old coord range
+    x_in_range = (map.x.min() <= new_x.min()) & (map.x.max() >= new_x.max())
+    y_in_range = (map.y.min() <= new_y.min()) & (map.y.max() >= new_y.max())
+    if not x_in_range or not y_in_range:
+        raise ValueError("The new grid defined by 'new_x' and 'new_y' exceeds the"
+                         "range of the existing grid defined by map.x and map.y.")
+
+    start_time = time.time()
+    # generate MapMesh object for both grids
+    # new_theta = -np.arcsin(new_y) + np.pi/2
+    # new_mesh = MapMesh(new_x, new_theta)
+    if y_units == "sinlat":
+        old_theta = -np.arcsin(map.y) + np.pi/2
+        sin_lat = map.y
+        new_sin_lat = new_y
+    elif y_units == "lat_rad":
+        old_theta = -map.y + np.pi/2
+        sin_lat = np.sin(map.y)
+        new_sin_lat = np.sin(new_y)
+    elif y_units == "lat_deg":
+        old_theta = -(np.pi/180)*map.y + np.pi/2
+        sin_lat = np.sin((np.pi/180)*map.y)
+        new_sin_lat = np.sin((np.pi/180)*new_y)
+    else:
+        old_theta = map.y
+        sin_lat = np.sin(-map.y + np.pi/2)
+        new_sin_lat = np.sin(-new_y + np.pi/2)
+    old_mesh = MapMesh(map.x, old_theta)
+    # the theta grid is reversed from what MapMesh expects so change sign on da
+    da = np.transpose(-old_mesh.da.copy())
+    # new_da = np.transpose(-new_mesh.da.copy())
+    # generate bin edges for each grid
+    new_y_interior_edges = (new_sin_lat[0:-1]+new_sin_lat[1:])/2
+    new_y_edges = np.concatenate([[new_sin_lat[0]], new_y_interior_edges, [new_sin_lat[-1]]])
+    new_x_interior_edges = (new_x[0:-1] + new_x[1:])/2
+    new_x_edges = np.concatenate([[new_x[0]], new_x_interior_edges, [new_x[-1]]])
+    old_y_interior_edges = (sin_lat[0:-1] + sin_lat[1:])/2
+    old_y_edges = np.concatenate([[sin_lat[0]], old_y_interior_edges, [sin_lat[-1]]])
+    old_x_interior_edges = (map.x[0:-1] + map.x[1:])/2
+    old_x_edges = np.concatenate([[map.x[0]], old_x_interior_edges, [map.x[-1]]])
+
+    # determine overlap weights for each row and column of new grid
+    #   include area-weighting in row associations
+    new_y_n = len(new_sin_lat)
+    old_y_n = len(sin_lat)
+    old_y_widths = np.diff(old_y_edges)
+    row_weight_mat = np.ndarray((new_y_n, old_y_n), dtype=float)
+    row_da_weight  = np.ndarray((new_y_n, old_y_n), dtype=float)
+    for new_y_index in range(new_y_n):
+        # determine linear row-weighting of original pixels to new pixels
+        # new_hist = np.ones(1)
+        temp_edges = new_y_edges[new_y_index:(new_y_index+2)]
+        # old_hist = lbcc_funs.hist_integration(new_hist, temp_edges, old_y_edges)
+        pixel_portions = pixel_portion_overlap1D(temp_edges, old_y_edges)
+        bin_indices = np.where(pixel_portions > 0.)
+        bin_weights = pixel_portions[bin_indices]
+        row_da_weight[new_y_index, bin_indices] = bin_weights
+        # also weight by pixel width(height). Assuming we are in sin(lat),
+        #    we do not need to explicitly include an area weight
+        # area_weights = da[bin_indices, 1]
+        area_weights = old_y_widths[bin_indices]
+        bin_weights = bin_weights*area_weights
+        # normalize
+        bin_weights = bin_weights/bin_weights.sum()
+        # store indices and weights for each row
+        row_weight_mat[new_y_index, bin_indices] = bin_weights
+
+    # repeat for columns
+    new_x_n = len(new_x)
+    old_x_n = len(map.x)
+    old_x_widths = np.diff(old_x_edges)
+    column_weight_mat = np.ndarray((old_x_n, new_x_n), dtype=float)
+    col_da_weight = np.ndarray((old_x_n, new_x_n), dtype=float)
+    for new_x_index in range(new_x_n):
+        # determine linear row-weighting of original pixels to new pixels
+        # new_hist = np.ones(1)
+        temp_edges = new_x_edges[new_x_index:(new_x_index + 2)]
+        # old_hist = lbcc_funs.hist_integration(new_hist, temp_edges, old_x_edges)
+        pixel_portions = pixel_portion_overlap1D(temp_edges, old_x_edges)
+        bin_indices = np.where(pixel_portions > 0.)
+        bin_weights = pixel_portions[bin_indices]
+        col_da_weight[bin_indices, new_x_index] = bin_weights
+        # multiply by pixel widths
+        bin_weights = bin_weights * old_x_widths[bin_indices]
+        # normalize
+        bin_weights = bin_weights/bin_weights.sum()
+        # store indices and weights for each column
+        column_weight_mat[bin_indices, new_x_index] = bin_weights
+
+    # prepare (de-linked) data for weighted-averaging
+    full_data = map.data.copy()
+    no_data_index = full_data == map.no_data_val
+    full_data[no_data_index] = 0.
+    # apply the row and column reduction by matrix multiplication
+    row_reduced_data = np.matmul(row_weight_mat, full_data)
+    reduced_data = np.matmul(row_reduced_data, column_weight_mat)
+    # also calculate da in the new grid
+    reduced_grid_da = np.matmul(np.matmul(row_da_weight, da), col_da_weight)
+    no_data_da = da.copy()
+    no_data_da[no_data_index] = 0.
+    reduced_no_data_da = np.matmul(np.matmul(row_da_weight, no_data_da),
+                                   col_da_weight)
+    # use the area ratio to improve intensity estimate at data boundaries (and
+    # better estimate the boundary)
+    da_ratio = reduced_no_data_da/reduced_grid_da
+    new_no_data_index = da_ratio < 0.5
+    reduced_data[new_no_data_index] = map.no_data_val
+    reduced_data[~new_no_data_index] = reduced_data[~new_no_data_index]/ \
+        da_ratio[~new_no_data_index]
+
+    if single_origin_image is not None:
+        origin_image = np.zeros(reduced_data.shape)
+        origin_image[~new_no_data_index] = single_origin_image
+    else:
+        origin_image = None
+
+    # now apply reduction to chd map
+    if map.chd is not None:
+        chd_data = map.data.copy()
+        if not uniform_no_data:
+            # recalculate the no_data locations and area ratio
+            no_data_index = chd_data == map.no_data_val
+            reduced_grid_da = np.matmul(np.matmul(row_da_weight, da), col_da_weight)
+            no_data_da = da.copy()
+            no_data_da[no_data_index] = 0.
+            reduced_no_data_da = np.matmul(np.matmul(row_da_weight, no_data_da),
+                                           col_da_weight)
+            # use the area ratio to improve intensity estimate at data boundaries (and
+            # better estimate the boundary)
+            da_ratio = reduced_no_data_da/reduced_grid_da
+            new_no_data_index = da_ratio < 0.5
+
+        chd_data[no_data_index] = 0.
+        # apply the row and column reduction by matrix multiplication
+        row_reduced_chd = np.matmul(row_weight_mat, chd_data)
+        reduced_chd = np.matmul(row_reduced_chd, column_weight_mat)
+        # use the area ratio to improve chd estimate at data boundaries (and
+        # better estimate the boundary)
+        reduced_chd[new_no_data_index] = map.no_data_val
+        reduced_chd[~new_no_data_index] = reduced_chd[~new_no_data_index] / \
+            da_ratio[~new_no_data_index]
+    else:
+        reduced_chd = None
+
+    # now apply reduction to mu values
+    if map.mu is not None:
+        mu_data = map.data.copy()
+        if not uniform_no_data:
+            # recalculate the no_data locations and area ratio
+            no_data_index = chd_data == map.no_data_val
+            reduced_grid_da = np.matmul(np.matmul(row_da_weight, da), col_da_weight)
+            no_data_da = da.copy()
+            no_data_da[no_data_index] = 0.
+            reduced_no_data_da = np.matmul(np.matmul(row_da_weight, no_data_da),
+                                           col_da_weight)
+            # use the area ratio to improve intensity estimate at data boundaries (and
+            # better estimate the boundary)
+            da_ratio = reduced_no_data_da/reduced_grid_da
+            new_no_data_index = da_ratio < 0.5
+
+        mu_data[no_data_index] = 0.
+        # apply the row and column reduction by matrix multiplication
+        row_reduced_mu = np.matmul(row_weight_mat, mu_data)
+        reduced_mu = np.matmul(row_reduced_mu, column_weight_mat)
+        # use the area ratio to improve mu estimate at data boundaries (and
+        # better estimate the boundary)
+        reduced_mu[new_no_data_index] = map.no_data_val
+        reduced_mu[~new_no_data_index] = reduced_mu[~new_no_data_index]/ \
+            da_ratio[~new_no_data_index]
+    else:
+        reduced_mu = None
+
+    # now apply reduction to map_lon values (?)
+    if map.map_lon is not None:
+        map_lon = None
+    else:
+        map_lon = None
+
+    if uniform_poles:
+        no_data_vec = reduced_data[0, ] == map.no_data_val
+        if np.any(~no_data_vec):
+            reduced_data[0, ] = np.mean(reduced_data[0, ~no_data_vec])
+        no_data_vec = reduced_data[-1, ] == map.no_data_val
+        if np.any(~no_data_vec):
+            reduced_data[-1, ] = np.mean(reduced_data[-1, ~no_data_vec])
+        if chd_data is not None:
+            no_data_vec = chd_data[0, ] == map.no_data_val
+            if np.any(~no_data_vec):
+                chd_data[0, ] = np.mean(chd_data[0, ~no_data_vec])
+            no_data_vec = chd_data[-1, ] == map.no_data_val
+            if np.any(~no_data_vec):
+                chd_data[-1, ] = np.mean(chd_data[-1, ~no_data_vec])
+        if reduced_mu is not None:
+            no_data_vec = reduced_mu[0, ] == map.no_data_val
+            if np.any(~no_data_vec):
+                reduced_mu[0, ] = np.mean(reduced_mu[0, ~no_data_vec])
+            no_data_vec = reduced_mu[-1, ] == map.no_data_val
+            if np.any(~no_data_vec):
+                reduced_mu[-1, ] = np.mean(reduced_mu[-1, ~no_data_vec])
+
+    if periodic_x:
+        new_x_widths = np.diff(new_x_edges)
+        # average half-pixels from left and right edge
+        reduced_data[:, 0], reduced_data[:, -1] = periodic_x_avg(
+            reduced_data[:, 0], reduced_data[:, -1], new_x_widths, map.no_data_val)
+
+        if reduced_mu is not None:
+            reduced_mu[:, 0], reduced_mu[:, -1] = periodic_x_avg(
+                reduced_mu[:, 0], reduced_mu[:, -1], new_x_widths, map.no_data_val)
+
+        if chd_data is not None:
+            chd_data[:, 0], chd_data[:, -1] = periodic_x_avg(
+                chd_data[:, 0], chd_data[:, -1], new_x_widths, map.no_data_val)
+
+    end_time = time.time()
+    # print(end_time - start_time, " seconds elapsed.\n")
+
+    # quick plot testing (remove at clean-up)
+    # import matplotlib.pyplot as plt
+    # plt.figure(0)
+    # plt.imshow(map.data, origin='lower')
+    # plt.title("Original Map")
+    # plt.figure(1)
+    # plt.imshow(reduced_data, origin='lower')
+    # plt.title("Reduced Map")
+
+    # alter method 'GridSize_sinLat' to new resolution
+    method_info = map.method_info.copy()
+    y_index = method_info.meth_name.eq('GridSize_sinLat') & \
+        method_info.var_name.eq('n_SinLat')
+    method_info.loc[y_index, 'var_val'] = new_y_n
+    x_index = method_info.meth_name.eq('GridSize_sinLat') & \
+        method_info.var_name.eq('n_phi')
+    method_info.loc[x_index, 'var_val'] = new_x_n
+
+    # generate new map object and fill
+    new_map = psi_d_types.PsiMap(data=reduced_data, x=new_x, y=new_y, mu=reduced_mu,
+                                 origin_image=origin_image, map_lon=map_lon, chd=reduced_chd,
+                                 no_data_val=map.no_data_val)
+    new_map.append_method_info(method_info)
+    new_map.append_map_info(map.map_info)
+    new_map.append_data_info(map.data_info)
+
+    return new_map
+
+
+def pixel_portion_overlap1D(edges, new_edges):
+    # function to calc new pixel overlap with a single pixel
+    """
+
+    :param edges: list-like with two entries (sorted increasing)
+           Original pixel edges
+    :param new_edges: list-like (sorted increasing)
+           New pixel edges
+    :return: np.ndarray vector with length=len(new_edges)-1
+             The portion of each new pixel that overlaps the original pixel.
+    """
+    # initiate results vector
+    n_bins = len(new_edges) - 1
+    out_vec = np.zeros(n_bins)
+
+    left_edges = new_edges[0:-1]
+    right_edges = new_edges[1:]
+    left_in = left_edges < edges[1]
+    left_out = left_edges < edges[0]
+    right_in = right_edges > edges[0]
+    right_out = right_edges > edges[1]
+
+    # for extremely large arrays (approx n_bins>2E5), this is probably faster
+    # temp_index = np.searchsorted(left_edges, edges[1], side='right')
+    # left_in = np.zeros(n_bins, dtype=bool)
+    # left_in[:temp_index] = True
+
+    consume_bin = left_out & right_out
+    # check for single new pixel that surrounds old pixel
+    if any(consume_bin):
+        # calculate portion of surrounding bin that overlaps old pixel
+        out_vec[consume_bin] = (edges[1] - edges[0])/(right_edges[consume_bin] -
+                                                      left_edges[consume_bin])
+        return out_vec
+
+    # check left overlap for partial overlap
+    left_overlap = left_out & right_in
+    out_vec[left_overlap] = (right_edges[left_overlap] - edges[0]) / \
+                            (right_edges[left_overlap] - left_edges[left_overlap])
+
+    # check for partial right overlap
+    right_overlap = right_out & left_in
+    out_vec[right_overlap] = (edges[1] - left_edges[right_overlap]) / \
+                             (right_edges[right_overlap] - left_edges[right_overlap])
+
+    # remaining overlap pixels fall inside original pixel
+    full_overlap = ~left_out & ~right_out
+    out_vec[full_overlap] = 1.
+
+    return out_vec
+
+
+def periodic_x_avg(l_vec, r_vec, x_edges, no_data_val):
+
+    # average half-pixels from left and right edge
+    left_no_data = l_vec == no_data_val
+    right_no_data = r_vec == no_data_val
+
+    both_index = ~left_no_data & ~right_no_data
+    average_vec = (x_edges[0]*l_vec[both_index] +
+                   x_edges[-1]*r_vec[both_index])/ \
+                  (x_edges[0] + x_edges[-1])
+    l_vec[both_index] = average_vec
+    r_vec[both_index] = average_vec
+
+    right_index = left_no_data & ~right_no_data
+    l_vec[right_index] = r_vec[right_index]
+    left_index = ~left_no_data & right_no_data
+    r_vec[left_index] = l_vec[left_index]
+
+    return l_vec, r_vec

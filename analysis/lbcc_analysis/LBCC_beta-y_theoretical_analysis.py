@@ -16,6 +16,7 @@ import modules.DB_classes as db_class
 
 # INSTRUMENT LIST
 inst_list = ["AIA", "EUVI-A", "EUVI-B"]
+wavelengths = [193, 195]
 
 # HISTOGRAM PARAMETERS TO UPDATE
 n_mu_bins = 18  # number of mu bins
@@ -81,15 +82,14 @@ for date_index, center_date in enumerate(moving_avg_centers):
         # query the histograms for time range based off moving average centers
         query_instrument = [instrument, ]
         pd_hist = query_hist(db_session=db_session, meth_id=method_id[1], n_mu_bins=n_mu_bins,
-                                      n_intensity_bins=n_intensity_bins,
-                                      lat_band=lat_band,
-                                      time_min=np.datetime64(min_date).astype(datetime.datetime),
-                                      time_max=np.datetime64(max_date).astype(datetime.datetime),
-                                      instrument=query_instrument)
+                             n_intensity_bins=n_intensity_bins, lat_band=lat_band,
+                             time_min=np.datetime64(min_date).astype(datetime.datetime),
+                             time_max=np.datetime64(max_date).astype(datetime.datetime),
+                             instrument=query_instrument, wavelength=wavelengths)
 
         # convert the binary types back to arrays
         mu_bin_array, intensity_bin_array, full_hist = psi_d_types.binary_to_hist(pd_hist, n_mu_bins,
-                                                                                            n_intensity_bins)
+                                                                                  n_intensity_bins)
 
         # create list of observed dates in time frame
         date_obs_npDT64 = pd_hist['date_obs']

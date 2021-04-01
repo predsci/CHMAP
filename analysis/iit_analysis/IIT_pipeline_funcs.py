@@ -17,7 +17,8 @@ import analysis.lbcc_analysis.LBCC_theoretic_funcs as lbcc_funcs
 
 ##### STEP ONE: CREATE 1D HISTOGRAMS AND SAVE TO DATABASE ######
 def create_histograms(db_session, inst_list, lbc_query_time_min, lbc_query_time_max, hdf_data_dir,
-                      n_intensity_bins=200, lat_band=[-np.pi / 2.4, np.pi / 2.4], log10=True, R0=1.01):
+                      n_intensity_bins=200, lat_band=[-np.pi / 2.4, np.pi / 2.4], log10=True, R0=1.01,
+                      wavelengths=None):
     """
     create and save (to database) IIT-Histograms from LBC Data
     @param db_session: connected db session for querying EUV images and saving histograms
@@ -43,18 +44,16 @@ def create_histograms(db_session, inst_list, lbc_query_time_min, lbc_query_time_
         # query EUV images
         query_instrument = [instrument, ]
         image_pd = db_funcs.query_euv_images(db_session=db_session, time_min=lbc_query_time_min,
-                                             time_max=lbc_query_time_max, instrument=query_instrument)
+                                             time_max=lbc_query_time_max, instrument=query_instrument,
+                                             wavelength=wavelengths)
         # query correct image combos
         combo_query = db_funcs.query_inst_combo(db_session, lbc_query_time_min, lbc_query_time_max,
                                                 meth_name="LBCC", instrument=instrument)
         # apply LBC
         for index, row in image_pd.iterrows():
-            original_los, lbcc_image, mu_indices, use_indices, theoretic_query = lbcc_funcs.apply_lbc(db_session,
-                                                                                                      hdf_data_dir,
-                                                                                                      combo_query,
-                                                                                                      image_row=row,
-                                                                                                      n_intensity_bins=n_intensity_bins,
-                                                                                                      R0=R0)
+            original_los, lbcc_image, mu_indices, use_indices, theoretic_query = lbcc_funcs.apply_lbc(
+                db_session, hdf_data_dir, combo_query, image_row=row,
+                n_intensity_bins=n_intensity_bins, R0=R0)
             # calculate IIT histogram from LBC
             hist = psi_d_types.LBCCImage.iit_hist(lbcc_image, lat_band, log10)
 
@@ -76,7 +75,8 @@ def create_histograms(db_session, inst_list, lbc_query_time_min, lbc_query_time_
 
 ##### STEP TWO: CALCULATE INTER-INSTRUMENT TRANSFORMATION COEFFICIENTS AND SAVE TO DATABASE ######
 def calc_iit_coefficients(db_session, inst_list, ref_inst, calc_query_time_min, calc_query_time_max, weekday=0,
-                          number_of_days=180, n_intensity_bins=200, lat_band=[-np.pi / 2.4, np.pi / 2.4], create=False):
+                          number_of_days=180, n_intensity_bins=200, lat_band=[-np.pi / 2.4, np.pi / 2.4], create=False,
+                          wavelengths=None):
     # start time
     start_time = time.time()
 
@@ -91,18 +91,17 @@ def calc_iit_coefficients(db_session, inst_list, ref_inst, calc_query_time_min, 
     # query euv images to get carrington rotation range
     ref_instrument = [ref_inst, ]
     euv_images = db_funcs.query_euv_images(db_session, time_min=calc_query_time_min, time_max=calc_query_time_max,
-                                           instrument=ref_instrument)
+                                           instrument=ref_instrument, wavelength=wavelengths)
     # get min and max carrington rotation
     rot_max = euv_images.cr_rot.max()
     rot_min = euv_images.cr_rot.min()
 
     # query histograms
     ref_hist_pd = db_funcs.query_hist(db_session=db_session, meth_id=method_id[1],
-                                      n_intensity_bins=n_intensity_bins,
-                                      lat_band=lat_band,
+                                      n_intensity_bins=n_intensity_bins, lat_band=lat_band,
                                       time_min=calc_query_time_min - datetime.timedelta(days=number_of_days),
                                       time_max=calc_query_time_max + datetime.timedelta(days=number_of_days),
-                                      instrument=ref_instrument)
+                                      instrument=ref_instrument, wavelength=wavelengths)
 
     # convert binary to histogram data
     mu_bin_edges, intensity_bin_edges, ref_full_hist = psi_d_types.binary_to_hist(hist_binary=ref_hist_pd,
@@ -133,18 +132,17 @@ def calc_iit_coefficients(db_session, inst_list, ref_inst, calc_query_time_min, 
             # query euv_images for correct carrington rotation
             query_instrument = [instrument, ]
             rot_images = db_funcs.query_euv_images_rot(db_session, rot_min=rot_min, rot_max=rot_max,
-                                                       instrument=query_instrument)
+                                                       instrument=query_instrument, wavelength=wavelengths)
             # get time minimum and maximum for instrument
             inst_time_min = rot_images.date_obs.min()
             inst_time_max = rot_images.date_obs.max()
             moving_avg_centers, moving_width = lbcc.moving_averages(inst_time_min, inst_time_max, weekday,
                                                                     number_of_days)
             inst_hist_pd = db_funcs.query_hist(db_session=db_session, meth_id=method_id[1],
-                                               n_intensity_bins=n_intensity_bins,
-                                               lat_band=lat_band,
+                                               n_intensity_bins=n_intensity_bins, lat_band=lat_band,
                                                time_min=inst_time_min - datetime.timedelta(days=number_of_days),
                                                time_max=inst_time_max + datetime.timedelta(days=number_of_days),
-                                               instrument=query_instrument)
+                                               instrument=query_instrument, wavelength=wavelengths)
             # convert binary to histogram data
             mu_bin_edges, intensity_bin_edges, inst_full_hist = psi_d_types.binary_to_hist(
                 hist_binary=inst_hist_pd, n_mu_bins=None, n_intensity_bins=n_intensity_bins)
@@ -290,6 +288,44 @@ def apply_iit(db_session, inst_combo_query, lbcc_image, use_indices, los_image, 
     alpha_x_parameters = db_funcs.query_var_val(db_session, meth_name, date_obs=lbcc_image.date_obs,
                                                 inst_combo_query=inst_combo_query)
     alpha, x = alpha_x_parameters
+
+    ##### APPLY IIT TRANSFORMATION ######
+    lbcc_data = lbcc_image.lbcc_data
+    corrected_iit_data = np.copy(lbcc_data)
+    corrected_iit_data[use_indices] = 10 ** (alpha * np.log10(lbcc_data[use_indices]) + x)
+    # create IIT datatype
+    iit_image = psi_d_types.create_iit_image(los_image, lbcc_image, corrected_iit_data, method_id_info[0])
+    psi_d_types.LosImage.get_coordinates(iit_image, R0=R0)
+
+    return lbcc_image, iit_image, use_indices, alpha, x
+
+
+def apply_iit_2(db_session, lbcc_image, use_indices, los_image, R0=1.01):
+    """
+    Different from apply_iit() because it does not require pre-queried iit_combos.
+    This function finds the previous and next IIT coefs based on lbcc_image.date_obs
+    Parameters
+    ----------
+    db_session
+    lbcc_image
+    use_indices
+    los_image
+    R0
+
+    Returns
+    -------
+
+    """
+    ###### GET VARIABLE VALUES #####
+    meth_name = "IIT"
+    method_id_info = db_funcs.get_method_id(db_session, meth_name, meth_desc=None, var_names=None,
+                                            var_descs=None, create=False)
+
+    theoretic_query = db_funcs.get_correction_pars(db_session, meth_name, date_obs=lbcc_image.date_obs,
+                                                   instrument=lbcc_image.instrument)
+    # separate alpha and x
+    alpha = theoretic_query[0]
+    x = theoretic_query[1]
 
     ##### APPLY IIT TRANSFORMATION ######
     lbcc_data = lbcc_image.lbcc_data

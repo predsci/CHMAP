@@ -10,8 +10,7 @@ outline to create combination EUV maps
 4. Convert to Map
 5. Combine Maps and Save to DB
 """
-import sys
-sys.path.append("/Users/tamarervin/CH_Project/CHD")
+
 import os
 import numpy as np
 import datetime
@@ -34,18 +33,13 @@ raw_data_dir = App.RAW_DATA_HOME
 hdf_data_dir = App.PROCESSED_DATA_HOME
 database_dir = App.DATABASE_HOME
 sqlite_filename = App.DATABASE_FNAME
-# initialize database connection
-# using mySQL
-# use_db = "mysql-Q"
-# user = "tervin"
-# password = ""
-# sqlite_path = os.path.join(database_dir, sqlite_filename)
-# db_session = db_funcs.init_db_conn(db_name=use_db, chd_base=db_class.Base, user=user, password=password)
-
-# initialize database connection
-use_db = "sqlite"
-sqlite_path = os.path.join(database_dir, sqlite_filename)
-db_session = db_funcs.init_db_conn(db_name=use_db, chd_base=db_class.Base, sqlite_path=sqlite_path)
+# designate which database to connect to
+use_db = "mysql-Q_test" # 'sqlite'  Use local sqlite file-based db
+                        # 'mysql-Q' Use the remote MySQL database on Q
+                        # 'mysql-Q_test' Use the development database on Q
+user = "turtle"         # only needed for remote databases.
+password = ""           # See example109 for setting-up an encrypted password.  In this case leave password="", and
+# init_db_conn() will automatically find and use your saved password. Otherwise, enter your MySQL password here.
 
 # INSTRUMENTS
 inst_list = ["AIA", "EUVI-A", "EUVI-B"]
@@ -79,6 +73,16 @@ map_y = np.linspace(y_range[0], y_range[1], map_nycoord, dtype='<f4')
 map_x = np.linspace(x_range[0], x_range[1], map_nxcoord, dtype='<f4')
 
 ### --------- NOTHING TO UPDATE BELOW -------- ###
+# Establish connection to database
+if use_db == 'sqlite':
+    # setup database connection to local sqlite file
+    sqlite_path = os.path.join(database_dir, sqlite_filename)
+
+    db_session = db_funcs.init_db_conn(db_name=use_db, chd_base=db_class.Base, sqlite_path=sqlite_path)
+elif use_db in ('mysql-Q', 'mysql-Q_test'):
+    # setup database connection to MySQL database on Q
+    db_session = db_funcs.init_db_conn(db_name=use_db, chd_base=db_class.Base, user=user, password=password)
+
 #### STEP ONE: SELECT IMAGES ####
 # 1.) query some images
 query_pd = db_funcs.query_euv_images(db_session=db_session, time_min=query_time_min, time_max=query_time_max)
@@ -116,7 +120,7 @@ for date_ind, center in enumerate(moving_avg_centers):
                                                                                                    methods_list, map_x,
                                                                                                    map_y, R0)
         #### STEP FIVE: CREATE COMBINED MAPS AND SAVE TO DB ####
-        euv_combined, chd_combined = chd_funcs.create_combined_maps(db_session, map_data_dir, map_list, chd_map_list,
+        euv_combined, chd_combined = chd_funcs.creaionte_combined_maps(db_session, map_data_dir, map_list, chd_map_list,
                                                                     methods_list, data_info, map_info,
                                                                     mu_merge_cutoff=mu_merge_cutoff, mu_cutoff=mu_cutoff)
 
