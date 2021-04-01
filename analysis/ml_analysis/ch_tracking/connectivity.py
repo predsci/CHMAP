@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 from analysis.ml_analysis.ch_tracking.contour import Contour
 from modules.map_manip import MapMesh
 import matplotlib.colors as cmpl
-from analysis.ml_analysis.ch_tracking.ch_db import CoronalHoleDB
+from analysis.ml_analysis.ch_tracking.src import CoronalHoleDB
 from analysis.ml_analysis.ch_tracking.graph import CoronalHoleGraph
 import numpy as np
 

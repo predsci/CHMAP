@@ -3,6 +3,8 @@ This module is an implementation of KNN (K- Nearest Neighbors) Algorithm (see mk
 about knn). This is used to match coronal holes between frames based on their centroid location.
 
 Author: Opal Issan, last updated March 25th, 2021.
+
+# TODO: Weighted KNN by Frame proximity as well. !!
 """
 
 import numpy as np
@@ -35,8 +37,15 @@ class KNN:
         # threshold for significant chance to be in the class.
         self.thresh = thresh
 
+        # K parameter in KNN Algorithm.
+        self.K = K
+
+        # if training data is less than K, then adjust K to the number of training centroids.
+        if len(Y_train) < self.K:
+            self.K = int(len(Y_train))
+
         # classifier
-        self.clf = KNeighborsClassifier(n_neighbors=K, metric=self.cartesian_distance, weights="distance")
+        self.clf = KNeighborsClassifier(n_neighbors=self.K, metric=self.cartesian_distance, weights="distance")
 
         # fit training dataset.
         self.clf.fit(self.X_train, self.Y_train)

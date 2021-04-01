@@ -4,7 +4,7 @@ import cv2
 import numpy as np
 import pickle
 import matplotlib.pyplot as plt
-from analysis.ml_analysis.ch_tracking.ch_db import CoronalHoleDB
+from analysis.ml_analysis.ch_tracking.src import CoronalHoleDB
 from analysis.ml_analysis.ch_tracking.projection import map_new_polar_projection, map_back_to_long_lat
 
 # def apply_latitude_weighted_erosion()
