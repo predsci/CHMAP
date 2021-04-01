@@ -31,7 +31,7 @@ Denoting an image by $f(x)$ and the structuring function by $B$, the grayscale d
 
 
 ### *Input* 
-Input image in lat-lon projection - greyscaled or binary image (greyscale if we use [Tamar's CNN](ml/chd.md) results).
+Input image in lat-lon projection - greyscaled or binary image (greyscale if we use [Tamar's CNN](chd.md) results).
 Therefore, dilation and erosion are done using greyscale formula (inf/sup). 
 
 
