@@ -18,7 +18,7 @@
     
     
       
-        <title>Dilation and Erosion - Coronal Hole Detection Project</title>
+        <title>Overview - Coronal Hole Detection Project</title>
       
     
     
@@ -66,7 +66,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#dilation-and-erosion-proposed-new-tracking-algorithm" class="md-skip">
+        <a href="#coronal-hole-tracking-cht-algorithm" class="md-skip">
           Skip to content
         </a>
       
@@ -97,7 +97,7 @@
         <div class="md-header-nav__topic">
           <span class="md-ellipsis">
             
-              Dilation and Erosion
+              Overview
             
           </span>
         </div>
@@ -588,55 +588,16 @@
       <input class="md-nav__toggle md-toggle" data-md-toggle="nav-8" type="checkbox" id="nav-8" checked>
     
     <label class="md-nav__link" for="nav-8">
-      Coronal Hole Tracking and Predictions
-      <span class="md-nav__icon md-icon"></span>
-    </label>
-    <nav class="md-nav" aria-label="Coronal Hole Tracking and Predictions" data-md-level="1">
-      <label class="md-nav__title" for="nav-8">
-        <span class="md-nav__icon md-icon"></span>
-        Coronal Hole Tracking and Predictions
-      </label>
-      <ul class="md-nav__list" data-md-scrollfix>
-        
-        
-          
-          
-          
-
-
-  
-
-
-  
-  <li class="md-nav__item md-nav__item--active md-nav__item--nested">
-    
-    
-      <input class="md-nav__toggle md-toggle" data-md-toggle="nav-8-1" type="checkbox" id="nav-8-1" checked>
-    
-    <label class="md-nav__link" for="nav-8-1">
       Tracking Algorithm
       <span class="md-nav__icon md-icon"></span>
     </label>
-    <nav class="md-nav" aria-label="Tracking Algorithm" data-md-level="2">
-      <label class="md-nav__title" for="nav-8-1">
+    <nav class="md-nav" aria-label="Tracking Algorithm" data-md-level="1">
+      <label class="md-nav__title" for="nav-8">
         <span class="md-nav__icon md-icon"></span>
         Tracking Algorithm
       </label>
       <ul class="md-nav__list" data-md-scrollfix>
         
-        
-          
-          
-          
-
-
-
-  <li class="md-nav__item">
-    <a href="../tracking_v1/" class="md-nav__link">
-      Polar Projection
-    </a>
-  </li>
-
         
           
           
@@ -653,9 +614,45 @@
       
     
     
+      <label class="md-nav__link md-nav__link--active" for="__toc">
+        Overview
+        <span class="md-nav__icon md-icon"></span>
+      </label>
+    
     <a href="./" class="md-nav__link md-nav__link--active">
-      Dilation and Erosion
+      Overview
     </a>
+    
+      
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#overview" class="md-nav__link">
+    Overview
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#cht-pipeline" class="md-nav__link">
+    CHT pipeline
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
     
   </li>
 
@@ -667,8 +664,34 @@
 
 
   <li class="md-nav__item">
+    <a href="../polarprojection/" class="md-nav__link">
+      Polar Projection
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+
+  <li class="md-nav__item">
+    <a href="../latitude_weighted_dilation/" class="md-nav__link">
+      Latitude Weighted Dilation
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+
+  <li class="md-nav__item">
     <a href="../tracking_features/" class="md-nav__link">
-      Tracking Features
+      CH Features
     </a>
   </li>
 
@@ -683,14 +706,14 @@
   <li class="md-nav__item md-nav__item--nested">
     
     
-      <input class="md-nav__toggle md-toggle" data-md-toggle="nav-8-1-4" type="checkbox" id="nav-8-1-4" >
+      <input class="md-nav__toggle md-toggle" data-md-toggle="nav-8-5" type="checkbox" id="nav-8-5" >
     
-    <label class="md-nav__link" for="nav-8-1-4">
+    <label class="md-nav__link" for="nav-8-5">
       CH Frame Matching
       <span class="md-nav__icon md-icon"></span>
     </label>
-    <nav class="md-nav" aria-label="CH Frame Matching" data-md-level="3">
-      <label class="md-nav__title" for="nav-8-1-4">
+    <nav class="md-nav" aria-label="CH Frame Matching" data-md-level="2">
+      <label class="md-nav__title" for="nav-8-5">
         <span class="md-nav__icon md-icon"></span>
         CH Frame Matching
       </label>
@@ -741,14 +764,27 @@
   </li>
 
         
+          
+          
+          
+
+
+
+  <li class="md-nav__item">
+    <a href="../connectivity/" class="md-nav__link">
+      CH Connectivity
+    </a>
+  </li>
+
+        
       </ul>
     </nav>
   </li>
 
-        
-          
-          
-          
+    
+      
+      
+      
 
 
 
@@ -758,10 +794,10 @@
     </a>
   </li>
 
-        
-          
-          
-          
+    
+      
+      
+      
 
 
 
@@ -769,11 +805,6 @@
     <a href="../pred/" class="md-nav__link">
       CH-Net Future Frame Predictions
     </a>
-  </li>
-
-        
-      </ul>
-    </nav>
   </li>
 
     
@@ -795,6 +826,28 @@
     
   
   
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#overview" class="md-nav__link">
+    Overview
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#cht-pipeline" class="md-nav__link">
+    CHT pipeline
+  </a>
+  
+</li>
+      
+    </ul>
+  
 </nav>
                   </div>
                 </div>
@@ -805,81 +858,18 @@
             <article class="md-content__inner md-typeset">
               
                 
-                  <a href="https://github.com/predsci/CHD/blob/master/CHD-mkdocs/docs/ml/tracking_v2.md" title="Edit this page" class="md-content__button md-icon">
+                  <a href="https://github.com/predsci/CHD/blob/master/CHD-mkdocs/docs/ml/tracking_overview.md" title="Edit this page" class="md-content__button md-icon">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20.71 7.04c.39-.39.39-1.04 0-1.41l-2.34-2.34c-.37-.39-1.02-.39-1.41 0l-1.84 1.83 3.75 3.75M3 17.25V21h3.75L17.81 9.93l-3.75-3.75L3 17.25z"/></svg>
                   </a>
                 
                 
-                <h1 id="dilation-and-erosion-proposed-new-tracking-algorithm">Dilation and Erosion - Proposed New Tracking Algorithm</h1>
-<h1 id="introduction">Introduction</h1>
-<h2 id="mathematical-morphology-definitions">Mathematical Morphology Definitions</h2>
-<p>Let <span><span class="MathJax_Preview">A</span><script type="math/tex">A</script></span> be the original set and <span><span class="MathJax_Preview">B</span><script type="math/tex">B</script></span> be the structuring element (also referred to as the kernel).</p>
-<h2 id="binary-dilation-and-erosion">Binary Dilation and Erosion</h2>
-<ul>
-<li><strong>Erosion</strong>: <span><span class="MathJax_Preview">A \ominus B = \{z| B_{z} \subseteq A\}</span><script type="math/tex">A \ominus B = \{z| B_{z} \subseteq A\}</script></span>, s.t. <span><span class="MathJax_Preview">A \ominus B \subseteq A</span><script type="math/tex">A \ominus B \subseteq A</script></span>. </li>
-<li><strong>Dilation</strong>: <span><span class="MathJax_Preview">A \oplus B = \{z| B_{z} \cap A \subseteq A\}</span><script type="math/tex">A \oplus B = \{z| B_{z} \cap A \subseteq A\}</script></span>, s.t. <span><span class="MathJax_Preview">A \oplus B \supseteq A</span><script type="math/tex">A \oplus B \supseteq A</script></span>. </li>
-</ul>
-<p>For erosion, the structuring element center is marked True if there is a <strong>full</strong> overlap with structuring element, whereas 
-with dilation, shifted elements have <strong>any</strong> overlap with original set <span><span class="MathJax_Preview">A</span><script type="math/tex">A</script></span> (in our case <span><span class="MathJax_Preview">A</span><script type="math/tex">A</script></span> is the input image). </p>
-<ul>
-<li><strong>Opening</strong>: <span><span class="MathJax_Preview">(A \ominus B) \oplus B</span><script type="math/tex">(A \ominus B) \oplus B</script></span> </li>
-<li><strong>Closing</strong>: <span><span class="MathJax_Preview">(A \oplus B) \ominus B</span><script type="math/tex">(A \oplus B) \ominus B</script></span></li>
-</ul>
-<p>Opening, meaning, erode then dilate, and closing is of opposite order. Opening removes small objects from the foreground 
-of an image, placing them in the background, while closing removes small holes in the foreground, changing small islands
- of background into foreground. Both are tools in image processing to remove noise or in our case - "false positives". </p>
-<h2 id="greyscale-dilation-and-erosion">Greyscale Dilation and Erosion</h2>
-<p>Denoting an image by <span><span class="MathJax_Preview">f(x)</span><script type="math/tex">f(x)</script></span> and the structuring function by <span><span class="MathJax_Preview">B</span><script type="math/tex">B</script></span>, the grayscale dilation of <span><span class="MathJax_Preview">f</span><script type="math/tex">f</script></span> by <span><span class="MathJax_Preview">B</span><script type="math/tex">B</script></span> is given by</p>
-<ul>
-<li><strong>Erosion</strong>: <span><span class="MathJax_Preview">f \ominus B = \inf_{(k, l) \in B}{f_{i+k, j+l}}</span><script type="math/tex">f \ominus B = \inf_{(k, l) \in B}{f_{i+k, j+l}}</script></span></li>
-<li><strong>Dilation</strong>: <span><span class="MathJax_Preview">f \oplus B = \sup_{(k, l) \in B}{f_{i+k, j+l}}</span><script type="math/tex">f \oplus B = \sup_{(k, l) \in B}{f_{i+k, j+l}}</script></span></li>
-</ul>
-<p><a href="https://docs.scipy.org/doc/scipy/reference/generated/scipy.ndimage.grey_dilation.html?highlight=scipy%20ndimage%20morphology%20grey_dilation">Example code</a> using Scipy library in Python. </p>
-<h1 id="the-coronal-hole-tracking-algorithm-pseudocode">The Coronal Hole Tracking Algorithm Pseudocode</h1>
-<h3 id="step-1"><em>Step 1</em></h3>
-<p>Input image in lat-lon projection - greyscaled or binary image (greyscale if we use Tamar's CNN results).
-Therefore, dilation and erosion are done using greyscale formula (inf/sup). </p>
-<h3 id="step-2"><em>Step 2</em></h3>
-<p>Apply a latitude weighted dilation. The structuring element depends on the pixel's latitude since in high and low latitude 
-there is high distortion in lat-lon projection. The structuring element <span><span class="MathJax_Preview">B</span><script type="math/tex">B</script></span> width depends on <span><span class="MathJax_Preview">\theta</span><script type="math/tex">\theta</script></span>. 
-The proposed function is as follows: </p>
-<div>
-<div class="MathJax_Preview">
-w(\theta) = \begin{array}{cc}
-  \{ &amp; 
-    \begin{array}{cc}
-       n_{p} &amp; 0 \leq \theta \leq \alpha \\
-       \frac{\gamma}{\sin(\theta)} &amp; \alpha &lt; \theta &lt; \beta  \\
-       n_{p} &amp; \beta \leq \theta \leq \pi
-    \end{array}
-    \}
-\end{array}
-</div>
-<script type="math/tex; mode=display">
-w(\theta) = \begin{array}{cc}
-  \{ & 
-    \begin{array}{cc}
-       n_{p} & 0 \leq \theta \leq \alpha \\
-       \frac{\gamma}{\sin(\theta)} & \alpha < \theta < \beta  \\
-       n_{p} & \beta \leq \theta \leq \pi
-    \end{array}
-    \}
-\end{array}
-</script>
-</div>
-<p>where <span><span class="MathJax_Preview">\alpha = \arcsin(\frac{\gamma}{n_{p}})</span><script type="math/tex">\alpha = \arcsin(\frac{\gamma}{n_{p}})</script></span> and <span><span class="MathJax_Preview">\beta = \pi - \alpha</span><script type="math/tex">\beta = \pi - \alpha</script></span> (from symmetry). </p>
-<h3 id="step-3"><em>Step 3</em></h3>
-<ul>
-<li>Find contours using a binary threshold. </li>
-<li><a href="../tracking_features/">Compute coronal hole features</a></li>
-<li>Remove coronal holes that are too small. </li>
-<li>Force periodicity. </li>
-</ul>
-<h3 id="step-4"><em>Step 4</em></h3>
-<ul>
-<li>Classify coronal hole unique ID and color. <a href="../knn/">Match</a> to previous coronal holes by centroid location.
-Future research steps: find a way to classify merges of two coronal holes based on previous pixel location.</li>
-</ul>
+                <h1 id="coronal-hole-tracking-cht-algorithm">Coronal Hole Tracking (CHT) Algorithm</h1>
+<h2 id="overview">Overview</h2>
+<p>We propose an algorithm to track coronal holes evolution in EUV imagery, study connectivity, open magnetic flux regions, and 
+compute coronal hole features such as area, centroid, tilt, etc..</p>
+<p>CHT provides important information for investigating the evolution of well-observed and long-lived coronal holes (CH).</p>
+<h2 id="cht-pipeline">CHT pipeline</h2>
+<p>... insert some graphic here</p>
                 
               
               
@@ -898,7 +888,7 @@ Future research steps: find a way to classify merges of two coronal holes based 
     <div class="md-footer-nav">
       <nav class="md-footer-nav__inner md-grid" aria-label="Footer">
         
-          <a href="../tracking_v1/" class="md-footer-nav__link md-footer-nav__link--prev" rel="prev">
+          <a href="../../db/map/" class="md-footer-nav__link md-footer-nav__link--prev" rel="prev">
             <div class="md-footer-nav__button md-icon">
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"/></svg>
             </div>
@@ -907,19 +897,19 @@ Future research steps: find a way to classify merges of two coronal holes based 
                 <span class="md-footer-nav__direction">
                   Previous
                 </span>
-                Polar Projection
+                Database for CHD Mapping
               </div>
             </div>
           </a>
         
         
-          <a href="../tracking_features/" class="md-footer-nav__link md-footer-nav__link--next" rel="next">
+          <a href="../polarprojection/" class="md-footer-nav__link md-footer-nav__link--next" rel="next">
             <div class="md-footer-nav__title">
               <div class="md-ellipsis">
                 <span class="md-footer-nav__direction">
                   Next
                 </span>
-                Tracking Features
+                Polar Projection
               </div>
             </div>
             <div class="md-footer-nav__button md-icon">

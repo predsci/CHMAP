@@ -588,37 +588,11 @@
       <input class="md-nav__toggle md-toggle" data-md-toggle="nav-8" type="checkbox" id="nav-8" checked>
     
     <label class="md-nav__link" for="nav-8">
-      Coronal Hole Tracking and Predictions
-      <span class="md-nav__icon md-icon"></span>
-    </label>
-    <nav class="md-nav" aria-label="Coronal Hole Tracking and Predictions" data-md-level="1">
-      <label class="md-nav__title" for="nav-8">
-        <span class="md-nav__icon md-icon"></span>
-        Coronal Hole Tracking and Predictions
-      </label>
-      <ul class="md-nav__list" data-md-scrollfix>
-        
-        
-          
-          
-          
-
-
-  
-
-
-  
-  <li class="md-nav__item md-nav__item--active md-nav__item--nested">
-    
-    
-      <input class="md-nav__toggle md-toggle" data-md-toggle="nav-8-1" type="checkbox" id="nav-8-1" checked>
-    
-    <label class="md-nav__link" for="nav-8-1">
       Tracking Algorithm
       <span class="md-nav__icon md-icon"></span>
     </label>
-    <nav class="md-nav" aria-label="Tracking Algorithm" data-md-level="2">
-      <label class="md-nav__title" for="nav-8-1">
+    <nav class="md-nav" aria-label="Tracking Algorithm" data-md-level="1">
+      <label class="md-nav__title" for="nav-8">
         <span class="md-nav__icon md-icon"></span>
         Tracking Algorithm
       </label>
@@ -632,7 +606,20 @@
 
 
   <li class="md-nav__item">
-    <a href="../tracking_v1/" class="md-nav__link">
+    <a href="../tracking_overview/" class="md-nav__link">
+      Overview
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+
+  <li class="md-nav__item">
+    <a href="../polarprojection/" class="md-nav__link">
       Polar Projection
     </a>
   </li>
@@ -645,8 +632,8 @@
 
 
   <li class="md-nav__item">
-    <a href="../tracking_v2/" class="md-nav__link">
-      Dilation and Erosion
+    <a href="../latitude_weighted_dilation/" class="md-nav__link">
+      Latitude Weighted Dilation
     </a>
   </li>
 
@@ -659,7 +646,7 @@
 
   <li class="md-nav__item">
     <a href="../tracking_features/" class="md-nav__link">
-      Tracking Features
+      CH Features
     </a>
   </li>
 
@@ -676,14 +663,14 @@
   <li class="md-nav__item md-nav__item--active md-nav__item--nested">
     
     
-      <input class="md-nav__toggle md-toggle" data-md-toggle="nav-8-1-4" type="checkbox" id="nav-8-1-4" checked>
+      <input class="md-nav__toggle md-toggle" data-md-toggle="nav-8-5" type="checkbox" id="nav-8-5" checked>
     
-    <label class="md-nav__link" for="nav-8-1-4">
+    <label class="md-nav__link" for="nav-8-5">
       CH Frame Matching
       <span class="md-nav__icon md-icon"></span>
     </label>
-    <nav class="md-nav" aria-label="CH Frame Matching" data-md-level="3">
-      <label class="md-nav__title" for="nav-8-1-4">
+    <nav class="md-nav" aria-label="CH Frame Matching" data-md-level="2">
+      <label class="md-nav__title" for="nav-8-5">
         <span class="md-nav__icon md-icon"></span>
         CH Frame Matching
       </label>
@@ -718,9 +705,80 @@
       
     
     
+      <label class="md-nav__link md-nav__link--active" for="__toc">
+        KNN
+        <span class="md-nav__icon md-icon"></span>
+      </label>
+    
     <a href="./" class="md-nav__link md-nav__link--active">
       KNN
     </a>
+    
+      
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#k-nearest-neighbor-algorithm" class="md-nav__link">
+    K - Nearest Neighbor Algorithm
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#knn-settings" class="md-nav__link">
+    KNN settings
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#example-of-knn-classification" class="md-nav__link">
+    Example of KNN classification
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#1-weighted-k-nearest-neighbor-classifier" class="md-nav__link">
+    1. Weighted K-Nearest Neighbor Classifier
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-distance-metric" class="md-nav__link">
+    2. Distance Metric
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-probability-estimate" class="md-nav__link">
+    3. Probability Estimate
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-how-do-we-choose-the-optimal-k" class="md-nav__link">
+    4. How do we choose the optimal K?
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
     
   </li>
 
@@ -743,14 +801,27 @@
   </li>
 
         
+          
+          
+          
+
+
+
+  <li class="md-nav__item">
+    <a href="../connectivity/" class="md-nav__link">
+      CH Connectivity
+    </a>
+  </li>
+
+        
       </ul>
     </nav>
   </li>
 
-        
-          
-          
-          
+    
+      
+      
+      
 
 
 
@@ -760,10 +831,10 @@
     </a>
   </li>
 
-        
-          
-          
-          
+    
+      
+      
+      
 
 
 
@@ -771,11 +842,6 @@
     <a href="../pred/" class="md-nav__link">
       CH-Net Future Frame Predictions
     </a>
-  </li>
-
-        
-      </ul>
-    </nav>
   </li>
 
     
@@ -797,6 +863,63 @@
     
   
   
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#k-nearest-neighbor-algorithm" class="md-nav__link">
+    K - Nearest Neighbor Algorithm
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#knn-settings" class="md-nav__link">
+    KNN settings
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#example-of-knn-classification" class="md-nav__link">
+    Example of KNN classification
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#1-weighted-k-nearest-neighbor-classifier" class="md-nav__link">
+    1. Weighted K-Nearest Neighbor Classifier
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-distance-metric" class="md-nav__link">
+    2. Distance Metric
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-probability-estimate" class="md-nav__link">
+    3. Probability Estimate
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-how-do-we-choose-the-optimal-k" class="md-nav__link">
+    4. How do we choose the optimal K?
+  </a>
+  
+</li>
+      
+    </ul>
+  
 </nav>
                   </div>
                 </div>
@@ -813,11 +936,11 @@
                 
                 
                 <h1 id="how-to-match-coronal-holes-between-sequential-frames">How to match coronal holes between sequential frames?</h1>
-<h1 id="k-nearest-neighbor-algorithm">K - Nearest Neighbor Algorithm</h1>
+<h2 id="k-nearest-neighbor-algorithm">K - Nearest Neighbor Algorithm</h2>
 <p>KNN algorithm is a simple supervised machine learning algorithm that is used to solve classification problems. 
-KNN is easy to implement and understand. Classification is based on proximity. In our example, we will use the coronal 
-hole centroid location to classify its ID number based on previous frames identified coronal holes.  </p>
-<h1 id="knn-settings">KNN settings</h1>
+KNN is easy to implement and understand. Classification is based on proximity. Here, we will use the coronal 
+hole centroid location in spherical coordinates to classify its ID number based on previously identified coronal holes.  </p>
+<h2 id="knn-settings">KNN settings</h2>
 <p>Lets assume we have the following pairs <span><span class="MathJax_Preview">(X_{1}, Y_{1}), (X_{2}, Y_{2}), ..., (X_{n}, Y_{n})</span><script type="math/tex">(X_{1}, Y_{1}), (X_{2}, Y_{2}), ..., (X_{n}, Y_{n})</script></span>,
  each pair has a label <span><span class="MathJax_Preview">(L_{m})</span><script type="math/tex">(L_{m})</script></span>, where <span><span class="MathJax_Preview">m</span><script type="math/tex">m</script></span> indicates the class associated with the pair. 
 The pairs and labeled coronal holes are treated as the <em>training dataset</em>. 
@@ -826,7 +949,7 @@ the pairs in the <em>training dataset</em>. K indicates the number of adjacent p
 K is a <em>hyper-parameter</em>. Based on the nearest K points one can compute the probability associated with each class. 
 Then, based on a threshold (<span><span class="MathJax_Preview">\xi</span><script type="math/tex">\xi</script></span>), the coronal hole can be labeled as an existing coronal hole in the library or be introduced
 as a new coronal hole.</p>
-<h1 id="example-of-knn-classification">Example of KNN classification</h1>
+<h2 id="example-of-knn-classification">Example of KNN classification</h2>
 <p><img alt="" src="../images/KnnClassification.svg" /></p>
 <p>The test sample (green circle) should be classified either to red triangle or blue square. </p>
 <ul>
@@ -849,8 +972,7 @@ d = 2 r \arcsin(\sqrt{\sin^{2}((\theta_{1} - \theta_{2})/2) + \cos(\theta_{1})\c
 d = 2 r \arcsin(\sqrt{\sin^{2}((\theta_{1} - \theta_{2})/2) + \cos(\theta_{1})\cos(\theta_{2})\sin^{2}((\phi_{2} - \phi_{1})/2))} )
 </script>
 </div>
-<h1 id="example-of-knn-classification-of-coronal-holes">Example of KNN classification of <em>Coronal Holes</em></h1>
-<h2 id="1-weighted-nearest-neighbor-classifier">1. weighted nearest neighbor classifier</h2>
+<h2 id="1-weighted-k-nearest-neighbor-classifier">1. Weighted K-Nearest Neighbor Classifier</h2>
 <p>The coronal holes identified in the previous frame will have a larger <strong>weight</strong> than the coronal holes found in the previous 
 say 5th frame. The total training data will be composed of the previous 10 frames (this number can be changed as we test it on the images). 
 Hence, the weight of each coronal hole would be based on its frame number. </p>

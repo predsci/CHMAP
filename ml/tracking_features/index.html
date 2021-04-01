@@ -18,7 +18,7 @@
     
     
       
-        <title>Tracking Features - Coronal Hole Detection Project</title>
+        <title>CH Features - Coronal Hole Detection Project</title>
       
     
     
@@ -97,7 +97,7 @@
         <div class="md-header-nav__topic">
           <span class="md-ellipsis">
             
-              Tracking Features
+              CH Features
             
           </span>
         </div>
@@ -588,37 +588,11 @@
       <input class="md-nav__toggle md-toggle" data-md-toggle="nav-8" type="checkbox" id="nav-8" checked>
     
     <label class="md-nav__link" for="nav-8">
-      Coronal Hole Tracking and Predictions
-      <span class="md-nav__icon md-icon"></span>
-    </label>
-    <nav class="md-nav" aria-label="Coronal Hole Tracking and Predictions" data-md-level="1">
-      <label class="md-nav__title" for="nav-8">
-        <span class="md-nav__icon md-icon"></span>
-        Coronal Hole Tracking and Predictions
-      </label>
-      <ul class="md-nav__list" data-md-scrollfix>
-        
-        
-          
-          
-          
-
-
-  
-
-
-  
-  <li class="md-nav__item md-nav__item--active md-nav__item--nested">
-    
-    
-      <input class="md-nav__toggle md-toggle" data-md-toggle="nav-8-1" type="checkbox" id="nav-8-1" checked>
-    
-    <label class="md-nav__link" for="nav-8-1">
       Tracking Algorithm
       <span class="md-nav__icon md-icon"></span>
     </label>
-    <nav class="md-nav" aria-label="Tracking Algorithm" data-md-level="2">
-      <label class="md-nav__title" for="nav-8-1">
+    <nav class="md-nav" aria-label="Tracking Algorithm" data-md-level="1">
+      <label class="md-nav__title" for="nav-8">
         <span class="md-nav__icon md-icon"></span>
         Tracking Algorithm
       </label>
@@ -632,7 +606,20 @@
 
 
   <li class="md-nav__item">
-    <a href="../tracking_v1/" class="md-nav__link">
+    <a href="../tracking_overview/" class="md-nav__link">
+      Overview
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+
+  <li class="md-nav__item">
+    <a href="../polarprojection/" class="md-nav__link">
       Polar Projection
     </a>
   </li>
@@ -645,8 +632,8 @@
 
 
   <li class="md-nav__item">
-    <a href="../tracking_v2/" class="md-nav__link">
-      Dilation and Erosion
+    <a href="../latitude_weighted_dilation/" class="md-nav__link">
+      Latitude Weighted Dilation
     </a>
   </li>
 
@@ -665,12 +652,12 @@
     
     
       <label class="md-nav__link md-nav__link--active" for="__toc">
-        Tracking Features
+        CH Features
         <span class="md-nav__icon md-icon"></span>
       </label>
     
     <a href="./" class="md-nav__link md-nav__link--active">
-      Tracking Features
+      CH Features
     </a>
     
       
@@ -743,14 +730,14 @@
   <li class="md-nav__item md-nav__item--nested">
     
     
-      <input class="md-nav__toggle md-toggle" data-md-toggle="nav-8-1-4" type="checkbox" id="nav-8-1-4" >
+      <input class="md-nav__toggle md-toggle" data-md-toggle="nav-8-5" type="checkbox" id="nav-8-5" >
     
-    <label class="md-nav__link" for="nav-8-1-4">
+    <label class="md-nav__link" for="nav-8-5">
       CH Frame Matching
       <span class="md-nav__icon md-icon"></span>
     </label>
-    <nav class="md-nav" aria-label="CH Frame Matching" data-md-level="3">
-      <label class="md-nav__title" for="nav-8-1-4">
+    <nav class="md-nav" aria-label="CH Frame Matching" data-md-level="2">
+      <label class="md-nav__title" for="nav-8-5">
         <span class="md-nav__icon md-icon"></span>
         CH Frame Matching
       </label>
@@ -801,14 +788,27 @@
   </li>
 
         
+          
+          
+          
+
+
+
+  <li class="md-nav__item">
+    <a href="../connectivity/" class="md-nav__link">
+      CH Connectivity
+    </a>
+  </li>
+
+        
       </ul>
     </nav>
   </li>
 
-        
-          
-          
-          
+    
+      
+      
+      
 
 
 
@@ -818,10 +818,10 @@
     </a>
   </li>
 
-        
-          
-          
-          
+    
+      
+      
+      
 
 
 
@@ -829,11 +829,6 @@
     <a href="../pred/" class="md-nav__link">
       CH-Net Future Frame Predictions
     </a>
-  </li>
-
-        
-      </ul>
-    </nav>
   </li>
 
     
@@ -918,7 +913,7 @@
                   </a>
                 
                 
-                  <h1>Tracking Features</h1>
+                  <h1>CH Features</h1>
                 
                 <h2 id="centroid">Centroid</h2>
 <p>Computed in cartesian coordinates and then map back to spherical (weighted average with respect to mesh grid).</p>
@@ -963,73 +958,6 @@ the coronal hole and its convexity.</p>
 <p>PCA approach - returns angle, tilt significance (eigenvalue ratio).
 If the eigenvalue ratio is approximately 1 then the tilt is insignificant (circle-like), 
 whereas, when the eigenvalue ratio &gt;&gt;1 then the coronal hole tilt is apparent. </p>
-<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
- 2
- 3
- 4
- 5
- 6
- 7
- 8
- 9
-10
-11
-12
-13
-14
-15
-16
-17
-18
-19
-20
-21
-22
-23
-24
-25
-26
-27
-28
-29
-30
-31
-32
-33</pre></div></td><td class="code"><div class="codehilite"><pre><span></span><code>    <span class="o">#</span> <span class="n">theta</span><span class="p">,</span> <span class="n">phi</span> <span class="n">coordinates</span><span class="p">.</span>
-    <span class="n">phi</span> <span class="o">=</span> <span class="n">Contour</span><span class="p">.</span><span class="n">Mesh</span><span class="p">.</span><span class="n">p</span><span class="p">[</span><span class="k">self</span><span class="p">.</span><span class="n">contour_pixels_phi</span><span class="p">]</span>
-    <span class="n">theta</span> <span class="o">=</span> <span class="n">Contour</span><span class="p">.</span><span class="n">Mesh</span><span class="p">.</span><span class="n">t</span><span class="p">[</span><span class="k">self</span><span class="p">.</span><span class="n">contour_pixels_theta</span><span class="p">]</span>
-
-    <span class="o">#</span> <span class="k">access</span> <span class="n">the</span> <span class="n">area</span> <span class="k">of</span> <span class="k">each</span> <span class="n">pixel</span> <span class="k">of</span> <span class="n">the</span> <span class="n">image</span> <span class="n">grid</span><span class="p">.</span>
-    <span class="n">A</span> <span class="o">=</span> <span class="n">Contour</span><span class="p">.</span><span class="n">Mesh</span><span class="p">.</span><span class="n">da</span><span class="p">[</span><span class="k">self</span><span class="p">.</span><span class="n">contour_pixels_phi</span><span class="p">,</span> <span class="k">self</span><span class="p">.</span><span class="n">contour_pixels_theta</span><span class="p">]</span>
-
-    <span class="o">#</span> <span class="n">recenter</span> <span class="n">around</span> <span class="n">weighted</span> <span class="n">mean</span><span class="p">.</span>
-    <span class="n">pc</span> <span class="o">=</span> <span class="n">phi</span> <span class="o">-</span> <span class="k">self</span><span class="p">.</span><span class="n">phys_centroid</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
-    <span class="n">tc</span> <span class="o">=</span> <span class="n">theta</span> <span class="o">-</span> <span class="k">self</span><span class="p">.</span><span class="n">phys_centroid</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-
-    <span class="o">#</span> <span class="n">difference</span> <span class="k">from</span> <span class="n">the</span> <span class="n">mean</span> <span class="k">as</span> <span class="n">an</span> <span class="n">arc</span> <span class="k">length</span> <span class="n">TODO</span><span class="p">:</span> <span class="n">Figure</span> <span class="k">out</span> <span class="k">if</span> <span class="n">this</span> <span class="k">is</span> <span class="n">correct</span><span class="p">.</span>
-    <span class="n">pc</span> <span class="o">=</span> <span class="n">pc</span> <span class="o">*</span> <span class="n">np</span><span class="p">.</span><span class="n">sin</span><span class="p">(</span><span class="n">theta</span><span class="p">)</span>
-
-    <span class="o">#</span> <span class="n">feature</span> <span class="n">matrix</span> <span class="mi">2</span> <span class="k">by</span> <span class="n">n</span><span class="p">.</span> <span class="p">(</span><span class="n">n</span> <span class="k">is</span> <span class="nb">number</span> <span class="k">of</span> <span class="n">pixels</span><span class="p">)</span>
-    <span class="n">X</span> <span class="o">=</span> <span class="n">np</span><span class="p">.</span><span class="nb">array</span><span class="p">([</span><span class="n">pc</span><span class="p">,</span> <span class="n">tc</span><span class="p">])</span>
-
-    <span class="o">#</span> <span class="n">covariance</span> <span class="n">matrix</span>
-    <span class="n">cov</span> <span class="o">=</span> <span class="n">np</span><span class="p">.</span><span class="n">matmul</span><span class="p">(</span><span class="n">X</span> <span class="o">@</span> <span class="n">np</span><span class="p">.</span><span class="n">diag</span><span class="p">(</span><span class="n">A</span><span class="p">),</span> <span class="n">np</span><span class="p">.</span><span class="n">transpose</span><span class="p">(</span><span class="n">X</span><span class="p">))</span> <span class="o">/</span> <span class="k">self</span><span class="p">.</span><span class="n">area</span>
-
-    <span class="o">#</span> <span class="n">eigenvalue</span> <span class="n">decomposition</span><span class="p">.</span>
-    <span class="n">evals</span><span class="p">,</span> <span class="n">evecs</span> <span class="o">=</span> <span class="n">np</span><span class="p">.</span><span class="n">linalg</span><span class="p">.</span><span class="n">eig</span><span class="p">(</span><span class="n">cov</span><span class="p">)</span>
-
-    <span class="o">#</span> <span class="n">find</span> <span class="n">most</span> <span class="n">dominant</span> <span class="n">eigenvector</span> <span class="k">with</span> <span class="n">largest</span> <span class="n">eigenvalue</span>
-    <span class="k">if</span> <span class="n">evals</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">evals</span><span class="p">[</span><span class="mi">1</span><span class="p">]:</span>
-        <span class="n">x_v1</span><span class="p">,</span> <span class="n">y_v1</span> <span class="o">=</span> <span class="n">evecs</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span>
-        <span class="n">sig</span> <span class="o">=</span> <span class="n">evals</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">/</span> <span class="n">evals</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="n">x_v1</span><span class="p">,</span> <span class="n">y_v1</span> <span class="o">=</span> <span class="n">evecs</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span>
-        <span class="n">sig</span> <span class="o">=</span> <span class="n">evals</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">/</span> <span class="n">evals</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-
-    <span class="n">angle</span> <span class="o">=</span> <span class="n">np</span><span class="p">.</span><span class="n">arctan2</span><span class="p">(</span><span class="n">x_v1</span><span class="p">,</span> <span class="n">y_v1</span><span class="p">)</span>
-    <span class="k">return</span> <span class="p">(</span><span class="mi">180</span> <span class="o">/</span> <span class="n">np</span><span class="p">.</span><span class="n">pi</span> <span class="o">*</span> <span class="n">angle</span><span class="p">),</span> <span class="n">sig</span>
-</code></pre></div>
-</td></tr></table>
                 
               
               
@@ -1048,7 +976,7 @@ whereas, when the eigenvalue ratio &gt;&gt;1 then the coronal hole tilt is appar
     <div class="md-footer-nav">
       <nav class="md-footer-nav__inner md-grid" aria-label="Footer">
         
-          <a href="../tracking_v2/" class="md-footer-nav__link md-footer-nav__link--prev" rel="prev">
+          <a href="../latitude_weighted_dilation/" class="md-footer-nav__link md-footer-nav__link--prev" rel="prev">
             <div class="md-footer-nav__button md-icon">
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"/></svg>
             </div>
@@ -1057,7 +985,7 @@ whereas, when the eigenvalue ratio &gt;&gt;1 then the coronal hole tilt is appar
                 <span class="md-footer-nav__direction">
                   Previous
                 </span>
-                Dilation and Erosion
+                Latitude Weighted Dilation
               </div>
             </div>
           </a>

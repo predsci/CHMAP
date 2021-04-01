@@ -18,7 +18,7 @@
     
     
       
-        <title>Machine Learning Detection - Coronal Hole Detection Project</title>
+        <title>Polar Projection - Coronal Hole Detection Project</title>
       
     
     
@@ -66,7 +66,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#techniques-to-detect-coronal-holes-using-neural-networks-and-k-means-algorithm" class="md-skip">
+        <a href="#polar-projection" class="md-skip">
           Skip to content
         </a>
       
@@ -97,7 +97,7 @@
         <div class="md-header-nav__topic">
           <span class="md-ellipsis">
             
-              Machine Learning Detection
+              Polar Projection
             
           </span>
         </div>
@@ -578,12 +578,14 @@
       
 
 
+  
+
 
   
-  <li class="md-nav__item md-nav__item--nested">
+  <li class="md-nav__item md-nav__item--active md-nav__item--nested">
     
     
-      <input class="md-nav__toggle md-toggle" data-md-toggle="nav-8" type="checkbox" id="nav-8" >
+      <input class="md-nav__toggle md-toggle" data-md-toggle="nav-8" type="checkbox" id="nav-8" checked>
     
     <label class="md-nav__link" for="nav-8">
       Tracking Algorithm
@@ -615,11 +617,49 @@
           
 
 
+  
 
-  <li class="md-nav__item">
-    <a href="../polarprojection/" class="md-nav__link">
+
+  <li class="md-nav__item md-nav__item--active">
+    
+    <input class="md-nav__toggle md-toggle" data-md-toggle="toc" type="checkbox" id="__toc">
+    
+      
+    
+    
+      <label class="md-nav__link md-nav__link--active" for="__toc">
+        Polar Projection
+        <span class="md-nav__icon md-icon"></span>
+      </label>
+    
+    <a href="./" class="md-nav__link md-nav__link--active">
       Polar Projection
     </a>
+    
+      
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#mapping-transformation" class="md-nav__link">
+    Mapping Transformation
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+    
   </li>
 
         
@@ -740,136 +780,11 @@
       
 
 
-  
 
-
-  <li class="md-nav__item md-nav__item--active">
-    
-    <input class="md-nav__toggle md-toggle" data-md-toggle="toc" type="checkbox" id="__toc">
-    
-      
-    
-    
-      <label class="md-nav__link md-nav__link--active" for="__toc">
-        Machine Learning Detection
-        <span class="md-nav__icon md-icon"></span>
-      </label>
-    
-    <a href="./" class="md-nav__link md-nav__link--active">
+  <li class="md-nav__item">
+    <a href="../chd/" class="md-nav__link">
       Machine Learning Detection
     </a>
-    
-      
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#where-we-are" class="md-nav__link">
-    Where we are
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#cnn-supervised-learning-to-detect-ch" class="md-nav__link">
-    CNN - Supervised Learning to Detect CH
-  </a>
-  
-    <nav class="md-nav" aria-label="CNN - Supervised Learning to Detect CH">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#example-images" class="md-nav__link">
-    Example Images
-  </a>
-  
-    <nav class="md-nav" aria-label="Example Images">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#test-data" class="md-nav__link">
-    Test Data
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#training-loss" class="md-nav__link">
-    Training Loss
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#k-means-clustering" class="md-nav__link">
-    K-Means Clustering
-  </a>
-  
-    <nav class="md-nav" aria-label="K-Means Clustering">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#example-images_1" class="md-nav__link">
-    Example Images
-  </a>
-  
-    <nav class="md-nav" aria-label="Example Images">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#basic-clustering-v-chd" class="md-nav__link">
-    Basic Clustering v. CHD
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#chd-clustering" class="md-nav__link">
-    CHD Clustering
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#predicted-chd" class="md-nav__link">
-    Predicted CHD
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-    
   </li>
 
     
@@ -911,96 +826,9 @@
     <ul class="md-nav__list" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#where-we-are" class="md-nav__link">
-    Where we are
+  <a href="#mapping-transformation" class="md-nav__link">
+    Mapping Transformation
   </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#cnn-supervised-learning-to-detect-ch" class="md-nav__link">
-    CNN - Supervised Learning to Detect CH
-  </a>
-  
-    <nav class="md-nav" aria-label="CNN - Supervised Learning to Detect CH">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#example-images" class="md-nav__link">
-    Example Images
-  </a>
-  
-    <nav class="md-nav" aria-label="Example Images">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#test-data" class="md-nav__link">
-    Test Data
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#training-loss" class="md-nav__link">
-    Training Loss
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#k-means-clustering" class="md-nav__link">
-    K-Means Clustering
-  </a>
-  
-    <nav class="md-nav" aria-label="K-Means Clustering">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#example-images_1" class="md-nav__link">
-    Example Images
-  </a>
-  
-    <nav class="md-nav" aria-label="Example Images">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#basic-clustering-v-chd" class="md-nav__link">
-    Basic Clustering v. CHD
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#chd-clustering" class="md-nav__link">
-    CHD Clustering
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#predicted-chd" class="md-nav__link">
-    Predicted CHD
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-        
-      </ul>
-    </nav>
   
 </li>
       
@@ -1016,64 +844,37 @@
             <article class="md-content__inner md-typeset">
               
                 
-                  <a href="https://github.com/predsci/CHD/blob/master/CHD-mkdocs/docs/ml/chd.md" title="Edit this page" class="md-content__button md-icon">
+                  <a href="https://github.com/predsci/CHD/blob/master/CHD-mkdocs/docs/ml/polarprojection.md" title="Edit this page" class="md-content__button md-icon">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20.71 7.04c.39-.39.39-1.04 0-1.41l-2.34-2.34c-.37-.39-1.02-.39-1.41 0l-1.84 1.83 3.75 3.75M3 17.25V21h3.75L17.81 9.93l-3.75-3.75L3 17.25z"/></svg>
                   </a>
                 
                 
-                <h1 id="techniques-to-detect-coronal-holes-using-neural-networks-and-k-means-algorithm">Techniques to detect coronal holes using neural networks and K-means algorithm</h1>
-<h2 id="where-we-are">Where we are</h2>
+                <h1 id="polar-projection">Polar Projection</h1>
+<p>The current images are in latitude - longitude coordinates with the poles placed at the top and bottom of the image.
+In this current projection, clustering coronal holes at the poles is challenging due to the distortion near the poles.
+In order to overcome this issue, we suggest a coordinate mapping placing the poles at the equator. 
+This transformation can be done in "projection.py" module. </p>
+<p><img alt="" src="../images/Figure_1.png" style="height:250px;width:370px" />
+<img alt="" src="../images/PolarProjection.png" style="height:250px;width:370px" /></p>
+<h2 id="mapping-transformation">Mapping Transformation</h2>
+<p>Input: image dimensions <span><span class="MathJax_Preview">(n_{\theta}, n_{\phi})</span><script type="math/tex">(n_{\theta}, n_{\phi})</script></span>, where <span><span class="MathJax_Preview">\theta \in [0, \pi]</span><script type="math/tex">\theta \in [0, \pi]</script></span> and <span><span class="MathJax_Preview">\phi \in [0, 2\pi]</span><script type="math/tex">\phi \in [0, 2\pi]</script></span>.</p>
 <ul>
-<li>Fortran region growing algorithm</li>
-<li>CNN Supervised Learning Algorithm<ul>
-<li>advantages: floating point</li>
-</ul>
+<li>
+<p><strong> <em>Step 1</em> </strong>: Convert to Cartesian coordinates (<span><span class="MathJax_Preview">x,y,z</span><script type="math/tex">x,y,z</script></span>).</p>
+<p><span><span class="MathJax_Preview">x = \rho \sin(\theta)\cos(\phi)</span><script type="math/tex">x = \rho \sin(\theta)\cos(\phi)</script></span>,</p>
+<p><span><span class="MathJax_Preview">y = \rho \sin(\theta)\sin(\phi)</span><script type="math/tex">y = \rho \sin(\theta)\sin(\phi)</script></span>,</p>
+<p><span><span class="MathJax_Preview">z = \rho \cos(\theta)</span><script type="math/tex">z = \rho \cos(\theta)</script></span>,</p>
+<p>where <span><span class="MathJax_Preview">\rho = 1</span><script type="math/tex">\rho = 1</script></span>. </p>
 </li>
-<li>GOAL: unsupervised algorithm</li>
+<li>
+<p><strong> <em>Step 2</em> </strong>: Rotate about the x axis with <span><span class="MathJax_Preview">\alpha = \pi/2</span><script type="math/tex">\alpha = \pi/2</script></span>.</p>
+</li>
+<li>
+<p><strong> <em>Step 3</em> </strong>: Map back to spherical coordinates (<span><span class="MathJax_Preview">\theta</span><script type="math/tex">\theta</script></span>, <span><span class="MathJax_Preview">\phi</span><script type="math/tex">\phi</script></span>).</p>
+<p><span><span class="MathJax_Preview">\theta = \arccos(\frac{z}{\rho}) = \arccos(\sin(\theta)\sin(\phi))</span><script type="math/tex">\theta = \arccos(\frac{z}{\rho}) = \arccos(\sin(\theta)\sin(\phi))</script></span>,</p>
+<p><span><span class="MathJax_Preview">\phi = \arctan(\frac{y}{x}) = \arctan(\frac{-\cos(\theta)}{\sin(\theta)\cos(\phi)})</span><script type="math/tex">\phi = \arctan(\frac{y}{x}) = \arctan(\frac{-\cos(\theta)}{\sin(\theta)\cos(\phi)})</script></span>.</p>
+</li>
 </ul>
-<h2 id="cnn-supervised-learning-to-detect-ch">CNN - Supervised Learning to Detect CH</h2>
-<ul>
-<li>labeled image data based on Fortran two-threshold detection algorithm</li>
-<li>U-Net Convolutional Network </li>
-<li>built using tensorflow</li>
-</ul>
-<h3 id="example-images">Example Images</h3>
-<h4 id="test-data"><a href="../images/pred_test.png">Test Data</a></h4>
-<p><img alt="Test Data" src="../images/pred_test.png" /></p>
-<h4 id="training-loss"><a href="../images/train_val_loss.png">Training Loss</a></h4>
-<p><img alt="Training Loss" src="../images/train_val_loss.png" /></p>
-<h2 id="k-means-clustering">K-Means Clustering</h2>
-<ul>
-<li>unsupervised learning method</li>
-<li>centroid based clustering algorithm to generate CH/non-CH groups</li>
-</ul>
-<p>Advantages:<br />
-<em> unsupervised<br />
-    * no requirement of segmentation masks or labeling<br />
-</em> easy to create multiple cluster types (find AR as well)<br />
-* can basically regenerate EUV map — use for prediction  </p>
-<p>Concerns/Questions:
-* can this be trained on a lot of images??<br />
-* can be trained on a lot of data points but thus far that seems like
-training on one image  </p>
-<p>K-Nearest Neighbor:
-* this would allow us to add pixels to a class -- perhaps track a CH over time  </p>
-<h3 id="example-images_1">Example Images</h3>
-<h4 id="basic-clustering-v-chd">Basic Clustering v. CHD</h4>
-<p><a href="images/k2_clusters.png">Two Clusters</a>  </p>
-<p><img alt="Two Clusters" src="images/k2_clusters.png" />  </p>
-<p><a href="images/k5_clusters.png">Five Clusters</a>  </p>
-<p><img alt="Five Clusters" src="images/k5_clusters.png" />  </p>
-<h4 id="chd-clustering">CHD Clustering</h4>
-<p><a href="../images/clustering2.png">Two Clusters</a>  </p>
-<p><img alt="Two Clusters" src="../images/clustering2.png" />  </p>
-<p><a href="../images/clustering5.png">Five Clusters</a>  </p>
-<p><img alt="Five Clusters" src="../images/clustering5.png" /> </p>
-<h4 id="predicted-chd">Predicted CHD</h4>
-<p><a href="../images/clustering2_chd.png">Two Clusters</a>  </p>
-<p><img alt="Two Clusters" src="../images/clustering2_chd.png" />  </p>
-<p><a href="../images/clustering5_chd.png">Five Clusters</a>  </p>
-<p><img alt="Five Clusters" src="../images/clustering5_chd.png" /> </p>
                 
               
               
@@ -1092,7 +893,7 @@ training on one image  </p>
     <div class="md-footer-nav">
       <nav class="md-footer-nav__inner md-grid" aria-label="Footer">
         
-          <a href="../connectivity/" class="md-footer-nav__link md-footer-nav__link--prev" rel="prev">
+          <a href="../tracking_overview/" class="md-footer-nav__link md-footer-nav__link--prev" rel="prev">
             <div class="md-footer-nav__button md-icon">
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"/></svg>
             </div>
@@ -1101,19 +902,19 @@ training on one image  </p>
                 <span class="md-footer-nav__direction">
                   Previous
                 </span>
-                CH Connectivity
+                Overview
               </div>
             </div>
           </a>
         
         
-          <a href="../pred/" class="md-footer-nav__link md-footer-nav__link--next" rel="next">
+          <a href="../latitude_weighted_dilation/" class="md-footer-nav__link md-footer-nav__link--next" rel="next">
             <div class="md-footer-nav__title">
               <div class="md-ellipsis">
                 <span class="md-footer-nav__direction">
                   Next
                 </span>
-                CH-Net Future Frame Predictions
+                Latitude Weighted Dilation
               </div>
             </div>
             <div class="md-footer-nav__button md-icon">
