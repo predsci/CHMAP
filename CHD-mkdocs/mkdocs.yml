@@ -32,17 +32,19 @@ nav:
       - Database for LBC: db/lbc.md
       - Database for IIT: db/iit.md
       - Database for CHD Mapping: db/map.md
-  - Coronal Hole Tracking and Predictions:
-      - Tracking Algorithm:
-          - Polar Projection: ml/tracking_v1.md
-          - Dilation and Erosion: ml/tracking_v2.md
-          - Tracking Features: ml/tracking_features.md
-          - CH Frame Matching:
-              - Overview: ml/match_overview.md
-              - KNN: ml/knn.md
-              - Area Overlap: ml/areaoverlap.md
-      - Machine Learning Detection: ml/chd.md
-      - CH-Net Future Frame Predictions: ml/pred.md
+  - Tracking Algorithm:
+      - Overview: ml/tracking_overview.md
+      - Polar Projection: ml/polarprojection.md
+      - Latitude Weighted Dilation: ml/latitude_weighted_dilation.md
+      - CH Features: ml/tracking_features.md
+      - CH Frame Matching:
+          - Overview: ml/match_overview.md
+          - KNN: ml/knn.md
+          - Area Overlap: ml/areaoverlap.md
+      - CH Connectivity: ml/connectivity.md
+
+  - Machine Learning Detection: ml/chd.md
+  - CH-Net Future Frame Predictions: ml/pred.md
 
 # theme
 theme:

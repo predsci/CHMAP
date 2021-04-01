@@ -35,36 +35,3 @@ PCA approach - returns angle, tilt significance (eigenvalue ratio).
 If the eigenvalue ratio is approximately 1 then the tilt is insignificant (circle-like), 
 whereas, when the eigenvalue ratio >>1 then the coronal hole tilt is apparent. 
 
-        # theta, phi coordinates.
-        phi = Contour.Mesh.p[self.contour_pixels_phi]
-        theta = Contour.Mesh.t[self.contour_pixels_theta]
-
-        # access the area of each pixel of the image grid.
-        A = Contour.Mesh.da[self.contour_pixels_phi, self.contour_pixels_theta]
-
-        # recenter around weighted mean.
-        pc = phi - self.phys_centroid[1]
-        tc = theta - self.phys_centroid[0]
-
-        # difference from the mean as an arc length TODO: Figure out if this is correct.
-        pc = pc * np.sin(theta)
-
-        # feature matrix 2 by n. (n is number of pixels)
-        X = np.array([pc, tc])
-
-        # covariance matrix
-        cov = np.matmul(X @ np.diag(A), np.transpose(X)) / self.area
-
-        # eigenvalue decomposition.
-        evals, evecs = np.linalg.eig(cov)
-
-        # find most dominant eigenvector with largest eigenvalue
-        if evals[0] > evals[1]:
-            x_v1, y_v1 = evecs[:, 0]
-            sig = evals[0] / evals[1]
-        else:
-            x_v1, y_v1 = evecs[:, 1]
-            sig = evals[1] / evals[0]
-
-        angle = np.arctan2(x_v1, y_v1)
-        return (180 / np.pi * angle), sig

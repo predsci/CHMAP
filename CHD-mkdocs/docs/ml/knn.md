@@ -1,12 +1,12 @@
 # How to match coronal holes between sequential frames?
 
-# K - Nearest Neighbor Algorithm 
+## K - Nearest Neighbor Algorithm 
 
 KNN algorithm is a simple supervised machine learning algorithm that is used to solve classification problems. 
-KNN is easy to implement and understand. Classification is based on proximity. In our example, we will use the coronal 
-hole centroid location to classify its ID number based on previous frames identified coronal holes.  
+KNN is easy to implement and understand. Classification is based on proximity. Here, we will use the coronal 
+hole centroid location in spherical coordinates to classify its ID number based on previously identified coronal holes.  
 
-# KNN settings 
+## KNN settings 
 Lets assume we have the following pairs $(X_{1}, Y_{1}), (X_{2}, Y_{2}), ..., (X_{n}, Y_{n})$,
  each pair has a label $(L_{m})$, where $m$ indicates the class associated with the pair. 
 The pairs and labeled coronal holes are treated as the *training dataset*. 
@@ -17,7 +17,7 @@ Then, based on a threshold ($\xi$), the coronal hole can be labeled as an existi
 as a new coronal hole.
 
 
-# Example of KNN classification
+## Example of KNN classification
 
 ![](images/KnnClassification.svg)
 
@@ -35,10 +35,8 @@ $$
 d = 2 r \arcsin(\sqrt{\sin^{2}((\theta_{1} - \theta_{2})/2) + \cos(\theta_{1})\cos(\theta_{2})\sin^{2}((\phi_{2} - \phi_{1})/2))} )
 $$
 
-# Example of KNN classification of *Coronal Holes*
 
-
-## 1. weighted nearest neighbor classifier
+## 1. Weighted K-Nearest Neighbor Classifier
 
 The coronal holes identified in the previous frame will have a larger **weight** than the coronal holes found in the previous 
 say 5th frame. The total training data will be composed of the previous 10 frames (this number can be changed as we test it on the images). 

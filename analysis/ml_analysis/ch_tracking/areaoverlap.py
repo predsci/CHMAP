@@ -36,23 +36,42 @@ def area_overlap(ch1, ch2, da):
     return intersection / ch1.area, intersection / ch2.area
 
 
-def classification_results(area_overlap_list, thresh=0.5):
-    """ Based on the area_overlap results, we will identify if the coronal hole is associated with previously found
-    coronal hole or will be classified as a new coronal hole and will be assigned a unique ID number.
+def max_area_overlap(area_check_list, area_overlap_results, threshold=0.5):
+    """ Return the ID with the *most* area overlap.
 
     Parameters
     ----------
-    area_overlap_list: (list)
-        results of the new frame in order of identified coronal holes.
-
-    thresh: (float)
-        threshold to decide if the overlap is significant.
+    threshold: (float) between 0 and 1
         Default is 0.5
+        Threshold for area overlap ratio to be a match.
+
+    area_check_list: (list)
+        results of KNN algorithm.
+
+    area_overlap_results: (list)
+        area overlap average ratio.
 
     Returns
     -------
-        (ndarray) with resulting class. "0" means "below the thresh", "1" means "above the thresh"
+        list of id corresponding to the contour list "0" means new class.
     """
-    for ii, cls in enumerate(area_overlap_list):
-        area_overlap_list[ii] = np.where(np.asarray(cls) > thresh, 1, 0).tolist()
-    return area_overlap_list
+    # initialize the returned list.
+    match_list = [None] * len(area_overlap_results)
+
+    for ii, res in enumerate(area_overlap_results):
+        # find the maximum area overlap average ratio.
+        max_val = max(res)
+
+        # if it is below the threshold then assign as a "new" coronal hole - labeled with zero.
+        if max_val < threshold:
+            match_list[ii] = 0
+
+        # otherwise, assign the ID corresponding to the max area overlap.
+        else:
+            # find the index of maximum overlap.
+            max_index = res.index(max_val)
+
+            # assign the corresponding ID number.
+            match_list[ii] = area_check_list[ii][max_index]
+
+    return match_list

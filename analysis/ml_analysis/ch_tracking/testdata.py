@@ -7,7 +7,7 @@ match coronal holes between frames. See mkdocs website for more details about KN
 
 import numpy as np
 import matplotlib.pyplot as plt
-from analysis.ml_analysis.ch_tracking.ch_db import CoronalHoleDB
+from analysis.ml_analysis.ch_tracking.src import CoronalHoleDB
 from sklearn.neighbors import KNeighborsClassifier
 from analysis.ml_analysis.ch_tracking.contour import Contour
 from analysis.ml_analysis.ch_tracking.plots import plot_coronal_hole

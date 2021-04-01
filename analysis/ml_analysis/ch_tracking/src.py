@@ -3,6 +3,10 @@ Author: Opal Issan, March 25th, 2021.
 
 A data structure for a set of coronal hole objects.
 
+
+# TODO LIST:
+            1. create a test function to create graphs.
+            2. rename this file to "src"
 """
 
 import json
@@ -12,7 +16,8 @@ from analysis.ml_analysis.ch_tracking.frame import Frame
 from analysis.ml_analysis.ch_tracking.contour import Contour
 from analysis.ml_analysis.ch_tracking.coronalhole import CoronalHole
 from analysis.ml_analysis.ch_tracking.knn import KNN
-from analysis.ml_analysis.ch_tracking.areaoverlap import area_overlap, classification_results
+from analysis.ml_analysis.ch_tracking.areaoverlap import area_overlap, max_area_overlap
+from analysis.ml_analysis.ch_tracking.graph import CoronalHoleGraph
 import matplotlib.pyplot as plt
 
 
@@ -26,12 +31,17 @@ class CoronalHoleDB:
     window = 10
     # parameter for dilation. (this should be changed for larger images.
     gamma = 10
-    # area overlap threshold for matching coronal holes.
-    area_thresh = 0.4
+    # connectivity threshold.
+    connectivity_thresh = 0.001
+    # connectivity threshold.
+    area_match_thresh = 0.4
 
     def __init__(self):
         # list of Contours that are part of this CoronalHole Object.
         self.ch_dict = dict()
+
+        # connectivity graph.
+        self.Graph = CoronalHoleGraph()
 
         # the unique identification number of for each coronal hole in the db.
         self.total_num_of_coronal_holes = 0
@@ -54,17 +64,16 @@ class CoronalHoleDB:
         }
 
     def _assign_id_coronal_hole(self, ch):
-        """Assign a unique ID number to coronal hole "
+        """Assign a *unique* ID number to a coronal hole"
 
         Parameters
         ----------
-        ch CoronalHole object
+        ch: CoronalHole() object see coronalhole.py
 
         Returns
         -------
-        ch with assigned id.
+        ch: with assigned id.
         """
-
         # set the index id.
         ch.id = self.total_num_of_coronal_holes + 1
         # update coronal hole holder.
@@ -76,11 +85,11 @@ class CoronalHoleDB:
 
         Parameters
         ----------
-        ch CoronalHole object
+        ch: CoronalHole() object see coronalhole.py
 
         Returns
         -------
-        ch with assigned color.
+        ch: with assigned color.
         """
         ch.color = self.generate_ch_color()
         return ch
@@ -90,11 +99,11 @@ class CoronalHoleDB:
 
         Parameters
         ----------
-        ch CoronalHole object
+        ch: CoronalHole() object see coronalhole.py
 
         Returns
         -------
-        None
+            N/A
         """
         # add to database.
         self.ch_dict[ch.id] = ch
@@ -104,7 +113,7 @@ class CoronalHoleDB:
 
         Parameters
         ----------
-        frame: new frame object Frame() in frame.py
+        frame: new frame object Frame() see frame.py
 
         Returns
         -------
@@ -116,15 +125,15 @@ class CoronalHoleDB:
         self.window_holder.append(frame)
 
     def _insert_new_contour_to_dict(self, contour):
-        """insert a new contour to dict.
+        """Insert a new contour to dict.
 
         Parameters
         ----------
-        contour: Contour() object
+        contour: Contour() object see contour.py
 
         Returns
         -------
-        None
+            N/A
         """
         coronal_hole = CoronalHole(identity=contour.id)
         coronal_hole.insert_contour_list(contour=contour)
@@ -450,14 +459,17 @@ class CoronalHoleDB:
                 contour_list[ii] = self._assign_color_coronal_hole(ch=contour_list[ii])
                 # add Coronal Hole to database.
                 self._insert_new_contour_to_dict(contour=contour_list[ii])
+                # add coronal hole as a node to graph.
+                self.Graph.insert_node(node=contour_list[ii])
 
         else:
             # match coronal holes to previous *window* frames.
-            matching_results, contour_list = self.global_match_coronal_holes_algorithm(contour_list=contour_list)
+            match_list, contour_list, area_overlap_results, area_check_list = \
+                self.global_match_coronal_holes_algorithm(contour_list=contour_list)
 
             for ii in range(len(contour_list)):
                 # new coronal hole
-                if matching_results[ii] == 0:
+                if match_list[ii] == 0:
                     contour_list[ii] = self._assign_id_coronal_hole(ch=contour_list[ii])
                     contour_list[ii] = self._assign_color_coronal_hole(ch=contour_list[ii])
                     # add Coronal Hole to database.
@@ -465,11 +477,19 @@ class CoronalHoleDB:
 
                 # existing coronal hole
                 else:
-                    contour_list[ii].id = matching_results[ii]
+                    contour_list[ii].id = match_list[ii]
                     contour_list[ii].color = self.ch_dict[contour_list[ii].id].contour_list[0].color
                     self.ch_dict[contour_list[ii].id].insert_contour_list(contour=contour_list[ii])
                     # add Coronal Hole to database.
                     self.ch_dict[contour_list[ii].id].insert_number_frame(frame_num=self.frame_num)
+
+                # add coronal hole as a node to graph.
+                self.Graph.insert_node(node=contour_list[ii])
+
+            # update graph edges -- connectivity.
+            # self.update_connectivity_graph(area_overlap_results=area_overlap_results, area_check_list=area_check_list,
+            #                                contour_list=contour_list)
+            self.update_connectivity_prev_frame(contour_list=contour_list)
 
         # update window holder.
         self.update_previous_frames(frame=Frame(contour_list=contour_list, identity=self.frame_num))
@@ -487,27 +507,42 @@ class CoronalHoleDB:
             of coronal holes in contour_list.
             "0" means "new class"
         """
+        # ==============================================================================================================
+        # KNN - K nearest neighbors for contour centroid location.
+        # ==============================================================================================================
         # prepare dataset for K nearest neighbor algorithm.
         X_train, Y_train, X_test = self.prepare_knn_data(contour_list=contour_list)
 
         # fit the training data and classify.
         classifier = KNN(X_train=X_train, X_test=X_test, Y_train=Y_train)
 
-        # if proba > thresh check its overlap of pixels area.
+        # ==============================================================================================================
+        # Area Overlap - Pixel overlap (connectivity and ID matching).
+        # ==============================================================================================================
+        # if proba > KNNthresh then check its overlap of pixels area (functions are in areaoverlap.py)
         area_check_list = classifier.check_list
-        area_overlap_results = self.area_overlap_results(area_check_list=area_check_list, contour_list=contour_list)
+
+        # compute the average area overlap ratio, this will be used for matching coronal holes and connectivity edges.
+        area_overlap_results = self.get_area_overlap_ratio_list(area_check_list=area_check_list,
+                                                                contour_list=contour_list)
 
         # return list of coronal holes corresponding unique ID.
-        match_list = self.get_coronal_hole_id(area_check_list=area_check_list, area_overlap_results=area_overlap_results)
+        match_list = max_area_overlap(area_check_list=area_check_list, area_overlap_results=area_overlap_results,
+                                      threshold=self.area_match_thresh)
 
-        # check if there multiple contours mapped to the same class.
-        return match_list
+        # # ==============================================================================================================
+        # # Label Contour() count for the latest frame.
+        # # ==============================================================================================================
+        # # check if there multiple contours mapped to the same class, if so, assign a count number for graph plotting
+        # # purposes (x-axis).
+        # match_list, contour_list = self.assign_count_number_to_coronal_hole(match_list=match_list,
+        #                                                                     contour_list=contour_list)
 
-    def merge_repeating_coronal_holes(self, match_list, contour_list):
-        """If there are multiple contours in the latest frame assigned to the same class, then we merge the
-         two contours. Meaning, matching is unique.
+        return match_list, contour_list, area_overlap_results, area_check_list
 
-         TODO: Do we even want this?
+    @staticmethod
+    def assign_count_number_to_coronal_hole(match_list, contour_list):
+        """Assign a count number to each contour object based on the number of times it appeared in match_list.
 
         Parameters
         ----------
@@ -515,54 +550,24 @@ class CoronalHoleDB:
             type: numpy array
         contour_list: list of contours.
             type: list
+
         Returns
         -------
-            updated match_list, updated contour_list
+            updated contour_list
         """
-        # # check if there are repeating IDs *that are not zero*
-        if len(match_list[match_list != 0]) != len(set(match_list[match_list != 0])):
-            # there are duplicates.
-            # values - list of unique values.
-            # counts - list of corresponding counts. (appearance in
-            values, counts = np.unique(match_list, return_counts=True)
+        # values - list of unique values.
+        # counts - list of corresponding counts. (appearance in
+        values, counts = np.unique(match_list, return_counts=True)
 
-            for ii, c in enumerate(counts, start=0):
-                # check if id appeared more than once in the list and if the id is not zero
-                if c > 1 and values[ii] != 0:
-                    # there is a duplication. merge is needed.
-                    index = np.where(match_list == values[ii])[0]
-                    # loop over every instance of this duplication
-                    # initialize iterator
-                    jj = 0
-                    while jj < len(index) - 1:
-                        # merge the first contour with the next.
-                        contour_list[index[jj]] = self._merge_contours(c1=contour_list[index[jj]],
-                                                                       c2=contour_list[index[jj + 1]])
-                        # delete duplicated contours from list.
-                        contour_list.pop(index[jj + 1])
-                        match_list = np.delete(match_list, index[jj + 1])
-                        index = np.delete(index, index[jj + 1])
-                        jj += 1
+        # if count > 1 assign a index number to each coronal hole.
+        for ii, c in enumerate(counts, start=0):
+            if c > 1 and values[ii] != 0:
+                # there are multiple coronal holes assigned to the same class in the latest frame.
+                index_list = np.where(match_list == values[ii])[0]
+                for counter, idx in enumerate(index_list, start=1):
+                    contour_list[idx].count = counter
 
         return match_list, contour_list
-
-    @staticmethod
-    def get_coronal_hole_id(area_check_list, area_overlap_results):
-        """ Return the result based on area overlap.
-        TODO: is classification unique?? NO.
-
-        Returns
-        -------
-            list of id corresponding to the contour list "0" means new class.
-        """
-        for ii, res in enumerate(area_overlap_results):
-            max_val = max(res)
-            if max_val == 0:
-                area_overlap_results[ii] = 0
-            else:
-                max_index = res.index(max_val)
-                area_overlap_results[ii] = area_check_list[ii][max_index]
-        return area_overlap_results
 
     def prepare_knn_data(self, contour_list):
         """ prepare X_train, Y_train, X_test for KNN algorithm.
@@ -601,7 +606,7 @@ class CoronalHoleDB:
                         res.append(ch)
         return res
 
-    def area_overlap_results(self, area_check_list, contour_list):
+    def get_area_overlap_ratio_list(self, area_check_list, contour_list):
         """Results of area overlap between the new coronal holes found in the latest frame and the coronal holes
         saved in window_holder.
 
@@ -612,20 +617,81 @@ class CoronalHoleDB:
 
         Returns
         -------
-
+        A list of area overlap probability corresponding to area_check_list
         """
-        proba_mat = []
+        # initialize the returned list containing the average area overlap.
+        area_overlap_ratio_list = []
 
+        # loop over suggested matches from KNN.
         for ii, ch_list in enumerate(area_check_list):
-            prob_list = []
-            for id in ch_list:
-                coronal_hole_list = self.prepare_area_overlap_data(id=id)
+            # corresponding average ratio.
+            holder = []
+            # loop over every "suggested match" based on KNN.
+            for identity in ch_list:
+                # find all contours with "identity" labelling in the previous *window* of frames.
+                coronal_hole_list = self.prepare_area_overlap_data(id=identity)
+                # save all ratios in this list and then average the elements.
                 p = []
                 for ch in coronal_hole_list:
                     p1, p2 = area_overlap(ch1=ch, ch2=contour_list[ii], da=Contour.Mesh.da)
                     p.append((p1 + p2) / 2)
-                prob_list.append(np.mean(p))
-            proba_mat.append(prob_list)
+                holder.append(np.mean(p))
+            area_overlap_ratio_list.append(holder)
 
-        return classification_results(area_overlap_list=proba_mat, thresh=self.area_thresh)
+        return area_overlap_ratio_list
 
+    def update_connectivity_graph(self, area_overlap_results, area_check_list, contour_list):
+        """Update connectivity graph by adding edges in cases of area overlap measured above-
+            Area_overlap_results()
+
+        Returns
+        -------
+
+        """
+        for ii, res in enumerate(area_overlap_results):
+            # find the maximum area overlap average ratio.
+            for jj, ratio in enumerate(res):
+                if ratio > self.connectivity_thresh:
+                    # there should be an edge.
+                    node_list = self.find_latest_contour_in_window(identity=area_check_list[ii][jj])
+                    for node in node_list:
+                        self.Graph.insert_edge(node_1=contour_list[ii], node_2=node)
+
+    def update_connectivity_prev_frame(self, contour_list):
+        """Update connectivity graph by checking area overlap with the previous frame coronal hole.
+
+        Returns
+        -------
+
+        """
+        for curr_contour in contour_list:
+            for prev_contour in self.window_holder[-1].contour_list:
+                p1, p2 = area_overlap(ch1=prev_contour, ch2=curr_contour, da=Contour.Mesh.da)
+                if (p1 + p2)/2 > self.connectivity_thresh:
+                    self.Graph.insert_edge(node_1=prev_contour, node_2=curr_contour)
+
+    def find_latest_contour_in_window(self, identity):
+        """Find the latest contour of a specific id, in the window frame holder.
+
+        Parameters
+        ----------
+        identity: (int)
+            Contour() ID number.
+
+        Returns
+        -------
+            Contour() object.
+        """
+        ii = self.window - 1
+        while ii >= 0:
+            frame = self.window_holder[ii]
+            # initialize contour list.
+            node_list = []
+            for contour in frame.contour_list:
+                if contour.id == identity:
+                    node_list.append(contour)
+
+            # check if contour list is empty.
+            if len(node_list) > 0:
+                return node_list
+            ii += -1

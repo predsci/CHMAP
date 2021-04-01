@@ -4,19 +4,14 @@ Assumptions:
 -------------------
 Tracking Algorithm steps:
 
-1. Input image in lat -lon projection
+1. Input image in lat-lon projection
 2. latitude weighted dilation.
 3. find contours + color the areas arbitrarily - TODO: verify that they are unique by using a uniform vector.
 4. multiply mask on original binary image.
 5. delete small contours.
 6. force periodicity.
-7. match coronal holes to previous coronal holes in *window consecutive frames. TODO: This is done by centroid distance and
-TODO: can also be done by using another feature such as area or bounding box.
+7. match coronal holes to previous coronal holes in *window* consecutive frames.
 8. add contours to database - which can be saved to JSON file.
-
-# TODO: How can we group multiple contours associated to the same coronal hole class in the same frame?
---> area should be combined. Box area should be combined, create some type of holder "multcontour=true" for plotting
-purposes.
 """
 
 import cv2
@@ -27,7 +22,7 @@ from scipy import ndimage
 import json
 from modules.map_manip import MapMesh
 import matplotlib.pyplot as plt
-from analysis.ml_analysis.ch_tracking.ch_db import CoronalHoleDB
+from analysis.ml_analysis.ch_tracking.src import CoronalHoleDB
 
 # Upload coronal hole video.
 cap = cv2.VideoCapture("example_vid/maps_r101_chm_low_res_1.mov")
@@ -105,6 +100,10 @@ while ch_lib.frame_num <= 40:
         # plot the contours center.
         cv2.circle(img=final_image, center=(c.pixel_centroid[1], c.pixel_centroid[0]),
                    radius=4, color=(0, 0, 0), thickness=-1)
+
+        cv2.circle(img=final_image, center=(c.pixel_centroid[1], c.pixel_centroid[0]),
+                   radius=int(100*c.area), color=(255, 20, 147), thickness=2)
+
         # check if its has multiple bounding boxes.
         ii = 0
         while ii < len(c.straight_box) / 4:
@@ -142,17 +141,17 @@ while ch_lib.frame_num <= 40:
         #             fontFace=cv2.Formatter_FMT_DEFAULT, fontScale=0.5, color=(255, 0, 0), thickness=1)
 
     if 1 <= ch_lib.frame_num <= 40:
-        # print ch_lib.
-        print(ch_lib)
-        # show tracking image.
-        cv2.imshow("Coronal Hole Tracking Final, Frame = " + str(ch_lib.frame_num), final_image)
-        # show original image.
-        cv2.imshow("Original Image, Frame = " + str(ch_lib.frame_num), image)
-        # show dilated image.
-        cv2.imshow("Dilated Image, Frame = " + str(ch_lib.frame_num), img)
-        # show image before forcing periodicity and deleting small coronal holes.
-        cv2.imshow("Classified Image before forcing periodicity and deleting small contours"
-                   ", Frame = " + str(ch_lib.frame_num), classified_img)
+        # # print ch_lib.
+        # print(ch_lib)
+        # # show tracking image.
+        # cv2.imshow("Coronal Hole Tracking Final, Frame = " + str(ch_lib.frame_num), final_image)
+        # # show original image.
+        # cv2.imshow("Original Image, Frame = " + str(ch_lib.frame_num), image)
+        # # show dilated image.
+        # cv2.imshow("Dilated Image, Frame = " + str(ch_lib.frame_num), img)
+        # # show image before forcing periodicity and deleting small coronal holes.
+        # cv2.imshow("Classified Image before forcing periodicity and deleting small contours"
+        #            ", Frame = " + str(ch_lib.frame_num), classified_img)
 
         # in order to access the zoom feature of an image, we can also plot using matplotlib gui.
         # plot using matplotlib.
@@ -173,6 +172,9 @@ while ch_lib.frame_num <= 40:
         plt.title("Coronal Hole Tracking, Frame #" + str(ch_lib.frame_num))
         # plt.show()
         # plt.savefig("results/images/tester/frames/" + "frame_" + str(ch_lib.frame_num) + ".png")
+
+        # plot connectivity subgraphs.
+        ch_lib.Graph.create_plots()
 
         # wait time between frames.
     cv2.waitKey(1000)

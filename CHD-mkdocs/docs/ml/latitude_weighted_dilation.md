@@ -1,4 +1,4 @@
-# Dilation and Erosion - Proposed New Tracking Algorithm 
+# Latitude Weighted Dilation - Overcome Spherical Coordinates Projection Distortion
 
 # Introduction 
 ## Mathematical Morphology Definitions
@@ -17,7 +17,7 @@ with dilation, shifted elements have **any** overlap with original set $A$ (in o
 
 Opening, meaning, erode then dilate, and closing is of opposite order. Opening removes small objects from the foreground 
 of an image, placing them in the background, while closing removes small holes in the foreground, changing small islands
- of background into foreground. Both are tools in image processing to remove noise or in our case - "false positives". 
+of background into foreground. Both are tools in image processing to remove noise or in our case - "false positives". 
 
 ## Greyscale Dilation and Erosion
 Denoting an image by $f(x)$ and the structuring function by $B$, the grayscale dilation of $f$ by $B$ is given by
@@ -27,17 +27,18 @@ Denoting an image by $f(x)$ and the structuring function by $B$, the grayscale d
 
 [Example code](https://docs.scipy.org/doc/scipy/reference/generated/scipy.ndimage.grey_dilation.html?highlight=scipy%20ndimage%20morphology%20grey_dilation) using Scipy library in Python. 
 
-# The Coronal Hole Tracking Algorithm Pseudocode
+# Implementation
 
-### *Step 1* 
-Input image in lat-lon projection - greyscaled or binary image (greyscale if we use Tamar's CNN results).
+
+### *Input* 
+Input image in lat-lon projection - greyscaled or binary image (greyscale if we use [Tamar's CNN](chd.md) results).
 Therefore, dilation and erosion are done using greyscale formula (inf/sup). 
 
 
-### *Step 2*
-Apply a latitude weighted dilation. The structuring element depends on the pixel's latitude since in high and low latitude 
-there is high distortion in lat-lon projection. The structuring element $B$ width depends on $\theta$. 
-The proposed function is as follows: 
+### *Latitude Weighted Dilation*
+Apply a latitude weighted dilation to overcome spherical coordinate projection distortion near the poles. By dilating the original 
+image based on latitude, the coronal holes at the poles will be clustered based on distance. 
+The structuring element is a one dimensional kernel whose width depends on latitude, more specifically
                 
 $$
 w(\theta) = \begin{array}{cc}
@@ -51,15 +52,6 @@ w(\theta) = \begin{array}{cc}
 \end{array}
 $$
 
-where $\alpha = \arcsin(\frac{\gamma}{n_{p}})$ and $\beta = \pi - \alpha$ (from symmetry). 
-
-### *Step 3*
-* Find contours using a binary threshold. 
-* [Compute coronal hole features](tracking_features.md)
-* Remove coronal holes that are too small. 
-* Force periodicity. 
-
-### *Step 4*
-* Classify coronal hole unique ID and color. [Match](knn.md) to previous coronal holes by centroid location.
-Future research steps: find a way to classify merges of two coronal holes based on previous pixel location.
+where $\alpha = \arcsin(\frac{\gamma}{n_{p}})$, $\beta = \pi - \alpha$ (from symmetry), and $\gamma$ is a 
+hyper parameter. 
 
