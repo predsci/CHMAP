@@ -67,6 +67,10 @@ c
       real*4,dimension(15) :: local_vec
       integer :: max_iters,nt,np,val_modded
       integer :: i,j,k,ii,jj,iters,fillit,nc
+c 
+c Make some explicit statements to f2py about input/output
+Cf2py intent(in) IMG,SEG,nt,np,thresh1,thresh2,nc,iters
+Cf2py intent(out) SEG, iters  
 c
 c----------------------------------------------------------------------
 c
