@@ -868,7 +868,7 @@ i.e. by a single edge, the vertices are called adjacent. </p>
 This means that there is a path between every pair of vertices.
 An undirected graph that is not connected is called disconnected. 
 An undirected graph G is therefore disconnected if there exist two vertices in G such that no path in G has these vertices as endpoints. </p>
-<p>In our project, the coronal hole database will be a set of <strong>connected subgraphs</strong>, where nodes are coronal hole contour object (see Contour.py) and edges connect identified coronal holes between frames (given area overlap results). The height/depth of the graph represents the number of frame connections. </p>
+<p>In our project, the coronal hole database will be a set of <strong>connected subgraphs</strong>, where nodes are coronal hole contour object (see Contour.py) and edges connect identified coronal holes between two sequential frames (given area overlap results). </p>
 <h2 id="implementation">Implementation</h2>
 <p>In Python, there are several libraries available that provide Graph functionality. After some reading , 
 it seems as Networkx is commonly used and is easy to use. In the module CoronalHoleGraph.py, 
