@@ -13,7 +13,7 @@ from analysis.ml_analysis.ch_tracking.contour import Contour
 from analysis.ml_analysis.ch_tracking.plots import plot_coronal_hole
 from analysis.ml_analysis.ch_tracking.knn import KNN
 from modules.map_manip import MapMesh
-from analysis.ml_analysis.ch_tracking.areaoverlap import area_overlap, classification_results
+from analysis.ml_analysis.ch_tracking.areaoverlap import area_overlap
 import json
 import cv2
 import pickle
@@ -23,7 +23,7 @@ Verbose = True
 # ======================================================================================================================
 # Read Pickle file saved in "results" folder as an object of coronalhole.py.
 # ======================================================================================================================
-ReadFile = True
+ReadFile = False
 
 if ReadFile:
     file_name = "results/first_frame_test_knn.pkl"
@@ -81,7 +81,7 @@ if SavePng and ReadFile:
 # ======================================================================================================================
 # Save to video.
 # ======================================================================================================================
-SaveVid = False
+SaveVid = True
 
 if SaveVid:
     # choose codec according to format needed
@@ -218,9 +218,3 @@ if testKNN:
     print(proba_mat)
 
 
-    # ======================================================================================================================
-    #  Based on the results above (area-overlap) we will decide if the new identified coronal hole is of an existing class
-    #  or a new identified coronal hole in database.
-    # ======================================================================================================================
-
-    print(classification_results(area_overlap_list=proba_mat, thresh=0.5))

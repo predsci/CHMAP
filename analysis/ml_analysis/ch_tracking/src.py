@@ -666,9 +666,56 @@ class CoronalHoleDB:
         """
         for curr_contour in contour_list:
             for prev_contour in self.window_holder[-1].contour_list:
-                p1, p2 = area_overlap(ch1=prev_contour, ch2=curr_contour, da=Contour.Mesh.da)
-                if (p1 + p2)/2 > self.connectivity_thresh:
-                    self.Graph.insert_edge(node_1=prev_contour, node_2=curr_contour)
+                self.add_weighted_edge(contour1=prev_contour, contour2=curr_contour)
+
+            if curr_contour.id < self.total_num_of_coronal_holes:
+                prev_list = self.get_contour_from_latest_frame(id=curr_contour.id, frame_num=curr_contour.frame_num)
+                for prev_contour in prev_list:
+                    if not self.Graph.G.has_edge(curr_contour, prev_contour):
+                        self.add_weighted_edge(contour1=prev_contour, contour2=curr_contour)
+
+    def add_weighted_edge(self, contour1, contour2):
+        """Add a weighted edge between two contours based on their area overlap.
+
+        Parameters
+        ----------
+        contour1: Contour()
+        contour2: Contour()
+
+        Returns
+        -------
+            N/A
+        """
+        p1, p2 = area_overlap(ch1=contour1, ch2=contour2, da=Contour.Mesh.da)
+        if (p1 + p2) / 2 > self.connectivity_thresh:
+            self.Graph.insert_edge(node_1=contour1, node_2=contour2, weight=round((p1 + p2) / 2, 3))
+
+    def get_contour_from_latest_frame(self, id, frame_num):
+        """Find the list of contours with a specific id in the latest frame it appeared.
+
+        Parameters
+        ----------
+        id: (int)
+        frame_num: (int)
+
+        Returns
+        -------
+            (list)
+        """
+        contour_list = []
+        frame_holder = -np.inf
+        ii = 2
+
+        while ii <= len(self.ch_dict[id].contour_list):
+            curr_frame = self.ch_dict[id].contour_list[-ii].frame_num
+            if frame_num > curr_frame >= frame_holder:
+                contour_list.append(self.ch_dict[id].contour_list[-ii])
+                frame_holder = curr_frame
+                ii += 1
+            else:
+                return contour_list
+
+        return contour_list
 
     def find_latest_contour_in_window(self, identity):
         """Find the latest contour of a specific id, in the window frame holder.

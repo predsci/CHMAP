@@ -12,17 +12,18 @@ Tracking Algorithm steps:
 6. force periodicity.
 7. match coronal holes to previous coronal holes in *window* consecutive frames.
 8. add contours to database - which can be saved to JSON file.
+9. graph connectivity - keep track of splitting & merging of coronal holes.
 """
 
 import cv2
 import numpy as np
 from analysis.ml_analysis.ch_tracking.contour import Contour
 import pickle
-from scipy import ndimage
 import json
 from modules.map_manip import MapMesh
-import matplotlib.pyplot as plt
 from analysis.ml_analysis.ch_tracking.src import CoronalHoleDB
+import matplotlib.pyplot as plt
+
 
 # Upload coronal hole video.
 cap = cv2.VideoCapture("example_vid/maps_r101_chm_low_res_1.mov")
