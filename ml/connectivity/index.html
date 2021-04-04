@@ -766,6 +766,13 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#plotting-subgraphs" class="md-nav__link">
+    Plotting Subgraphs
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -840,6 +847,13 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#plotting-subgraphs" class="md-nav__link">
+    Plotting Subgraphs
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -868,17 +882,20 @@ i.e. by a single edge, the vertices are called adjacent. </p>
 This means that there is a path between every pair of vertices.
 An undirected graph that is not connected is called disconnected. 
 An undirected graph G is therefore disconnected if there exist two vertices in G such that no path in G has these vertices as endpoints. </p>
-<p>In our project, the coronal hole database will be a set of <strong>connected subgraphs</strong>, where nodes are coronal hole contour object (see Contour.py) and edges connect identified coronal holes between two sequential frames (given area overlap results). </p>
+<p>In our project, the coronal hole database will be a set of <strong>connected weighted subgraphs</strong>, 
+where nodes are coronal hole contour object (see Contour.py) 
+and edges connect identified coronal holes between two sequential frames (given area overlap results). The edge weight corresponds
+to area overlap average ratio with previous frame instance (see <a href="../areaoverlap/">areaoverlap</a>). </p>
 <h2 id="implementation">Implementation</h2>
-<p>In Python, there are several libraries available that provide Graph functionality. After some reading , 
-it seems as Networkx is commonly used and is easy to use. In the module CoronalHoleGraph.py, 
+<p>In Python, there are several libraries available that provide Graph functionality. After some reading, 
+it seems as <em>Networkx</em> is commonly used and is easy to use. In the module CoronalHoleGraph.py, 
 there is a class called CoronalHoleGraph() . This class is the data structure that will store identified 
 contours and their connectivity. For plotting purposes, each contour will be associated with a frame number (y-axis) 
 and count (x-axis) in case of repetition in the same frame. Connectivity is determined by the area overlap of two contours. </p>
-<ul>
-<li>Q: Connectivity should only depend on previous frame? How do we identify an edge? - Can be discussed on Thursday🙂</li>
-</ul>
-<p>!<img alt="" src="../images/connectivity_frame9.png" /></p>
+<h2 id="plotting-subgraphs">Plotting Subgraphs</h2>
+<p>In the plot below, the connected subgraphs are ordered hierarchically based on average area. The edge color is based on 
+the edge weight. see Grey colormap. </p>
+<p>!<img alt="" src="../images/connectivity_cbar.png" /></p>
                 
               
               
