@@ -24,7 +24,8 @@ contours and their connectivity. For plotting purposes, each contour will be ass
 and count (x-axis) in case of repetition in the same frame. Connectivity is determined by the area overlap of two contours. 
 
 ## Plotting Subgraphs 
-In the plot below, the connected subgraphs are ordered hierarchically based on average area. The edge color is based on 
-the edge weight. see Grey colormap. 
+In the plot below, the connected subgraphs are ordered hierarchically based on subgraph average node area. 
+The edge color is based on the edge weight or area ratio, hence, dark edges correspond with strong 
+overlap whereas light edges correspond to a weak overlap (see Grey colormap). 
 
 !![](images/connectivity_cbar.png)
