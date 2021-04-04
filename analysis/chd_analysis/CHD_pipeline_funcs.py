@@ -279,8 +279,11 @@ def chd(iit_list, los_list, use_indices, inst_list, thresh1, thresh2, ref_alpha,
             # we will only use 'use_chd' pixels, but to avoid warnings on np.log10(image_data)
             image_data[image_data <= 0.] = 1e-8
 
-            # fortran CHD algorithm
-            ezseg_output, iters_used = ezsegwrapper.ezseg(np.log10(image_data), use_chd, nx, ny, t1, t2, nc, iters)
+            # fortran CHD algorithm. use keyword-assignment for all variables because
+            #             # f2py will sometimes identify inputs as optional and reorder them.
+            ezseg_output, iters_used = ezsegwrapper.ezseg(img=np.log10(image_data), seg=use_chd,
+                                                          nt=ny, np=nx, thresh1=t1, thresh2=t2,
+                                                          nc=nc, iters=iters)
             chd_result = np.logical_and(ezseg_output == 0, use_chd == 1)
             chd_result = chd_result.astype(int)
 
@@ -327,8 +330,11 @@ def chd_2(iit_list, los_list, use_indices, thresh1, thresh2, ref_alpha, ref_x, n
             # we will only use 'use_chd' pixels, but to avoid warnings on np.log10(image_data)
             image_data[image_data <= 0.] = 1e-8
 
-            # fortran CHD algorithm
-            ezseg_output, iters_used = ezsegwrapper.ezseg(np.log10(image_data), use_chd, nx, ny, t1, t2, nc, iters)
+            # fortran CHD algorithm. use keyword-assignment for all variables because
+            # f2py will sometimes identify inputs as optional and reorder them.
+            ezseg_output, iters_used = ezsegwrapper.ezseg(
+                img=np.log10(image_data), seg=use_chd, nt=ny, np=nx, thresh1=t1,
+                thresh2=t2, nc=nc, iters=iters)
             chd_result = np.logical_and(ezseg_output == 0, use_chd == 1)
             chd_result = chd_result.astype(int)
 
