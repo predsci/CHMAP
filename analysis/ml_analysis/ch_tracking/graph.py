@@ -3,7 +3,7 @@ Here, we analyze coronal hole connectivity- when do coronal holes merge? split? 
 
 Note: this module imports networkx library.
 
-TODO: Only plot *x* approx 10 subplots so it will not be cluttered.
+Last Modified: April 13th, 2021 (Opal)
 """
 
 import networkx as nx
@@ -200,31 +200,37 @@ class CoronalHoleGraph:
         # (descending order)
         return [subgraph_list[i] for i in sorted_index]
 
-    def create_plots(self, save_dir=False, subplots=True):
+    def create_plots(self, save_dir=False, subplots=True, subplots_thresh=10, timestamps=False):
         """Plot the resulting isolated connected sub - graphs in separate figures.
 
         Parameters
         ----------
+        timestamps: (bool or list)
+            If set to False, y axis labels are the frame number. Otherwise y axis labels will be the timestamps.
         subplots: (bool)
                 If subplot is True, then sub- graphs are plotted on the same figure in subplots. -
                 This is noy recommended when there are a large number of nodes in each subplot.
         save_dir: (bool or str)
                 If not False, will save figures in save_dir directory.
 
+        subplots_thresh: (int)
+                Threshold of number of subplots to plot - above a certain threshold they
+                start overlapping.
+
         Returns
         -------
-
+             N/A
         """
         num_of_subplots = len(list(nx.connected_components(self.G)))
 
         if subplots:
-            fig, axes = plt.subplots(nrows=1, ncols=int(num_of_subplots), sharey=True)
+            fig, axes = plt.subplots(nrows=1, ncols=min(subplots_thresh, num_of_subplots), sharey=True)
             axes = axes.flatten()
 
         ii = 0
         edge_color_bar = None
         # sort the subgraphs based on area. The first subgraphs are long lived-large coronal holes.
-        sub_graph_list = self.order_subgraphs_based_on_area()
+        sub_graph_list = self.order_subgraphs_based_on_area()[:subplots_thresh]
 
         # loop over each subgraph and plot
         for connectedG in sub_graph_list:
@@ -278,6 +284,10 @@ class CoronalHoleGraph:
                     ax.yaxis.get_major_locator().set_params(integer=True)
                     ax.xaxis.get_major_locator().set_params(integer=True)
 
+                    # timestamp as y axis.
+                    if timestamps:
+                        ax.set_yticklabels(timestamps)
+
                     # invert the y axis.
                     ax.invert_yaxis()
                     ax.axis('on')
@@ -298,8 +308,8 @@ class CoronalHoleGraph:
                 plt.title("Coronal Hole Connectivity")
                 plt.show()
 
-            if save_dir is not False:
-                plt.savefig(save_dir + "/connected_sub_graph_" + str(ii) + ".png")
+            # if save_dir is not False:
+            #     plt.savefig(save_dir + "/connected_sub_graph_" + str(ii) + ".png")
             ii += 1
 
         if subplots:
@@ -310,4 +320,5 @@ class CoronalHoleGraph:
             fig.suptitle("Coronal Hole Connectivity")
             fig.subplots_adjust(wspace=0.01, hspace=0.01)
 
-            plt.show()
+            if save_dir is not False:
+                plt.savefig(save_dir)

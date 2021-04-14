@@ -291,7 +291,7 @@ class CoronalHoleDB:
                     c2 = contour_list[jj]
                     if c2.periodic_at_zero:
                         # get interval of latitude at 2pi.
-                        t1, t2 = c1.lat_interval_at_2_pi()
+                        t1, t2 = c1.lat_interval_at_2_pi(Mesh=self.Mesh)
                         # get interval of latitude at 0.
                         t3, t4 = c2.lat_interval_at_zero()
                         # check if intervals overlap.
@@ -390,16 +390,20 @@ class CoronalHoleDB:
         # force periodicity.
         return self._force_periodicity(contour_list=contour_list)
 
-    def assign_new_coronal_holes(self, contour_list):
+    def assign_new_coronal_holes(self, contour_list, timestamp=None):
         """Match coronal holes to previous *window* frames.
 
         Parameters
         ----------
-        contour_list: current frame Contour() list.
+        contour_list:
+            (list) current frame Contour() list.
+
+        timestamp:
+            (str) frame timestamp
 
         Returns
         -------
-        None
+            N/A
         """
         # if this is the first image in the sequence then just save coronal holes.
         if self.frame_num == 1:
@@ -441,7 +445,8 @@ class CoronalHoleDB:
             self.update_connectivity_prev_frame(contour_list=contour_list)
 
         # update window holder.
-        self.update_previous_frames(frame=Frame(contour_list=contour_list, identity=self.frame_num))
+        self.update_previous_frames(frame=Frame(contour_list=contour_list, identity=self.frame_num,
+                                                timestamp=timestamp))
 
     def global_match_coronal_holes_algorithm(self, contour_list):
         """ Match coronal holes between sequential frames using KNN and area overlap probability.

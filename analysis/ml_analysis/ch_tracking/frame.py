@@ -11,7 +11,7 @@ import json
 
 class Frame:
     """ Frame data structure. """
-    def __init__(self, contour_list, identity):
+    def __init__(self, contour_list, identity, timestamp=None):
         # list of Contours that are part of this CoronalHole Object.
         self.contour_list = contour_list
 
@@ -23,6 +23,9 @@ class Frame:
 
         # the unique identification number of this frame.
         self.id = identity
+
+        # frame time stamp: usually a string or astropy timestamp.
+        self.timestamp = timestamp
 
     def __str__(self):
         return json.dumps(
