@@ -3,16 +3,12 @@ Here, we analyze coronal hole connectivity- when do coronal holes merge? split? 
 
 Note: this module imports networkx library.
 
-# TODO: sort subgraphs based on average area :) 1/frame * sum(area)
-# TODO: fix plotting "count" so edges will *not* cross each other.
+TODO: Only plot *x* approx 10 subplots so it will not be cluttered.
 """
 
 import networkx as nx
 import matplotlib.pyplot as plt
 import matplotlib.colors as c
-from analysis.ml_analysis.ch_tracking.contour import Contour
-from modules.map_manip import MapMesh
-
 import numpy as np
 import json
 

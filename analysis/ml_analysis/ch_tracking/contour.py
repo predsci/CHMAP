@@ -1,69 +1,60 @@
-"""
-Author: Opal Issan, Feb 13th, 2021.
+"""A data structure for a coronal hole contour.
+Last Modified: April 13th, 2021 (Opal)
 
-A data structure for a coronal hole contour.
 List of properties:                                         || Name of variable.
-- centroid pixel location (x,y) in spherical coordinates    || pixel_centroid
-- centroid physical location (phi, theta)                   || phys_centroid
-- contour physical area                                     || area
-- bounding rectangle straight                               || straight_box
-- straight_box_area                                         || straight box area
+=======================================================================================================================
+- centroid pixel location (theta: int, phi: int)            || pixel_centroid
+- centroid physical location (phi: float, theta: float)     || phys_centroid
+- contour physical area (solar radii)                       || area
+- straight bounding rectangle                               || straight_box
+- straight bounding rectangle area                          || straight box area
 - rotated box                                               || rot_box
 - rotated box corners                                       || rot_box_corners
 - rotated box angle                                         || rot_box_angle
-- convex hull points                                        || convex_hull
 - coronal hole tilt                                         || pca_tilt
-- coronal hole symmetry (lambda_max/lambda_min)             || sig_tilt
+- coronal hole symmetry (eig_max/eig_min)                   || sig_tilt
 - periodic boundary                                         || periodic_at_zero & periodic_at_2pi
-
-
-- periodicity (handled by several functions)
-
-* NOTE:
-- n_t and n_p : image dimensions.
-- Mesh : image mesh grid.
-
-
-# TODO: REMOVE MESHMAP FROM CLASS PARAMETERS ITS EXPENSIVE TO STORE AND DOES NOT MAKE SENSE TO FO SO FOR EVERY CONTOUR..
 """
-
 import numpy as np
 import json
 import cv2 as cv
-import matplotlib.pyplot as plt
 
 
 class Contour:
     """ Coronal Hole Single Contour Object Data Structure.
-    :parameter contour_pixels = coronal hole pixel location.  """
 
-    # image dimensions latitude and longitude.
-    n_t, n_p = None, None
-    Mesh = None  # This will be an object of type MeshMap with information about the input image mesh grid.
+    Parameters
+    ----------
+    Mesh:
+        MapMesh object with image coordinates and pixel area.
 
-    def __init__(self, contour_pixels, frame_num=None):
+     contour_pixels:
+        coronal hole pixel location.
+    """
+
+    def __init__(self, contour_pixels, Mesh, frame_num=None):
         # save contour inner pixels. shape: [list(row), list(column)].
         self.contour_pixels_theta = contour_pixels[0]
         self.contour_pixels_phi = contour_pixels[1]
 
-        # frame number id.
+        # frame number id in Julian Day number.
         self.frame_num = frame_num
 
         # contour physical area based on lat-lon contour_pixels.
         # sum(d𝐴=𝑟^2 * sin𝜃 * d𝜙 * d𝜃)
-        self.area = np.sum(Contour.Mesh.da[self.contour_pixels_phi, self.contour_pixels_theta])
+        self.area = np.sum(Mesh.da[self.contour_pixels_phi, self.contour_pixels_theta])
 
         # contour centroid physical location in lat-lon projection. (t, p)
         self.phys_centroid = None
 
         # centroid pixel location in polar projection for coronal hole matching (x,y).
-        self.pixel_centroid = self.compute_pixel_centroid()
+        self.pixel_centroid = self.compute_pixel_centroid(Mesh=Mesh)
 
         # compute the bounding box upper left corner, width, height (x, y, w, h).
         self.straight_box = self.compute_straight_bounding_rectangle()
 
         # contour straight bounding box physical area based on lat-lon contour_pixels.
-        self.straight_box_area = self.compute_straight_box_area()
+        self.straight_box_area = self.compute_straight_box_area(Mesh=Mesh)
 
         # compute the rotated bounding box with min pixel area.
         self.rot_box = self.compute_rotated_rect()
@@ -75,20 +66,10 @@ class Contour:
         self.rot_box_angle = self.compute_rot_box_angle()
 
         # compute the rotate box area.
-        self.rot_box_area = self.compute_rot_box_area()
-
-        # TODO: Do we want to compute the following features?
-        # compute the rotated box perimeter.
-        # self.rot_box_perimeter = self.compute_rot_perimeter()
-
-        # compute convex hull.
-        # self.convex_hull = self.compute_convex_hull()
-
-        # compute convex hull perimeter on a sphere.
-        # self.convex_hull_perimeter = self.compute_convex_hull_perimeter()
+        self.rot_box_area = self.compute_rot_box_area(Mesh=Mesh)
 
         # compute the tilt of the coronal hole in spherical coordinates using PCA.
-        self.pca_tilt, self.sig_tilt = self.compute_coronal_hole_tilt_pca()
+        self.pca_tilt, self.sig_tilt = self.compute_coronal_hole_tilt_pca(Mesh=Mesh)
 
         # the unique identification number of this coronal hole (should be a natural number).
         self.id = None
@@ -101,7 +82,7 @@ class Contour:
 
         # periodic label.
         self.periodic_at_zero = self.is_periodic_zero()
-        self.periodic_at_2pi = self.is_periodic_2_pi()
+        self.periodic_at_2pi = self.is_periodic_2_pi(Mesh=Mesh)
 
     def __str__(self):
         return json.dumps(
@@ -109,8 +90,6 @@ class Contour:
 
     def json_dict(self):
         return {
-        #    'ch_id': self.id,
-        #    'color': self.color,
             'frame_num': self.frame_num,
             'centroid_spherical': self.phys_centroid,
             'centroid_pixel': self.pixel_centroid,
@@ -123,21 +102,27 @@ class Contour:
             'significance_of_tilt': self.sig_tilt,
         }
 
-    def compute_pixel_centroid(self):
+    def compute_pixel_centroid(self, Mesh):
         """ Given the coronal hole pixel location we can compute the pixel center in polar projection.
+            Saves the centroid pixel location and physical location in spherical coordinates.
+
+        Parameters
+        ----------
+        Mesh:
+            MapMesh object.
 
         Returns
         -------
-        (t, p) image pixel coordinates
+            (t: int, p: int) image pixel coordinates
         """
         try:
             # convert to cartesian coordinates.
-            x = Contour.Mesh.x2d[self.contour_pixels_phi, self.contour_pixels_theta]
-            y = Contour.Mesh.y2d[self.contour_pixels_phi, self.contour_pixels_theta]
-            z = Contour.Mesh.z2d[self.contour_pixels_phi, self.contour_pixels_theta]
+            x = Mesh.x2d[self.contour_pixels_phi, self.contour_pixels_theta]
+            y = Mesh.y2d[self.contour_pixels_phi, self.contour_pixels_theta]
+            z = Mesh.z2d[self.contour_pixels_phi, self.contour_pixels_theta]
 
             # access the area of each pixel of the image grid.
-            A = Contour.Mesh.da[self.contour_pixels_phi, self.contour_pixels_theta]
+            A = Mesh.da[self.contour_pixels_phi, self.contour_pixels_theta]
 
             # compute the weighted mean of each coordinate and convert back to spherical coordinates.
             x_mean = np.dot(A, x) / self.area
@@ -148,15 +133,21 @@ class Contour:
             self.phys_centroid = self._cartesian_centroid_to_spherical_coordinates(x=x_mean, y=y_mean, z=z_mean)
 
             # return image pixel coordinates.
-            return self._spherical_coordinates_to_image_coordinates(*self.phys_centroid)
+            return self._spherical_coordinates_to_image_coordinates(t=self.phys_centroid[0], p=self.phys_centroid[1],
+                                                                    Mesh=Mesh)
 
         except ArithmeticError:
             raise ArithmeticError('Contour pixels are invalid. ')
 
-    def compute_coronal_hole_tilt_pca(self):
+    def compute_coronal_hole_tilt_pca(self, Mesh):
         """Compute the tilt of the coronal hole with respect to north using PCA method.
         If eigenvalue ratio is close to 1 then the coronal hole tilt is insignificant.
         Otherwise, when the eigenvalue ratio>>1 then the coronal hole shape has an apparent tilt.
+
+        Parameters
+        ----------
+        Mesh:
+            MapMesh object with image coordinates and pixel area.
 
         Returns
         -------
@@ -164,11 +155,11 @@ class Contour:
 
         """
         # theta, phi coordinates.
-        phi = Contour.Mesh.p[self.contour_pixels_phi]
-        theta = Contour.Mesh.t[self.contour_pixels_theta]
+        phi = Mesh.p[self.contour_pixels_phi]
+        theta = Mesh.t[self.contour_pixels_theta]
 
         # access the area of each pixel of the image grid.
-        A = Contour.Mesh.da[self.contour_pixels_phi, self.contour_pixels_theta]
+        A = Mesh.da[self.contour_pixels_phi, self.contour_pixels_theta]
 
         # recenter around weighted mean.
         pc = phi - self.phys_centroid[1]
@@ -207,7 +198,7 @@ class Contour:
         angle = np.arctan2(x_v1, y_v1)
         return (180 / np.pi * angle), sig
 
-    def _image_pixel_location_to_cartesian(self, t, p):
+    def _image_pixel_location_to_cartesian(self, t, p, Mesh):
         """ Convert longitude latitude image pixel location to cartesian coordinates.
         x = ρ sinθ cosφ
         y = ρ sinθ sinφ
@@ -217,13 +208,15 @@ class Contour:
         ----------
         t: list or numpy array
         p: list or numpy array
+        Mesh:
+            MapMesh object with image coordinates and pixel area.
 
         Returns
         -------
         x, y, z - all numpy arrays
         """
         # convert image pixel location to spherical coordinates.
-        theta, phi = self._image_coordinates_to_spherical_coordinates(t=t, p=p)
+        theta, phi = self._image_coordinates_to_spherical_coordinates(t=t, p=p, Mesh=Mesh)
         # return x, y, z.
         return np.sin(theta) * np.cos(phi), np.sin(theta) * np.sin(phi), np.cos(theta)
 
@@ -252,41 +245,44 @@ class Contour:
         return t, p
 
     @staticmethod
-    def _spherical_coordinates_to_image_coordinates(t, p):
+    def _spherical_coordinates_to_image_coordinates(t, p, Mesh):
         """Convert spherical coordinates to image coordinates.
 
         Parameters
         ----------
         t: float
         p: float
+        Mesh:
+            MapMesh object with image coordinates and pixel area.
 
         Returns
         -------
         t, p
         """
         if 0 <= p <= 2 * np.pi and 0 <= t <= np.pi:
-            return int(Contour.Mesh.interp_t2index(t)), int(Contour.Mesh.interp_p2index(p))
+            return int(Mesh.interp_t2index(t)), int(Mesh.interp_p2index(p))
         else:
             raise ValueError('When converting spherical coordinates to image coordinates,'
                              ' 0 <= phi < 2pi and 0 <= theta <= pi.')
 
     @staticmethod
-    def _image_coordinates_to_spherical_coordinates(t, p):
+    def _image_coordinates_to_spherical_coordinates(t, p, Mesh):
         """Convert image coordinates to spherical coordinates.
 
         Parameters
         ----------
         t: int
         p: int
+        Mesh:
+            MapMesh object with image coordinates and pixel area.
 
         Returns
         -------
         row, column spherical coordinates.
         """
-
-        if 0 <= np.all(t) <= Contour.n_t and 0 <= np.all(p) <= Contour.n_p:
-            return Contour.Mesh.t[t], Contour.Mesh.p[p]
-        else:
+        try:
+            return Mesh.t[t], Mesh.p[p]
+        except Exception:
             raise ValueError('Image coordinates are out of input image dimensions.')
 
     def compute_straight_bounding_rectangle(self):
@@ -307,10 +303,16 @@ class Contour:
         except Exception:
             raise ArithmeticError("contour pixel locations are invalid. ")
 
-    def compute_straight_box_area(self):
+    def compute_straight_box_area(self, Mesh):
         """ Compute the contour's straight bounding box area.
         d𝐴=𝑟^2 * sin𝜃 * d𝜙 * d𝜃, let r be in solar radii.
         A = (cos(𝜃1) - cos(𝜃2)) * (𝜙1 - 𝜙2)
+
+        Parameters
+        ----------
+        Mesh:
+            MapMesh object with image coordinates and pixel area.
+
 
         Returns
         -------
@@ -320,13 +322,13 @@ class Contour:
             # access left corner pixel coordinates and width and height.
             x, y, w, h = self.straight_box
             if w == 0 and h == 0:
-                return Contour.Mesh.da[x, y]
+                return Mesh.da[x, y]
             elif w == 0 and h > 0:
-                np.sum(Contour.Mesh.da[x: x + w, y])
+                np.sum(Mesh.da[x: x + w, y])
             elif w > 0 and h == 0:
-                np.sum(Contour.Mesh.da[x, y:y + h])
+                np.sum(Mesh.da[x, y:y + h])
             else:
-                return np.sum(Contour.Mesh.da[x: x + w, y: y + h])
+                return np.sum(Mesh.da[x: x + w, y: y + h])
 
         except Exception:
             raise ArithmeticError("Straight box coordinates, weight, or height are not valid.")
@@ -343,28 +345,38 @@ class Contour:
             return True
         return False
 
-    def is_periodic_2_pi(self):
+    def is_periodic_2_pi(self, Mesh):
         """If the coronal hole detected at 2 pi (phi)
+
+        Parameters
+        ----------
+        Mesh:
+            MapMesh object with image coordinates and pixel area.
 
         Returns
         -------
         boolean
         """
         # check if 2pi pixel is included in the contour pixels.
-        if (Contour.n_p - 1) in self.contour_pixels_phi:
+        if (Mesh.n_p - 1) in self.contour_pixels_phi:
             return True
         return False
 
-    def lat_interval_at_2_pi(self):
+    def lat_interval_at_2_pi(self, Mesh):
         """Return the latitude pixel interval where the contour pixels are 2pi longitude.
         This function is used to force periodicity.
+
+        Parameters
+        ----------
+        Mesh:
+            MapMesh object with image coordinates and pixel area.
 
         Returns
         -------
         (min_lat, max_lat)- pixel image coordinates
         """
         if self.periodic_at_2pi:
-            mask = (self.contour_pixels_phi == int(Contour.n_p - 1))
+            mask = (self.contour_pixels_phi == int(Mesh.n_p - 1))
             index = np.argwhere(mask)
             return np.min(self.contour_pixels_theta[index]), np.max(self.contour_pixels_theta[index])
 
@@ -396,8 +408,13 @@ class Contour:
         else:
             return None
 
-    def compute_rot_perimeter(self):
+    def compute_rot_perimeter(self, Mesh):
         """Compute the rotated box perimeter on a sphere using the haversine metric.
+
+        Parameters
+        ----------
+        Mesh:
+            MapMesh object with image coordinates and pixel area.
 
         Returns
         -------
@@ -421,45 +438,11 @@ class Contour:
 
                 # convert the two consecutive points from pixel coordinates to spherical coordinates.
                 p1 = self._image_coordinates_to_spherical_coordinates(t=self.rot_box_corners[ii][1],
-                                                                      p=self.rot_box_corners[ii][0])
+                                                                      p=self.rot_box_corners[ii][0],
+                                                                      Mesh=Mesh)
                 p2 = self._image_coordinates_to_spherical_coordinates(t=self.rot_box_corners[ii + 1][1],
-                                                                      p=self.rot_box_corners[ii + 1][0])
-                perimeter += self.haversine(p1=p1, p2=p2)
-
-            return perimeter
-
-    def compute_convex_hull_perimeter(self):
-        """Compute the convex hull perimeter on a sphere using the haversine metric.
-
-        Returns
-        -------
-            float: perimeter on a sphere.
-        """
-        if self.convex_hull is None:
-            return None
-
-        elif len(self.convex_hull) < 3:
-            return None
-
-        else:
-            # compute the distance on a sphere between each consecutive points on the convex hull.
-
-            # initialize the perimeter holder.
-            perimeter = 0
-
-            # loop over each consecutive pair of points and compute its distance on a sphere
-            # using the haversine metric.
-            for ii in range(len(self.convex_hull)):
-
-                # compute the distance between the first and the last point.
-                if ii == len(self.convex_hull) - 1:
-                    ii = -1
-
-                # convert the two consecutive points from pixel coordinates to spherical coordinates.
-                p1 = self._image_coordinates_to_spherical_coordinates(t=self.convex_hull[ii][0][0],
-                                                                      p=self.convex_hull[ii][0][1])
-                p2 = self._image_coordinates_to_spherical_coordinates(t=self.convex_hull[ii + 1][0][0],
-                                                                      p=self.convex_hull[ii + 1][0][1])
+                                                                      p=self.rot_box_corners[ii + 1][0],
+                                                                      Mesh=Mesh)
                 perimeter += self.haversine(p1=p1, p2=p2)
 
             return perimeter
@@ -488,10 +471,10 @@ class Contour:
     def compute_rotated_rect(self):
         """Find the bounding rectangle with the minimum pixel area.
 
-            Returns
-            -------
-             center (x,y), (width, height), angle of rotation
-            """
+        Returns
+        -------
+         center (x,y), (width, height), angle of rotation
+        """
         if len(self.contour_pixels_theta) > 1 and len(self.contour_pixels_phi) > 1:
             # access contour pixels.
             points = self.open_cv_pixels_format()
@@ -500,7 +483,7 @@ class Contour:
             return None
 
     def open_cv_pixels_format(self):
-        """Return OpenCV Contour pixel locations. This function is used to find minRect minCirlce and ConvexHull.
+        """Return OpenCV Contour pixel locations. This function is used to find minRect minCircle and ConvexHull.
 
         Returns
         -------
@@ -512,6 +495,7 @@ class Contour:
     def rotated_rect_corners(self):
         """Find the rotated box corners.
         The lowest phi point in a rectangle is 0th vertex, and 1st, 2nd, 3rd vertices follow clockwise.
+
         Returns
         -------
         (x1, y1), (x2, y2), (x3, y3), (x4, y4)
@@ -554,8 +538,13 @@ class Contour:
         else:
             return None
 
-    def compute_rot_box_area(self):
+    def compute_rot_box_area(self, Mesh):
         """Compute rotated box area.
+
+        Parameters
+        ----------
+        Mesh:
+            MapMesh object with image coordinates and pixel area.
 
         Returns
         -------
@@ -563,10 +552,53 @@ class Contour:
         """
         if self.rot_box is not None:
             # create a mask the size of our original image.
-            mask = np.zeros((Contour.n_t, Contour.n_p), dtype=np.uint8)
+            mask = np.zeros((Mesh.n_t, Mesh.n_p), dtype=np.uint8)
             # find all the pixels inside the rotated rectangle and mark them 1.
             cv.fillPoly(img=mask, pts=[self.rot_box_corners], color=1)
             # find pixel location of the mask.
             mask_location = np.where(mask)
             # multiply the mask by the area.
-            return np.sum(Contour.Mesh.da[mask_location[1], mask_location[0]])
+            return np.sum(Mesh.da[mask_location[1], mask_location[0]])
+
+    # def compute_convex_hull_perimeter(self, Mesh):
+    #     """Compute the convex hull perimeter on a sphere using the haversine metric.
+    #
+    #     Parameters
+    #     ----------
+    #     Mesh:
+    #         MapMesh object with image coordinates and pixel area.
+    #
+    #     Returns
+    #     -------
+    #         float: perimeter on a sphere.
+    #     """
+    #     if self.convex_hull is None:
+    #         return None
+    #
+    #     elif len(self.convex_hull) < 3:
+    #         return None
+    #
+    #     else:
+    #         # compute the distance on a sphere between each consecutive points on the convex hull.
+    #
+    #         # initialize the perimeter holder.
+    #         perimeter = 0
+    #
+    #         # loop over each consecutive pair of points and compute its distance on a sphere
+    #         # using the haversine metric.
+    #         for ii in range(len(self.convex_hull)):
+    #
+    #             # compute the distance between the first and the last point.
+    #             if ii == len(self.convex_hull) - 1:
+    #                 ii = -1
+    #
+    #             # convert the two consecutive points from pixel coordinates to spherical coordinates.
+    #             p1 = self._image_coordinates_to_spherical_coordinates(t=self.convex_hull[ii][0][0],
+    #                                                                   p=self.convex_hull[ii][0][1],
+    #                                                                   Mesh=Mesh)
+    #             p2 = self._image_coordinates_to_spherical_coordinates(t=self.convex_hull[ii + 1][0][0],
+    #                                                                   p=self.convex_hull[ii + 1][0][1],
+    #                                                                   Mesh=Mesh)
+    #             perimeter += self.haversine(p1=p1, p2=p2)
+    #
+    #         return perimeter

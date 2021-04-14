@@ -1,4 +1,5 @@
-"""Match Coronal Holes based on their area overlap. """
+"""Helper Functions to match Coronal Holes based on their area overlap.
+Last Modification: April 13th, 2021 (Opal) """
 
 import numpy as np
 
@@ -16,7 +17,7 @@ def area_overlap(ch1, ch2, da):
 
     Returns
     -------
-        areaoverlap/ch1area, areaoverlap/ch2area
+        intersection/ch1area: float (non-negative ratio), intersection/ch2area: float (non-negative ratio)
     """
     # zip ch1 pixel location.
     ch1_location = list(zip(ch1.contour_pixels_phi, ch1.contour_pixels_theta))
@@ -27,6 +28,7 @@ def area_overlap(ch1, ch2, da):
     # find intersection - [phi, theta].
     pixel_intersection = np.array(list(ch2_location.intersection(ch1_location)))
 
+    # the two coronal holes pixel sets are disjoint.
     if len(pixel_intersection) == 0:
         intersection = 0
     else:
@@ -37,7 +39,7 @@ def area_overlap(ch1, ch2, da):
 
 
 def max_area_overlap(area_check_list, area_overlap_results, threshold=0.5):
-    """ Return the ID with the *most* area overlap.
+    """ Return the ID with high area overlap.
 
     Parameters
     ----------
@@ -58,6 +60,7 @@ def max_area_overlap(area_check_list, area_overlap_results, threshold=0.5):
     # initialize the returned list.
     match_list = [None] * len(area_overlap_results)
 
+    # loop over area overlap results.
     for ii, res in enumerate(area_overlap_results):
         # find the maximum area overlap average ratio.
         max_val = max(res)
@@ -73,5 +76,4 @@ def max_area_overlap(area_check_list, area_overlap_results, threshold=0.5):
 
             # assign the corresponding ID number.
             match_list[ii] = area_check_list[ii][max_index]
-
     return match_list

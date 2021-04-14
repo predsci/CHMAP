@@ -1,12 +1,12 @@
 """
-Author: Opal Issan, March 25th, 2021.
+Last Modified: April 15th, 2021.
 
-A data structure for a set of coronal hole objects.
+A data structure for a set of coronal hole tracking (CHT) algorithm.
 
 
 # TODO LIST:
             1. create a test function to create graphs.
-            2. rename this file to "src"
+
 """
 
 import json
@@ -35,6 +35,8 @@ class CoronalHoleDB:
     connectivity_thresh = 0.001
     # connectivity threshold.
     area_match_thresh = 0.4
+    # MeshMap with information about the input image mesh grid and pixel area.
+    Mesh = None
 
     def __init__(self):
         # list of Contours that are part of this CoronalHole Object.
@@ -187,51 +189,54 @@ class CoronalHoleDB:
             # find image pixel coordinates.
             contour_pixel = np.asarray(np.where(mask))
             # save contour in a list if its not zero.
-            coronal_hole_list.append(Contour(contour_pixels=contour_pixel, frame_num=self.frame_num))
+            coronal_hole_list.append(Contour(contour_pixels=contour_pixel,
+                                             frame_num=self.frame_num,
+                                             Mesh=self.Mesh))
         return coronal_hole_list
 
-    def plot_dilated_contours(self, contours):
-        """Draw filled contours of dilated greyscale input image.
-
-        Parameters
-        ----------
-        contours: opencv contours.
-
-        Returns
-        -------
-        rbg: image where each contour has a unique color
-        color_list: list of unique contour colors.
-        """
-        # initialize RBG image.
-        rbg = np.zeros((Contour.n_t, Contour.n_p, 3), dtype=np.uint8)
-        # initialize contour color list.
-        color_list = np.zeros((len(contours), 3))
-
-        # draw contours on rbg.
-        for ii, contour in enumerate(contours):
-            color_list[ii] = self.generate_ch_color()
-            cv2.drawContours(image=rbg, contours=[contour], contourIdx=0, color=color_list[ii],
-                             thickness=cv2.FILLED)
-        return rbg, color_list.astype(int)
-
-    def find_contours(self, image):
-        """Find contours contours of a greyscale image.
-
-        Parameters
-        ----------
-        image - gray scaled image.
-
-        Returns
-        -------
-        rbg image
-        list of unique colors.
-        """
-        # create binary threshold.
-        ret, thresh = cv2.threshold(image, CoronalHoleDB.BinaryThreshold, 255, 0)
-        # find contours using opencv function.
-        contours, hierarchy = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
-        # draw contours.
-        return self.plot_dilated_contours(contours=contours)
+    # def plot_dilated_contours(self, contours):
+    #     """Draw filled contours of dilated greyscale input image.
+    #
+    #     Parameters
+    #     ----------
+    #     contours: opencv contours.
+    #
+    #     Returns
+    #     -------
+    #     rbg: image where each contour has a unique color
+    #     color_list: list of unique contour colors.
+    #     """
+    #     # initialize RBG image.
+    #     rbg = np.zeros((self.Mesh.n_t, self.Mesh.n_p, 3), dtype=np.uint8)
+    #     # initialize contour color list.
+    #     color_list = np.zeros((len(contours), 3))
+    #
+    #     # draw contours on rbg.
+    #     for ii, contour in enumerate(contours):
+    #         color_list[ii] = self.generate_ch_color()
+    #         cv2.drawContours(image=rbg, contours=[contour], contourIdx=0, color=color_list[ii],
+    #                          thickness=cv2.FILLED)
+    #     return rbg, color_list.astype(int)
+    #
+    # def find_contours(self, image):
+    #     """Find contours contours of a greyscale image.
+    #
+    #     Parameters
+    #     ----------
+    #     image - gray scaled image.
+    #
+    #     Returns
+    #     -------
+    #     rbg image
+    #     list of unique colors.
+    #     """
+    #     # create binary threshold.
+    #     ret, thresh = cv2.threshold(image, CoronalHoleDB.BinaryThreshold, 255, 0)
+    #     # find contours using opencv function.
+    #     contours, hierarchy = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
+    #     # draw contours.
+    #     return self.plot_dilated_contours(contours=contours)
+    #
 
     @staticmethod
     def generate_ch_color():
@@ -268,7 +273,7 @@ class CoronalHoleDB:
                         # get interval of latitude at 0.
                         t1, t2 = c1.lat_interval_at_zero()
                         # get interval of latitude at 2pi.
-                        t3, t4 = c2.lat_interval_at_2_pi()
+                        t3, t4 = c2.lat_interval_at_2_pi(Mesh=self.Mesh)
                         # check if intervals overlap.
                         if self._interval_overlap(t1, t2, t3, t4):
                             # merge the two contours by appending c2 to c1.
@@ -299,8 +304,7 @@ class CoronalHoleDB:
             ii += 1
         return contour_list
 
-    @staticmethod
-    def _merge_contours(c1, c2):
+    def _merge_contours(self, c1, c2):
         """Merge c2 onto c1.
             # TODO: update all features computed.
         Parameters
@@ -326,7 +330,7 @@ class CoronalHoleDB:
         c1.area = c1.area + c2.area
 
         # update c1 pixel centroid.
-        c1.pixel_centroid = c1.compute_pixel_centroid()
+        c1.pixel_centroid = c1.compute_pixel_centroid(Mesh=self.Mesh)
 
         # update bounding box.
         c1.straight_box = np.append(c1.straight_box, c2.straight_box)
@@ -346,7 +350,7 @@ class CoronalHoleDB:
         c1.rot_box_area = c1.rot_box_area + c2.rot_box_area
 
         # compute the tilt of the coronal hole in spherical coordinates using PCA.
-        c1.pca_tilt, c1.sig_tilt = c1.compute_coronal_hole_tilt_pca()
+        c1.pca_tilt, c1.sig_tilt = c1.compute_coronal_hole_tilt_pca(Mesh=self.Mesh)
 
         return c1
 
@@ -385,61 +389,6 @@ class CoronalHoleDB:
         contour_list = self._remove_small_coronal_holes(contour_list=contour_list)
         # force periodicity.
         return self._force_periodicity(contour_list=contour_list)
-
-    @staticmethod
-    def kernel_width(t, gamma):
-        """The dilation kernel width based on latitude.
-
-        Parameters
-        ----------
-        t: float
-            theta latitude
-        gamma: int
-            constant param of kernel width at the equator.
-        Returns
-        -------
-            kernel width: int
-        """
-        # piecewise function.
-        alpha = np.arcsin(gamma / Contour.n_p)
-        # due to symmetry.
-        beta = np.pi - alpha
-        # loop over each interval.
-        if alpha < t < beta:
-            return int(gamma / np.sin(t))
-        elif 0 <= t <= alpha:
-            return Contour.n_p
-        elif beta <= t <= np.pi:
-            return Contour.n_p
-        else:
-            raise Exception("latitude value is invalid.")
-
-    def lat_weighted_dilation(self, grey_scale_image):
-        """latitude weighted dilation.
-        TODO: optimize.
-
-        Parameters
-        ----------
-        grey_scale_image
-
-        Returns
-        -------
-            Latitude Weighted dilation
-        """
-        # theta array.
-        theta = Contour.Mesh.t
-
-        # create copy of greyscaled_image
-        dilated_image = np.zeros(grey_scale_image.shape, dtype=np.uint8)
-
-        # latitude weighted dilation.
-        for ii in range(Contour.n_t):
-            # build the flat structuring element.
-            width = self.kernel_width(t=theta[ii], gamma=self.gamma)
-            kernel = np.ones(width, dtype=np.uint8)
-            # save dilated strip.
-            dilated_image[ii, :] = np.reshape(cv2.dilate(grey_scale_image[ii, :], kernel, iterations=1), Contour.n_p)
-        return dilated_image
 
     def assign_new_coronal_holes(self, contour_list):
         """Match coronal holes to previous *window* frames.
@@ -530,44 +479,7 @@ class CoronalHoleDB:
         match_list = max_area_overlap(area_check_list=area_check_list, area_overlap_results=area_overlap_results,
                                       threshold=self.area_match_thresh)
 
-        # # ==============================================================================================================
-        # # Label Contour() count for the latest frame.
-        # # ==============================================================================================================
-        # # check if there multiple contours mapped to the same class, if so, assign a count number for graph plotting
-        # # purposes (x-axis).
-        # match_list, contour_list = self.assign_count_number_to_coronal_hole(match_list=match_list,
-        #                                                                     contour_list=contour_list)
-
         return match_list, contour_list, area_overlap_results, area_check_list
-
-    @staticmethod
-    def assign_count_number_to_coronal_hole(match_list, contour_list):
-        """Assign a count number to each contour object based on the number of times it appeared in match_list.
-
-        Parameters
-        ----------
-        match_list: list of corresponding ID.
-            type: numpy array
-        contour_list: list of contours.
-            type: list
-
-        Returns
-        -------
-            updated contour_list
-        """
-        # values - list of unique values.
-        # counts - list of corresponding counts. (appearance in
-        values, counts = np.unique(match_list, return_counts=True)
-
-        # if count > 1 assign a index number to each coronal hole.
-        for ii, c in enumerate(counts, start=0):
-            if c > 1 and values[ii] != 0:
-                # there are multiple coronal holes assigned to the same class in the latest frame.
-                index_list = np.where(match_list == values[ii])[0]
-                for counter, idx in enumerate(index_list, start=1):
-                    contour_list[idx].count = counter
-
-        return match_list, contour_list
 
     def prepare_knn_data(self, contour_list):
         """ prepare X_train, Y_train, X_test for KNN algorithm.
@@ -633,7 +545,7 @@ class CoronalHoleDB:
                 # save all ratios in this list and then average the elements.
                 p = []
                 for ch in coronal_hole_list:
-                    p1, p2 = area_overlap(ch1=ch, ch2=contour_list[ii], da=Contour.Mesh.da)
+                    p1, p2 = area_overlap(ch1=ch, ch2=contour_list[ii], da=self.Mesh.da)
                     p.append((p1 + p2) / 2)
                 holder.append(np.mean(p))
             area_overlap_ratio_list.append(holder)
@@ -686,7 +598,7 @@ class CoronalHoleDB:
         -------
             N/A
         """
-        p1, p2 = area_overlap(ch1=contour1, ch2=contour2, da=Contour.Mesh.da)
+        p1, p2 = area_overlap(ch1=contour1, ch2=contour2, da=self.Mesh.da)
         if (p1 + p2) / 2 > self.connectivity_thresh:
             self.Graph.insert_edge(node_1=contour1, node_2=contour2, weight=round((p1 + p2) / 2, 3))
 

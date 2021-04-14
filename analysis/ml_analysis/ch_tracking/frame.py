@@ -1,12 +1,9 @@
-"""Author: Opal Issan, Feb 3rd, 2021.
-
-A data structure for a frame - consists of a list of contours.
+"""A data structure for a frame - consists of a list of contours.
 
 Coronal Hole properties to keep in mind:
         - on average a coronal hole exists for 2 weeks.
 
-Video processing to avoid flickering:
-        - temporal averaging - gaussian. add probability to each coronal hole.
+Last Modified: April 13th, 2021 (Opal).
 """
 
 import json

@@ -83,6 +83,8 @@ class MapMesh:
         interp_t2dt = interp1d(t, dt, fill_value=(dt[0], dt[-1]), bounds_error=False)
 
         # add these as attributes to the class
+        self.n_p = len(p)
+        self.n_t = len(t)
         self.p = p
         self.t = t
         self.dp = dp

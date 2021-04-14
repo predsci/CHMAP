@@ -1,7 +1,7 @@
-"""
-Author: Opal Issan. February 13th, 2021.
+"""A data structure for a coronal hole with a specific ID. It contains a list of all contours in the
+database that are associated to the same ID.
 
-A data structure for a coronal hole.
+Last Modified: 13th April, 2021 (Opal).
 """
 
 import numpy as np

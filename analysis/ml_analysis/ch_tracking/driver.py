@@ -1,29 +1,36 @@
 """
-Author: Opal Issan. Date: Feb 3rd, 2021.
-Assumptions:
--------------------
-Tracking Algorithm steps:
+Tracking Algorithm steps (overview):
+-----------------------------
+1. input image in lat-lon projection. /
 
-1. Input image in lat-lon projection
-2. latitude weighted dilation.
-3. find contours + color the areas arbitrarily - TODO: verify that they are unique by using a uniform vector.
-4. multiply mask on original binary image.
-5. delete small contours.
-6. force periodicity.
-7. match coronal holes to previous coronal holes in *window* consecutive frames.
-8. add contours to database - which can be saved to JSON file.
-9. graph connectivity - keep track of splitting & merging of coronal holes.
+2. latitude weighted dilation. /
+
+3. find contours + color the areas arbitrarily. /
+
+4. multiply mask on original binary image. /
+
+5. delete small contours. /
+
+6. force periodicity. /
+
+7. match coronal holes to previous coronal holes in *window* consecutive frames. /
+
+8. add contours to database - which can be saved to JSON file. /
+
+9. graph connectivity - keep track of splitting & merging of coronal holes. /
+
+Last Modified: April 13th, 2021 (Opal).
 """
 
 import cv2
 import numpy as np
 from analysis.ml_analysis.ch_tracking.contour import Contour
+from analysis.ml_analysis.ch_tracking.dilation import latitude_weighted_dilation, find_contours
 import pickle
 import json
 from modules.map_manip import MapMesh
 from analysis.ml_analysis.ch_tracking.src import CoronalHoleDB
 import matplotlib.pyplot as plt
-
 
 # Upload coronal hole video.
 cap = cv2.VideoCapture("example_vid/maps_r101_chm_low_res_1.mov")
@@ -35,6 +42,7 @@ t, b, r, l = 47, -55, 110, -55
 ch_lib = CoronalHoleDB()
 
 # initialize frame index.
+# TODO: CHANGE TO JULIAN DAY (DATE TIMESTAMP).
 ch_lib.frame_num = 1
 
 # loop over each frame.
@@ -48,7 +56,6 @@ while ch_lib.frame_num <= 40:
     # cut out the image axis and title.
     image = img[t:b, r:l, :]
 
-    # image = cv2.imread('example_vid/various_shapes_0.jpg')
     # ================================================================================================================
     # Step 2: Convert Image to Greyscale.
     # ================================================================================================================
@@ -56,19 +63,23 @@ while ch_lib.frame_num <= 40:
     image = 255 - cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
     # update the image dimensions.
-    Contour.n_t, Contour.n_p = np.shape(image)
-    Contour.Mesh = MapMesh(p=np.linspace(0, 2*np.pi, Contour.n_p), t=np.linspace(0, np.pi, Contour.n_t))
+    n_t, n_p = np.shape(image)
+    ch_lib.Mesh = MapMesh(p=np.linspace(0, 2 * np.pi, n_p), t=np.linspace(0, np.pi, n_t))
+
     # ================================================================================================================
     # Step 3: Latitude Weighted Dilation.
     # ================================================================================================================
     # pass one extra erode and dilate before latitude weighted dilation.
-    img = ch_lib.lat_weighted_dilation(grey_scale_image=image)
+    dilated_img = latitude_weighted_dilation(grey_scale_image=image,
+                                             theta=ch_lib.Mesh.t,
+                                             gamma=ch_lib.gamma,
+                                             n_p=ch_lib.Mesh.n_p)
 
     # ================================================================================================================
     # Step 4: Plot the contours found in the dilated image and multiply mask.
     # ================================================================================================================
     # add coronal holes to data base.
-    rbg_dilated, color_list = ch_lib.find_contours(img)
+    rbg_dilated, color_list = find_contours(image=dilated_img, thresh=ch_lib.BinaryThreshold, Mesh=ch_lib.Mesh)
 
     # create a threshold mask.
     ret, thresh = cv2.threshold(image, CoronalHoleDB.BinaryThreshold, 1, 0)
@@ -103,7 +114,7 @@ while ch_lib.frame_num <= 40:
                    radius=4, color=(0, 0, 0), thickness=-1)
 
         cv2.circle(img=final_image, center=(c.pixel_centroid[1], c.pixel_centroid[0]),
-                   radius=int(100*c.area), color=(255, 20, 147), thickness=2)
+                   radius=int(100 * c.area), color=(255, 20, 147), thickness=2)
 
         # check if its has multiple bounding boxes.
         ii = 0
@@ -159,8 +170,8 @@ while ch_lib.frame_num <= 40:
         plt.imshow(final_image)
 
         # pixel coordinates + set ticks.
-        p_pixel = np.linspace(0, Contour.n_p, 5)
-        t_pixel = np.linspace(0, Contour.n_t, 5)
+        p_pixel = np.linspace(0, ch_lib.Mesh.n_p, 5)
+        t_pixel = np.linspace(0, ch_lib.Mesh.n_t, 5)
 
         plt.xticks(p_pixel, ["0", "$90$", "$180$", "$270$", "$360$"])
         plt.yticks(t_pixel, ["1", "$\dfrac{1}{2}$", "$0$", "-$\dfrac{1}{2}$", "-$1$"])

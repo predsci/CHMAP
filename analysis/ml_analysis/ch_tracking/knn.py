@@ -2,7 +2,7 @@
 This module is an implementation of KNN (K- Nearest Neighbors) Algorithm (see mkdocs website for more information
 about knn). This is used to match coronal holes between frames based on their centroid location.
 
-Author: Opal Issan, last updated March 25th, 2021.
+Last Modified: March 25th, 2021 (Opal).
 
 # TODO: Weighted KNN by Frame proximity as well. !!
 """
