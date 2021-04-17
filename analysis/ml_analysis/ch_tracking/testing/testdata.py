@@ -13,7 +13,7 @@ from analysis.ml_analysis.ch_tracking.contour import Contour
 from analysis.ml_analysis.ch_tracking.plots import plot_coronal_hole
 from analysis.ml_analysis.ch_tracking.knn import KNN
 from modules.map_manip import MapMesh
-from analysis.ml_analysis.ch_tracking.areaoverlap import area_overlap, classification_results
+from analysis.ml_analysis.ch_tracking.areaoverlap import area_overlap
 import json
 import cv2
 import pickle
@@ -23,7 +23,7 @@ Verbose = True
 # ======================================================================================================================
 # Read Pickle file saved in "results" folder as an object of coronalhole.py.
 # ======================================================================================================================
-ReadFile = True
+ReadFile = False
 
 if ReadFile:
     file_name = "results/first_frame_test_knn.pkl"
@@ -34,26 +34,26 @@ if ReadFile:
 # ======================================================================================================================
 # Plot the feature evaluation of coronal hole 1 and 5.
 # ======================================================================================================================
-ID = 4
-ch_list = ch_db.ch_dict[ID].contour_list
+    ID = 4
+    ch_list = ch_db.ch_dict[ID].contour_list
 
-frame_list, area_list = [], []
-for ch in ch_list:
-    # plot feature.
-    if frame_list.count(ch.frame_num) > 0:
-        area_list[-1] += ch.area
-    else:
-        frame_list.append(ch.frame_num)
-        area_list.append(ch.area)
+    frame_list, area_list = [], []
+    for ch in ch_list:
+        # plot feature.
+        if frame_list.count(ch.frame_num) > 0:
+            area_list[-1] += ch.area
+        else:
+            frame_list.append(ch.frame_num)
+            area_list.append(ch.area)
 
-plt.scatter(frame_list, area_list, c="b")
-plt.plot(frame_list, area_list, c="k")
-plt.xlabel("Frame")
-plt.ylabel("Area")
-plt.title("Coronal Hole # " + str(ID))
+    plt.scatter(frame_list, area_list, c="b")
+    plt.plot(frame_list, area_list, c="k")
+    plt.xlabel("Frame")
+    plt.ylabel("Area")
+    plt.title("Coronal Hole # " + str(ID))
 
-plt.savefig("figures/" + "ch_area_" + str(ID) + ".png")
-plt.show()
+    plt.savefig("figures/" + "ch_area_" + str(ID) + ".png")
+    plt.show()
 
 # ======================================================================================================================
 # save png files to create a video of coronal hole #1.
@@ -81,18 +81,20 @@ if SavePng and ReadFile:
 # ======================================================================================================================
 # Save to video.
 # ======================================================================================================================
-SaveVid = False
+SaveVid = True
 
 if SaveVid:
     # choose codec according to format needed
     fourcc = cv2.VideoWriter_fourcc(*'mp4v')
     #video = cv2.VideoWriter("results/images/testervid/coronalhole" + str(ID) + ".mov", fourcc, 1, (640, 480))
-    video = cv2.VideoWriter("results/images/testervid/tracking_vid_" + str(ID) + ".mov", fourcc, 1, (640, 480))
+    video = cv2.VideoWriter("results/images/testervid/tracking_vid_combined.mov", fourcc, 1, (640*2, 480))
 
     for j in range(1, 40):
-        filename = "results/images/tester/frames/" + "frame_" + str(j)
-        img = cv2.imread(filename + '.png')
-        video.write(img)
+        filename1 = "results/images/tester/frames/" + "frame_" + str(j)
+        filename2 = "results/images/tester/frames/" + "graph_frame_" + str(j)
+        img1 = cv2.imread(filename1 + '.png')
+        img2 = cv2.imread(filename2 + '.png')
+        video.write(np.hstack((img1, img2)))
 
     cv2.destroyAllWindows()
     video.release()
@@ -218,9 +220,3 @@ if testKNN:
     print(proba_mat)
 
 
-    # ======================================================================================================================
-    #  Based on the results above (area-overlap) we will decide if the new identified coronal hole is of an existing class
-    #  or a new identified coronal hole in database.
-    # ======================================================================================================================
-
-    print(classification_results(area_overlap_list=proba_mat, thresh=0.5))

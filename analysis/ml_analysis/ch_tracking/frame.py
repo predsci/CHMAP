@@ -1,12 +1,9 @@
-"""Author: Opal Issan, Feb 3rd, 2021.
-
-A data structure for a frame - consists of a list of contours.
+"""A data structure for a frame - consists of a list of contours.
 
 Coronal Hole properties to keep in mind:
         - on average a coronal hole exists for 2 weeks.
 
-Video processing to avoid flickering:
-        - temporal averaging - gaussian. add probability to each coronal hole.
+Last Modified: April 13th, 2021 (Opal).
 """
 
 import json
@@ -14,7 +11,7 @@ import json
 
 class Frame:
     """ Frame data structure. """
-    def __init__(self, contour_list, identity):
+    def __init__(self, contour_list, identity, timestamp=None):
         # list of Contours that are part of this CoronalHole Object.
         self.contour_list = contour_list
 
@@ -26,6 +23,9 @@ class Frame:
 
         # the unique identification number of this frame.
         self.id = identity
+
+        # frame time stamp: usually a string or astropy timestamp.
+        self.timestamp = timestamp
 
     def __str__(self):
         return json.dumps(
