@@ -240,6 +240,63 @@ def query_data_file(db_session, time_min=None, time_max=None, datatype=None, pro
     return pd_out
 
 
+def add_datafile2session(db_session, date_obs, data_provider, data_type, fname_raw,
+                         fname_hdf="", flag=0):
+    """
+
+    :param db_session: sqlalchemy.orm.session.Session
+                       SQLAlchemy session object
+    :param date_obs: datetime.datetime
+                     The observation timestamp
+    :param data_provider: str
+                          A brief label for the data provider
+    :param data_type: str
+                      A brief label for the data type
+    :param fname_raw: str
+                      The relative path of the raw data file
+    :param fname_hdf: str (default: "")
+                      The relative path of the processed data file (optional)
+    :param flag: int (default: 0)
+                 Simple flag for good data, bad data, saturated image, etc.
+    :return:
+            db_session: sqlalchemy.orm.session.Session
+                        The updated session with new record added to session,
+                        but not yet committed to the database.
+            out_flag: int
+                      Database write result: 0 - record written to session
+                                             1 - record already exists in DB.
+                                             Record not added to session.
+                                             2 - filename_raw already exists in
+                                             DB. Record not added to session.
+    """
+    # check if exists in DB
+    out_flag = 0
+    existing_record = db_session.query(Data_Files).filter(
+        Data_Files.date_obs == date_obs,
+        Data_Files.provider == data_provider,
+        Data_Files.type == data_type
+    ).all()
+    if existing_record.__len__() > 0:
+        print("A database record already exists for provider", data_provider,
+              ", data-type", data_type, "and observation date", date_obs, ". SKIPPING.\n")
+        out_flag = 1
+        return db_session, out_flag
+    existing_fname = db_session.query(Data_Files).filter(
+        Data_Files.fname_raw == fname_raw
+    ).all()
+    if existing_fname.__len__() > 0:
+        print("A database record already exists for relative path:", fname_raw, ". SKIPPING.\n")
+        out_flag = 2
+        return db_session, out_flag
+
+    # save to database
+    new_record = Data_Files(date_obs=date_obs, provider=data_provider, type=data_type,
+                            fname_raw=fname_raw, fname_hdf=fname_hdf, flag=flag)
+    db_session.add(new_record)
+
+    return db_session, out_flag
+
+
 def add_image2session(data_dir, subdir, fname, db_session, datatype="EUV_Image", provider=None):
     """
     Adds a row to the database session (euv_images table) that references the image location and metadata.
@@ -582,9 +639,10 @@ def add_euv_map(db_session, psi_map, base_path=None, map_type=None):
                 else:
                     inst = None
                 subdir, temp_fname = misc_helpers.construct_map_path_and_fname(base_path, psi_map.map_info.date_mean[
-                    valid_combo_ind], map_id, map_type, 'h5', inst=inst, mkdir=True)
+                    valid_combo_ind], map_id, map_type, 'h5', inst=None, mkdir=True)
                 h5_filename = os.path.join(subdir, temp_fname)
-                rel_file_path = h5_filename.replace(base_path, "")
+                # rel_file_path = h5_filename.replace(base_path, "")
+                rel_file_path = os.path.relpath(h5_filename, base_path)
                 # record file path in map object
                 psi_map.map_info.loc[0, 'fname'] = rel_file_path
                 # alter map record to reflect newly-generated filename
@@ -595,8 +653,8 @@ def add_euv_map(db_session, psi_map, base_path=None, map_type=None):
             # write map object to file
             psihdf.wrh5_fullmap(h5_filename, psi_map.x, psi_map.y, np.array([]), psi_map.data,
                                 method_info=psi_map.method_info, data_info=psi_map.data_info,
-                                map_info=psi_map.map_info,
-                                no_data_val=psi_map.no_data_val, mu=psi_map.mu, origin_image=psi_map.origin_image)
+                                map_info=psi_map.map_info, no_data_val=psi_map.no_data_val,
+                                mu=psi_map.mu, origin_image=psi_map.origin_image, chd=psi_map.chd)
 
             # Loop over psi_map.method_info rows and insert variable values
             for index, var_row in psi_map.method_info.iterrows():
@@ -629,6 +687,37 @@ def update_euv_map(db_session, map_id, col_name, new_val):
               "directly using SQLAlchemy functions.")
     else:
         db_session.query(EUV_Maps).filter(EUV_Maps.map_id == map_id).update({col_name: new_val})
+        db_session.commit()
+
+    return db_session
+
+
+def remove_euv_map(db_session, map_info, map_dir):
+
+    # loop through map_info rows
+    for index, row in map_info.iterrows():
+        # remove all var_vals_map records with matching map_id
+        n_vals_del = db_session.query(Var_Vals_Map).filter(
+            Var_Vals_Map.map_id == row.map_id).delete()
+        # remove map from euv_maps
+        n_maps_del = db_session.query(EUV_Maps).filter(
+            EUV_Maps.map_id == row.map_id).delete()
+
+        # delete map file
+        if row.fname[0] == "/":
+            rel_path = row.fname[1:]
+        else:
+            rel_path = row.fname
+        file_path = os.path.join(map_dir, rel_path)
+        # check that file exists
+        if os.path.exists(file_path):
+            # delete file
+            print("Deleting file: ", rel_path)
+            os.remove(file_path)
+        else:
+            print("No file associated with map_id", row.map_id, ". No file to delete.\n")
+
+        # commit deletions to database
         db_session.commit()
 
     return db_session
@@ -950,21 +1039,26 @@ def query_euv_maps(db_session, mean_time_range=None, extrema_time_range=None, n_
     :return: map_info, data_info, method_info - three pandas dataframes that summarize map details.
     """
 
+    # determine map-combo method id
+    map_combo_meth_id = db_session.query(Method_Defs.meth_id).filter(
+        Method_Defs.meth_name == "Map - Data combo").first()[0]
+    combo_query = db_session.query(Data_Combos.combo_id).filter(
+            Data_Combos.meth_id == map_combo_meth_id)
     # combo query
     # n_images, data_ids, mean_time_range, extrema_time_range
     if mean_time_range is not None:
         # query combos by mean timestamp
-        combo_query = db_session.query(Data_Combos.combo_id).filter(Data_Combos.date_mean.between(mean_time_range[0],
-                                                                                                    mean_time_range[1]))
+        combo_query = combo_query.filter(
+            Data_Combos.date_mean.between(mean_time_range[0], mean_time_range[1]))
         if extrema_time_range is not None:
             # AND combo must contain an image in extrema_time_range
-            combo_query = combo_query.filter_by(or_(Data_Combos.date_min.between(extrema_time_range[0],
-                                                                                  extrema_time_range[1]),
-                                                    Data_Combos.date_max.between(extrema_time_range[0],
-                                                                                  extrema_time_range[1])))
+            combo_query = combo_query.filter(or_(Data_Combos.date_min.between(extrema_time_range[0],
+                                                                              extrema_time_range[1]),
+                                                 Data_Combos.date_max.between(extrema_time_range[0],
+                                                                              extrema_time_range[1])))
     elif extrema_time_range is not None:
         # query combos with an image in extrema_time_range
-        combo_query = db_session.query(Data_Combos.combo_id).filter_by(
+        combo_query = combo_query.filter(
             or_(Data_Combos.date_min.between(extrema_time_range[0], extrema_time_range[1]),
                 Data_Combos.date_max.between(extrema_time_range[0], extrema_time_range[1])
                 )
@@ -990,19 +1084,27 @@ def query_euv_maps(db_session, mean_time_range=None, extrema_time_range=None, n_
         combo_query = combo_query.filter_by(Data_Combos.combo_id.in_(combo_ids_query))
 
     # start the master EUV_Map query that references combo, method, and var queries. Includes an
-    # implicit join with image_combos
-    euv_map_query = db_session.query(EUV_Maps, Data_Combos).filter(EUV_Maps.combo_id.in_(combo_query))
+    # join with data_combos
+    euv_map_query = db_session.query(EUV_Maps, Data_Combos).filter(
+        EUV_Maps.combo_id.in_(combo_query), EUV_Maps.combo_id == Data_Combos.combo_id
+    ).order_by(Data_Combos.date_mean)
 
     # method query
     if methods is not None:
         # filter method_id by method names in 'methods' input
         method_ids_query = db_session.query(Method_Defs.meth_id).filter(Method_Defs.meth_name.in_(methods))
         # find method combos containing methods
-        method_combo_query = db_session.query(Method_Combo_Assoc.meth_combo_id).filter(Method_Combo_Assoc.meth_id.in_(
-            method_ids_query
-        )).distinct()
+        if len(methods) == 1:
+            method_combo_query = db_session.query(Method_Combo_Assoc.meth_combo_id).filter(Method_Combo_Assoc.meth_id.in_(
+                method_ids_query
+            )).distinct()
+        else:
+            method_combo_query = db_session.query(Method_Combo_Assoc.meth_combo_id).filter(
+                Method_Combo_Assoc.meth_id.in_(method_ids_query)).group_by(
+                    Method_Combo_Assoc.meth_combo_id).having(func.count(
+                        Method_Combo_Assoc.meth_id) == len(methods))
         # update master query
-        euv_map_query = euv_map_query.filter_by(EUV_Maps.meth_combo_id.in_(method_combo_query))
+        euv_map_query = euv_map_query.filter(EUV_Maps.meth_combo_id.in_(method_combo_query))
 
     # variable value query
     if var_val_range is not None:
@@ -1010,11 +1112,24 @@ def query_euv_maps(db_session, mean_time_range=None, extrema_time_range=None, n_
         var_map_id_query = db_session.query(Var_Vals_Map.map_id)
         # setup a query to find a list of maps in the specified variable ranges
         for var_name in var_val_range:
+            var_vals = var_val_range[var_name]
             var_id_query = db_session.query(Var_Defs.var_id).filter(Var_Defs.var_name == var_name)
-            var_map_id_query = var_map_id_query.filter_by(Var_Vals_Map.var_id == var_id_query,
-                                                          Var_Vals_Map.var_val.between(var_val_range[var_name]))
+            # Use intersect operator
+            # temp_map_id_query = db_session.query(Var_Vals_Map.map_id).filter(Var_Vals_Map.var_id == var_id_query,
+            #                                      Var_Vals_Map.var_val.between(var_vals[0], var_vals[1]))
+            # var_map_id_query = var_map_id_query.intersect(temp_map_id_query)
+            # Use inner join
+            temp_map_id_subquery = db_session.query(Var_Vals_Map.map_id).filter(
+                Var_Vals_Map.var_id.in_(var_id_query), Var_Vals_Map.var_val.between(
+                    var_vals[0], var_vals[1])
+            ).subquery()
+            var_map_id_query = var_map_id_query.join(temp_map_id_subquery, Var_Vals_Map.map_id ==
+                                                     temp_map_id_subquery.c.map_id)
+            # var_map_id_query = var_map_id_query.filter(Var_Vals_Map.var_id == var_id_query,
+            #                                            Var_Vals_Map.var_val.between(var_vals[0], var_vals[1]))
+
         # update master query
-        euv_map_query = euv_map_query.filter_by(EUV_Maps.map_id.in_(var_map_id_query))
+        euv_map_query = euv_map_query.filter(EUV_Maps.map_id.in_(var_map_id_query))
 
     # Need three output tables from SQL
     # 1. map_info: euv_maps joined with image_combos

@@ -166,7 +166,7 @@ def combine_maps(map_list, mu_cutoff=0.0, mu_merge_cutoff=None, del_mu=None):
         data_array = np.ndarray(shape=mat_size + (nmaps,), dtype=DTypes.MAP_DATA)
         image_array = np.ndarray(shape=mat_size + (nmaps,), dtype=DTypes.MAP_ORIGIN_IMAGE)
         if map_list[0].chd is not None:
-            chd_array = np.ndarray(shape=mat_size + (nmaps,), dtype=DTypes.MAP_DATA)
+            chd_array = np.ndarray(shape=mat_size + (nmaps,), dtype=DTypes.MAP_CHD)
             for ii in range(nmaps):
                 mu_array[:, :, ii] = map_list[ii].mu
                 data_array[:, :, ii] = map_list[ii].data
@@ -179,8 +179,8 @@ def combine_maps(map_list, mu_cutoff=0.0, mu_merge_cutoff=None, del_mu=None):
                 image_array[:, :, ii] = map_list[ii].origin_image
 
         float_info = np.finfo(map_list[0].data.dtype)
+        good_index = np.ones(shape=mat_size + (nmaps,), dtype=bool)
         if mu_merge_cutoff is not None:
-            good_index = np.ndarray(shape=mat_size + (nmaps,), dtype=bool)
             overlap = np.ndarray(shape=mat_size + (nmaps,), dtype=bool)
             for ii in range(nmaps):
                 for jj in range(nmaps):
@@ -193,30 +193,52 @@ def combine_maps(map_list, mu_cutoff=0.0, mu_merge_cutoff=None, del_mu=None):
                                                      np.logical_and(
                                                          data_array[:, :, ii] != map_list[0].no_data_val,
                                                          mu_array[:, :, ii] >= mu_cutoff))
+            good_index2D = np.any(good_index, axis=2)
             # make poor mu pixels unusable to merge
-            data_array[np.logical_not(good_index)] = float_info.max
+            # data_array[np.logical_not(good_index)] = float_info.max
         elif del_mu is not None:
             max_mu = mu_array.max(axis=2)
-            good_index = np.ndarray(shape=mat_size + (nmaps,), dtype=bool)
             for ii in range(nmaps):
-                good_index[:, :, ii] = mu_array[:, :, ii] > (max_mu - del_mu)
+                good_index[:, :, ii] = np.logical_and(
+                    mu_array[:, :, ii] > (max_mu - del_mu),
+                    data_array[:, :, ii] >= 0.)
+            good_index2D = np.any(good_index, axis=2)
             # make poor mu pixels unusable to merge
-            data_array[np.logical_not(good_index)] = float_info.max
+            # data_array[np.logical_not(good_index)] = float_info.max
 
-        # make no_data_vals unusable to merge
-        data_array[data_array == map_list[0].no_data_val] = float_info.max
+        good_data = data_array.copy()
+        # make poor mu pixels unusable to merge
+        good_data[~good_index] = float_info.max
+        good_data_winner = np.argmin(good_data, axis=2)
+
+        # for less-good data, make no_data_vals unusable to merge
+        # data_array[data_array == map_list[0].no_data_val] = float_info.max
+        data_array[data_array < 0.] = float_info.max
         # find minimum intensity of remaining pixels
-        map_index = np.argmin(data_array, axis=2)
+        all_winners = np.argmin(data_array, axis=2)
         # return bad-mu and no-data pixels to no_data_val
         data_array[data_array == float_info.max] = map_list[0].no_data_val
 
         # correct indices to create maps
         col_index, row_index = np.meshgrid(range(mat_size[1]), range(mat_size[0]))
-        keep_mu = mu_array[row_index, col_index, map_index]
-        keep_data = data_array[row_index, col_index, map_index]
-        keep_image = image_array[row_index, col_index, map_index]
+        keep_mu = mu_array[:, :, 0].copy()
+        keep_mu[good_index2D] = mu_array[row_index, col_index, good_data_winner][good_index2D]
+        keep_mu[~good_index2D] = mu_array[row_index, col_index, all_winners][~good_index2D]
+
+        keep_data = data_array[:, :, 0].copy()
+        keep_data[good_index2D] = data_array[row_index, col_index, good_data_winner][good_index2D]
+        keep_data[~good_index2D] = data_array[row_index, col_index, all_winners][~good_index2D]
+
+        keep_image = image_array[:, :, 0].copy()
+        keep_image[good_index2D] = image_array[row_index, col_index, good_data_winner][good_index2D]
+        keep_image[~good_index2D] = image_array[row_index, col_index, all_winners][~good_index2D]
+
         if map_list[0].chd is not None:
-            keep_chd = chd_array[row_index, col_index, map_index]
+            keep_chd = chd_array[:, :, 0].copy()
+            keep_chd[good_index2D] = chd_array[row_index, col_index, good_data_winner][good_index2D]
+            keep_chd[~good_index2D] = chd_array[row_index, col_index, all_winners][~good_index2D]
+        else:
+            keep_chd = None
 
         # Generate new EUV map
         euv_map = psi_d_types.PsiMap(keep_data, map_list[0].x, map_list[0].y, mu=keep_mu,
@@ -805,14 +827,14 @@ def downsamp_reg_grid_orig(map, new_y, new_x, image_method=0, chd_method=0, peri
                                  no_data_val=map.no_data_val)
 
 
-def downsamp_reg_grid(map, new_y, new_x, image_method=0, chd_method=0, periodic_x=True,
+def downsamp_reg_grid(full_map, new_y, new_x, image_method=0, chd_method=0, periodic_x=True,
                       y_units='sinlat', uniform_poles=True, single_origin_image=None,
                       uniform_no_data=True):
     """
     Input a PSI-map object (full_map) and re-sample to the new x, y coords.
     Assumes grids are regular, but non-uniform.
 
-    :param map: PsiMap object
+    :param full_map: PsiMap object
                 The full-map (covers full sphere) to be downsampled
     :param new_y: Array like
                   Vector of pixel centers. Units can be specified with y_units.
@@ -848,33 +870,33 @@ def downsamp_reg_grid(map, new_y, new_x, image_method=0, chd_method=0, periodic_
     #
 
     # check that new coord range does not exceed old coord range
-    x_in_range = (map.x.min() <= new_x.min()) & (map.x.max() >= new_x.max())
-    y_in_range = (map.y.min() <= new_y.min()) & (map.y.max() >= new_y.max())
+    x_in_range = (full_map.x.min() <= new_x.min()) & (full_map.x.max() >= new_x.max())
+    y_in_range = (full_map.y.min() <= new_y.min()) & (full_map.y.max() >= new_y.max())
     if not x_in_range or not y_in_range:
         raise ValueError("The new grid defined by 'new_x' and 'new_y' exceeds the"
-                         "range of the existing grid defined by map.x and map.y.")
+                         "range of the existing grid defined by full_map.x and full_map.y.")
 
     start_time = time.time()
     # generate MapMesh object for both grids
     # new_theta = -np.arcsin(new_y) + np.pi/2
     # new_mesh = MapMesh(new_x, new_theta)
     if y_units == "sinlat":
-        old_theta = -np.arcsin(map.y) + np.pi/2
-        sin_lat = map.y
+        old_theta = -np.arcsin(full_map.y) + np.pi/2
+        sin_lat = full_map.y
         new_sin_lat = new_y
     elif y_units == "lat_rad":
-        old_theta = -map.y + np.pi/2
-        sin_lat = np.sin(map.y)
+        old_theta = -full_map.y + np.pi/2
+        sin_lat = np.sin(full_map.y)
         new_sin_lat = np.sin(new_y)
     elif y_units == "lat_deg":
-        old_theta = -(np.pi/180)*map.y + np.pi/2
-        sin_lat = np.sin((np.pi/180)*map.y)
+        old_theta = -(np.pi/180)*full_map.y + np.pi/2
+        sin_lat = np.sin((np.pi/180)*full_map.y)
         new_sin_lat = np.sin((np.pi/180)*new_y)
     else:
-        old_theta = map.y
-        sin_lat = np.sin(-map.y + np.pi/2)
+        old_theta = full_map.y
+        sin_lat = np.sin(-full_map.y + np.pi/2)
         new_sin_lat = np.sin(-new_y + np.pi/2)
-    old_mesh = MapMesh(map.x, old_theta)
+    old_mesh = MapMesh(full_map.x, old_theta)
     # the theta grid is reversed from what MapMesh expects so change sign on da
     da = np.transpose(-old_mesh.da.copy())
     # new_da = np.transpose(-new_mesh.da.copy())
@@ -885,16 +907,16 @@ def downsamp_reg_grid(map, new_y, new_x, image_method=0, chd_method=0, periodic_
     new_x_edges = np.concatenate([[new_x[0]], new_x_interior_edges, [new_x[-1]]])
     old_y_interior_edges = (sin_lat[0:-1] + sin_lat[1:])/2
     old_y_edges = np.concatenate([[sin_lat[0]], old_y_interior_edges, [sin_lat[-1]]])
-    old_x_interior_edges = (map.x[0:-1] + map.x[1:])/2
-    old_x_edges = np.concatenate([[map.x[0]], old_x_interior_edges, [map.x[-1]]])
+    old_x_interior_edges = (full_map.x[0:-1] + full_map.x[1:])/2
+    old_x_edges = np.concatenate([[full_map.x[0]], old_x_interior_edges, [full_map.x[-1]]])
 
     # determine overlap weights for each row and column of new grid
     #   include area-weighting in row associations
     new_y_n = len(new_sin_lat)
     old_y_n = len(sin_lat)
     old_y_widths = np.diff(old_y_edges)
-    row_weight_mat = np.ndarray((new_y_n, old_y_n), dtype=float)
-    row_da_weight  = np.ndarray((new_y_n, old_y_n), dtype=float)
+    row_weight_mat = np.zeros((new_y_n, old_y_n), dtype=float)
+    row_da_weight  = np.zeros((new_y_n, old_y_n), dtype=float)
     for new_y_index in range(new_y_n):
         # determine linear row-weighting of original pixels to new pixels
         # new_hist = np.ones(1)
@@ -904,8 +926,7 @@ def downsamp_reg_grid(map, new_y, new_x, image_method=0, chd_method=0, periodic_
         bin_indices = np.where(pixel_portions > 0.)
         bin_weights = pixel_portions[bin_indices]
         row_da_weight[new_y_index, bin_indices] = bin_weights
-        # also weight by pixel width(height). Assuming we are in sin(lat),
-        #    we do not need to explicitly include an area weight
+        # also weight by pixel width(height).
         # area_weights = da[bin_indices, 1]
         area_weights = old_y_widths[bin_indices]
         bin_weights = bin_weights*area_weights
@@ -916,10 +937,10 @@ def downsamp_reg_grid(map, new_y, new_x, image_method=0, chd_method=0, periodic_
 
     # repeat for columns
     new_x_n = len(new_x)
-    old_x_n = len(map.x)
+    old_x_n = len(full_map.x)
     old_x_widths = np.diff(old_x_edges)
-    column_weight_mat = np.ndarray((old_x_n, new_x_n), dtype=float)
-    col_da_weight = np.ndarray((old_x_n, new_x_n), dtype=float)
+    column_weight_mat = np.zeros((old_x_n, new_x_n), dtype=float)
+    col_da_weight = np.zeros((old_x_n, new_x_n), dtype=float)
     for new_x_index in range(new_x_n):
         # determine linear row-weighting of original pixels to new pixels
         # new_hist = np.ones(1)
@@ -937,8 +958,8 @@ def downsamp_reg_grid(map, new_y, new_x, image_method=0, chd_method=0, periodic_
         column_weight_mat[bin_indices, new_x_index] = bin_weights
 
     # prepare (de-linked) data for weighted-averaging
-    full_data = map.data.copy()
-    no_data_index = full_data == map.no_data_val
+    full_data = full_map.data.copy()
+    no_data_index = full_data == full_map.no_data_val
     full_data[no_data_index] = 0.
     # apply the row and column reduction by matrix multiplication
     row_reduced_data = np.matmul(row_weight_mat, full_data)
@@ -953,7 +974,7 @@ def downsamp_reg_grid(map, new_y, new_x, image_method=0, chd_method=0, periodic_
     # better estimate the boundary)
     da_ratio = reduced_no_data_da/reduced_grid_da
     new_no_data_index = da_ratio < 0.5
-    reduced_data[new_no_data_index] = map.no_data_val
+    reduced_data[new_no_data_index] = full_map.no_data_val
     reduced_data[~new_no_data_index] = reduced_data[~new_no_data_index]/ \
         da_ratio[~new_no_data_index]
 
@@ -964,86 +985,89 @@ def downsamp_reg_grid(map, new_y, new_x, image_method=0, chd_method=0, periodic_
         origin_image = None
 
     # now apply reduction to chd map
-    if map.chd is not None:
-        chd_data = map.data.copy()
+    if full_map.chd is not None:
+        chd_data = full_map.chd.copy()
         if not uniform_no_data:
             # recalculate the no_data locations and area ratio
-            no_data_index = chd_data == map.no_data_val
+            no_chd_index = chd_data == full_map.no_data_val
             reduced_grid_da = np.matmul(np.matmul(row_da_weight, da), col_da_weight)
             no_data_da = da.copy()
-            no_data_da[no_data_index] = 0.
+            no_data_da[no_chd_index] = 0.
             reduced_no_data_da = np.matmul(np.matmul(row_da_weight, no_data_da),
                                            col_da_weight)
             # use the area ratio to improve intensity estimate at data boundaries (and
             # better estimate the boundary)
             da_ratio = reduced_no_data_da/reduced_grid_da
-            new_no_data_index = da_ratio < 0.5
+            new_no_chd_index = da_ratio < 0.5
+        else:
+            no_chd_index = no_data_index
+            new_no_chd_index = new_no_data_index
 
-        chd_data[no_data_index] = 0.
+        chd_data[no_chd_index] = 0.
         # apply the row and column reduction by matrix multiplication
         row_reduced_chd = np.matmul(row_weight_mat, chd_data)
         reduced_chd = np.matmul(row_reduced_chd, column_weight_mat)
         # use the area ratio to improve chd estimate at data boundaries (and
         # better estimate the boundary)
-        reduced_chd[new_no_data_index] = map.no_data_val
-        reduced_chd[~new_no_data_index] = reduced_chd[~new_no_data_index] / \
-            da_ratio[~new_no_data_index]
+        reduced_chd[new_no_chd_index] = full_map.no_data_val
+        reduced_chd[~new_no_chd_index] = reduced_chd[~new_no_chd_index] / \
+            da_ratio[~new_no_chd_index]
     else:
         reduced_chd = None
 
     # now apply reduction to mu values
-    if map.mu is not None:
-        mu_data = map.data.copy()
-        if not uniform_no_data:
-            # recalculate the no_data locations and area ratio
-            no_data_index = chd_data == map.no_data_val
-            reduced_grid_da = np.matmul(np.matmul(row_da_weight, da), col_da_weight)
-            no_data_da = da.copy()
-            no_data_da[no_data_index] = 0.
-            reduced_no_data_da = np.matmul(np.matmul(row_da_weight, no_data_da),
-                                           col_da_weight)
-            # use the area ratio to improve intensity estimate at data boundaries (and
-            # better estimate the boundary)
-            da_ratio = reduced_no_data_da/reduced_grid_da
-            new_no_data_index = da_ratio < 0.5
-
-        mu_data[no_data_index] = 0.
+    if full_map.mu is not None:
+        mu_data = full_map.mu.copy()
+        # if not uniform_no_data:
+        #     # recalculate the no_data locations and area ratio
+        #     no_data_index = chd_data == full_map.no_data_val
+        #     reduced_grid_da = np.matmul(np.matmul(row_da_weight, da), col_da_weight)
+        #     no_data_da = da.copy()
+        #     no_data_da[no_data_index] = 0.
+        #     reduced_no_data_da = np.matmul(np.matmul(row_da_weight, no_data_da),
+        #                                    col_da_weight)
+        #     # use the area ratio to improve intensity estimate at data boundaries (and
+        #     # better estimate the boundary)
+        #     da_ratio = reduced_no_data_da/reduced_grid_da
+        #     new_no_data_index = da_ratio < 0.5
+        #
+        # mu_data[no_data_index] = 0.
         # apply the row and column reduction by matrix multiplication
         row_reduced_mu = np.matmul(row_weight_mat, mu_data)
         reduced_mu = np.matmul(row_reduced_mu, column_weight_mat)
         # use the area ratio to improve mu estimate at data boundaries (and
         # better estimate the boundary)
-        reduced_mu[new_no_data_index] = map.no_data_val
-        reduced_mu[~new_no_data_index] = reduced_mu[~new_no_data_index]/ \
-            da_ratio[~new_no_data_index]
+        # reduced_mu[new_no_data_index] = full_map.no_data_val
+        # reduced_mu[~new_no_data_index] = reduced_mu[~new_no_data_index]/ \
+        #     da_ratio[~new_no_data_index]
     else:
         reduced_mu = None
 
     # now apply reduction to map_lon values (?)
-    if map.map_lon is not None:
+    if full_map.map_lon is not None:
         map_lon = None
     else:
         map_lon = None
 
     if uniform_poles:
-        no_data_vec = reduced_data[0, ] == map.no_data_val
+        no_data_vec = reduced_data[0, ] == full_map.no_data_val
         if np.any(~no_data_vec):
             reduced_data[0, ] = np.mean(reduced_data[0, ~no_data_vec])
-        no_data_vec = reduced_data[-1, ] == map.no_data_val
+        no_data_vec = reduced_data[-1, ] == full_map.no_data_val
         if np.any(~no_data_vec):
             reduced_data[-1, ] = np.mean(reduced_data[-1, ~no_data_vec])
         if chd_data is not None:
-            no_data_vec = chd_data[0, ] == map.no_data_val
+            no_data_vec = chd_data[0, ] == full_map.no_data_val
             if np.any(~no_data_vec):
                 chd_data[0, ] = np.mean(chd_data[0, ~no_data_vec])
-            no_data_vec = chd_data[-1, ] == map.no_data_val
+            no_data_vec = chd_data[-1, ] == full_map.no_data_val
             if np.any(~no_data_vec):
                 chd_data[-1, ] = np.mean(chd_data[-1, ~no_data_vec])
         if reduced_mu is not None:
-            no_data_vec = reduced_mu[0, ] == map.no_data_val
+            no_data_vec = reduced_mu[0, ] == full_map.no_data_val
             if np.any(~no_data_vec):
                 reduced_mu[0, ] = np.mean(reduced_mu[0, ~no_data_vec])
-            no_data_vec = reduced_mu[-1, ] == map.no_data_val
+            no_data_vec = reduced_mu[-1, ] == full_map.no_data_val
             if np.any(~no_data_vec):
                 reduced_mu[-1, ] = np.mean(reduced_mu[-1, ~no_data_vec])
 
@@ -1051,15 +1075,15 @@ def downsamp_reg_grid(map, new_y, new_x, image_method=0, chd_method=0, periodic_
         new_x_widths = np.diff(new_x_edges)
         # average half-pixels from left and right edge
         reduced_data[:, 0], reduced_data[:, -1] = periodic_x_avg(
-            reduced_data[:, 0], reduced_data[:, -1], new_x_widths, map.no_data_val)
+            reduced_data[:, 0], reduced_data[:, -1], new_x_widths, full_map.no_data_val)
 
         if reduced_mu is not None:
             reduced_mu[:, 0], reduced_mu[:, -1] = periodic_x_avg(
-                reduced_mu[:, 0], reduced_mu[:, -1], new_x_widths, map.no_data_val)
+                reduced_mu[:, 0], reduced_mu[:, -1], new_x_widths, full_map.no_data_val)
 
         if chd_data is not None:
             chd_data[:, 0], chd_data[:, -1] = periodic_x_avg(
-                chd_data[:, 0], chd_data[:, -1], new_x_widths, map.no_data_val)
+                chd_data[:, 0], chd_data[:, -1], new_x_widths, full_map.no_data_val)
 
     end_time = time.time()
     # print(end_time - start_time, " seconds elapsed.\n")
@@ -1067,14 +1091,14 @@ def downsamp_reg_grid(map, new_y, new_x, image_method=0, chd_method=0, periodic_
     # quick plot testing (remove at clean-up)
     # import matplotlib.pyplot as plt
     # plt.figure(0)
-    # plt.imshow(map.data, origin='lower')
+    # plt.imshow(full_map.data, origin='lower')
     # plt.title("Original Map")
     # plt.figure(1)
     # plt.imshow(reduced_data, origin='lower')
     # plt.title("Reduced Map")
 
     # alter method 'GridSize_sinLat' to new resolution
-    method_info = map.method_info.copy()
+    method_info = full_map.method_info.copy()
     y_index = method_info.meth_name.eq('GridSize_sinLat') & \
         method_info.var_name.eq('n_SinLat')
     method_info.loc[y_index, 'var_val'] = new_y_n
@@ -1085,10 +1109,10 @@ def downsamp_reg_grid(map, new_y, new_x, image_method=0, chd_method=0, periodic_
     # generate new map object and fill
     new_map = psi_d_types.PsiMap(data=reduced_data, x=new_x, y=new_y, mu=reduced_mu,
                                  origin_image=origin_image, map_lon=map_lon, chd=reduced_chd,
-                                 no_data_val=map.no_data_val)
+                                 no_data_val=full_map.no_data_val)
     new_map.append_method_info(method_info)
-    new_map.append_map_info(map.map_info)
-    new_map.append_data_info(map.data_info)
+    new_map.append_map_info(full_map.map_info)
+    new_map.append_data_info(full_map.data_info)
 
     return new_map
 

@@ -477,7 +477,9 @@ def get_beta_y_theoretic_continuous_1d_indices(x, los_image, mu_limit=0.1):
 
     # get mu index locations where mu is valid.
     mu_indices = np.where(mu_array > 0)
-    use_indices = np.logical_and(mu_array > 0, data > 0)  # added
+    # use_indices = np.logical_and(mu_array > 0, data > 0)  # added
+    # JT - avoid potential problems with log10 (post LBC values are sometimes below 0)
+    use_indices = np.logical_and(mu_array > 0., data > 2.)
 
     # get a 1D array of the valid mu values
     # mu1d = mu_array[mu_indices]

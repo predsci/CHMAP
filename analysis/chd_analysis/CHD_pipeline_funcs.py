@@ -23,6 +23,7 @@ import modules.datatypes as datatypes
 import analysis.lbcc_analysis.LBCC_theoretic_funcs as lbcc_funcs
 import analysis.iit_analysis.IIT_pipeline_funcs as iit_funcs
 from modules.misc_funs import cluster_meth_1
+from settings.info import DTypes
 
 
 #### STEP ONE: SELECT IMAGES ####
@@ -231,6 +232,14 @@ def apply_ipp_2(db_session, center_date, query_pd, inst_list, hdf_data_dir,
             lbcc_image, iit_list[index], use_indices[index], alpha, x = \
                 iit_funcs.apply_iit_2(db_session, lbcc_image, use_ind,
                                       los_list[index], R0=R0)
+            # set unused points to no_data_val
+            # if los_list[index].no_data_val is None:
+            #     no_data_val = -9999.0
+            #     iit_list[index].no_data_val = no_data_val
+            # else:
+            #     no_data_val = iit_list[index].no_data_val
+            # iit_list[index].iit_data[~use_indices[index]] = no_data_val
+            # JT - this should be handled in minimum intensity merge, not here
 
             # add methods to dataframe
             ipp_method = {'meth_name': ("LBCC", "IIT"), 'meth_description': ["LBCC Theoretic Fit Method",
@@ -337,6 +346,7 @@ def chd_2(iit_list, los_list, use_indices, thresh1, thresh2, ref_alpha, ref_x, n
                 thresh2=t2, nc=nc, iters=iters)
             chd_result = np.logical_and(ezseg_output == 0, use_chd == 1)
             chd_result = chd_result.astype(int)
+            chd_result[~use_indices[iit_ind]] = round(iit_list[iit_ind].no_data_val)
 
             # create CHD image
             chd_image_list[iit_ind] = datatypes.create_chd_image(los_list[iit_ind], chd_result)
@@ -543,12 +553,16 @@ def create_combined_maps(db_session, map_data_dir, map_list, chd_map_list, metho
     return euv_combined, chd_combined
 
 
-def create_combined_maps_2(map_list, mu_merge_cutoff=None, del_mu=None, mu_cutoff=0.0):
+def create_combined_maps_2(map_list, mu_merge_cutoff=None, del_mu=None, mu_cutoff=0.0,
+                           EUV_CHD_sep=False, low_int_filt=1.):
     """
     Function to create combined EUV and CHD maps.
 
     New in version 2: - function does not try to save to the database.
                       - assumes that EUV and CHD are in the same map object
+                      - do some filtering on low-intensity pixels (some images are
+                        cropped or do not include the sun. We do not want these to
+                        dominate the minimum intensity merge.
     @param map_list: list of EUV maps
     @param mu_merge_cutoff: float
                             cutoff mu value for overlap areas
@@ -556,39 +570,72 @@ def create_combined_maps_2(map_list, mu_merge_cutoff=None, del_mu=None, mu_cutof
                    maximum mu threshold value
     @param mu_cutoff: float
                       lower mu value
+    @param low_int_filt: float
+                         low intensity filter. pixels with image intensity less than
+                         1.0 are generally bad data. Data < low_int_filt are recast
+                         as no_data_vals prior to minimum intensity merge
     @return: PsiMap object
              Minimum Intensity Merge (MIM) euv map, MIM chd map, and merged
              map meta data.
     """
     # start time
     start = time.time()
-    # create chd dummy-maps (for function back-compatibility)
-    chd_maps = []
-    for ii in range(len(map_list)):
-        chd_maps.append(map_list[ii])
-        chd_maps[ii].data = chd_maps[ii].chd
-    if del_mu is not None:
-        euv_combined = combine_maps(map_list, del_mu=del_mu, mu_cutoff=mu_cutoff)
-        chd_combined = combine_maps(chd_maps, del_mu=del_mu, mu_cutoff=mu_cutoff)
-        combined_method = {'meth_name': ["Min-Int-Merge-del_mu"] * 3, 'meth_description':
-            ["Minimum intensity merge for synchronic map: using del mu"] * 3,
-             'var_name': ("mu_cutoff", "del_mu", "mu_merge_cutoff"),
-             'var_description': ("lower mu cutoff value", "max acceptable mu range",
-                                 "mu cutoff value in areas of overlap"),
-             'var_val': (mu_cutoff, del_mu, None)}
-    else:
-        euv_combined = combine_maps(map_list, mu_merge_cutoff=mu_merge_cutoff,
-                                    mu_cutoff=mu_cutoff)
-        chd_combined = combine_maps(chd_maps, mu_merge_cutoff=mu_merge_cutoff,
-                                    mu_cutoff=mu_cutoff)
-        combined_method = {'meth_name': ["Min-Int-Merge-del_mu"] * 3, 'meth_description':
-            ["Minimum intensity merge for synchronic map: using del mu"] * 3,
-             'var_name': ("mu_cutoff", "del_mu", "mu_merge_cutoff"),
-             'var_description': ("lower mu cutoff value", "max acceptable mu range",
-                                 "mu cutoff value in areas of overlap"),
-                           'var_val': (mu_cutoff, None, mu_merge_cutoff)}
+    n_maps = len(map_list)
+    # remove excessively low image data (these are almost always some form of
+    # bad data and we don't want them to 'win' the minimum intensity merge)
+    for ii in range(n_maps):
+        map_list[ii].data[map_list[ii].data < low_int_filt] = map_list[ii].no_data_val
+    if EUV_CHD_sep:
+        # create chd dummy-maps (for separate minimum-intensity merge)
+        chd_maps = []
+        for ii in range(n_maps):
+            chd_maps.append(map_list[ii].__copy__())
+            chd_maps[ii].data = chd_maps[ii].chd.astype(DTypes.MAP_DATA)
+            chd_maps[ii].data[chd_maps[ii].data <= chd_maps[ii].no_data_val] = \
+                chd_maps[ii].no_data_val
 
-    euv_combined.chd = chd_combined.data
+        if del_mu is not None:
+            euv_combined = combine_maps(map_list, del_mu=del_mu, mu_cutoff=mu_cutoff)
+            chd_combined = combine_maps(chd_maps, del_mu=del_mu, mu_cutoff=mu_cutoff)
+            combined_method = {'meth_name': ["Min-Int-Merge-del_mu"] * 3, 'meth_description':
+                ["Minimum intensity merge for synchronic map: using del mu"] * 3,
+                 'var_name': ("mu_cutoff", "del_mu", "mu_merge_cutoff"),
+                 'var_description': ("lower mu cutoff value", "max acceptable mu range",
+                                     "mu cutoff value in areas of overlap"),
+                 'var_val': (mu_cutoff, del_mu, None)}
+        else:
+            euv_combined = combine_maps(map_list, mu_merge_cutoff=mu_merge_cutoff,
+                                        mu_cutoff=mu_cutoff)
+            chd_combined = combine_maps(chd_maps, mu_merge_cutoff=mu_merge_cutoff,
+                                        mu_cutoff=mu_cutoff)
+            combined_method = {'meth_name': ["Min-Int-Merge-mu_merge"] * 3, 'meth_description':
+                ["Minimum intensity merge for synchronic map: based on Caplan et. al."] * 3,
+                 'var_name': ("mu_cutoff", "del_mu", "mu_merge_cutoff"),
+                 'var_description': ("lower mu cutoff value", "max acceptable mu range",
+                                     "mu cutoff value in areas of overlap"),
+                               'var_val': (mu_cutoff, None, mu_merge_cutoff)}
+
+        euv_combined.chd = chd_combined.data.astype(DTypes.MAP_CHD)
+    else:
+        # Use indexing from EUV min-merge to select CHD merge values
+        if del_mu is not None:
+            euv_combined = combine_maps(map_list, del_mu=del_mu, mu_cutoff=mu_cutoff)
+            combined_method = {'meth_name': ["MIDM-Comb-del_mu"]*3, 'meth_description':
+                ["Minimum intensity merge for (combined EUV/CHD) synchronic map: using del mu"]*3,
+                               'var_name': ("mu_cutoff", "del_mu", "mu_merge_cutoff"),
+                               'var_description': ("lower mu cutoff value", "max acceptable mu range",
+                                                   "mu cutoff value in areas of overlap"),
+                               'var_val': (mu_cutoff, del_mu, None)}
+        else:
+            euv_combined = combine_maps(map_list, mu_merge_cutoff=mu_merge_cutoff,
+                                        mu_cutoff=mu_cutoff)
+            combined_method = {'meth_name': ["MIDM-Comb-mu_merge"]*3, 'meth_description':
+                ["Minimum intensity merge for (combined EUV/CHD) synchronic map: based on Caplan et. al."]*3,
+                               'var_name': ("mu_cutoff", "del_mu", "mu_merge_cutoff"),
+                               'var_description': ("lower mu cutoff value", "max acceptable mu range",
+                                                   "mu cutoff value in areas of overlap"),
+                               'var_val': (mu_cutoff, None, mu_merge_cutoff)}
+
     # merge map meta data
     for ii in range(len(map_list)):
         euv_combined.append_method_info(map_list[ii].method_info)
@@ -601,7 +648,7 @@ def create_combined_maps_2(map_list, mu_merge_cutoff=None, del_mu=None, mu_cutof
     euv_combined.data_info = euv_combined.data_info.drop_duplicates()
     # record compute time
     euv_combined.append_map_info(pd.DataFrame({'time_of_compute':
-                                                   [datetime.datetime.now(), ]}))
+                                               [datetime.datetime.now(), ]}))
 
     # end time
     end = time.time()
@@ -626,6 +673,13 @@ def select_synchronic_images(center_time, del_interval, image_pd, inst_list):
     synch_images pandas.DataFrame
 
     """
+    # define a method to attach to synchronic maps
+    map_method_dict = {'meth_name': ("Synch_Im_Sel",), 'meth_description': [
+        "Synchronic image selection", ],
+                       'var_name': ("clust_meth",), 'var_description': ("Clustering method",),
+                       'var_val': (1,)}
+    map_method = pd.DataFrame(data=map_method_dict)
+
     jd0 = pd.DatetimeIndex([center_time, ]).to_julian_date().item()
     # choose which images to use at this datetime
     interval_max = center_time + del_interval
@@ -647,7 +701,7 @@ def select_synchronic_images(center_time, del_interval, image_pd, inst_list):
     if f_list.__len__() == 0:
         print("No instrument images in time range around ", center_time, ".\n")
         # return None
-        return None
+        return None, map_method
 
     # Now loop over all the image pairs to select the "perfect" group of images.
     cluster_index = cluster_meth_1(f_list=f_list, jd0=jd0)
@@ -657,4 +711,4 @@ def select_synchronic_images(center_time, del_interval, image_pd, inst_list):
         for ii in range(1, cluster_index.__len__()):
             synch_images = synch_images.append(image_list[ii].iloc[cluster_index[ii]])
 
-    return synch_images
+    return synch_images, map_method

@@ -485,9 +485,9 @@ class PsiMap:
         self.data_info = self.data_info.append(image_df, sort=False, ignore_index=True)
 
     def __copy__(self):
-        out = PsiMap.__init__(data=self.data, x=self.x, y=self.y, mu=self.mu,
-                              origin_image=self.origin_image, map_lon=self.map_lon,
-                              chd=self.chd, no_data_val=self.no_data_val)
+        out = PsiMap(data=self.data, x=self.x, y=self.y, mu=self.mu,
+                     origin_image=self.origin_image, map_lon=self.map_lon,
+                     chd=self.chd, no_data_val=self.no_data_val)
         out.append_map_info(self.map_info)
         out.append_data_info(self.data_info)
         out.append_method_info(self.method_info)
@@ -524,7 +524,8 @@ class PsiMap:
             # write map to file
             psihdf.wrh5_fullmap(h5_filename, self.x, self.y, np.array([]), self.data, method_info=self.method_info,
                                 data_info=self.data_info, map_info=self.map_info,
-                                no_data_val=self.no_data_val, mu=self.mu, origin_image=self.origin_image)
+                                no_data_val=self.no_data_val, mu=self.mu, origin_image=self.origin_image,
+                                chd=self.chd)
             print("PsiMap object written to: " + h5_filename)
 
         else:

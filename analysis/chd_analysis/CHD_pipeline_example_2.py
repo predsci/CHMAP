@@ -23,11 +23,12 @@ import modules.DB_classes as db_class
 import modules.DB_funs as db_funcs
 import analysis.chd_analysis.CHD_pipeline_funcs as chd_funcs
 import modules.map_manip as map_manip
+import modules.datatypes as datatypes
 
 # -------- parameters --------- #
 # TIME RANGE FOR QUERYING
-query_time_min = datetime.datetime(2007, 6, 2, 0, 0, 0)
-query_time_max = datetime.datetime(2008, 1, 1, 0, 0, 0)
+query_time_min = datetime.datetime(2010, 12, 1, 0, 0, 0)
+query_time_max = datetime.datetime(2011, 1, 1, 0, 0, 0)
 # define map interval cadence and width
 map_freq = 2  # number of hours
 interval_delta = 30  # number of minutes
@@ -65,17 +66,20 @@ nc = 3
 iters = 1000
 
 # MINIMUM MERGE MAPPING PARAMETERS
-del_mu = None  # optional between this method and mu_merge_cutoff method
+del_mu = 1.0  # optional between this method and mu_merge_cutoff method (not both)
 mu_cutoff = 0.0  # lower mu cutoff value
-mu_merge_cutoff = 0.4  # mu cutoff in overlap areas
+mu_merge_cutoff = None  # mu cutoff in overlap areas
+EUV_CHD_sep = False  # Do separate minimum intensity merges for image and CHD
 
 # MAP PARAMETERS
 x_range = [0, 2 * np.pi]
 y_range = [-1, 1]
-reduce_map_nycoord = 160
-reduce_map_nxcoord = 400
+reduce_map_nycoord = 640
+reduce_map_nxcoord = 1600
 full_map_nycoord = 2048
 full_map_nxcoord = 2048*2
+low_res_nycoord = 160
+low_res_nxcoord = 400
 # del_y = (y_range[1] - y_range[0]) / (map_nycoord - 1)
 # map_nxcoord = (np.floor((x_range[1] - x_range[0]) / del_y) + 1).astype(int)
 # generate map x,y grids. y grid centered on equator, x referenced from lon=0
@@ -83,6 +87,9 @@ full_map_y = np.linspace(y_range[0], y_range[1], full_map_nycoord, dtype='<f4')
 full_map_x = np.linspace(x_range[0], x_range[1], full_map_nxcoord, dtype='<f4')
 reduce_map_y = np.linspace(y_range[0], y_range[1], reduce_map_nycoord, dtype='<f4')
 reduce_map_x = np.linspace(x_range[0], x_range[1], reduce_map_nxcoord, dtype='<f4')
+low_res_y = np.linspace(y_range[0], y_range[1], low_res_nycoord, dtype='<f4')
+low_res_x = np.linspace(x_range[0], x_range[1], low_res_nxcoord, dtype='<f4')
+
 
 ### --------- NOTHING TO UPDATE BELOW -------- ###
 # Establish connection to database
@@ -111,7 +118,8 @@ moving_avg_centers = chd_funcs.get_dates(time_min=query_time_min, time_max=query
 # 3.) loop through center dates
 for date_ind, center in enumerate(moving_avg_centers):
     # choose which images to use in the same way we choose images for synchronic download
-    synch_images = chd_funcs.select_synchronic_images(center, del_interval, query_pd, inst_list)
+    synch_images, cluster_method = chd_funcs.select_synchronic_images(
+        center, del_interval, query_pd, inst_list)
     if synch_images is None:
         # no images fall in the appropriate range, skip
         continue
@@ -137,30 +145,53 @@ for date_ind, center in enumerate(moving_avg_centers):
                                             methods_list, full_map_x, full_map_y, R0)
 
         #### STEP SIX: REDUCE MAP PIXEL GRID ####
-        reduced_maps = [None, ] * map_list.__len__()
+        reduced_maps = [datatypes.PsiMap()] * map_list.__len__()
         for ii in range(map_list.__len__()):
             # first combine chd and image into a single map object
-            map_list[ii].chd = chd_map_list[ii].data
+            map_list[ii].chd = chd_map_list[ii].data.astype('float16')
             print("Reducing resolution on single image/chd map of", map_list[ii].data_info.instrument[0],
                   "at", map_list[ii].data_info.date_obs[0])
             # perform map reduction
             reduced_maps[ii] = map_manip.downsamp_reg_grid(map_list[ii], reduce_map_y,
                 reduce_map_x, single_origin_image=map_list[ii].data_info.data_id[0])
+            # reduced_maps[ii], row_mat, col_mat = map_manip.downsamp_reg_grid(
+            #     map_list[ii], reduce_map_y, reduce_map_x,
+            #     single_origin_image=map_list[ii].data_info.data_id[0])
 
         #### STEP FIVE: CREATE COMBINED MAPS ####
-        # euv_combined, chd_combined = chd_funcs.create_combined_maps(
-        #     db_session, map_data_dir, map_list, chd_map_list,
-        #     methods_list, data_info, map_info, mu_merge_cutoff=mu_merge_cutoff,
-        #     mu_cutoff=mu_cutoff)
-        if reduced_maps.__len__() == 1:
-            synchronic_map = reduced_maps[0]
-        else:
-            synchronic_map = chd_funcs.create_combined_maps_2(
-                reduced_maps, mu_merge_cutoff=mu_merge_cutoff, mu_cutoff=mu_cutoff)
+        # if reduced_maps.__len__() == 1:
+        #     # synchronic_map = reduced_maps[0].__copy__()
+        #     synchronic_map = reduced_maps[0]
+        # else:
+        synchronic_map = chd_funcs.create_combined_maps_2(
+            reduced_maps.copy(), mu_merge_cutoff=mu_merge_cutoff, del_mu=del_mu,
+            mu_cutoff=mu_cutoff, EUV_CHD_sep=EUV_CHD_sep)
+        # add synchronic clustering method to final map
+        synchronic_map.append_method_info(cluster_method)
 
         #### STEP SEVEN: SAVE MAP TO DATABASE ####
         db_session = synchronic_map.write_to_file(map_data_dir, map_type='synchronic',
                                                   db_session=db_session)
+
+        #### SAVE LOW-RES MAP AS WELL ####
+        low_res_maps = [datatypes.PsiMap()]*map_list.__len__()
+        for ii in range(map_list.__len__()):
+            # first combine chd and image into a single map object
+            map_list[ii].chd = chd_map_list[ii].data.astype('float16')
+            print("Reducing resolution on single image/chd map of", map_list[ii].data_info.instrument[0],
+                  "at", map_list[ii].data_info.date_obs[0])
+            # perform map reduction
+            low_res_maps[ii] = map_manip.downsamp_reg_grid(
+                map_list[ii], low_res_y, low_res_x,
+                single_origin_image=map_list[ii].data_info.data_id[0],
+                uniform_no_data=False)
+        low_synch_map = chd_funcs.create_combined_maps_2(
+            low_res_maps.copy(), mu_merge_cutoff=mu_merge_cutoff, del_mu=del_mu,
+            mu_cutoff=mu_cutoff, EUV_CHD_sep=EUV_CHD_sep)
+        # add synchronic clustering method to final map
+        low_synch_map.append_method_info(cluster_method)
+        db_session = low_synch_map.write_to_file(map_data_dir, map_type='synchronic',
+                                                 db_session=db_session)
 
 end_time = time.time()
 print("Total elapsed time: ", end_time-start_time)

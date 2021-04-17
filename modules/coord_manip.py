@@ -96,6 +96,13 @@ def map_grid_to_image(map_x, map_y, R0=1.0, obsv_lon=0.0, obsv_lat=0.0):
     # apply rotation matrix to coordinates
     image3D_coord = np.matmul(rot_mat, coord_array)
 
+    # numeric error occasionally results in |z| > R0. This is a problem for np.arccos()
+    image3D_coord[2, image3D_coord[2, :] > R0] = R0
+    image3D_coord[2, image3D_coord[2, :] < -R0] = -R0
+    # a more proper solution is to re-normalize each coordinate set, but that would be
+    # more expensive (to fix error on an order we are not worried about). Also, the
+    # numeric error of the renormalization could still create problems with arccos().
+
     image_phi = np.arctan2(image3D_coord[1, :], image3D_coord[0, :])
     image_theta = np.arccos(image3D_coord[2, :] / R0)
 
@@ -215,6 +222,10 @@ def interp_los_image_to_map(image_in, R0, map_x, map_y, no_data_val=-9999.):
     interp_result_vec[interp_index] = interp_vec
     # reformat result to matrix form
     interp_result = interp_result_vec.reshape((map_nycoord, map_nxcoord), order="C")
+
+    # some images are cutoff or have no_data_val within the image disk for some reason
+    # to mostly filter out these types of points, set any resulting negatives to no_data_val
+    interp_result[interp_result < 0.] = no_data_val
 
     mu_vec = np.cos(image_theta)
     mu_mat = mu_vec.reshape((map_nycoord, map_nxcoord), order="C")

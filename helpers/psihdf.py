@@ -181,7 +181,7 @@ def wrh5_fullmap(h5_filename, x, y, z, f, method_info=None, data_info=None, map_
         # h5file.create_dataset("origin_image", data=origin_image, dtype='i4')
         h5file.create_dataset("origin_image", data=origin_image, dtype=chd_info.DTypes.MAP_ORIGIN_IMAGE)
     if chd is not None:
-        h5file.create_dataset("chd", data=origin_image, dtype=chd_info.DTypes.MAP_CHD)
+        h5file.create_dataset("chd", data=chd, dtype=chd_info.DTypes.MAP_CHD)
 
 
     # Convert the metadata to a json string, save it as an "attribute"

@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 import matplotlib as mpl
 import numpy as np
 from matplotlib.lines import Line2D
+import modules.datatypes as psi_dt
 
 
 def PlotImage(los_image, nfig=None, mask_rad=1.5, title=None):
@@ -13,10 +14,6 @@ def PlotImage(los_image, nfig=None, mask_rad=1.5, title=None):
     imshow() should be replaced with pcolormesh() for generalizing to non-uniform rectilinear grids
     OR use Ron's Plot2D from PSI's 'tools'
     """
-    # set color palette and normalization (improve by using Ron's colormap setup)
-    norm = mpl.colors.LogNorm(vmin=1.0, vmax=np.nanmax(los_image.data))
-    # norm = mpl.colors.LogNorm()
-    im_cmap = plt.get_cmap('sohoeit195')
 
     # mask-off pixels outside of mask_rad
     # mesh_x, mesh_y = np.meshgrid(los_image.x, los_image.y)
@@ -26,8 +23,19 @@ def PlotImage(los_image, nfig=None, mask_rad=1.5, title=None):
 
     # remove extremely small values from data so that log color scale treats them as black
     # rather than white
-    plot_arr = los_image.data
+    if type(los_image) is psi_dt.IITImage:
+        plot_arr = los_image.iit_data
+    elif type(los_image) is psi_dt.LBCCImage:
+        plot_arr = los_image.lbcc_data
+    else:
+        plot_arr = los_image.data
+
     plot_arr[plot_arr < .001] = .001
+
+    # set color palette and normalization (improve by using Ron's colormap setup)
+    norm = mpl.colors.LogNorm(vmin=1.0, vmax=np.nanmax(plot_arr))
+    # norm = mpl.colors.LogNorm()
+    im_cmap = plt.get_cmap('sohoeit195')
 
     # plot the initial image
     if nfig is None:
@@ -91,7 +99,7 @@ def PlotMap(map_plot, nfig=None, title=None, map_type=None, save_map=False,
         # norm = mpl.colors.LogNorm(vmin=0.01, vmax=np.nanmax(map_plot.data))
         im_cmap = plt.get_cmap('Greys')
         norm = mpl.colors.LogNorm(vmin=0.01, vmax=1)
-        plot_mat = map_plot.chd
+        plot_mat = map_plot.chd.astype('float32')
     else:
         norm = mpl.colors.LogNorm(vmin=1.0, vmax=np.nanmax(map_plot.data))
         im_cmap = plt.get_cmap('sohoeit195')
