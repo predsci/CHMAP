@@ -55,3 +55,11 @@ $$
 where $\alpha = \arcsin(\frac{\gamma}{n_{p}})$, $\beta = \pi - \alpha$ (from symmetry), and $\gamma$ is a 
 hyper parameter. 
 
+![](images/DilationWorkFlow.PNG)
+**Figure- Classifying coronal holes using a latitude weighted dilation. 
+(a) The input greyscaled synoptic coronal hole map obtained by 
+Tamar’s CNN/K-Means detection. (b) The input image after applying a
+latitude weighted dilation described by equation (1) and (2).
+(c) Dilated filled contour image where each coronal hole is associated 
+with a unique color. (d) Lastly, the dilated filled contour 
+image multiplied by the binary input image.**

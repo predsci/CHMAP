@@ -29,12 +29,16 @@ class CoronalHoleDB:
     AreaThreshold = 5e-3
     # window to match coronal holes.
     window = 10
-    # parameter for dilation. (this should be changed for larger images.
+    # parameter for dilation (this should be changed for larger image dimensions).
     gamma = 10
     # connectivity threshold.
-    connectivity_thresh = 0.001
+    ConnectivityThresh = 1e-3
     # connectivity threshold.
-    area_match_thresh = 0.4
+    AreaMatchThresh = 0.4
+    # knn k hyper parameter
+    kHyper = 6
+    # knn thresh
+    kNNThresh = 0.1
     # MeshMap with information about the input image mesh grid and pixel area.
     Mesh = None
 
@@ -194,50 +198,6 @@ class CoronalHoleDB:
                                              Mesh=self.Mesh))
         return coronal_hole_list
 
-    # def plot_dilated_contours(self, contours):
-    #     """Draw filled contours of dilated greyscale input image.
-    #
-    #     Parameters
-    #     ----------
-    #     contours: opencv contours.
-    #
-    #     Returns
-    #     -------
-    #     rbg: image where each contour has a unique color
-    #     color_list: list of unique contour colors.
-    #     """
-    #     # initialize RBG image.
-    #     rbg = np.zeros((self.Mesh.n_t, self.Mesh.n_p, 3), dtype=np.uint8)
-    #     # initialize contour color list.
-    #     color_list = np.zeros((len(contours), 3))
-    #
-    #     # draw contours on rbg.
-    #     for ii, contour in enumerate(contours):
-    #         color_list[ii] = self.generate_ch_color()
-    #         cv2.drawContours(image=rbg, contours=[contour], contourIdx=0, color=color_list[ii],
-    #                          thickness=cv2.FILLED)
-    #     return rbg, color_list.astype(int)
-    #
-    # def find_contours(self, image):
-    #     """Find contours contours of a greyscale image.
-    #
-    #     Parameters
-    #     ----------
-    #     image - gray scaled image.
-    #
-    #     Returns
-    #     -------
-    #     rbg image
-    #     list of unique colors.
-    #     """
-    #     # create binary threshold.
-    #     ret, thresh = cv2.threshold(image, CoronalHoleDB.BinaryThreshold, 255, 0)
-    #     # find contours using opencv function.
-    #     contours, hierarchy = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
-    #     # draw contours.
-    #     return self.plot_dilated_contours(contours=contours)
-    #
-
     @staticmethod
     def generate_ch_color():
         """generate a random color
@@ -338,10 +298,10 @@ class CoronalHoleDB:
         # update bounding box area.
         c1.straight_box_area = c1.straight_box_area + c2.straight_box_area
 
-        c1.rot_box = np.append(c1.rot_box, c2.rot_box)
+        # c1.rot_box = np.append(c1.rot_box, c2.rot_box)
 
         # save rot box corners.
-        c1.rot_box_corners = np.append(c1.rot_box_corners, c2.rot_box_corners)
+        c1.rot_box_corners = np.vstack((c1.rot_box_corners, c2.rot_box_corners))
 
         # save rot box angle with respect to north.
         c1.rot_box_angle = np.append(c1.rot_box_angle, c2.rot_box_angle)
@@ -468,7 +428,7 @@ class CoronalHoleDB:
         X_train, Y_train, X_test = self.prepare_knn_data(contour_list=contour_list)
 
         # fit the training data and classify.
-        classifier = KNN(X_train=X_train, X_test=X_test, Y_train=Y_train)
+        classifier = KNN(X_train=X_train, X_test=X_test, Y_train=Y_train, K=self.kHyper, thresh=self.kNNThresh)
 
         # ==============================================================================================================
         # Area Overlap - Pixel overlap (connectivity and ID matching).
@@ -482,7 +442,7 @@ class CoronalHoleDB:
 
         # return list of coronal holes corresponding unique ID.
         match_list = max_area_overlap(area_check_list=area_check_list, area_overlap_results=area_overlap_results,
-                                      threshold=self.area_match_thresh)
+                                      threshold=self.AreaMatchThresh)
 
         return match_list, contour_list, area_overlap_results, area_check_list
 
@@ -568,7 +528,7 @@ class CoronalHoleDB:
         for ii, res in enumerate(area_overlap_results):
             # find the maximum area overlap average ratio.
             for jj, ratio in enumerate(res):
-                if ratio > self.connectivity_thresh:
+                if ratio > self.ConnectivityThresh:
                     # there should be an edge.
                     node_list = self.find_latest_contour_in_window(identity=area_check_list[ii][jj])
                     for node in node_list:
@@ -604,7 +564,7 @@ class CoronalHoleDB:
             N/A
         """
         p1, p2 = area_overlap(ch1=contour1, ch2=contour2, da=self.Mesh.da)
-        if (p1 + p2) / 2 > self.connectivity_thresh:
+        if (p1 + p2) / 2 > self.ConnectivityThresh:
             self.Graph.insert_edge(node_1=contour1, node_2=contour2, weight=round((p1 + p2) / 2, 3))
 
     def get_contour_from_latest_frame(self, id, frame_num):

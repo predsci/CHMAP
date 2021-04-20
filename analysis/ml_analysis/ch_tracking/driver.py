@@ -72,7 +72,8 @@ while ch_lib.frame_num <= 67:
 
     # update the image dimensions.
     n_t, n_p = np.shape(image)
-    ch_lib.Mesh = MapMesh(p=np.linspace(0, 2 * np.pi, n_p), t=np.linspace(0, np.pi, n_t))
+    ch_lib.Mesh = MapMesh(p=np.linspace(0, 2 * np.pi, n_p),
+                          t=(np.pi/2 + np.arcsin(np.linspace(-1, 1, n_t))))
 
     # ================================================================================================================
     # Step 3: Latitude Weighted Dilation.
