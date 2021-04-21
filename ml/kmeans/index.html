@@ -19,7 +19,7 @@
     
     
       
-        <title>PSF Deconvolution - Coronal Hole Detection Project</title>
+        <title>K-Means Detection - Coronal Hole Detection Project</title>
       
     
     
@@ -62,7 +62,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#psf-deconvolution" class="md-skip">
+        <a href="#detection-coronal-holes-using-k-means-algorithm" class="md-skip">
           Skip to content
         </a>
       
@@ -89,7 +89,7 @@
           </span>
           <span class="md-header-nav__topic md-ellipsis">
             
-              PSF Deconvolution
+              K-Means Detection
             
           </span>
         </div>
@@ -210,12 +210,10 @@
       
       
 
-  
 
-
-  <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+  <li class="md-nav__item md-nav__item--nested">
     
-      <input class="md-nav__toggle md-toggle" data-md-toggle="nav-3" type="checkbox" id="nav-3" checked>
+      <input class="md-nav__toggle md-toggle" data-md-toggle="nav-3" type="checkbox" id="nav-3">
     
     <label class="md-nav__link" for="nav-3">
       Image Pre-Processing
@@ -237,20 +235,11 @@
           
           
 
-  
 
-
-  <li class="md-nav__item md-nav__item--active">
-    
-    <input class="md-nav__toggle md-toggle" data-md-toggle="toc" type="checkbox" id="__toc">
-    
-      
-    
-    
-    <a href="./" title="PSF Deconvolution" class="md-nav__link md-nav__link--active">
+  <li class="md-nav__item">
+    <a href="../../ipp/psf/" title="PSF Deconvolution" class="md-nav__link">
       PSF Deconvolution
     </a>
-    
   </li>
 
         
@@ -260,7 +249,7 @@
 
 
   <li class="md-nav__item">
-    <a href="../lbc/" title="Limb-Brightening Correction" class="md-nav__link">
+    <a href="../../ipp/lbc/" title="Limb-Brightening Correction" class="md-nav__link">
       Limb-Brightening Correction
     </a>
   </li>
@@ -272,7 +261,7 @@
 
 
   <li class="md-nav__item">
-    <a href="../iit/" title="Inter-Instrument Transformation" class="md-nav__link">
+    <a href="../../ipp/iit/" title="Inter-Instrument Transformation" class="md-nav__link">
       Inter-Instrument Transformation
     </a>
   </li>
@@ -590,7 +579,7 @@
 
 
   <li class="md-nav__item">
-    <a href="../../ml/tracking_overview/" title="Overview" class="md-nav__link">
+    <a href="../tracking_overview/" title="Overview" class="md-nav__link">
       Overview
     </a>
   </li>
@@ -602,7 +591,7 @@
 
 
   <li class="md-nav__item">
-    <a href="../../ml/polarprojection/" title="Polar Projection" class="md-nav__link">
+    <a href="../polarprojection/" title="Polar Projection" class="md-nav__link">
       Polar Projection
     </a>
   </li>
@@ -614,7 +603,7 @@
 
 
   <li class="md-nav__item">
-    <a href="../../ml/latitude_weighted_dilation/" title="Latitude Weighted Dilation" class="md-nav__link">
+    <a href="../latitude_weighted_dilation/" title="Latitude Weighted Dilation" class="md-nav__link">
       Latitude Weighted Dilation
     </a>
   </li>
@@ -626,7 +615,7 @@
 
 
   <li class="md-nav__item">
-    <a href="../../ml/tracking_features/" title="CH Features" class="md-nav__link">
+    <a href="../tracking_features/" title="CH Features" class="md-nav__link">
       CH Features
     </a>
   </li>
@@ -663,7 +652,7 @@
 
 
   <li class="md-nav__item">
-    <a href="../../ml/match_overview/" title="Overview" class="md-nav__link">
+    <a href="../match_overview/" title="Overview" class="md-nav__link">
       Overview
     </a>
   </li>
@@ -675,7 +664,7 @@
 
 
   <li class="md-nav__item">
-    <a href="../../ml/knn/" title="KNN" class="md-nav__link">
+    <a href="../knn/" title="KNN" class="md-nav__link">
       KNN
     </a>
   </li>
@@ -687,7 +676,7 @@
 
 
   <li class="md-nav__item">
-    <a href="../../ml/areaoverlap/" title="Area Overlap" class="md-nav__link">
+    <a href="../areaoverlap/" title="Area Overlap" class="md-nav__link">
       Area Overlap
     </a>
   </li>
@@ -704,7 +693,7 @@
 
 
   <li class="md-nav__item">
-    <a href="../../ml/connectivity/" title="CH Connectivity" class="md-nav__link">
+    <a href="../connectivity/" title="CH Connectivity" class="md-nav__link">
       CH Connectivity
     </a>
   </li>
@@ -719,10 +708,12 @@
       
       
 
+  
 
-  <li class="md-nav__item md-nav__item--nested">
+
+  <li class="md-nav__item md-nav__item--active md-nav__item--nested">
     
-      <input class="md-nav__toggle md-toggle" data-md-toggle="nav-9" type="checkbox" id="nav-9">
+      <input class="md-nav__toggle md-toggle" data-md-toggle="nav-9" type="checkbox" id="nav-9" checked>
     
     <label class="md-nav__link" for="nav-9">
       Machine Learning Detection
@@ -746,7 +737,7 @@
 
 
   <li class="md-nav__item">
-    <a href="../../ml/chd/" title="Overview" class="md-nav__link">
+    <a href="../chd/" title="Overview" class="md-nav__link">
       Overview
     </a>
   </li>
@@ -756,11 +747,94 @@
           
           
 
+  
 
-  <li class="md-nav__item">
-    <a href="../../ml/kmeans/" title="K-Means Detection" class="md-nav__link">
+
+  <li class="md-nav__item md-nav__item--active">
+    
+    <input class="md-nav__toggle md-toggle" data-md-toggle="toc" type="checkbox" id="__toc">
+    
+      
+    
+    
+      <label class="md-nav__link md-nav__link--active" for="__toc">
+        K-Means Detection
+        <span class="md-nav__icon md-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 9h14V7H3v2m0 4h14v-2H3v2m0 4h14v-2H3v2m16 0h2v-2h-2v2m0-10v2h2V7h-2m0 6h2v-2h-2v2z"/></svg>
+        </span>
+      </label>
+    
+    <a href="./" title="K-Means Detection" class="md-nav__link md-nav__link--active">
       K-Means Detection
     </a>
+    
+      
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"/></svg>
+      </span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#k-means-clustering" class="md-nav__link">
+    K-Means Clustering
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#clustering-examples" class="md-nav__link">
+    Clustering Examples
+  </a>
+  
+    <nav class="md-nav" aria-label="Clustering Examples">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#clustered-maps" class="md-nav__link">
+    Clustered Maps
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#clustered-by-intensity" class="md-nav__link">
+    Clustered by intensity
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#area-constraints" class="md-nav__link">
+    Area Constraints
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#movies" class="md-nav__link">
+    Movies!!
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+    
   </li>
 
         
@@ -775,7 +849,7 @@
 
 
   <li class="md-nav__item">
-    <a href="../../ml/pred/" title="CH-Net Future Frame Predictions" class="md-nav__link">
+    <a href="../pred/" title="CH-Net Future Frame Predictions" class="md-nav__link">
       CH-Net Future Frame Predictions
     </a>
   </li>
@@ -798,6 +872,64 @@
     
   
   
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"/></svg>
+      </span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#k-means-clustering" class="md-nav__link">
+    K-Means Clustering
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#clustering-examples" class="md-nav__link">
+    Clustering Examples
+  </a>
+  
+    <nav class="md-nav" aria-label="Clustering Examples">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#clustered-maps" class="md-nav__link">
+    Clustered Maps
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#clustered-by-intensity" class="md-nav__link">
+    Clustered by intensity
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#area-constraints" class="md-nav__link">
+    Area Constraints
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#movies" class="md-nav__link">
+    Movies!!
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
 </nav>
                   </div>
                 </div>
@@ -808,7 +940,7 @@
             <article class="md-content__inner md-typeset">
               
                 
-                  <a href="https://github.com/predsci/CHD/blob/master/CHD-mkdocs/docs/ipp/psf.md" title="Edit this page" class="md-content__button md-icon">
+                  <a href="https://github.com/predsci/CHD/blob/master/CHD-mkdocs/docs/ml/kmeans.md" title="Edit this page" class="md-content__button md-icon">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20.71 7.04c.39-.39.39-1.04 0-1.41l-2.34-2.34c-.37-.39-1.02-.39-1.41 0l-1.84 1.83 3.75 3.75M3 17.25V21h3.75L17.81 9.93l-3.75-3.75L3 17.25z"/></svg>
                   </a>
                 
@@ -816,8 +948,38 @@
                   
                 
                 
-                <h1 id="psf-deconvolution">PSF Deconvolution</h1>
-<p>Page regarding PSF deconvolution. </p>
+                <h1 id="detection-coronal-holes-using-k-means-algorithm">Detection Coronal Holes using K-means algorithm</h1>
+<h2 id="k-means-clustering">K-Means Clustering</h2>
+<ul>
+<li>unsupervised learning method</li>
+<li>centroid based clustering algorithm to generate CH/non-CH groups</li>
+</ul>
+<p>Advantages:<br />
+<em> unsupervised<br />
+    * no requirement of segmentation masks or labeling<br />
+</em> easy to create multiple cluster types (find AR as well)<br />
+* can basically regenerate EUV map — use for prediction  </p>
+<p>Next Steps:
+* connectivity of regions
+    * currently weighted in favor of intensity rather than connectivity
+* finalize area constraint to reduce flickering of images</p>
+<p>K-Nearest Neighbor:
+* this would allow us to add pixels to a class -- perhaps track a CH over time </p>
+<h2 id="clustering-examples">Clustering Examples</h2>
+<h3 id="clustered-maps">Clustered Maps</h3>
+<p><a href="../images/clustered_k6.png">Six Clusters</a>  </p>
+<p><img alt="Six Clusters" src="../images/clustered_k6.png" />  </p>
+<h3 id="clustered-by-intensity">Clustered by intensity</h3>
+<p><a href="../images/pred_clusters_inc_brightness_k6.png">Six Clusters: Intensity Ordered</a>
+<img alt="Six Clusters: Intensity Ordered" src="../images/pred_clusters_inc_brightness_k6.png" /></p>
+<h3 id="area-constraints">Area Constraints</h3>
+<p><a href="../images/no_area_constraint_k6.png">Without Area Constraint</a>
+<img alt="Without Area Constraint" src="../images/no_area_constraint_k6.png" /></p>
+<p><a href="../images/area_constraint_k6.png">With Area Constraint</a>
+<img alt="With Area Constraint" src="../images/area_constraint_k6.png" /></p>
+<h3 id="movies">Movies!!</h3>
+<p>[Area Constraint]&lt;&gt;</p>
+<p>[Without Area Constraint]<a href="https://youtu.be/-WTVDGb5vwU">https://youtu.be/-WTVDGb5vwU</a></p>
                 
               
               
@@ -836,7 +998,7 @@
     <div class="md-footer-nav">
       <nav class="md-footer-nav__inner md-grid" aria-label="Footer">
         
-          <a href="../../about/" title="About the Project" class="md-footer-nav__link md-footer-nav__link--prev" rel="prev">
+          <a href="../chd/" title="Overview" class="md-footer-nav__link md-footer-nav__link--prev" rel="prev">
             <div class="md-footer-nav__button md-icon">
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"/></svg>
             </div>
@@ -845,19 +1007,19 @@
                 <span class="md-footer-nav__direction">
                   Previous
                 </span>
-                About the Project
+                Overview
               </div>
             </div>
           </a>
         
         
-          <a href="../lbc/" title="Limb-Brightening Correction" class="md-footer-nav__link md-footer-nav__link--next" rel="next">
+          <a href="../pred/" title="CH-Net Future Frame Predictions" class="md-footer-nav__link md-footer-nav__link--next" rel="next">
             <div class="md-footer-nav__title">
               <div class="md-ellipsis">
                 <span class="md-footer-nav__direction">
                   Next
                 </span>
-                Limb-Brightening Correction
+                CH-Net Future Frame Predictions
               </div>
             </div>
             <div class="md-footer-nav__button md-icon">
