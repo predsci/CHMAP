@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 import cv2
 
 
-def plot_coronal_hole(ch_list, n_t, n_p, title, filename):
+def plot_coronal_hole(ch_list, n_t, n_p, title, filename=False):
     """
 
     Parameters

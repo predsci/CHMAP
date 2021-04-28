@@ -10,7 +10,6 @@ A data structure for a set of coronal hole tracking (CHT) algorithm.
 """
 
 import json
-import cv2
 import numpy as np
 from analysis.ml_analysis.ch_tracking.frame import Frame
 from analysis.ml_analysis.ch_tracking.contour import Contour
@@ -24,13 +23,13 @@ import matplotlib.pyplot as plt
 class CoronalHoleDB:
     """ Coronal Hole Object Data Structure."""
     # contour binary threshold.
-    BinaryThreshold = 200
+    BinaryThreshold = 0.7
     # coronal hole area threshold.
     AreaThreshold = 5e-3
     # window to match coronal holes.
     window = 10
     # parameter for dilation (this should be changed for larger image dimensions).
-    gamma = 10
+    gamma = 40
     # connectivity threshold.
     ConnectivityThresh = 1e-3
     # connectivity threshold.
@@ -53,7 +52,7 @@ class CoronalHoleDB:
         self.total_num_of_coronal_holes = 0
 
         # frame number.
-        self.frame_num = 0
+        self.frame_num = 1
 
         # data holder for previous *window* frames. TODO: is it better to use a dictionary?
         self.window_holder = [None] * self.window
@@ -74,7 +73,7 @@ class CoronalHoleDB:
 
         Parameters
         ----------
-        ch: CoronalHole() object see coronalhole.py
+        ch: CoronalHole() object
 
         Returns
         -------
@@ -91,7 +90,7 @@ class CoronalHoleDB:
 
         Parameters
         ----------
-        ch: CoronalHole() object see coronalhole.py
+        ch: CoronalHole() object
 
         Returns
         -------
@@ -105,7 +104,7 @@ class CoronalHoleDB:
 
         Parameters
         ----------
-        ch: CoronalHole() object see coronalhole.py
+        ch: CoronalHole() object
 
         Returns
         -------
@@ -147,58 +146,6 @@ class CoronalHoleDB:
         self.ch_dict[contour.id] = coronal_hole
 
     @staticmethod
-    def _interval_overlap(t1, t2, t3, t4):
-        """check if two intervals overlap.
-
-        Parameters
-        ----------
-        t1: int
-        t2: int
-        t3: int
-        t4: int
-
-        Returns
-        -------
-        Boolean
-        The two intervals are built from [t1,t2] and [t3,t4] assuming t1 <= t2 and t3 <=t4.
-        If the two intervals overlap: return True, otherwise False.
-        """
-        if t1 <= t3 <= t2:
-            return True
-        elif t1 <= t4 <= t2:
-            return True
-        elif t3 <= t1 <= t4:
-            return True
-        elif t3 <= t2 <= t4:
-            return True
-        return False
-
-    def save_contour_pixel_locations(self, rbg_image, color_list):
-        """This function will save all the image pixel coordinates that are assigned to each coronal hole.
-
-        Parameters
-        ----------
-        rbg_image: rbg lon-lat classified coronal hole image.
-        color_list: list of contour unique colors.
-
-        Returns
-        -------
-        coronal_hole_list : coronal hole list of Contour object.
-        """
-        # loop over each contour saved.
-        coronal_hole_list = []
-        for color in color_list:
-            # save pixel locations.
-            mask = np.all(rbg_image == color, axis=-1)
-            # find image pixel coordinates.
-            contour_pixel = np.asarray(np.where(mask))
-            # save contour in a list if its not zero.
-            coronal_hole_list.append(Contour(contour_pixels=contour_pixel,
-                                             frame_num=self.frame_num,
-                                             Mesh=self.Mesh))
-        return coronal_hole_list
-
-    @staticmethod
     def generate_ch_color():
         """generate a random color
 
@@ -207,148 +154,6 @@ class CoronalHoleDB:
         list of 3 integers between 0 and 255.
         """
         return np.random.randint(low=0, high=255, size=(3,)).tolist()
-
-    def _force_periodicity(self, contour_list):
-        """Force periodicity.
-
-        Parameters
-        ----------
-        contour_list: list of all contours.
-
-        Returns
-        -------
-        updated contour list.
-        """
-        # loop over each coronal hole and check if it is on the periodic border.
-        ii = 0
-        while ii <= len(contour_list) - 2:
-            c1 = contour_list[ii]
-            # check if it overlaps phi=0.
-            if c1.periodic_at_zero:
-                # check for all other periodic 2pi.
-                jj = ii + 1
-                while jj <= len(contour_list) - 1:
-                    c2 = contour_list[jj]
-                    if c2.periodic_at_2pi:
-                        # get interval of latitude at 0.
-                        t1, t2 = c1.lat_interval_at_zero()
-                        # get interval of latitude at 2pi.
-                        t3, t4 = c2.lat_interval_at_2_pi(Mesh=self.Mesh)
-                        # check if intervals overlap.
-                        if self._interval_overlap(t1, t2, t3, t4):
-                            # merge the two contours by appending c2 to c1.
-                            contour_list[ii] = self._merge_contours(c1=c1, c2=c2)
-                            c1 = contour_list[ii]
-                            contour_list.remove(c2)
-                            ii += -1
-                    jj += 1
-
-            # check if it overlaps phi=2pi.
-            if c1.periodic_at_2pi:
-                # check for all other periodic 0.
-                jj = ii + 1
-                while jj <= len(contour_list) - 1:
-                    c2 = contour_list[jj]
-                    if c2.periodic_at_zero:
-                        # get interval of latitude at 2pi.
-                        t1, t2 = c1.lat_interval_at_2_pi(Mesh=self.Mesh)
-                        # get interval of latitude at 0.
-                        t3, t4 = c2.lat_interval_at_zero()
-                        # check if intervals overlap.
-                        if self._interval_overlap(t1, t2, t3, t4):
-                            # merge the two contours by appending c2 to c1.
-                            contour_list[ii] = self._merge_contours(c1=c1, c2=c2)
-                            contour_list.remove(c2)
-                            ii += -1
-                    jj += 1
-            ii += 1
-        return contour_list
-
-    def _merge_contours(self, c1, c2):
-        """Merge c2 onto c1.
-            # TODO: update all features computed.
-        Parameters
-        ----------
-        c1: Contour
-        c2: Contour
-
-        Returns
-        -------
-        c1 modified.
-        """
-        # append c2 pixel locations to c1.
-        c1.contour_pixels_theta = np.append(c2.contour_pixels_theta, c1.contour_pixels_theta)
-        c1.contour_pixels_phi = np.append(c2.contour_pixels_phi, c1.contour_pixels_phi)
-
-        # update c1 periodic label.
-        if c2.periodic_at_2pi:
-            c1.periodic_at_2pi = True
-        if c2.periodic_at_zero:
-            c1.periodic_at_zero = True
-
-        # update c1 area.
-        c1.area = c1.area + c2.area
-
-        # update c1 pixel centroid.
-        c1.pixel_centroid = c1.compute_pixel_centroid(Mesh=self.Mesh)
-
-        # update bounding box.
-        c1.straight_box = np.append(c1.straight_box, c2.straight_box)
-
-        # update bounding box area.
-        c1.straight_box_area = c1.straight_box_area + c2.straight_box_area
-
-        # c1.rot_box = np.append(c1.rot_box, c2.rot_box)
-
-        # save rot box corners.
-        c1.rot_box_corners = np.vstack((c1.rot_box_corners, c2.rot_box_corners))
-
-        # save rot box angle with respect to north.
-        c1.rot_box_angle = np.append(c1.rot_box_angle, c2.rot_box_angle)
-
-        # compute the rotate box area.
-        c1.rot_box_area = c1.rot_box_area + c2.rot_box_area
-
-        # compute the tilt of the coronal hole in spherical coordinates using PCA.
-        c1.pca_tilt, c1.sig_tilt = c1.compute_coronal_hole_tilt_pca(Mesh=self.Mesh)
-
-        return c1
-
-    @staticmethod
-    def _remove_small_coronal_holes(contour_list):
-        """Remove all contours that are smaller than AreaThreshold.
-
-        Parameters
-        ----------
-        contour_list: list of all contours.
-
-        Returns
-        -------
-        pruned contour list.
-        """
-        ii = 0
-        while ii < len(contour_list):
-            if contour_list[ii].area < CoronalHoleDB.AreaThreshold:
-                contour_list.remove(contour_list[ii])
-                ii += -1
-            ii += 1
-        return contour_list
-
-    def prune_coronal_hole_list(self, contour_list):
-        """Remove small coronal holes and force periodicity.
-
-        Parameters
-        ----------
-        contour_list: list of all contours.
-
-        Returns
-        -------
-        pruned contour list.
-        """
-        # remove small coronal holes.
-        contour_list = self._remove_small_coronal_holes(contour_list=contour_list)
-        # force periodicity.
-        return self._force_periodicity(contour_list=contour_list)
 
     def assign_new_coronal_holes(self, contour_list, timestamp=None):
         """Match coronal holes to previous *window* frames.
@@ -433,7 +238,7 @@ class CoronalHoleDB:
         # ==============================================================================================================
         # Area Overlap - Pixel overlap (connectivity and ID matching).
         # ==============================================================================================================
-        # if proba > KNNthresh then check its overlap of pixels area (functions are in areaoverlap.py)
+        # if probability > KNN threshold then check its overlap of pixels area (functions are in areaoverlap.py)
         area_check_list = classifier.check_list
 
         # compute the average area overlap ratio, this will be used for matching coronal holes and connectivity edges.

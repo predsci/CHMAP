@@ -230,7 +230,7 @@ class CoronalHoleGraph:
         ii = 0
         edge_color_bar = None
         # sort the subgraphs based on area. The first subgraphs are long lived-large coronal holes.
-        sub_graph_list = self.order_subgraphs_based_on_area()[:subplots_thresh]
+        sub_graph_list = self.order_subgraphs_based_on_area()[:min(subplots_thresh, num_of_subplots)]
 
         # loop over each subgraph and plot
         for connectedG in sub_graph_list:

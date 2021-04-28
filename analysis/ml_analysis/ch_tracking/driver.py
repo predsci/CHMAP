@@ -26,12 +26,12 @@ Last Modified: April 13th, 2021 (Opal).
 import cv2
 import numpy as np
 from analysis.ml_analysis.ch_tracking.contour import Contour
-from analysis.ml_analysis.ch_tracking.dilation import latitude_weighted_dilation, find_contours
 import pickle
 import json
 from modules.map_manip import MapMesh
 from analysis.ml_analysis.ch_tracking.src import CoronalHoleDB
 from analysis.ml_analysis.ch_tracking.plots import plot_coronal_hole
+from analysis.ml_analysis.ch_tracking.classification import classify_grey_scaled_image
 import matplotlib.pyplot as plt
 from astropy.time import Time
 
@@ -76,50 +76,33 @@ while ch_lib.frame_num <= 67:
                           t=(np.pi/2 + np.arcsin(np.linspace(-1, 1, n_t))))
 
     # ================================================================================================================
-    # Step 3: Latitude Weighted Dilation.
+    # Step 3: Latitude Weighted Dilation +
+    #         Compute all contour features +
+    #         Force periodicity and delete small contours.
     # ================================================================================================================
-    # pass one extra erode and dilate before latitude weighted dilation.
-    dilated_img = latitude_weighted_dilation(grey_scale_image=image,
-                                             theta=ch_lib.Mesh.t,
-                                             gamma=ch_lib.gamma,
-                                             n_p=ch_lib.Mesh.n_p)
+    contour_list_pruned = classify_grey_scaled_image(greyscale_image=image,
+                                                     lat_coord=ch_lib.Mesh.t,
+                                                     lon_coord=ch_lib.Mesh.p,
+                                                     AreaThreshold=ch_lib.AreaThreshold,
+                                                     frame_num=ch_lib.frame_num,
+                                                     BinaryThreshold=ch_lib.BinaryThreshold,
+                                                     gamma=ch_lib.gamma)
 
     # ================================================================================================================
-    # Step 4: Plot the contours found in the dilated image and multiply mask.
-    # ================================================================================================================
-    # add coronal holes to data base.
-    rbg_dilated, color_list = find_contours(image=dilated_img, thresh=ch_lib.BinaryThreshold, Mesh=ch_lib.Mesh)
-
-    # create a threshold mask.
-    ret, thresh = cv2.threshold(image, CoronalHoleDB.BinaryThreshold, 1, 0)
-
-    # multiply mask.
-    classified_img = (rbg_dilated.transpose(2, 0, 1) * thresh).transpose(1, 2, 0)
-
-    # save contour pixels of each coronal hole in the classified image.
-    contour_list = ch_lib.save_contour_pixel_locations(classified_img, color_list)
-
-    # ================================================================================================================
-    # Step 5: Force periodicity and remove small detections.
-    # ================================================================================================================
-    # force periodicity and delete small segments.
-    contour_list_pruned = ch_lib.prune_coronal_hole_list(contour_list=contour_list)
-
-    # ================================================================================================================
-    # Step 6: Match coronal holes detected to previous frame detections.
+    # Step 4: Match coronal holes detected to previous frame detections.
     # ================================================================================================================
     ch_lib.assign_new_coronal_holes(contour_list=contour_list_pruned,
                                     timestamp=times[ch_lib.frame_num - 1])
 
     # ================================================================================================================
-    # Step 7: Plot results.
+    # Step 5: Plot results.
     # ================================================================================================================
     # plot coronal holes in the latest frame.
     plot_coronal_hole(ch_list=ch_lib.window_holder[-1].contour_list, n_t=ch_lib.Mesh.n_t, n_p=ch_lib.Mesh.n_p,
                       title="Frame: " + str(ch_lib.frame_num) + ", Time: " + str(times[ch_lib.frame_num])[:10],
                       filename=False)
 
-    # plot connectivity subgraphs.
+    # plot connectivity sub - graphs.
     file_name = "results/images/tester/frames/" + "graph_frame_" + str(ch_lib.frame_num) + ".png"
     ch_lib.Graph.create_plots()
     plt.show()

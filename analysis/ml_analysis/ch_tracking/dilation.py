@@ -4,6 +4,7 @@ Last Modified: April 13th, 2021 (Opal)
 """
 import cv2
 import numpy as np
+from analysis.ml_analysis.ch_tracking.contour import Contour
 import matplotlib.pyplot as plt
 
 
@@ -133,8 +134,36 @@ def find_contours(image, thresh, Mesh):
         list of unique colors.
     """
     # create binary threshold.
-    ret, thresh = cv2.threshold(image, thresh, 255, 0)
+    ret, thresh = cv2.threshold(image, thresh, 1, 0)
     # find contours using opencv function.
     contours, hierarchy = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
     # draw contours.
     return plot_dilated_contours(contours=contours, Mesh=Mesh)
+
+
+def get_list_of_contours_from_rbg(rbg_image, color_list, Mesh, frame_num=0):
+    """This function will save all the image pixel coordinates that are assigned to each coronal hole.
+
+    Parameters
+    ----------
+    frame_num: frame id number, default is 0.
+    Mesh: MeshMap() object with image coordinates.
+    rbg_image: rbg lon-lat classified coronal hole image.
+    color_list: list of contour unique colors.
+
+    Returns
+    -------
+    coronal_hole_list : coronal hole list of Contour object.
+    """
+    # loop over each contour saved.
+    coronal_hole_list = []
+    for color in color_list:
+        # save pixel locations.
+        mask = np.all(rbg_image == color, axis=-1)
+        # find image pixel coordinates.
+        contour_pixel = np.asarray(np.where(mask))
+        # save contour in a list if its not zero.
+        coronal_hole_list.append(Contour(contour_pixels=contour_pixel,
+                                         frame_num=frame_num,
+                                         Mesh=Mesh))
+    return coronal_hole_list
