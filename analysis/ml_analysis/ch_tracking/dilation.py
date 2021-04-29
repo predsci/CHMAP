@@ -77,6 +77,21 @@ def latitude_weighted_dilation(grey_scale_image, theta, gamma, n_p):
     return dilated_image
 
 
+def extra_3_by_3_kernel_dilation(image, kernel=np.array([[1, 1, 1], [1, 1, 1], [1, 1, 1]], dtype=np.uint8)):
+    """An extra 3 by 3 kernel dilation
+
+    Parameters
+    ----------
+    kernel: structuring element for dilation.
+    image: greyscale image.
+
+    Returns
+    -------
+        (numpy array) dilared image.
+    """
+    return cv2.dilate(image, kernel=kernel, iterations=1)
+
+
 def generate_ch_color():
     """generate a random color
 

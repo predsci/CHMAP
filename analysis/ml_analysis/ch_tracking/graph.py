@@ -19,6 +19,12 @@ class CoronalHoleGraph:
     def __init__(self):
         # Graph object.
         self.G = nx.Graph()
+        # current frame number.
+        self.max_frame_num = 1
+        # y interval to plot at a time
+        self.y_window = 10
+        # number of connected sub-graphs to plot
+        self.plot_num_subgraphs = 10
 
     def __str__(self):
         return json.dumps(
@@ -200,7 +206,28 @@ class CoronalHoleGraph:
         # (descending order)
         return [subgraph_list[i] for i in sorted_index]
 
-    def create_plots(self, save_dir=False, subplots=True, subplots_thresh=10, timestamps=False):
+    def return_list_of_nodes_in_frame_window(self, subgraph):
+        """return a list of nodes in the frame window.
+
+        Parameters
+        ----------
+        subgraph: a connected subgraph in G.
+
+        Returns
+        -------
+            (list) of contour nodes that are in the frame.
+        """
+        node_list = []
+        for node in subgraph.nodes:
+            if self.max_frame_num < self.y_window:
+                node_list.append(node)
+
+            elif (self.max_frame_num - self.y_window) <= node.frame_num <= self.max_frame_num:
+                node_list.append(node)
+
+        return node_list
+
+    def create_plots(self, save_dir=False, subplots=True, timestamps=False):
         """Plot the resulting isolated connected sub - graphs in separate figures.
 
         Parameters
@@ -213,10 +240,6 @@ class CoronalHoleGraph:
         save_dir: (bool or str)
                 If not False, will save figures in save_dir directory.
 
-        subplots_thresh: (int)
-                Threshold of number of subplots to plot - above a certain threshold they
-                start overlapping.
-
         Returns
         -------
              N/A
@@ -224,81 +247,97 @@ class CoronalHoleGraph:
         num_of_subplots = len(list(nx.connected_components(self.G)))
 
         if subplots:
-            fig, axes = plt.subplots(nrows=1, ncols=min(subplots_thresh, num_of_subplots), sharey=True)
+            fig, axes = plt.subplots(nrows=1, ncols=min(self.plot_num_subgraphs, num_of_subplots), sharey=True)
             axes = axes.flatten()
 
         ii = 0
         edge_color_bar = None
         # sort the subgraphs based on area. The first subgraphs are long lived-large coronal holes.
-        sub_graph_list = self.order_subgraphs_based_on_area()[:min(subplots_thresh, num_of_subplots)]
+        sub_graph_list = self.order_subgraphs_based_on_area()[:min(self.plot_num_subgraphs, num_of_subplots)]
 
         # loop over each subgraph and plot
         for connectedG in sub_graph_list:
             # connect sub graph.
             sub_graph = self.G.subgraph(connectedG)
-            # plot a hierarchical graph.
-            if subplots:
-                ax = axes[ii]
-            else:
-                fig, ax = plt.subplots()
-            # draw graph, nodes positions are based on their count and frame_num.
-            # labels are the coronal hole id number.
-            pos, labels = self.get_plot_features(sub_graph=sub_graph)
+            # prune the list of nodes for each plot based on their frame number.
+            list_of_nodes_in_range = self.return_list_of_nodes_in_frame_window(subgraph=sub_graph)
+            if len(list_of_nodes_in_range) == 0:
+                if subplots:
+                    ax = axes[ii]
+                    fig.delaxes(ax)
 
-            if sub_graph.number_of_nodes() == 1:
-                # plot nodes and labels.
-                nx.draw(sub_graph, pos=pos, font_weight='bold', ax=ax, node_size=100,
-                        node_color=[c.to_rgba(np.array(ch.color) / 255) for ch in sub_graph.nodes])
+            elif len(list_of_nodes_in_range) > 0:
+                sub_graph = self.G.subgraph(nodes=list_of_nodes_in_range)
+                # plot a hierarchical graph.
+                if subplots:
+                    ax = axes[ii]
+                else:
+                    fig, ax = plt.subplots()
+                # draw graph, nodes positions are based on their count and frame_num.
+                # labels are the coronal hole id number.
+                pos, labels = self.get_plot_features(sub_graph=sub_graph)
 
-                nx.draw_networkx_labels(G=sub_graph, pos=pos, labels=labels, ax=ax)
+                if sub_graph.number_of_nodes() == 1:
+                    # plot nodes and labels.
+                    nx.draw(sub_graph, pos=pos, font_weight='bold', ax=ax, node_size=100,
+                            node_color=[c.to_rgba(np.array(ch.color) / 255) for ch in sub_graph.nodes])
 
-            else:
-                edge_weights = nx.get_edge_attributes(G=sub_graph, name='weight')
-                edges, weights = zip(*edge_weights.items())
-
-                # plot nodes and labels.
-                nx.draw(sub_graph, pos=pos, font_weight='bold', ax=ax, node_size=100,
-                        node_color=[c.to_rgba(np.array(ch.color) / 255) for ch in sub_graph.nodes],
-                        edgelist=[])
-                nx.draw_networkx_labels(G=sub_graph, pos=pos, labels=labels, ax=ax)
-
-                edge_color_bar = nx.draw_networkx_edges(sub_graph, pos=pos, edge_color=weights, edgelist=edges,
-                                                        edge_cmap=plt.cm.get_cmap('Greys'), edge_vmin=0, edge_vmax=1,
-                                                        width=3, ax=ax)
-
-                # nx.draw_networkx_edge_labels(G=sub_graph, pos=pos,
-                #                              edge_labels=edge_weights, ax=ax,
-                #                              alpha=1, font_size=5)
-
-            if subplots:
-                # Hide the right and top spines
-                ax.spines['right'].set_visible(False)
-                ax.spines['top'].set_visible(False)
-                if ii == 0:
-                    # Only show ticks on the left and bottom spines
-                    ax.yaxis.set_ticks_position('left')
-                    ax.set_xlim(tuple(sum(i) for i in zip(ax.get_xlim(), (-0.5, 0.5))))
-                    # ax.xaxis.set_ticks_position('bottom')
-
-                    # set x and y axis ticks to be integers
-                    ax.yaxis.get_major_locator().set_params(integer=True)
-                    ax.xaxis.get_major_locator().set_params(integer=True)
-
-                    # timestamp as y axis.
-                    if timestamps:
-                        ax.set_yticklabels(timestamps)
-
-                    # invert the y axis.
-                    ax.invert_yaxis()
-                    ax.axis('on')
-                    ax.set_ylabel("frame number")
+                    nx.draw_networkx_labels(G=sub_graph, pos=pos, labels=labels, ax=ax)
 
                 else:
-                    ax.set_xlim(tuple(sum(i) for i in zip(ax.get_xlim(), (-0.5, 0.5))))
-                    ax.spines['left'].set_visible(False)
-                    # ax.xaxis.set_ticks_position('bottom')
-                    ax.xaxis.get_major_locator().set_params(integer=True)
-                    ax.axis('on')
+                    edge_weights = nx.get_edge_attributes(G=sub_graph, name='weight')
+                    edges, weights = zip(*edge_weights.items())
+
+                    # plot nodes and labels.
+                    nx.draw(sub_graph, pos=pos, font_weight='bold', ax=ax, node_size=100,
+                            node_color=[c.to_rgba(np.array(ch.color) / 255) for ch in sub_graph.nodes],
+                            edgelist=[])
+                    nx.draw_networkx_labels(G=sub_graph, pos=pos, labels=labels, ax=ax)
+
+                    edge_color_bar = nx.draw_networkx_edges(sub_graph, pos=pos, edge_color=weights, edgelist=edges,
+                                                            edge_cmap=plt.cm.get_cmap('Greys'), edge_vmin=0, edge_vmax=1,
+                                                            width=3, ax=ax)
+
+                    # nx.draw_networkx_edge_labels(G=sub_graph, pos=pos,
+                    #                              edge_labels=edge_weights, ax=ax,
+                    #                              alpha=1, font_size=5)
+
+                if subplots:
+                    # Hide the right and top spines
+                    ax.spines['right'].set_visible(False)
+                    ax.spines['top'].set_visible(False)
+
+                    # restrict y limits so the graph plot is readable.
+                    if self.max_frame_num < self.y_window:
+                        ax.set_ylim(0, self.max_frame_num+0.5)
+                    else:
+                        ax.set_ylim((self.max_frame_num - self.y_window)-0.5, self.max_frame_num+0.5)
+
+                    if ii == 0:
+                        # Only show ticks on the left and bottom spines
+                        ax.yaxis.set_ticks_position('left')
+                        ax.set_xlim(tuple(sum(i) for i in zip(ax.get_xlim(), (-0.5, 0.5))))
+                        # ax.xaxis.set_ticks_position('bottom')
+
+                        # set x and y axis ticks to be integers
+                        ax.yaxis.get_major_locator().set_params(integer=True)
+                        ax.xaxis.get_major_locator().set_params(integer=True)
+
+                        # timestamp as y axis.
+                        if timestamps:
+                            ax.set_yticklabels(timestamps)
+
+                        # invert the y axis.
+                        ax.invert_yaxis()
+                        ax.axis('on')
+                        ax.set_ylabel("frame number")
+
+                    else:
+                        ax.set_xlim(tuple(sum(i) for i in zip(ax.get_xlim(), (-0.5, 0.5))))
+                        ax.spines['left'].set_visible(False)
+                        # ax.xaxis.set_ticks_position('bottom')
+                        ax.xaxis.get_major_locator().set_params(integer=True)
+                        ax.axis('on')
 
             # label axes and title.
             if not subplots:

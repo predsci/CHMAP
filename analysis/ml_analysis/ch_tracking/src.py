@@ -27,23 +27,27 @@ class CoronalHoleDB:
     # coronal hole area threshold.
     AreaThreshold = 5e-3
     # window to match coronal holes.
-    window = 10
+    window = 15
     # parameter for dilation (this should be changed for larger image dimensions).
-    gamma = 40
+    gamma = 20
     # connectivity threshold.
     ConnectivityThresh = 1e-3
     # connectivity threshold.
-    AreaMatchThresh = 0.4
+    AreaMatchThresh = 0.2
     # knn k hyper parameter
-    kHyper = 6
+    kHyper = 10
     # knn thresh
-    kNNThresh = 0.1
+    kNNThresh = 1e-2
     # MeshMap with information about the input image mesh grid and pixel area.
     Mesh = None
 
     def __init__(self):
         # list of Contours that are part of this CoronalHole Object.
         self.ch_dict = dict()
+
+        # save coronal holes in database based on their frame number.
+        # TODO: update this.
+        self.frame_dict = dict()
 
         # connectivity graph.
         self.Graph = CoronalHoleGraph()
@@ -55,6 +59,7 @@ class CoronalHoleDB:
         self.frame_num = 1
 
         # data holder for previous *window* frames. TODO: is it better to use a dictionary?
+        # todo: no need to use this if we save everything in a frame dict?
         self.window_holder = [None] * self.window
 
     def __str__(self):
@@ -208,6 +213,7 @@ class CoronalHoleDB:
             # self.update_connectivity_graph(area_overlap_results=area_overlap_results, area_check_list=area_check_list,
             #                                contour_list=contour_list)
             self.update_connectivity_prev_frame(contour_list=contour_list)
+            self.Graph.max_frame_num = self.frame_num
 
         # update window holder.
         self.update_previous_frames(frame=Frame(contour_list=contour_list, identity=self.frame_num,

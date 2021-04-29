@@ -16,6 +16,7 @@ from analysis.ml_analysis.ch_tracking.classification import classify_grey_scaled
 from analysis.ml_analysis.ch_tracking.plots import plot_coronal_hole
 from modules.map_manip import MapMesh
 import modules.Plotting as EasyPlot
+import pickle
 import matplotlib.pyplot as plt
 
 # ================================================================================================================
@@ -123,18 +124,40 @@ for row_index, row in map_info.iterrows():
     # ================================================================================================================
     # Step 5: Plot results.
     # ================================================================================================================
+    # plot connectivity sub - graphs.
+    dir_name = "/Users/opalissan/desktop/CHT_RESULTS/"
+    folder_name = "2010-12-20-to-2011-04-01/"
+    graph_file_name = "graph_frame_" + str(ch_lib.frame_num) + ".png"
+    image_file_name = "classified_frame_" + str(ch_lib.frame_num) + ".png"
+
     # plot coronal holes in the latest frame.
     plot_coronal_hole(ch_list=ch_lib.window_holder[-1].contour_list, n_t=ch_lib.Mesh.n_t, n_p=ch_lib.Mesh.n_p,
                       title="Frame: " + str(ch_lib.frame_num) + ", Time: " + str(mean_timestamp),
-                      filename=False)
+                      filename=dir_name + folder_name + image_file_name)
 
-    # plot connectivity sub - graphs.
-    file_name = "results/images/tester/frames/" + "graph_frame_" + str(ch_lib.frame_num) + ".png"
-    ch_lib.Graph.create_plots()
+    if ch_lib.frame_num > 20:
+        ch_lib.Graph.plot_num_subgraphs = 5
+    elif ch_lib.frame_num > 10:
+        ch_lib.Graph.plot_num_subgraphs = 8
+
+    ch_lib.Graph.create_plots(save_dir=dir_name + folder_name + graph_file_name)
     plt.show()
 
-    # # iterate over frame number.
+    # iterate over frame number.
     ch_lib.frame_num += 1
+
+    # save in pickle file
+    if ch_lib.frame_num == 50:
+        # # save object to pickle file.
+        with open(dir_name + folder_name + "graph_pickle.pkl", 'wb') as f:
+            pickle.dump(ch_lib.Graph, f)
+
+        with open(dir_name + folder_name + "ch_dict.pkl", 'wb') as f:
+            pickle.dump(ch_lib.ch_dict, f)
+
+        break
 
 # close database connection
 db_session.close()
+
+

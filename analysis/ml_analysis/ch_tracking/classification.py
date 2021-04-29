@@ -7,7 +7,7 @@ Last modified: April 26th, 2021 (Opal)
 
 import cv2
 from analysis.ml_analysis.ch_tracking.dilation import latitude_weighted_dilation, find_contours, \
-    get_list_of_contours_from_rbg
+    get_list_of_contours_from_rbg, extra_3_by_3_kernel_dilation
 from analysis.ml_analysis.ch_tracking.periodicity import prune_coronal_hole_list
 from modules.map_manip import MapMesh
 import matplotlib.pyplot as plt
@@ -47,10 +47,12 @@ def classify_grey_scaled_image(greyscale_image, lat_coord, lon_coord, frame_num=
     # Step 3: Latitude Weighted Dilation.
     # ================================================================================================================
     # pass one extra erode and dilate before latitude weighted dilation.
-    dilated_img = latitude_weighted_dilation(grey_scale_image=greyscale_image,
-                                             theta=Mesh.t,
-                                             gamma=gamma,
-                                             n_p=Mesh.n_p)
+    w_dilated_img = latitude_weighted_dilation(grey_scale_image=greyscale_image,
+                                               theta=Mesh.t,
+                                               gamma=gamma,
+                                               n_p=Mesh.n_p)
+
+    dilated_img = extra_3_by_3_kernel_dilation(image=w_dilated_img)
 
     # ================================================================================================================
     # Step 4: Plot the contours found in the dilated image and multiply mask.
@@ -89,7 +91,7 @@ if __name__ == "__main__":
     # example image dimensions.
     n_t, n_p, color_dim = np.shape(image)
     p = np.linspace(0, 2 * np.pi, n_p)
-    t = np.pi/2 + np.arcsin(np.linspace(-1, 1, n_t))
+    t = np.pi / 2 + np.arcsin(np.linspace(-1, 1, n_t))
 
     # force grey scale
     image_grey = 255 - cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
