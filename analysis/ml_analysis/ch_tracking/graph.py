@@ -3,7 +3,9 @@ Here, we analyze coronal hole connectivity- when do coronal holes merge? split? 
 
 Note: this module imports networkx library.
 
-Last Modified: April 13th, 2021 (Opal)
+Last Modified: May 6th, 2021 (Opal)
+
+# todo: fix graph node x position when plotting.
 """
 
 import networkx as nx
@@ -48,7 +50,14 @@ class CoronalHoleGraph:
         -------
 
         """
-        self.G.add_node(node)
+        # add node to the connectivity graph.
+        self.G.add_node(id(node),
+                        area=node.area,
+                        id=node.id,
+                        frame_num=node.frame_num,
+                        frame_timestamp=node.frame_timestamp,
+                        count=node.count,
+                        color=node.color)
 
     def insert_edge(self, node_1, node_2, weight=0):
         """Insert an edge between two nodes (coronal hole objects)
@@ -63,7 +72,9 @@ class CoronalHoleGraph:
         -------
 
         """
-        self.G.add_edge(u_of_edge=node_1, v_of_edge=node_2, weight=weight)
+        if not self.G.has_edge(id(node_1), id(node_2)):
+            # add edge between two node in Graph, with an edge weight between 0 and 1.
+            self.G.add_edge(u_of_edge=id(node_1), v_of_edge=id(node_2), weight=weight)
 
     @staticmethod
     def get_sub_graph_pos(sub_graph):
@@ -80,26 +91,33 @@ class CoronalHoleGraph:
 
         """
 
+        # initialize position and label dictionaries.
         pos = dict()
-        for contour in sub_graph:
+        label = dict()
+
+        # iterate over all subgraph nodes.
+        for node in sub_graph:
             # (x location, y location)- tuple
-            pos[contour] = (contour.count, contour.frame_num)
-        return pos
+            pos[node] = (sub_graph.nodes[node]["x-pos"], sub_graph.nodes[node]["frame_num"])
+            # class id number
+            label[node] = sub_graph.nodes[node]["id"]
+        return pos, label
 
     @staticmethod
-    def assign_count_for_each_node_in_subgraph(sub_graph):
-        """Assign a count attribute to each node based on the number of nodes assigned in the same frame_num, for
+    def assign_x_pos_for_each_node_in_subgraph(sub_graph):
+        """Assign an x axis location attribute to each node
+        based on the number of nodes assigned in the same frame_num, for
         plotting purposes (x-axis)
 
         Returns
         -------
-
+            subgraph
         """
         # list of all frame numbers in input sub-graph
-        frame_list = [contour.frame_num for contour in sub_graph]
+        frame_list = [sub_graph.nodes[node]["frame_num"] for node in sub_graph]
 
         # list of all IDs in the sub-graph.
-        id_list = [contour.id for contour in sub_graph]
+        id_list = [sub_graph.nodes[node]["id"] for node in sub_graph]
 
         # each ID gets a count based on area.
         count_list = list(set(id_list))
@@ -113,36 +131,21 @@ class CoronalHoleGraph:
                 rep_list.append((ii, tuple_list.count(ii)))
 
         # assign count (x-axis position) to each node
-        for contour in sub_graph:
-            contour.count = count_list.index(contour.id)
+        for node in sub_graph:
+            sub_graph.nodes[node]["x-pos"] = count_list.index(sub_graph.nodes[node]["id"])
 
         # loop over the contours that have duplicate id in the same frame_num
         for tup, count in rep_list:
             frame_num, id_num = tup
-            node_list = [contour for contour in sub_graph if
-                         contour.frame_num == frame_num and contour.id == id_num]
-            for jj, contour in enumerate(node_list):
+            node_list = [node for node in sub_graph if
+                         sub_graph.nodes[node]["frame_num"] == frame_num
+                         and sub_graph.nodes[node]["id"] == id_num]
+
+            for jj, node in enumerate(node_list):
                 if jj != 0:
-                    contour.count = -jj
+                    sub_graph.nodes[node]["x-pos"] = -jj
 
         return sub_graph
-
-    @staticmethod
-    def get_sub_graph_labels(pos):
-        """Return a dictionary with sub-graph node labels in matplotlib plot (see create_plots())
-
-        Parameters
-        ----------
-        pos: dictionary with subplot node i.e. Contour() with corresponding label location
-
-        Returns
-        -------
-            dictionary with sub graph labels (ID)
-        """
-        labels = pos.copy()
-        for key in pos.keys():
-            labels[key] = key.id
-        return labels
 
     def get_plot_features(self, sub_graph):
         """Return sub-graph node x-y location and label.
@@ -156,10 +159,9 @@ class CoronalHoleGraph:
         -------
             pos, labels (dict, dict)
         """
-        self.assign_count_for_each_node_in_subgraph(sub_graph=sub_graph)
-        pos = self.get_sub_graph_pos(sub_graph=sub_graph)
-        labels = self.get_sub_graph_labels(pos=pos)
-        return pos, labels
+        self.assign_x_pos_for_each_node_in_subgraph(sub_graph=sub_graph)
+        pos, label = self.get_sub_graph_pos(sub_graph=sub_graph)
+        return pos, label
 
     def get_edge_weight_lim(self):
         """Find the maximum edge weight in the graph.
@@ -184,8 +186,8 @@ class CoronalHoleGraph:
             (float)
         """
         # list of node area.
-        area_list = [node.area for node in sub_graph.nodes]
-        frame_appearance = [node.frame_num for node in sub_graph.nodes]
+        area_list = [sub_graph.nodes[node]["area"] for node in sub_graph.nodes]
+        frame_appearance = [sub_graph.nodes[node]["frame_num"] for node in sub_graph.nodes]
         return sum(area_list) / len(set(frame_appearance))
 
     def order_subgraphs_based_on_area(self):
@@ -222,9 +224,8 @@ class CoronalHoleGraph:
             if self.max_frame_num < self.y_window:
                 node_list.append(node)
 
-            elif (self.max_frame_num - self.y_window) <= node.frame_num <= self.max_frame_num:
+            elif (self.max_frame_num - self.y_window) <= subgraph.nodes[node]["frame_num"] <= self.max_frame_num:
                 node_list.append(node)
-
         return node_list
 
     def create_plots(self, save_dir=False, subplots=True, timestamps=False):
@@ -247,11 +248,16 @@ class CoronalHoleGraph:
         num_of_subplots = len(list(nx.connected_components(self.G)))
 
         if subplots:
-            fig, axes = plt.subplots(nrows=1, ncols=min(self.plot_num_subgraphs, num_of_subplots), sharey=True)
+            num_columns = min(self.plot_num_subgraphs, num_of_subplots)
+            fig, axes = plt.subplots(nrows=1, ncols=num_columns, sharey=True)
             axes = axes.flatten()
 
         ii = 0
         edge_color_bar = None
+
+        # number of deleted axes
+        del_axes = []
+
         # sort the subgraphs based on area. The first subgraphs are long lived-large coronal holes.
         sub_graph_list = self.order_subgraphs_based_on_area()[:min(self.plot_num_subgraphs, num_of_subplots)]
 
@@ -261,10 +267,19 @@ class CoronalHoleGraph:
             sub_graph = self.G.subgraph(connectedG)
             # prune the list of nodes for each plot based on their frame number.
             list_of_nodes_in_range = self.return_list_of_nodes_in_frame_window(subgraph=sub_graph)
+
             if len(list_of_nodes_in_range) == 0:
                 if subplots:
-                    ax = axes[ii]
-                    fig.delaxes(ax)
+                    ii += -1
+                    del_axes.append(ii)
+                    # fig.delaxes(axes[ii])
+                    # del_axes.append(ii)
+                    #
+                    # kk = 0
+                    # for jj in range(num_columns):
+                    #     if jj not in del_axes:
+                    #         axes[jj].change_geometry(1, num_columns - len(del_axes), kk)
+                    #         kk += 1
 
             elif len(list_of_nodes_in_range) > 0:
                 sub_graph = self.G.subgraph(nodes=list_of_nodes_in_range)
@@ -280,7 +295,8 @@ class CoronalHoleGraph:
                 if sub_graph.number_of_nodes() == 1:
                     # plot nodes and labels.
                     nx.draw(sub_graph, pos=pos, font_weight='bold', ax=ax, node_size=100,
-                            node_color=[c.to_rgba(np.array(ch.color) / 255) for ch in sub_graph.nodes])
+                            node_color=[c.to_rgba(np.array(sub_graph.nodes[ch]["color"]) / 255)
+                                        for ch in sub_graph.nodes])
 
                     nx.draw_networkx_labels(G=sub_graph, pos=pos, labels=labels, ax=ax)
 
@@ -290,13 +306,14 @@ class CoronalHoleGraph:
 
                     # plot nodes and labels.
                     nx.draw(sub_graph, pos=pos, font_weight='bold', ax=ax, node_size=100,
-                            node_color=[c.to_rgba(np.array(ch.color) / 255) for ch in sub_graph.nodes],
+                            node_color=[c.to_rgba(np.array(sub_graph.nodes[ch]["color"]) / 255)
+                                        for ch in sub_graph.nodes],
                             edgelist=[])
                     nx.draw_networkx_labels(G=sub_graph, pos=pos, labels=labels, ax=ax)
 
                     edge_color_bar = nx.draw_networkx_edges(sub_graph, pos=pos, edge_color=weights, edgelist=edges,
-                                                            edge_cmap=plt.cm.get_cmap('Greys'), edge_vmin=0, edge_vmax=1,
-                                                            width=3, ax=ax)
+                                                            edge_cmap=plt.cm.get_cmap('Greys'), edge_vmin=0,
+                                                            edge_vmax=1, width=3, ax=ax)
 
                     # nx.draw_networkx_edge_labels(G=sub_graph, pos=pos,
                     #                              edge_labels=edge_weights, ax=ax,
@@ -309,9 +326,9 @@ class CoronalHoleGraph:
 
                     # restrict y limits so the graph plot is readable.
                     if self.max_frame_num < self.y_window:
-                        ax.set_ylim(0, self.max_frame_num+0.5)
+                        ax.set_ylim(0, self.max_frame_num + 0.5)
                     else:
-                        ax.set_ylim((self.max_frame_num - self.y_window)-0.5, self.max_frame_num+0.5)
+                        ax.set_ylim((self.max_frame_num - self.y_window) - 0.5, self.max_frame_num + 0.5)
 
                     if ii == 0:
                         # Only show ticks on the left and bottom spines
@@ -351,6 +368,10 @@ class CoronalHoleGraph:
             #     plt.savefig(save_dir + "/connected_sub_graph_" + str(ii) + ".png")
             ii += 1
 
+        if len(del_axes) > 0:
+            for jj in range(len(del_axes)):
+                fig.delaxes(axes[ii + jj])
+
         if subplots:
             if edge_color_bar is not None:
                 cbar = fig.colorbar(edge_color_bar, ticks=[0, 0.5, 1])
@@ -358,6 +379,7 @@ class CoronalHoleGraph:
             fig.text(0.5, 0.01, 'connected subgraph', ha='center')
             fig.suptitle("Coronal Hole Connectivity")
             fig.subplots_adjust(wspace=0.01, hspace=0.01)
+            # fig.tight_layout()
 
             if save_dir is not False:
                 plt.savefig(save_dir)

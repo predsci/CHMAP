@@ -1,6 +1,6 @@
-"""Apply Latitude Weighted Dilation on EUV Images.
+"""Apply Dilation on CH Maps.
 
-Last Modified: April 13th, 2021 (Opal)
+Last Modified: May 6th, 2021 (Opal)
 """
 import cv2
 import numpy as np
@@ -77,19 +77,23 @@ def latitude_weighted_dilation(grey_scale_image, theta, gamma, n_p):
     return dilated_image
 
 
-def extra_3_by_3_kernel_dilation(image, kernel=np.array([[1, 1, 1], [1, 1, 1], [1, 1, 1]], dtype=np.uint8)):
-    """An extra 3 by 3 kernel dilation
+def uniform_dilation_in_latitude(image, beta=8):
+    """Uniform dilation in latitude - kernel height is the size of "beta" (int).
 
     Parameters
     ----------
-    kernel: structuring element for dilation.
-    image: greyscale image.
+    beta: (int) structuring element height.
+            Default is 8 pixels (this should change depending on the size of the input image.
+    image: (numpy array) greyscale image.
 
     Returns
     -------
-        (numpy array) dilared image.
+        (numpy array) dilated image.
     """
-    return cv2.dilate(image, kernel=kernel, iterations=1)
+    # initialize the kernel size.
+    kernel = np.ones(beta, dtype=np.uint8)
+    # dilate in latitude.
+    return cv2.dilate(image, kernel=kernel.T, iterations=1)
 
 
 def generate_ch_color():
@@ -156,22 +160,26 @@ def find_contours(image, thresh, Mesh):
     return plot_dilated_contours(contours=contours, Mesh=Mesh)
 
 
-def get_list_of_contours_from_rbg(rbg_image, color_list, Mesh, frame_num=0):
-    """This function will save all the image pixel coordinates that are assigned to each coronal hole.
+def get_list_of_contours_from_rbg(rbg_image, color_list, Mesh, frame_num=0, frame_timestamp=None):
+    """Save all the image pixel coordinates that are assigned to each coronal hole
+    (along with other coronal hole features- such as area, centroid, etc...).
 
     Parameters
     ----------
-    frame_num: frame id number, default is 0.
     Mesh: MeshMap() object with image coordinates.
     rbg_image: rbg lon-lat classified coronal hole image.
     color_list: list of contour unique colors.
+    frame_timestamp: frame time stamp, default is None.
+    frame_num: frame id number, default is 0.
 
     Returns
     -------
     coronal_hole_list : coronal hole list of Contour object.
     """
-    # loop over each contour saved.
+    # initialize list of contours.
     coronal_hole_list = []
+
+    # loop over each contour saved.
     for color in color_list:
         # save pixel locations.
         mask = np.all(rbg_image == color, axis=-1)
@@ -180,5 +188,6 @@ def get_list_of_contours_from_rbg(rbg_image, color_list, Mesh, frame_num=0):
         # save contour in a list if its not zero.
         coronal_hole_list.append(Contour(contour_pixels=contour_pixel,
                                          frame_num=frame_num,
+                                         frame_timestamp=frame_timestamp,
                                          Mesh=Mesh))
     return coronal_hole_list

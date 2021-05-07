@@ -1,7 +1,15 @@
-"""Apply Coronal Hole Tracking Algorithm to a particular test case. Importing Detection images from Q
+"""Apply Coronal Hole Tracking (CHT)  Algorithm to a particular test case.
+This Module includes he following operations:
+
+1. Importing Detection images from Q
 (see Jamie's examples/examples112_query_maps.py for more information on how to access the database).
 
-Last Modified: April 27th, 2021 (Opal)"""
+2. Save list of coronal holes for each frame in a .pkl (pickle file format).
+
+3. Save a connectivity graph of the coronal hole evolution in time.
+
+Last Modified: May 6th, 2021 (Opal)
+"""
 
 import os
 import datetime
@@ -15,7 +23,7 @@ from analysis.ml_analysis.ch_tracking.src import CoronalHoleDB
 from analysis.ml_analysis.ch_tracking.classification import classify_grey_scaled_image
 from analysis.ml_analysis.ch_tracking.plots import plot_coronal_hole
 from modules.map_manip import MapMesh
-import modules.Plotting as EasyPlot
+
 import pickle
 import matplotlib.pyplot as plt
 
@@ -23,8 +31,8 @@ import matplotlib.pyplot as plt
 # Step 1: Choose a test case - time interval
 # ================================================================================================================
 # define map query start and end times
-query_start = datetime.datetime(year=2010, month=12, day=20, hour=23, minute=0, second=0)
-query_end = datetime.datetime(year=2011, month=4, day=1, hour=1, minute=0, second=0)
+query_start = datetime.datetime(year=2011, month=1, day=1, hour=23, minute=0, second=0)
+query_end = datetime.datetime(year=2011, month=2, day=1, hour=1, minute=0, second=0)
 
 # initialize coronal hole tracking database.
 ch_lib = CoronalHoleDB()
@@ -96,13 +104,15 @@ for row_index, row in map_info.iterrows():
     phi_coords = my_map.x
     sinlat_coords = my_map.y
     theta_coords = np.pi / 2 + np.arcsin(sinlat_coords)
+
+    # TODO: ASK JAMIE WHAT IS THE CORRECT TIMESTAMP?
     mean_timestamp = row.T[2]
 
     # save mesh map
     ch_lib.Mesh = MapMesh(p=phi_coords, t=theta_coords)
 
     # ================================================================================================================
-    # Step 3: Latitude Weighted Dilation +
+    # Step 3: Latitude Weighted Dilation (in longitude) + Uniform dilation (in latitude)
     #         Compute all contour features +
     #         Force periodicity and delete small contours.
     # ================================================================================================================
@@ -112,8 +122,10 @@ for row_index, row in map_info.iterrows():
                                                      lon_coord=ch_lib.Mesh.p,
                                                      AreaThreshold=ch_lib.AreaThreshold,
                                                      frame_num=ch_lib.frame_num,
+                                                     frame_timestamp=mean_timestamp,
                                                      BinaryThreshold=ch_lib.BinaryThreshold,
-                                                     gamma=ch_lib.gamma)
+                                                     gamma=ch_lib.gamma,
+                                                     beta=ch_lib.beta)
 
     # ================================================================================================================
     # Step 4: Match coronal holes detected to previous frame detections.
@@ -126,7 +138,7 @@ for row_index, row in map_info.iterrows():
     # ================================================================================================================
     # plot connectivity sub - graphs.
     dir_name = "/Users/opalissan/desktop/CHT_RESULTS/"
-    folder_name = "2010-12-20-to-2011-04-01/"
+    folder_name = "2011-01-01-2011-02-01/"
     graph_file_name = "graph_frame_" + str(ch_lib.frame_num) + ".png"
     image_file_name = "classified_frame_" + str(ch_lib.frame_num) + ".png"
 
@@ -134,11 +146,6 @@ for row_index, row in map_info.iterrows():
     plot_coronal_hole(ch_list=ch_lib.window_holder[-1].contour_list, n_t=ch_lib.Mesh.n_t, n_p=ch_lib.Mesh.n_p,
                       title="Frame: " + str(ch_lib.frame_num) + ", Time: " + str(mean_timestamp),
                       filename=dir_name + folder_name + image_file_name)
-
-    if ch_lib.frame_num > 20:
-        ch_lib.Graph.plot_num_subgraphs = 5
-    elif ch_lib.frame_num > 10:
-        ch_lib.Graph.plot_num_subgraphs = 8
 
     ch_lib.Graph.create_plots(save_dir=dir_name + folder_name + graph_file_name)
     plt.show()
@@ -151,9 +158,6 @@ for row_index, row in map_info.iterrows():
         # # save object to pickle file.
         with open(dir_name + folder_name + "graph_pickle.pkl", 'wb') as f:
             pickle.dump(ch_lib.Graph, f)
-
-        with open(dir_name + folder_name + "ch_dict.pkl", 'wb') as f:
-            pickle.dump(ch_lib.ch_dict, f)
 
         break
 

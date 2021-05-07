@@ -1,5 +1,5 @@
 """A data structure for a coronal hole contour.
-Last Modified: April 13th, 2021 (Opal)
+Last Modified: May 6th, 2021 (Opal)
 
 List of properties:                                         || Name of variable.
 =======================================================================================================================
@@ -32,13 +32,16 @@ class Contour:
         coronal hole pixel location.
     """
 
-    def __init__(self, contour_pixels, Mesh, frame_num=None):
+    def __init__(self, contour_pixels, Mesh, frame_num=None, frame_timestamp=None):
         # save contour inner pixels. shape: [list(row), list(column)].
         self.contour_pixels_theta = contour_pixels[0]
         self.contour_pixels_phi = contour_pixels[1]
 
-        # frame number id in Julian Day number.
+        # frame number count in the video sequence.
         self.frame_num = frame_num
+
+        # frame time stamp (when input is a synchronic ch map).
+        self.frame_timestamp = frame_timestamp
 
         # contour physical area based on lat-lon contour_pixels.
         # sum(d𝐴=𝑟^2 * sin𝜃 * d𝜙 * d𝜃)
@@ -85,13 +88,14 @@ class Contour:
         self.periodic_at_2pi = self.is_periodic_2_pi(Mesh=Mesh)
 
     # todo: fix for graph.
-    # def __str__(self):
-    #     return json.dumps(
-    #         self.json_dict(), indent=4, default=lambda o: o.json_dict())
+    def __str__(self):
+        return json.dumps(
+            self.json_dict(), indent=4, default=lambda o: o.json_dict())
 
     def json_dict(self):
         return {
             'frame_num': self.frame_num,
+            'frame_timestamp': self.frame_timestamp,
             'centroid_spherical': self.phys_centroid,
             'centroid_pixel': self.pixel_centroid,
             'area': self.area,
