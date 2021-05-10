@@ -31,9 +31,9 @@ if ReadFile:
     if Verbose:
         print(ch_db)
 
-# ======================================================================================================================
-# Plot the feature evaluation of coronal hole 1 and 5.
-# ======================================================================================================================
+    # ======================================================================================================================
+    # Plot the feature evaluation of coronal hole 1 and 5.
+    # ======================================================================================================================
     ID = 4
     ch_list = ch_db.ch_dict[ID].contour_list
 
@@ -84,16 +84,18 @@ if SavePng and ReadFile:
 SaveVid = True
 
 if SaveVid:
+    dir_name = "/Users/opalissan/desktop/CHT_RESULTS/"
+    folder_name = "2010-12-20-to-2011-04-01/"
     # choose codec according to format needed
     fourcc = cv2.VideoWriter_fourcc(*'mp4v')
-    #video = cv2.VideoWriter("results/images/testervid/coronalhole" + str(ID) + ".mov", fourcc, 1, (640, 480))
-    video = cv2.VideoWriter("results/images/testervid/tracking_vid_combined.mov", fourcc, 1, (640*2, 480))
+    # video = cv2.VideoWriter("results/images/testervid/coronalhole" + str(ID) + ".mov", fourcc, 1, (640, 480))
+    video = cv2.VideoWriter(dir_name + folder_name + "tracking_vid_combined.mov", fourcc, 1, (640 * 2, 480))
 
-    for j in range(1, 40):
-        filename1 = "results/images/tester/frames/" + "frame_" + str(j)
-        filename2 = "results/images/tester/frames/" + "graph_frame_" + str(j)
-        img1 = cv2.imread(filename1 + '.png')
-        img2 = cv2.imread(filename2 + '.png')
+    for j in range(1, 49):
+        graph_file_name = "graph_frame_" + str(j) + ".png"
+        image_file_name = "classified_frame_" + str(j) + ".png"
+        img1 = cv2.imread(dir_name + folder_name + image_file_name)
+        img2 = cv2.imread(dir_name + folder_name + graph_file_name)
         video.write(np.hstack((img1, img2)))
 
     cv2.destroyAllWindows()
@@ -180,7 +182,7 @@ if testKNN:
     # ======================================================================================================================
 
     # area matrix
-    mesh = MapMesh(p=np.linspace(0, 2*np.pi, n_p), t=np.linspace(0, np.pi, n_t))
+    mesh = MapMesh(p=np.linspace(0, 2 * np.pi, n_p), t=np.linspace(0, np.pi, n_t))
     da = mesh.da
 
     if plot:
@@ -188,7 +190,6 @@ if testKNN:
         plt.colorbar()
         plt.title("$\Delta A$")
         plt.show()
-
 
     # initialize probability matrix
     proba_mat = []
@@ -205,7 +206,6 @@ if testKNN:
             if ch.frame_num == 3:
                 X_test.append(ch)
 
-
     for ii, ch_list in enumerate(area_check_list):
         prob_list = []
         for id in ch_list:
@@ -213,10 +213,8 @@ if testKNN:
             p = []
             for ch in coronal_hole_list.contour_list:
                 p1, p2 = area_overlap(ch1=ch, ch2=X_test[ii], da=da)
-                p.append((p1+p2)/2)
+                p.append((p1 + p2) / 2)
             prob_list.append(np.mean(p))
         proba_mat.append(prob_list)
 
     print(proba_mat)
-
-

@@ -1,4 +1,5 @@
 """Helper Functions to match Coronal Holes based on their area overlap.
+
 Last Modification: April 13th, 2021 (Opal) """
 
 import numpy as np
@@ -10,6 +11,7 @@ def area_overlap(ch1, ch2, da):
     Parameters
     ----------
     da: area matrix of each pixel in the image (spherical coordinates).
+        type: (numpy array)
     ch1: Coronal Hole 1.
         Contour() object.
     ch2: Coronal Hole 2.
@@ -35,6 +37,7 @@ def area_overlap(ch1, ch2, da):
         # area of intersection on a sphere.
         intersection = np.sum(da[pixel_intersection[:, 0], pixel_intersection[:, 1]])
 
+    # return both ratios.
     return intersection / ch1.area, intersection / ch2.area
 
 
@@ -58,7 +61,7 @@ def max_area_overlap(area_check_list, area_overlap_results, threshold=0.5):
         list of id corresponding to the contour list "0" means new class.
     """
     # initialize the returned list.
-    match_list = [None] * len(area_overlap_results)
+    match_list = np.zeros(len(area_overlap_results), dtype=np.int32)
 
     # loop over area overlap results.
     for ii, res in enumerate(area_overlap_results):
@@ -66,14 +69,12 @@ def max_area_overlap(area_check_list, area_overlap_results, threshold=0.5):
         max_val = max(res)
 
         # if it is below the threshold then assign as a "new" coronal hole - labeled with zero.
-        if max_val < threshold:
-            match_list[ii] = 0
-
         # otherwise, assign the ID corresponding to the max area overlap.
-        else:
+        if max_val > threshold:
             # find the index of maximum overlap.
             max_index = res.index(max_val)
 
             # assign the corresponding ID number.
             match_list[ii] = area_check_list[ii][max_index]
-    return match_list
+
+    return list(match_list)

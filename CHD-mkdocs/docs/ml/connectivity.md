@@ -28,9 +28,4 @@ In the plot below, the connected subgraphs are ordered hierarchically based on s
 The edge color is based on the edge weight or area ratio, hence, dark edges correspond with strong 
 overlap whereas light edges correspond to a weak overlap (see Grey colormap). 
 
-![](images/tracking_vid_combined.mp4)
-
-<video style="width:100%" controls>
-  <source src="images/tracking_vid_combined.mp4" type="video/mp4">
-Your browser does not support the video tag.
-</video>
+![](images/tracking_vid_combined_2010.gif)

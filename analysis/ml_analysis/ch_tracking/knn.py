@@ -4,7 +4,7 @@ about knn). This is used to match coronal holes between frames based on their ce
 
 Last Modified: March 25th, 2021 (Opal).
 
-# TODO: Weighted KNN by Frame proximity as well. !!
+# TODO: Weighted KNN by Frame proximity as well. - double weighted knn..?
 """
 
 import numpy as np
