@@ -1,4 +1,4 @@
-Alpha Version!!! This software is expected for full release in the next couple of months, but is currently a work in progress. Code may be buggy and/or poorly documented at this time.
+Alpha Version!!! Full release of this software is expected in the next couple of months, but is currently a work in progress. Code may be buggy and/or poorly documented at this time.
 
 # CHD
 Coronal Hole Detection (and tracking).  Python-based package to download data, process, and database results.
