@@ -781,9 +781,15 @@ def get_combo_id(db_session, meth_id, data_ids, create=False):
 
     if no_match_exists and create:
         # add record to image_combos
-        # first retrieve records of images
-        image_pd = pd.read_sql(db_session.query(EUV_Images).filter(EUV_Images.data_id.in_(data_ids)).statement,
-                               db_session.bind)
+        # first retrieve records of images/data_files
+        # image_pd = pd.read_sql(db_session.query(Data_Files, EUV_Images).filter(
+        #     Data_Files.data_id.in_(data_ids),
+        #     Data_Files.data_id == EUV_Images.data_id).statement, db_session.bind)
+        image_pd = pd.read_sql(db_session.query(Data_Files, EUV_Images).filter(
+            Data_Files.data_id.in_(data_ids)).join(
+            EUV_Images, Data_Files.data_id == EUV_Images.data_id, isouter=True
+            ).statement, db_session.bind)
+        image_pd = image_pd.loc[:, ~image_pd.columns.duplicated()]
         # determine date range and mean
         date_max = image_pd.date_obs.max()
         date_min = image_pd.date_obs.min()
@@ -793,7 +799,7 @@ def get_combo_id(db_session, meth_id, data_ids, create=False):
 
         # determine instruments in combo
         all_instruments = image_pd.instrument.unique()
-        if all_instruments.__len__() == 1:
+        if all_instruments.__len__() == 1 and all_instruments[0] is not None:
             # set this instrument value in 'instrument' column
             instrument = all_instruments[0]
         elif all_instruments.__len__() > 1:

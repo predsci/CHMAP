@@ -2,10 +2,13 @@
 Functions to plot EUV images and maps
 """
 
+import os
 import matplotlib.pyplot as plt
 import matplotlib as mpl
 import numpy as np
 from matplotlib.lines import Line2D
+import cv2
+
 import modules.datatypes as psi_dt
 
 
@@ -33,7 +36,8 @@ def PlotImage(los_image, nfig=None, mask_rad=1.5, title=None):
     plot_arr[plot_arr < .001] = .001
 
     # set color palette and normalization (improve by using Ron's colormap setup)
-    norm = mpl.colors.LogNorm(vmin=1.0, vmax=np.nanmax(plot_arr))
+    norm_max = max(1.01, np.nanmax(plot_arr))
+    norm = mpl.colors.LogNorm(vmin=1.0, vmax=norm_max)
     # norm = mpl.colors.LogNorm()
     im_cmap = plt.get_cmap('sohoeit195')
 
@@ -137,6 +141,193 @@ def PlotMap(map_plot, nfig=None, title=None, map_type=None, save_map=False,
     plt.show(block=False)
     if save_map:
         plt.savefig(save_dir + str(map_plot.data_info.date_obs[0]))
+
+    return None
+
+
+def map_movie_frame(map_plot, int_range, save_path='maps/synoptic/',
+                    nfig=None, title=None, map_type=None, dpi=300):
+    """
+    Plot and save a PsiMap to png file as a frame for a video.
+
+    :param map_plot: modules.datatypes.PsiMap
+                     The map to plot.
+    :param int_range: list (float) [min intensity, max intensity]
+                      Minimum and maximum values considered in the plotting
+                      colorscale. Values beyond this range will saturate the
+                      colorscale.
+    :param save_path: str
+                      Full path (w/ filename) where PNG should be saved. Should
+                      end in '.png'.
+    :param nfig: int (optional)
+                 This may be specified to avoid affecting existing figures.
+    :param title: str
+                  Title to appear above plot.
+    :param map_type: str
+                     EUV images are default. Other types of images will be supported
+                     in the future.
+    :param dpi: int
+                Dots-per-inch image quality of PNG.
+    :return: None
+             This routine writes a file to save_path, but has no explicit output.
+    """
+    # set color palette and normalization (improve by using Ron's colormap setup)
+    if map_type == "CHD":
+        im_cmap = plt.get_cmap('Greys')
+        norm = mpl.colors.LogNorm(vmin=int_range[0], vmax=int_range[1])
+        plot_mat = map_plot.chd.astype('float32')
+    else:
+        norm = mpl.colors.LogNorm(vmin=int_range[0], vmax=int_range[1])
+        im_cmap = plt.get_cmap('sohoeit195')
+        plot_mat = map_plot.data
+
+    # plot the initial image
+    if nfig is None:
+        cur_figs = plt.get_fignums()
+        if not nfig:
+            nfig = 0
+        else:
+            nfig = cur_figs.max() + 1
+
+    # convert map x-extents to degrees
+    x_range = [180 * map_plot.x.min() / np.pi, 180 * map_plot.x.max() / np.pi]
+    # setup xticks
+    xticks = np.arange(x_range[0], x_range[1] + 1, 60)
+
+    # setup yticks
+    yticks = np.arange(map_plot.y[0], map_plot.y[-1], 0.5)
+
+    plt.style.use('dark_background')
+    plt.rcParams.update({
+        # "lines.color": "white",
+        # "patch.edgecolor": "white",
+        "text.color": "darkgray",
+        # "axes.facecolor": "white",
+        "axes.edgecolor": "darkgray",
+        "axes.labelcolor": "darkgray",
+        "xtick.color": "darkgray",
+        "ytick.color": "darkgray",
+        "grid.color": "dimgrey",
+        # "figure.facecolor": "black",
+        # "figure.edgecolor": "black",
+        # "savefig.facecolor": "black",
+        # "savefig.edgecolor": "black"
+        })
+
+    #plt.style.use('grayscale')
+    # plt.figure(nfig, figsize=[6.4, 3.5], tight_layout=True)
+    plt.figure(nfig, figsize=[6.4, 3.5])
+    plt.subplots_adjust(left=0.10, bottom=0.11, right=0.97, top=0.95, wspace=0., hspace=0.)
+    if map_type == 'Contour':
+        x_extent = np.linspace(x_range[0], x_range[1], len(map_plot.x))
+        plt.contour(x_extent, map_plot.y, map_plot.data, origin="lower", cmap=im_cmap,
+                    extent=[x_range[0], x_range[1], map_plot.y.min(), map_plot.y.max()])
+    else:
+        plt.imshow(plot_mat, extent=[x_range[0], x_range[1], map_plot.y.min(), map_plot.y.max()],
+                   origin="lower", cmap=im_cmap, aspect=90.0, norm=norm)
+    plt.xlabel("Carrington Longitude")
+    plt.ylabel("Sine Latitude")
+    plt.xticks(xticks)
+    plt.yticks(yticks)
+    plt.grid(alpha=0.6, linestyle='dashed', lw=1.0)
+
+    if title is not None:
+        plt.title(title)
+
+    # plt.show(block=False)
+    plt.savefig(save_path, dpi=dpi)
+
+    return None
+
+
+def euv_map_movie(map_info, png_dir, movie_path, map_dir, int_range, fps, dpi=None):
+    """
+    Take a list of EUV synchronic maps and generate a video.
+
+    The map_info dataframe references one map per row. Each referenced map
+    is plotted and saved to png in png_dir. Each png is added to an .mp4
+    as a single frame.
+    :param map_info: pandas.DataFrame
+                     Generally this will be the output of modules.query_euv_maps()
+    :param png_dir: str
+                    Location of a directory that png files should be written to.
+                    These are an intermediate product and may be deleted after execution.
+    :param movie_path: str
+                       Full path where output video file should be written
+                       (not including filename).
+    :param map_dir: str
+                    Root path to PsiMap database filesystem. This will be combined
+                    with relative paths in map_info to locate input maps.
+    :param int_range: list (float) [min intensity, max intensity]
+                      Minimum and maximum values considered in the plotting
+                      colorscale. Values beyond this range will saturate the
+                      colorscale.
+    :param fps: int
+                Frames per second
+    :param dpi: int
+                Dots per inch for pngs.  If set to None, an automatic estimation
+                will be done to preserve the map resolution.
+    :return: None
+             This routine writes PNGs to png_dir and an MP4 to movie_dir, but has
+             no explicit output.
+    """
+    # num images
+    num_maps = map_info.shape[0]
+    # generate first frame to establish framesize
+    map_index = 0
+    row = map_info.loc[map_index]
+    # open map object
+    map_path = os.path.join(map_dir, row.fname)
+    euv_map = psi_dt.read_psi_map(map_path)
+    # generate title (timestamp)
+    title = row.date_mean.strftime("%Y/%m/%d, %H:%M:%S")
+    # generate filename
+    frame_filename = "Frame" + str(map_index).zfill(5) + ".png"
+    frame_path = os.path.join(png_dir, frame_filename)
+    # if no dpi specified, estimate dpi to preserve map resolution
+    if dpi is None:
+        map_shape = euv_map.data.shape
+        width_dpi = map_shape[1]/5.57
+        height_dpi = map_shape[0]/2.78
+        dpi = np.ceil(max(width_dpi, height_dpi))
+    # generate frame image
+    map_movie_frame(euv_map, int_range, save_path=frame_path,
+                    title=title, dpi=dpi)
+    # read image to cv2 format
+    cv_im = cv2.imread(frame_path)
+    # extract frame size
+    frameSize = list(cv_im.shape[0:2])
+    frameSize.reverse()
+    frameSize = tuple(frameSize)
+    # initiate cv2 movie object
+    out = cv2.VideoWriter(movie_path, cv2.VideoWriter_fourcc('m', 'p', '4', 'v'),
+                          fps, frameSize)
+    # add first image to video
+    out.write(cv_im)
+
+    # loop through map files
+    for map_index, row in map_info.iloc[1:].iterrows():
+        print("Processing map", map_index+1, "of", num_maps)
+        # open map object
+        map_path = os.path.join(map_dir, row.fname)
+        euv_map = psi_dt.read_psi_map(map_path)
+        # generate title (timestamp)
+        title = row.date_mean.strftime("%Y/%m/%d, %H:%M:%S")
+        # generate filename
+        frame_filename = "Frame" + str(map_index).zfill(5) + ".png"
+        frame_path = os.path.join(png_dir, frame_filename)
+        # generate frame image
+        map_movie_frame(euv_map, int_range, save_path=frame_path,
+                    title=title, dpi=dpi)
+        # read image to cv2 format
+        cv_im = cv2.imread(frame_path)
+        # add image to movie object
+        out.write(cv_im)
+
+    # finish and close file
+    out.release()
+    out = None
+    cv2.destroyAllWindows()
 
     return None
 

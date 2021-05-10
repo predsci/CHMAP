@@ -584,3 +584,4 @@ def plot_map(map: np.ndarray, map_mesh: MapMesh, xrange=None, yrange=None,
         plt.savefig(fname=filename, dpi=150)
     else:
         plt.show()
+

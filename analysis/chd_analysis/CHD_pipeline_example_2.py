@@ -27,8 +27,8 @@ import modules.datatypes as datatypes
 
 # -------- parameters --------- #
 # TIME RANGE FOR QUERYING
-query_time_min = datetime.datetime(2010, 12, 1, 0, 0, 0)
-query_time_max = datetime.datetime(2011, 1, 1, 0, 0, 0)
+query_time_min = datetime.datetime(2012, 3, 11, 0, 0, 0)
+query_time_max = datetime.datetime(2012, 4, 1, 0, 0, 0)
 # define map interval cadence and width
 map_freq = 2  # number of hours
 interval_delta = 30  # number of minutes
@@ -66,7 +66,7 @@ nc = 3
 iters = 1000
 
 # MINIMUM MERGE MAPPING PARAMETERS
-del_mu = 1.0  # optional between this method and mu_merge_cutoff method (not both)
+del_mu = 0.6  # optional between this method and mu_merge_cutoff method (not both)
 mu_cutoff = 0.0  # lower mu cutoff value
 mu_merge_cutoff = None  # mu cutoff in overlap areas
 EUV_CHD_sep = False  # Do separate minimum intensity merges for image and CHD

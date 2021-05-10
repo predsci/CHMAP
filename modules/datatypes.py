@@ -412,7 +412,7 @@ class PsiMap:
             self.data = self.x = self.y = ()
         else:
             # --- Initialize empty dataframes based on Table schema ---
-            # create the data tags (all pandas dataframes?)
+            # create the data tags
             # self.data_info = init_df_from_declarative_base(db.EUV_Images)
             euv_image_cols = []
             for column in db.EUV_Images.__table__.columns:

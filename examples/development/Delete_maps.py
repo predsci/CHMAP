@@ -5,19 +5,20 @@ import os
 os.environ["OMP_NUM_THREADS"] = "4"  # limit number of threads numpy can spawn
 import numpy as np
 import datetime
-import time
-# import pandas as pd
 
 from settings.app import App
 import modules.DB_classes as db_class
 import modules.DB_funs as db_funcs
-import analysis.chd_analysis.CHD_pipeline_funcs as chd_funcs
-import modules.map_manip as map_manip
 
 # -------- parameters --------- #
 # TIME RANGE FOR QUERYING
-query_time_min = datetime.datetime(2007, 3, 1, 0, 0, 0)
-query_time_max = datetime.datetime(2012, 1, 1, 0, 0, 0)
+query_time_min = datetime.datetime(2007, 9, 22, 17, 0, 0)
+query_time_max = datetime.datetime(2007, 9, 22, 19, 0, 0)
+
+# define map type and grid to query
+# map_methods = ['Synch_Im_Sel', 'GridSize_sinLat', 'MIDM-Comb-del_mu']
+map_methods = ["ProjFlux2Map", ]
+
 # define map interval cadence and width
 map_freq = 2  # number of hours
 interval_delta = 30  # number of minutes
@@ -52,7 +53,7 @@ elif use_db in ('mysql-Q', 'mysql-Q_test'):
 
 # query the maps to be deleted
 map_info, data_info, method_info, image_assoc = db_funcs.query_euv_maps(
-    db_session, mean_time_range=(query_time_min, query_time_max)
+    db_session, mean_time_range=(query_time_min, query_time_max), methods=map_methods
 )
 
 db_session = db_funcs.remove_euv_map(db_session, map_info, map_data_dir)

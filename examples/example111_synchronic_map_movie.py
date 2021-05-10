@@ -20,11 +20,11 @@ map_dir = App.MAP_FILE_HOME
 
 # --- User Parameters ----------------------
 # image or coronal hole detection
-video_type = "image"    # 'image' or 'chd'
+video_type = "chd"    # 'image' or 'chd'
 
 # define map query start and end times
-movie_start = datetime.datetime(2010, 11, 30, 23, 0, 0)
-movie_end = datetime.datetime(2011, 1, 1, 1, 0, 0)
+movie_start = datetime.datetime(2012, 5, 20, 0, 0, 0)
+movie_end = datetime.datetime(2012, 5, 21, 0, 0, 0)
 # define map type and grid to query
 map_methods = ['Synch_Im_Sel', 'GridSize_sinLat']
 grid_size = (1600, 640)
@@ -34,8 +34,8 @@ grid_size = (1600, 640)
 #             "del_mu": [0.59, 0.61]}
 map_vars = {"n_phi": [grid_size[0]-0.1, grid_size[0]+0.1],
             "n_SinLat": [grid_size[1]-0.1, grid_size[1]+0.1],
-            "del_mu": [0.99, 1.01]}
-unique_str = "del-mu1"  # additional filename component
+            "del_mu": [0.59, 0.61]}
+unique_str = "del-mu06"  # additional filename component
 
 save_dir = "/Users/turtle/Dropbox/MyNACD/video"
 file_base = "synch_map"

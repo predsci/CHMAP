@@ -2,6 +2,7 @@
 Functions to manipulate and combine maps
 """
 
+import sys
 import numpy as np
 from scipy.interpolate import interp1d
 from skimage.measure import block_reduce
@@ -1190,3 +1191,68 @@ def periodic_x_avg(l_vec, r_vec, x_edges, no_data_val):
     r_vec[left_index] = l_vec[left_index]
 
     return l_vec, r_vec
+
+
+def chdmap_br_flux(br_map, chd_map):
+    """
+    Calculate the magnetic flux in the coronal holes of a map.
+
+    Overlay a coronal hole map with a radial magnetic field map and sum the flux
+    associated with coronal holes (except where there is no data).
+    :param chd_map: PsiMap
+                     A map object with chd_map.chd being an array that defines
+                     one or more coronal hole regions. Values should be between
+                     0.0 and 1.0 except where 'no_data' is designated by a value
+                     of chd_map.no_data_val.
+    :param br_map: PsiMap
+                   A map object with br_map.data being an array that contains
+                   radial magnetic field magnitudes and with shape/mesh matching
+                   the chd_data array.
+    :return: float
+             Scalar sum of flux in the coronal hole regions of chd_map.chd.
+    """
+    # verify that maps have same grids
+    same_x = (len(chd_map.x) == len(br_map.x)) and all(chd_map.x == br_map.x)
+    same_y = (len(chd_map.y) == len(br_map.y)) and all(chd_map.y == br_map.y)
+    if ~(same_x and same_y):
+        sys.exit("Input maps for modules/map_manip.chdmap_br_flux() do not have identical axes.")
+
+    # calculate the flux
+    chd_flux = chdarray_br_flux(br_map, chd_map, chd_map.no_data_val)
+
+    return chd_flux
+
+
+def chdarray_br_flux(br_map, chd_data, chd_no_data_val):
+    """
+    Calculate the magnetic flux in the coronal holes of a map.
+
+    Overlay a coronal hole map with a radial magnetic field map and sum the flux
+    associated with coronal holes (except where there is no data).
+    :param chd_data: numpy.ndarray
+                     An array that defines one or more coronal hole regions.
+                     Values should be between 0.0 and 1.0 except where
+                     'no_data' is designated by a value of chd_no_data_val.
+    :param br_map: PsiMap
+                   A map object with br_map.data being an array that contains
+                   radial magnetic field magnitudes and with shape/mesh matching
+                   the chd_data array.
+    :param chd_no_data_val: float
+                            The value in chd_data that designates 'no_data'
+    :return: float
+             Scalar sum of flux in the coronal hole regions of chd_map.chd.
+    """
+    # calc theta from sin(lat). increase float precision to reduce numeric
+    # error from np.arcsin()
+    theta_y = np.pi/2 - np.arcsin(np.flip(br_map.y.astype('float64')))
+    # generate a mesh
+    map_mesh = MapMesh(br_map.x, theta_y)
+    # convert area characteristic of mesh back to map grid
+    map_da = np.flip(map_mesh.da.transpose(), axis=0)
+    # do not evaluate at 'no_data' points
+    no_data_index = chd_data == chd_no_data_val.astype(DTypes.MAP_CHD)
+    chd_data[no_data_index] == 0.
+    # sum total flux
+    chd_flux = np.sum(chd_data * br_map.data * map_da)
+
+    return chd_flux

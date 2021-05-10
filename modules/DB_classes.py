@@ -87,7 +87,7 @@ class Data_Combos(Base):
     date_min = Column(DateTime)
     instrument = Column(String(10))
     __table_args__ = (Index('mean_time', "date_mean", "meth_id", "instrument"),
-                      Index('unique_combo', "meth_id", "n_images", "date_mean", "date_max", "date_min", unique=True))
+                      Index('unique_combo', "meth_id", "n_images", "date_mean", "date_max", "date_min"))
 
     images = relationship("Data_Combo_Assoc")
 
