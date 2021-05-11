@@ -4,63 +4,56 @@
 
 KNN algorithm is a simple supervised machine learning algorithm that is used to solve classification problems. 
 KNN is easy to implement and understand. Classification is based on proximity. Here, we will use the coronal 
-hole centroid location in spherical coordinates to classify its ID number based on previously identified coronal holes.  
+hole centroid location to classify its ID number based on previously identified coronal holes.  
 
-## KNN settings 
-Lets assume we have the following pairs $(X_{1}, Y_{1}), (X_{2}, Y_{2}), ..., (X_{n}, Y_{n})$,
- each pair has a label $(L_{m})$, where $m$ indicates the class associated with the pair. 
-The pairs and labeled coronal holes are treated as the *training dataset*. 
-Then, given a new unlabled pair $(X_{n+1}, Y_{n+1})$, we classify its associated label by its proximity to 
-the pairs in the *training dataset*. K indicates the number of adjacent pairs near the new unlabled point $(X_{n+1}, Y_{n+1})$. Therefore, 
-K is a *hyper-parameter*. Based on the nearest K points one can compute the probability associated with each class. 
-Then, based on a threshold ($\xi$), the coronal hole can be labeled as an existing coronal hole in the library or be introduced
-as a new coronal hole.
 
 
 ## Example of KNN classification
-
 ![](images/KnnClassification.svg)
 
 The test sample (green circle) should be classified either to red triangle or blue square. 
 
 * **Case 1**: If K = 3 (solid line circle) then it is 75% red and 25% being blue. 
-Based on the threshold ($\xi$) we will either classify the new coronal hole as red or as a new coronal hole. 
 
 * **Case 2**: If K = 5 (dashed circle) then the new coronal hole is 60% blue and 40% red. 
-Therefore, in this case when k=5, the new coronal hole will be classified as blue or as a new coronal hole. 
-It is important to mention that since the location of the centroid is placed on a sphere, we will use the *haversine*
-metric to compute the distance between any two centroids. The *haversine* metric is defined as follows
-
-$$
-d = 2 r \arcsin(\sqrt{\sin^{2}((\theta_{1} - \theta_{2})/2) + \cos(\theta_{1})\cos(\theta_{2})\sin^{2}((\phi_{2} - \phi_{1})/2))} )
-$$
+Therefore, in this case when $k$=5, the test sample will be classified as blue. However, when $k$=3,
+  the test sample is classified as red. Notice that KNN algorithm is sensitive to the hyperparamter $k$. 
 
 
-## 1. Weighted K-Nearest Neighbor Classifier
 
-The coronal holes identified in the previous frame will have a larger **weight** than the coronal holes found in the previous 
-say 5th frame. The total training data will be composed of the previous 10 frames (this number can be changed as we test it on the images). 
-Hence, the weight of each coronal hole would be based on its frame number. 
+## Implementation 
+To prune the list of possible CH class associations and reduce the complexity of the proposed tracking algorithm, we utilize k- Nearest Neighbors (kNN) algorithm. kNN algorithm is a simple supervised machine learning algorithm that is used to solve classification problems. Since kNN is supervised all training measurements are labeled. Consequently, in the context of our problem, the CH centroid location are treated as the training dataset along with the corresponding CH labels. The labels indicate the CH class. Let the training dataset be denoted as
 
-$$ W_{1}(n) = \frac{1}{n_{last} - n}$$
+\begin{equation}
+    T = \{(\bar C_{i}, L_{i}) \text{ | } i \in \mathbb{N} \text{ and } i \in [1, n]\} 
+\end{equation}
 
-Therefore, the weight of the coronal hole is proportional to its frame number. 
+where $n$ is the number of previously identified CHs in a given window of frames, $\bar C_{i} = (\bar x_{i}, \bar y_{i}, \bar z_{i})$ is the centroid location in Cartesian coordinates, and $L$ is the corresponding label. Note that the number of unique labels is less than or equal to the number of centroids in $T$.
 
-* We also want to define the weight based on distance? Thoughts?
+Our goal is to  prune the list of possible labels for a newly identified CH, denoted by $X$, based on its distance to all other centroids in $T$. The distance is measured in Cartesian coordinates $\mathbb{R}^3$ and is equipped with the Euclidean norm $(||\cdot ||_{2})$. 
+Given the training dataset, let the centroids be reordered based on their distance to $X$, such that ${\|C_{1}-X\|_{2}\leq \dots \leq \|C_{n}-X\|_{2}}$. Let $\tilde T \subseteq T$ contain the first $k$ centroids that are of closest proximity to the newly identified $X$. The baseline kNN metric is defined as
 
-$$ W_{2}(d) = 1/d$$
+\begin{equation}
+    P_{knn}(X=L_{i}|\tilde T) = \frac{1}{k} \sum_{j=1}^{k} I(\tilde T_{j}=L_{i})
+\end{equation}
 
-Therefore the weight can be some type of combination of the two weights. 
+where $I$ is the indicator function of the subset $\tilde T$, which evaluates to 1 when the argument is true and 0 otherwise. 
 
-$$W_{final} = W_{1} W_{2}$$
+The baseline kNN results described above can be sensitive to the choice of the hyper-parameter $k$. If $k$ is too small it can discard important associations, and otherwise, when $k$ is too large, it will include points that are far from the query centroid ($X$). To overcome this challenge, we implement a modification of the baseline kNN, namely, the weighted kNN algorithm. The assigned weight is $\frac{1}{d}$ where $d$ is the euclidean distance.
+
+\begin{equation}
+\begin{array}{cc}
+     P_{wknn}(X=L_{i}|{\tilde T}) = \frac{1}{\sum_{j=1}^{k} {w_{j}}} \sum_{j=1}^{k} w_{j} I(\tilde T_{j}=L_{i}) \\
+     w_{j} = \frac{1}{\|X - C_{j}\|_{2}}
+\end{array}
+\end{equation}
 
 
-## 2. Distance Metric 
+The list of associated classes is then pruned by a certain threshold $\texttt{kNNThresh} \approx 0.1$. Meaning, all class associations where $P_{wknn} < 0.1$ are removed from potential class list. 
 
-As explained above we will use the *haversine* function. That will also overcome the issue of periodicity.  
-Note: "haversine" in sklearn metric requires data in the form of [latitude, longitude] and both inputs and outputs are in units of radians.
 
-## 3. Probability Estimate
+
+## KNN Centroid Example
 
 ![](images/KNNclassifier.png)
 
@@ -127,67 +120,6 @@ P_{blue} = \frac{T_{blue}}{T_{red} + T_{blue}} = 0.405
 $$
 
 
-Predicted probability of [4, 1] is as follows:
-
-0.594 and 0.405 for class red and blue respectively. Since $P_{red} > P_{blue}$ then it is more 
-likely [4, 1] is of class red, yet the probability is close to 50/50 therefore we should set a threshold to classify such cases to be 
-new coronal holes. 
-
-## 4. How do we choose the optimal K? 
-
-The default K is 5. If we have few frames or total coronal holes in the library we should alter this number. 
-* Note: small perturbations in K will not effect the solution of the WKNN algorithm. 
-
-
-# Implementation steps in Python
-
-*sklearn* library implemented KNN algorithm is called *KNeighborsClassifier()*. 
-
-    from sklearn.neighbors import KNeighborsClassifier
-    
-
-### Step 1
-Prepare the *training* dataset. This information is saved in Coronal Hole DB. Access the latest five frames centroid location 
-$(\phi, \theta)$ and corresponding frame number. Organize this information in the following form:
-
-$$
-X = [[\phi_{1}, \theta_{1}], [\phi_{2}, \theta_{2}], ... [\phi_{n}, \theta_{n}]]
-$$
-
-$$
-Y = [ID_{1}, ID_{2}, .... ID_{n}]
-$$
-
-$$
-F = [f_{1}, f_{2}, .... , f_{n}]
-$$
-
-Where $X$ is the centroid location in longitude and latitude (radians), $Y$ is the corresponding ID number, and 
-$F$ is the frame number. 
-
-### Step 2
-Use the built in sklearn KNN algorithm to find the distance between the K- nearest neighbors. See Jupyter Notebook for 
-a quick tutorial explaining the code below. 
-
-    >>> #sklearn classified
-    >>> clf = KNeighborsClassifier(n_neighbors=6, metric=vincenty/haversine)
-    
-    >>> # fit the training data
-    >>> clf.fit(X, Y)
-    
-    >>> # find the distance between the k nearest centroids to the new coronal hole. 
-    >>> clf.kneighbors([[4, 1]])
-    (array([[0.42397562, 0.87152123, 0.92636638, 0.98801916, 1.13048736,
-         1.18696572]]),
-     array([[2, 1, 3, 4, 5, 0]]))
-    
-    >>> # compute weighted probability
-    >>> def weight(ch, last_frame_num):
-           return 1/(last_frame_num - ch.frame_num)
-     
-    >>> # based on a threshold decide if it should be classified as an existing coronal 
-            hole or a new coronal hole in database. 
- 
- 
-### Step 3
-Update the database with new classification. 
+Predicted probability of [4, 1] is 0.594 and 0.405 for class red and blue, respectively. Since both $P_{red}$ and $P_{blue}$ 
+are above $\texttt{kNNThresh}$ then the tracking algorithm will proceed to compute the area overlap between both classes 
+to evaluate the class of the test sample. 

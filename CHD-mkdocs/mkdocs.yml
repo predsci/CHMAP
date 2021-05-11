@@ -51,7 +51,7 @@ theme:
   name: material
   language: en
   palette:
-    primary: indigo
+    primary: black
     accent: black
   logo: img/psi_logo.png
 

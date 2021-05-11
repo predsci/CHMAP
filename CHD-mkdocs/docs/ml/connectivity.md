@@ -1,31 +1,28 @@
-## Introduction to Graph Theory
+## Connectivity Graph
 
-A Graph G(V, E) is a data structure that is defined by a set of **Vertices** (or Nodes) (V) and and a set of **Edges** (E).
-In an undirected graph G(V, E), two vertices u and v are called connected if G contains a path from u to v. 
-Otherwise, they are called disconnected. If the two vertices are additionally connected by a path of length 1, 
-i.e. by a single edge, the vertices are called adjacent. 
+With the purpose of identifying coronal holes that split and merge, we implemented a connectivity graph, where each node is a coronal hole. The edges between nodes are established for two cases: 
 
-A graph is said to be **connected** if every pair of vertices in the graph is connected. 
-This means that there is a path between every pair of vertices.
-An undirected graph that is not connected is called disconnected. 
-An undirected graph G is therefore disconnected if there exist two vertices in G such that no path in G has these vertices as endpoints. 
+(1) If there is an area overlap with the previous frame set of identified CHs that is greater than $\texttt{ConnectivityThresh}$.
 
-In our project, the coronal hole database will be a set of **connected weighted subgraphs**, 
-where nodes are coronal hole contour object (see Contour.py) 
-and edges connect identified coronal holes between two sequential frames (given area overlap results). The edge weight corresponds
-to area overlap average ratio with previous frame instance (see [areaoverlap](areaoverlap.md)). 
+(2) If the CH ID has appeared previously in the database, then we draw an edge with its most recent appearance.
+
+
+Therefore, the connectivity graph is a set of connected directed weighted subgraphs, where edge weights corresponds to average ratio area overlap between two nodes. 
+
+
 
 ## Implementation
 
-In Python, there are several libraries available that provide Graph functionality. After some reading, 
-it seems as *Networkx* is commonly used and is easy to use. In the module CoronalHoleGraph.py, 
-there is a class called CoronalHoleGraph() . This class is the data structure that will store identified 
-contours and their connectivity. For plotting purposes, each contour will be associated with a frame number (y-axis) 
-and count (x-axis) in case of repetition in the same frame. Connectivity is determined by the area overlap of two contours. 
+A Graph G(V, E) is a data structure that is defined by a set of **Vertices** (or Nodes) (V) and and a set of **Edges** (E). 
+The coronal hole connectivity graph will be a set of **connected weighted subgraphs**, 
+where nodes are CH contour objects and edges correspond the area overlap ratio (see [areaoverlap](areaoverlap.md)). 
+
+![](images/DataStructuresCHT.PNG)
+
 
 ## Plotting Subgraphs 
-In the plot below, the connected subgraphs are ordered hierarchically based on subgraph average node area. 
+In the plot below, the connected subgraphs are ordered hierarchically based on the subgraph average node area. 
 The edge color is based on the edge weight or area ratio, hence, dark edges correspond with strong 
-overlap whereas light edges correspond to a weak overlap (see Grey colormap). 
+overlap whereas light edges correspond to a weak overlap. 
 
 ![](images/tracking_vid_combined_2010.gif)

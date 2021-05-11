@@ -2,7 +2,7 @@
 The current images are in latitude - longitude coordinates with the poles placed at the top and bottom of the image.
 In this current projection, clustering coronal holes at the poles is challenging due to the distortion near the poles.
 In order to overcome this issue, we suggest a coordinate mapping placing the poles at the equator. 
-This transformation can be done in "projection.py" module. 
+This transformation can be done in *projection.py* module. 
 
 
 ![](images/Figure_1.png){: style="height:250px;width:370px"}

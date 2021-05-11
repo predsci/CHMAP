@@ -8,7 +8,7 @@ Let $S_{1}$, $S_{2}$ denote the set of pixel locations associated with $C_{1}$ a
 Therefore, the area overlapped by the two regions is $A(S_{1} \cap S_{2})$.  
 
 
-The area overlap will be measured as an average of the latest $m$ ($\approx 10$) frames. 
+The area overlap will be measured as an average of the latest window $m$ ($\approx 20$) frames. 
 $$ P = \frac{1}{m} \sum_{n=0}^{m} \frac{1}{2} [\frac{A(S_{1, n} \cap S_{2})}{A(S_{2})}‎ + \frac{A(S_{1, n} \cap S_{2})}{A(S_{1})}‎]$$
 
 

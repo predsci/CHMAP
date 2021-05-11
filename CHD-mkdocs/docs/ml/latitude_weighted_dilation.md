@@ -10,14 +10,7 @@ Let $A$ be the original set and $B$ be the structuring element (also referred to
 * **Dilation**: $A \oplus B = \{z| B_{z} \cap A \subseteq A\}$, s.t. $A \oplus B \supseteq A$. 
 
 For erosion, the structuring element center is marked True if there is a **full** overlap with structuring element, whereas 
-with dilation, shifted elements have **any** overlap with original set $A$ (in our case $A$ is the input image). 
-
-* **Opening**: $(A \ominus B) \oplus B$ 
-* **Closing**: $(A \oplus B) \ominus B$
-
-Opening, meaning, erode then dilate, and closing is of opposite order. Opening removes small objects from the foreground 
-of an image, placing them in the background, while closing removes small holes in the foreground, changing small islands
-of background into foreground. Both are tools in image processing to remove noise or in our case - "false positives". 
+with dilation, shifted elements have **any** overlap with original set $A$. 
 
 ## Greyscale Dilation and Erosion
 Denoting an image by $f(x)$ and the structuring function by $B$, the grayscale dilation of $f$ by $B$ is given by
@@ -25,14 +18,9 @@ Denoting an image by $f(x)$ and the structuring function by $B$, the grayscale d
 * **Erosion**: $f \ominus B = \inf_{(k, l) \in B}{f_{i+k, j+l}}$
 * **Dilation**: $f \oplus B = \sup_{(k, l) \in B}{f_{i+k, j+l}}$
 
-[Example code](https://docs.scipy.org/doc/scipy/reference/generated/scipy.ndimage.grey_dilation.html?highlight=scipy%20ndimage%20morphology%20grey_dilation) using Scipy library in Python. 
-
 # Implementation
-
-
 ### *Input* 
-Input image in lat-lon projection - greyscaled or binary image (greyscale if we use [Tamar's CNN](chd.md) results).
-Therefore, dilation and erosion are done using greyscale formula (inf/sup). 
+Input image is in lat-lon projection and can be greyscaled or a binary image.
 
 
 ### *Latitude Weighted Dilation*
@@ -53,12 +41,12 @@ w(\theta) = \begin{array}{cc}
 $$
 
 where $\alpha = \arcsin(\frac{\gamma}{n_{p}})$, $\beta = \pi - \alpha$ (from symmetry), and $\gamma$ is a 
-hyper parameter. 
+hyper parameter. In addition, the dilation in latitude direction is uniform since spacial distortion is only 
+in longitude direction. 
 
 ![](images/DilationWorkFlow.PNG)
 **Figure- Classifying coronal holes using a latitude weighted dilation. 
-(a) The input greyscaled synoptic coronal hole map obtained by 
-Tamar’s CNN/K-Means detection. (b) The input image after applying a
+(a) The input greyscaled synchronic CH Map. (b) The input image after applying a
 latitude weighted dilation described by equation (1) and (2).
 (c) Dilated filled contour image where each coronal hole is associated 
 with a unique color. (d) Lastly, the dilated filled contour 
