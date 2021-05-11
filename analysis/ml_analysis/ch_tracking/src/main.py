@@ -6,11 +6,11 @@ Last Modified: May 6th, 2021 (Opal).
 
 import json
 import numpy as np
-from analysis.ml_analysis.ch_tracking.frame import Frame
-from analysis.ml_analysis.ch_tracking.contour import Contour
-from analysis.ml_analysis.ch_tracking.knn import KNN
-from analysis.ml_analysis.ch_tracking.areaoverlap import area_overlap, max_area_overlap
-from analysis.ml_analysis.ch_tracking.graph import CoronalHoleGraph
+from analysis.ml_analysis.ch_tracking.src.frame import Frame
+from analysis.ml_analysis.ch_tracking.src.contour import Contour
+from analysis.ml_analysis.ch_tracking.src.knn import KNN
+from analysis.ml_analysis.ch_tracking.src.areaoverlap import area_overlap, max_area_overlap
+from analysis.ml_analysis.ch_tracking.src.graph import CoronalHoleGraph
 import matplotlib.pyplot as plt
 
 

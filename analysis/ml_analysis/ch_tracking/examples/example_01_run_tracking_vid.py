@@ -12,19 +12,19 @@ This Module includes the following operations:
 4. Save image of the coronal hole detected frame in each iteration + save a plot of the graph then create a side
     by side (.mov)
 
-Last Modified: May 6th, 2021 (Opal)
+Last Modified: May 10th, 2021 (Opal)
 """
 
 import cv2
 import numpy as np
-from analysis.ml_analysis.ch_tracking.contour import Contour
+from analysis.ml_analysis.ch_tracking.src.contour import Contour
 import pickle
 import json
 import os
 from modules.map_manip import MapMesh
-from analysis.ml_analysis.ch_tracking.src import CoronalHoleDB
+from analysis.ml_analysis.ch_tracking.src.main import CoronalHoleDB
 from analysis.ml_analysis.ch_tracking.tools.plots import plot_coronal_hole
-from analysis.ml_analysis.ch_tracking.classification import classify_grey_scaled_image
+from analysis.ml_analysis.ch_tracking.src.classification import classify_grey_scaled_image
 import matplotlib.pyplot as plt
 from astropy.time import Time
 
@@ -143,7 +143,6 @@ SaveVid = True
 if SaveVid:
     # choose codec according to format needed
     fourcc = cv2.VideoWriter_fourcc(*'mp4v')
-    # video = cv2.VideoWriter("results/images/testervid/coronalhole" + str(ID) + ".mov", fourcc, 1, (640, 480))
     video = cv2.VideoWriter(dir_name + folder_name + "tracking_vid_combined.mov", fourcc, 1, (640 * 2, 480))
 
     for j in range(1, 49):

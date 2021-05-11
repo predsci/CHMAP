@@ -25,8 +25,8 @@ from modules import DB_funs
 import modules.DB_classes as DBClass
 import modules.datatypes as psi_datatype
 from settings.app import App
-from analysis.ml_analysis.ch_tracking.src import CoronalHoleDB
-from analysis.ml_analysis.ch_tracking.classification import classify_grey_scaled_image
+from analysis.ml_analysis.ch_tracking.src.main import CoronalHoleDB
+from analysis.ml_analysis.ch_tracking.src.classification import classify_grey_scaled_image
 from analysis.ml_analysis.ch_tracking.tools.plots import plot_coronal_hole
 from modules.map_manip import MapMesh
 
@@ -192,7 +192,6 @@ SaveVid = True
 if SaveVid:
     # choose codec according to format needed
     fourcc = cv2.VideoWriter_fourcc(*'mp4v')
-    # video = cv2.VideoWriter("results/images/testervid/coronalhole" + str(ID) + ".mov", fourcc, 1, (640, 480))
     video = cv2.VideoWriter(dir_name + folder_name + "tracking_vid_combined.mov", fourcc, 1, (640 * 2, 480))
 
     for j in range(1, ch_lib.frame_num - 1):

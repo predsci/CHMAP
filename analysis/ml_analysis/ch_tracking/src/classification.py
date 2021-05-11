@@ -100,7 +100,7 @@ def classify_grey_scaled_image(greyscale_image, lat_coord, lon_coord, gamma=10, 
 if __name__ == "__main__":
     import numpy as np
     from analysis.ml_analysis.ch_tracking.dilation import generate_ch_color
-    from analysis.ml_analysis.ch_tracking.plots import plot_coronal_hole
+    from analysis.ml_analysis.ch_tracking.tools.plots import plot_coronal_hole
 
     # read in an example image
     image = cv2.imread("data/example_frame.png")
