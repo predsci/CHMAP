@@ -3,7 +3,7 @@
 Coronal Hole properties to keep in mind:
         - on average a coronal hole exists for 2 weeks.
 
-Last Modified: April 13th, 2021 (Opal).
+Last Modified: May 6th, 2021 (Opal).
 """
 
 import json
@@ -36,6 +36,7 @@ class Frame:
             'contour_list': self.contour_list,
             'centroid_list': self.centroid_list,
             'id': self.id,
+            'timestamp': self.timestamp
         }
 
     def compute_centroid_list(self):

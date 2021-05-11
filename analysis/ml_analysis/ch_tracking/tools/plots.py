@@ -9,7 +9,8 @@ import matplotlib.pyplot as plt
 import cv2
 
 
-def plot_coronal_hole(ch_list, n_t, n_p, title, filename=False, plot_rect=False):
+def plot_coronal_hole(ch_list, n_t, n_p, title, filename=False, plot_rect=True, plot_circle=True,
+                      circle_radius=50, thickness_circle=1, thickness_rect=2, fontscale=0.3):
     """
 
     Parameters
@@ -19,6 +20,12 @@ def plot_coronal_hole(ch_list, n_t, n_p, title, filename=False, plot_rect=False)
     n_p: phi dimensions
     title: title of the plot
     filename: save file directory
+    plot_rect: if True then we plot the bounding box.
+    plot_circle: if True then we plot the circle relative to area size.
+    circle_radius: default is 50. depends on the image dimensions.
+    thickness_rect: default is 2. depends on the image dimensions.
+    thickness_circle: default is 2. depends on the image dimensions.
+    fontscale: default is 0.3. depends on the image dimensions.
 
     Returns
     -------
@@ -35,6 +42,11 @@ def plot_coronal_hole(ch_list, n_t, n_p, title, filename=False, plot_rect=False)
         cv2.circle(img=final_image, center=(ch.pixel_centroid[1], ch.pixel_centroid[0]),
                    radius=3, color=(0, 0, 0), thickness=-1)
 
+        if plot_circle:
+            # plot circle based on area.
+            cv2.circle(img=final_image, center=(ch.pixel_centroid[1], ch.pixel_centroid[0]),
+                       radius=int(ch.area*circle_radius), color=(255, 0, 0), thickness=thickness_circle)
+
         # check if its has multiple bounding boxes.
         if plot_rect:
             ii = 0
@@ -43,21 +55,21 @@ def plot_coronal_hole(ch_list, n_t, n_p, title, filename=False, plot_rect=False)
                 cv2.rectangle(img=final_image, pt1=(ch.straight_box[4 * ii + 0], ch.straight_box[4 * ii + 1]),
                               pt2=(ch.straight_box[4 * ii + 0] + ch.straight_box[4 * ii + 2], ch.straight_box[4 * ii + 1] +
                                    ch.straight_box[4 * ii + 3]),
-                              color=(0, 255, 0), thickness=2)
+                              color=(0, 255, 0), thickness=thickness_rect)
 
                 ii += 1
 
             # draw rotated box.
             if ii > 1:
-                cv2.drawContours(final_image, [ch.rot_box_corners[:4, :]], 0, (0, 0, 255), 2)
-                cv2.drawContours(final_image, [ch.rot_box_corners[4:, :]], 0, (0, 0, 255), 2)
+                cv2.drawContours(final_image, [ch.rot_box_corners[:4, :]], 0, (0, 0, 255), thickness_rect)
+                cv2.drawContours(final_image, [ch.rot_box_corners[4:, :]], 0, (0, 0, 255), thickness_rect)
             else:
-                cv2.drawContours(final_image, [ch.rot_box_corners], 0, (0, 0, 255), 2)
+                cv2.drawContours(final_image, [ch.rot_box_corners], 0, (0, 0, 255), thickness_rect)
 
         # plot the contour's ID number.
         cv2.putText(img=final_image, text=str(ch.id),
                     org=tuple(np.add((ch.pixel_centroid[1], ch.pixel_centroid[0]), (-15, 15))),
-                    fontFace=cv2.FONT_HERSHEY_TRIPLEX, fontScale=0.3, color=(0, 0, 0), thickness=1)
+                    fontFace=cv2.FONT_HERSHEY_TRIPLEX, fontScale=fontscale, color=(0, 0, 0), thickness=1)
 
     # plot using matplotlib
     set_up_plt_figure(image=final_image, n_p=n_p, n_t=n_t, title=title, filename=filename)

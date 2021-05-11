@@ -8,7 +8,6 @@ import json
 import numpy as np
 from analysis.ml_analysis.ch_tracking.frame import Frame
 from analysis.ml_analysis.ch_tracking.contour import Contour
-from analysis.ml_analysis.ch_tracking.coronalhole import CoronalHole
 from analysis.ml_analysis.ch_tracking.knn import KNN
 from analysis.ml_analysis.ch_tracking.areaoverlap import area_overlap, max_area_overlap
 from analysis.ml_analysis.ch_tracking.graph import CoronalHoleGraph
@@ -30,7 +29,7 @@ class CoronalHoleDB:
     # connectivity threshold.
     ConnectivityThresh = 1e-3
     # connectivity threshold.
-    AreaMatchThresh = 0.2
+    AreaMatchThresh = 0.3
     # knn k hyper parameter
     kHyper = 10
     # knn thresh
@@ -183,8 +182,6 @@ class CoronalHoleDB:
                     contour_list[ii] = self._assign_id_coronal_hole(ch=contour_list[ii])
                     # assign a unique color (RBG) to the contour.
                     contour_list[ii] = self._assign_color_coronal_hole(ch=contour_list[ii])
-                    # assign count to contour.
-                    contour_list[ii] = self._assign_count_coronal_hole(ch=contour_list[ii], contour_list=contour_list)
                     # update the color dictionary.
                     self.color_dict[contour_list[ii].id] = contour_list[ii].color
 
@@ -195,8 +192,9 @@ class CoronalHoleDB:
                     contour_list[ii].id = match_list[ii]
                     # assign a the corresponding color that all contours of this class have.
                     contour_list[ii].color = self.color_dict[contour_list[ii].id]
-                    # assign count to contour.
-                    contour_list[ii] = self._assign_count_coronal_hole(ch=contour_list[ii], contour_list=contour_list)
+
+                # assign count to contour.
+                contour_list[ii] = self._assign_count_coronal_hole(ch=contour_list[ii], contour_list=contour_list)
 
                 # add coronal hole as a node to graph.
                 self.Graph.insert_node(node=contour_list[ii])
@@ -385,12 +383,17 @@ class CoronalHoleDB:
             frame = self.window_holder[ii]
             # initialize contour list.
             node_list = []
-            for contour in frame.contour_list:
-                if contour.id == identity:
-                    node_list.append(contour)
 
-            # check if contour list is empty.
-            if len(node_list) > 0:
-                return node_list
-            ii += -1
+            if frame is None:
+                # exit- the frame is fairly new and there is no point in continuing the iterations.
+                return []
+            else:
+                for contour in frame.contour_list:
+                    if contour.id == identity:
+                        node_list.append(contour)
+
+                # check if contour list is empty.
+                if len(node_list) > 0:
+                    return node_list
+                ii += -1
         return []

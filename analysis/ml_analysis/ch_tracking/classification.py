@@ -103,7 +103,7 @@ if __name__ == "__main__":
     from analysis.ml_analysis.ch_tracking.plots import plot_coronal_hole
 
     # read in an example image
-    image = cv2.imread("example_vid/example_frame.png")
+    image = cv2.imread("data/example_frame.png")
 
     # example image dimensions.
     n_t, n_p, color_dim = np.shape(image)

@@ -1,30 +1,33 @@
-"""Apply Coronal Hole Tracking (CHT)  Algorithm to a particular test case.
-This Module includes he following operations:
+""" This is a tutorial/example on how to run the coronal hole tracking algorithm on CH Maps
+from in the database (db).
 
-1. Importing Detection images from Q
+This Module includes the following operations:
+
+1. Importing Detection images (CH Maps - low res) from Q
 (see Jamie's examples/examples112_query_maps.py for more information on how to access the database).
 
-2. Save list of coronal holes for each frame in a .pkl (pickle file format).
+2. Save list of coronal holes for each frame (pickle file format).
 
-3. Save a connectivity graph of the coronal hole evolution in time.
+3. Save a connectivity graph of the coronal hole evolution in time (pickle file format).
 
 4. Save image of the coronal hole detected frame in each iteration + save a plot of the graph then create a side
-    by side (.gif)
+    by side (.mov)
 
 Last Modified: May 6th, 2021 (Opal)
 """
 
+
 import os
 import datetime
 import numpy as np
-
+import cv2
 from modules import DB_funs
 import modules.DB_classes as DBClass
 import modules.datatypes as psi_datatype
 from settings.app import App
 from analysis.ml_analysis.ch_tracking.src import CoronalHoleDB
 from analysis.ml_analysis.ch_tracking.classification import classify_grey_scaled_image
-from analysis.ml_analysis.ch_tracking.plots import plot_coronal_hole
+from analysis.ml_analysis.ch_tracking.tools.plots import plot_coronal_hole
 from modules.map_manip import MapMesh
 
 import pickle
@@ -167,11 +170,12 @@ for row_index, row in map_info.iterrows():
     # plot coronal holes in the latest frame.
     plot_coronal_hole(ch_list=ch_lib.window_holder[-1].contour_list, n_t=ch_lib.Mesh.n_t, n_p=ch_lib.Mesh.n_p,
                       title="Frame: " + str(ch_lib.frame_num) + ", Time: " + str(mean_timestamp),
-                      filename=dir_name + folder_name + image_file_name)
+                      filename=dir_name + folder_name + image_file_name, plot_rect=True, plot_circle=True,
+                      fontscale=0.3, circle_radius=80, thickness_rect=1, thickness_circle=1)
 
     # plot current graph in the latest window.
     ch_lib.Graph.create_plots(save_dir=dir_name + folder_name + graph_file_name)
-    plt.show()
+    # plt.show()
 
     # iterate over frame number.
     ch_lib.frame_num += 1
@@ -180,3 +184,23 @@ for row_index, row in map_info.iterrows():
 db_session.close()
 
 
+# ======================================================================================================================
+# Step 9: Save to video.
+# ======================================================================================================================
+SaveVid = True
+
+if SaveVid:
+    # choose codec according to format needed
+    fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+    # video = cv2.VideoWriter("results/images/testervid/coronalhole" + str(ID) + ".mov", fourcc, 1, (640, 480))
+    video = cv2.VideoWriter(dir_name + folder_name + "tracking_vid_combined.mov", fourcc, 1, (640 * 2, 480))
+
+    for j in range(1, ch_lib.frame_num - 1):
+        graph_file_name = "graph_frame_" + str(j) + ".png"
+        image_file_name = "classified_frame_" + str(j) + ".png"
+        img1 = cv2.imread(dir_name + folder_name + image_file_name)
+        img2 = cv2.imread(dir_name + folder_name + graph_file_name)
+        video.write(np.hstack((img1, img2)))
+
+    cv2.destroyAllWindows()
+    video.release()

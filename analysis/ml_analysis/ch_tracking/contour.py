@@ -87,13 +87,14 @@ class Contour:
         self.periodic_at_zero = self.is_periodic_zero()
         self.periodic_at_2pi = self.is_periodic_2_pi(Mesh=Mesh)
 
-    # todo: fix for graph.
     def __str__(self):
         return json.dumps(
             self.json_dict(), indent=4, default=lambda o: o.json_dict())
 
     def json_dict(self):
         return {
+            'id': self.id,
+            'count': self.count,
             'frame_num': self.frame_num,
             'frame_timestamp': self.frame_timestamp,
             'centroid_spherical': self.phys_centroid,

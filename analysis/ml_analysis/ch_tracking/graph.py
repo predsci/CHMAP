@@ -26,7 +26,7 @@ class CoronalHoleGraph:
         # y interval to plot at a time
         self.y_window = 10
         # number of connected sub-graphs to plot
-        self.plot_num_subgraphs = 10
+        self.plot_num_subgraphs = 5
 
     def __str__(self):
         return json.dumps(
@@ -272,14 +272,6 @@ class CoronalHoleGraph:
                 if subplots:
                     ii += -1
                     del_axes.append(ii)
-                    # fig.delaxes(axes[ii])
-                    # del_axes.append(ii)
-                    #
-                    # kk = 0
-                    # for jj in range(num_columns):
-                    #     if jj not in del_axes:
-                    #         axes[jj].change_geometry(1, num_columns - len(del_axes), kk)
-                    #         kk += 1
 
             elif len(list_of_nodes_in_range) > 0:
                 sub_graph = self.G.subgraph(nodes=list_of_nodes_in_range)
