@@ -4,7 +4,7 @@ Last Modified: May 6th, 2021 (Opal)
 """
 import cv2
 import numpy as np
-from analysis.ml_analysis.ch_tracking.contour import Contour
+from analysis.ml_analysis.ch_tracking.src.contour import Contour
 import matplotlib.pyplot as plt
 
 

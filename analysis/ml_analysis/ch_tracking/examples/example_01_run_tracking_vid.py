@@ -54,7 +54,7 @@ ch_lib = CoronalHoleDB()
 ch_lib.frame_num = 1
 
 # loop over each frame.
-while ch_lib.frame_num <= 66:
+while ch_lib.frame_num <= 100:
     # ================================================================================================================
     # Step 2: Read in first frame.
     # ================================================================================================================
@@ -119,7 +119,7 @@ while ch_lib.frame_num <= 66:
 
     # plot current graph in the latest window.
     ch_lib.Graph.create_plots(save_dir=dir_name + folder_name + graph_file_name)
-    plt.show()
+    # plt.show()
 
     # print diagnostic.
     print("Frame num = ", ch_lib.frame_num)
@@ -145,7 +145,7 @@ if SaveVid:
     fourcc = cv2.VideoWriter_fourcc(*'mp4v')
     video = cv2.VideoWriter(dir_name + folder_name + "tracking_vid_combined.mov", fourcc, 1, (640 * 2, 480))
 
-    for j in range(1, 49):
+    for j in range(1, ch_lib.frame_num-1):
         graph_file_name = "graph_frame_" + str(j) + ".png"
         image_file_name = "classified_frame_" + str(j) + ".png"
         img1 = cv2.imread(dir_name + folder_name + image_file_name)

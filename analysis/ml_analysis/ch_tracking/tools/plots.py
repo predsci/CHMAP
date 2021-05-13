@@ -91,23 +91,28 @@ def set_up_plt_figure(image, n_p, n_t, title, filename, cmap=None):
     -------
         N/A
     """
+    fig, ax = plt.subplots()
     # plot using matplotlib.imshow function.
-    plt.imshow(image, cmap=cmap, aspect=n_p/(2*n_t))
+    ax.imshow(image, cmap=cmap, aspect=n_p/(2*n_t))
 
     # pixel coordinates + set ticks.
     p_pixel = np.linspace(0, n_p, 5)
     t_pixel = np.linspace(0, n_t, 5)
 
-    plt.xticks(p_pixel, ["0", "$90$", "$180$", "$270$", "$360$"])
-    plt.yticks(t_pixel, ["1", "$\dfrac{1}{2}$", "$0$", "-$\dfrac{1}{2}$", "-$1$"])
+    ax.set_xticks(p_pixel)
+    ax.set_xticklabels(["0", "$90$", "$180$", "$270$", "$360$"])
+    ax.set_yticks(t_pixel)
+    ax.set_yticklabels(["1", "$\dfrac{1}{2}$", "$0$", "-$\dfrac{1}{2}$", "-$1$"])
 
     # axis label.
-    plt.xlabel("Longitude (Deg.)")
-    plt.ylabel("Sin(Lat.)")
+    ax.set_xlabel("Longitude (Deg.)")
+    ax.set_ylabel("Sin(Lat.)")
 
     # title of the image includes its frame number.
-    plt.title(title)
+    ax.set_title(title)
 
     # save figure in filename.
     if filename is not False:
         plt.savefig(filename)
+
+    plt.close()

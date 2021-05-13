@@ -364,6 +364,11 @@ class CoronalHoleGraph:
             for jj in range(len(del_axes)):
                 fig.delaxes(axes[ii + jj])
 
+            kk = 1
+            for ii in range(len(sub_graph_list) - len(del_axes)):
+                axes[kk-1].change_geometry(1, len(sub_graph_list) - len(del_axes), int(kk))
+                kk += 1
+
         if subplots:
             if edge_color_bar is not None:
                 cbar = fig.colorbar(edge_color_bar, ticks=[0, 0.5, 1])
@@ -375,3 +380,4 @@ class CoronalHoleGraph:
 
             if save_dir is not False:
                 plt.savefig(save_dir)
+        plt.close()

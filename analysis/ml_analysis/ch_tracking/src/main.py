@@ -19,7 +19,7 @@ class CoronalHoleDB:
     # contour binary threshold.
     BinaryThreshold = 0.7
     # coronal hole area threshold.
-    AreaThreshold = 5e-3
+    AreaThreshold = 5E-3
     # window to match coronal holes.
     window = 20
     # parameter for longitude dilation (this should be changed for larger image dimensions).
@@ -27,13 +27,13 @@ class CoronalHoleDB:
     # parameter for latitude dilation (this should be changed for larger image dimensions).
     beta = 10
     # connectivity threshold.
-    ConnectivityThresh = 1e-3
+    ConnectivityThresh = 0.1
     # connectivity threshold.
-    AreaMatchThresh = 0.3
+    AreaMatchThresh = 5E-3
     # knn k hyper parameter
     kHyper = 10
     # knn thresh
-    kNNThresh = 1e-2
+    kNNThresh = 1E-3
     # MeshMap with information about the input image mesh grid and pixel area.
     Mesh = None
 
@@ -317,17 +317,25 @@ class CoronalHoleDB:
             # corresponding average ratio.
             holder = []
             # loop over every "suggested match" based on KNN.
+            # weighted mean.
             for identity in ch_list:
                 # find all contours with "identity" labelling in the previous *window* of frames.
                 coronal_hole_list = self.get_all_instances_of_class(class_id=identity)
                 # save all ratios in this list and then average the elements.
                 p = []
+                # keep track of weight sum
+                weight_sum = 0
                 for ch in coronal_hole_list:
                     p1, p2 = area_overlap(ch1=ch, ch2=contour_list[ii], da=self.Mesh.da)
-                    p.append((p1 + p2) / 2)
-                holder.append(np.mean(p))
+                    # weight is based on frame proximity.
+                    weight = 1 / (self.frame_num - ch.frame_num)
+                    # weighted average.
+                    p.append(weight*(p1 + p2) / 2)
+                    # keep track of the sum of weights.
+                    weight_sum += weight
+                # save the weighted average -> later used to dictate the ch id number.
+                holder.append(sum(p)/weight_sum)
             area_overlap_ratio_list.append(holder)
-
         return area_overlap_ratio_list
 
     def update_connectivity_prev_frame(self, contour_list):
