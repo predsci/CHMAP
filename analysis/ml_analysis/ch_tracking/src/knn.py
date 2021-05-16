@@ -30,9 +30,8 @@ class KNN:
         # labels of coronal holes in order, for example, say we have ID # 4, 5, 6, 17 in Y_train then:
         # label= [4, 5, 6, 17].
         # sort the list of labels in Y_train.
-        sort_label = np.sort(Y_train)
         # remove duplicates.
-        self.label = list(set(sort_label))
+        self.label = np.sort(list(set(Y_train)))
 
         # threshold for significant chance to be in the class.
         self.thresh = thresh

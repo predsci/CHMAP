@@ -39,17 +39,42 @@ import matplotlib.pyplot as plt
 # ================================================================================================================
 # define map query start and end times
 query_start = datetime.datetime(year=2011, month=1, day=1, hour=1, minute=0, second=0)
-query_end = datetime.datetime(year=2011, month=3, day=1, hour=1, minute=0, second=0)
+query_end = datetime.datetime(year=2011, month=4, day=1, hour=1, minute=0, second=0)
 
-# initialize coronal hole tracking database.
-ch_lib = CoronalHoleDB()
 
 # ================================================================================================================
 # Step 2: Initialize directory and folder to save results (USER PARAMETERS)
 # ================================================================================================================
 # --- User Parameters ----------------------
 dir_name = "/Users/opalissan/desktop/CHT_RESULTS/"
-folder_name = "2011-01-01-2011-03-01/"
+folder_name = "2011-01-01-2011-04-01/"
+
+
+# ================================================================================================================
+# Step 3: Algorithm Hyper Parameters
+# ================================================================================================================
+# initialize coronal hole tracking database.
+ch_lib = CoronalHoleDB()
+
+# specify hyper parameters.
+# contour binary threshold.
+ch_lib.BinaryThreshold = 0.7
+# coronal hole area threshold.
+ch_lib.AreaThreshold = 5E-3
+# window to match coronal holes.
+ch_lib.window = 20
+# parameter for longitude dilation (this should be changed for larger image dimensions).
+ch_lib.gamma = 20
+# parameter for latitude dilation (this should be changed for larger image dimensions).
+ch_lib.beta = 12
+# connectivity threshold.
+ch_lib.ConnectivityThresh = 0.1
+# connectivity threshold.
+ch_lib.AreaMatchThresh = 0.1
+# knn k hyper parameter
+ch_lib.kHyper = 15
+# knn thresh
+ch_lib.kNNThresh = 1E-3
 
 # ================================================================================================================
 # Step 3: Read in detected images from the database.
@@ -95,8 +120,8 @@ map_info.keys()
 ii = 0
 # iterate through the rows of map_info
 for row_index, row in map_info.iterrows():
-    if ii % 3 == 0:
-        print("Processing map for:" + str(row.date_mean) + "Frame num = " + str(ch_lib.frame_num))
+    if ii % 2 == 0:
+        print("Processing map for:" + str(row.date_mean) + ", Frame num = " + str(ch_lib.frame_num))
         # load map (some older maps have a leading '/' that messes with os.path.join
         if row.fname[0] == "/":
             rel_path = row.fname[1:]
@@ -111,15 +136,17 @@ for row_index, row in map_info.iterrows():
         # note that the grid has been reduced since the coronal
         # hole detection was performed, so values are floats between 0. and 1.
         chd_data = my_map.chd.astype('float32')
+        # flip image to correspond 0 - 0 and pi - n_t
+        input_image = cv2.flip(chd_data, 0)
 
         # restrict chd_data to be positive.
-        chd_data[chd_data < 0] = 0
-        chd_data[chd_data > 1] = 1
+        input_image[input_image < 0] = 0
+        input_image[input_image > 1] = 1
 
         # image coordinates (latitude and longitude).
         phi_coords = my_map.x
         sinlat_coords = my_map.y
-        theta_coords = np.pi / 2 - np.arcsin(sinlat_coords)
+        theta_coords = np.pi / 2 + np.arcsin(sinlat_coords)
 
         # TODO: ASK JAMIE WHAT IS THE CORRECT TIMESTAMP?
         mean_timestamp = row.T[2]
@@ -133,7 +160,7 @@ for row_index, row in map_info.iterrows():
         #         Force periodicity and delete small contours.
         # ================================================================================================================
         # get list of contours.
-        contour_list_pruned = classify_grey_scaled_image(greyscale_image=chd_data,
+        contour_list_pruned = classify_grey_scaled_image(greyscale_image=input_image,
                                                          lat_coord=ch_lib.Mesh.t,
                                                          lon_coord=ch_lib.Mesh.p,
                                                          AreaThreshold=ch_lib.AreaThreshold,
@@ -166,7 +193,7 @@ for row_index, row in map_info.iterrows():
         # plot coronal holes in the latest frame.
         plot_coronal_hole(ch_list=ch_lib.window_holder[-1].contour_list, n_t=ch_lib.Mesh.n_t, n_p=ch_lib.Mesh.n_p,
                           title="Frame: " + str(ch_lib.frame_num) + ", Time: " + str(mean_timestamp),
-                          filename=dir_name + folder_name + image_file_name, plot_rect=True, plot_circle=True,
+                          filename=dir_name + folder_name + image_file_name, plot_rect=False, plot_circle=True,
                           fontscale=0.3, circle_radius=80, thickness_rect=1, thickness_circle=1)
 
         # plot current graph in the latest window.

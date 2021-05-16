@@ -41,7 +41,7 @@ def area_overlap(ch1, ch2, da):
     return intersection / ch1.area, intersection / ch2.area
 
 
-def max_area_overlap(area_check_list, area_overlap_results, threshold=0.5):
+def max_area_overlap(area_check_list, area_overlap_results, threshold=0.2):
     """ Return the ID with high area overlap.
 
     Parameters

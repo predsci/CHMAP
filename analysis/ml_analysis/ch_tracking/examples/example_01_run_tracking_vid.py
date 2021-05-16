@@ -17,7 +17,6 @@ Last Modified: May 10th, 2021 (Opal)
 
 import cv2
 import numpy as np
-from analysis.ml_analysis.ch_tracking.src.contour import Contour
 import pickle
 import json
 import os
@@ -33,30 +32,52 @@ from astropy.time import Time
 # ================================================================================================================
 # --- User Parameters ----------------------
 dir_name = "/Users/opalissan/desktop/CHT_RESULTS/"
-folder_name = "2011-02-17-2011-10-27/"
+folder_name = "2011-02-17-2011-04-01/"
 
 # Upload coronal hole video.
-cap = cv2.VideoCapture("../data/maps_r101_chm_low_res_1.mov")
+cap = cv2.VideoCapture("../data/maps_r101_chm_low_res_1_Trim.mp4")
 
 # time interval
-times = ['2011-02-17T18:00:30', '2011-10-27T23:55:30']
+times = ['2011-02-17T18:00:30', '2011-04-01T23:58:00']
 t = Time(times)
 dt = t[1] - t[0]
-times = t[0] + dt * np.linspace(0., 1., 67)
+times = t[0] + dt * np.linspace(0., 1., 11*30)
 
 # cut out the axis and title.
 t, b, r, l = 47, -55, 110, -55
 
+# ================================================================================================================
+# Step 2: Specify Algorithm Hyper-Parameters
+# ================================================================================================================
 # coronal hole video database.
 ch_lib = CoronalHoleDB()
+# specify hyper parameters.
+# contour binary threshold.
+ch_lib.BinaryThreshold = 0.7
+# coronal hole area threshold.
+ch_lib.AreaThreshold = 5E-3
+# window to match coronal holes.
+ch_lib.window = 20
+# parameter for longitude dilation (this should be changed for larger image dimensions).
+ch_lib.gamma = 25
+# parameter for latitude dilation (this should be changed for larger image dimensions).
+ch_lib.beta = 15
+# connectivity threshold.
+ch_lib.ConnectivityThresh = 0.1
+# connectivity threshold.
+ch_lib.AreaMatchThresh = 0.1
+# knn k hyper parameter
+ch_lib.kHyper = 10
+# knn thresh
+ch_lib.kNNThresh =1E-3
 
 # initialize frame index.
 ch_lib.frame_num = 1
 
 # loop over each frame.
-while ch_lib.frame_num <= 100:
+while ch_lib.frame_num <= 330:
     # ================================================================================================================
-    # Step 2: Read in first frame.
+    # Step 3: Read in first frame.
     # ================================================================================================================
     # read in frame by frame.
     success, img = cap.read()
@@ -65,7 +86,7 @@ while ch_lib.frame_num <= 100:
     image = img[t:b, r:l, :]
 
     # ================================================================================================================
-    # Step 3: Convert Image to Greyscale.
+    # Step 4: Convert Image to Greyscale.
     # ================================================================================================================
     # gray scale: coronal holes are close to 1 other regions are close to 0.
     image = (255 - cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)) / 255
@@ -76,7 +97,7 @@ while ch_lib.frame_num <= 100:
                           t=(np.pi / 2 + np.arcsin(np.linspace(-1, 1, n_t))))
 
     # ================================================================================================================
-    # Step 4: Latitude Weighted Dilation +
+    # Step 5: Latitude Weighted Dilation +
     #         Compute all contour features +
     #         Force periodicity and delete small contours.
     # ================================================================================================================
@@ -92,13 +113,13 @@ while ch_lib.frame_num <= 100:
                                                      beta=ch_lib.beta)
 
     # ================================================================================================================
-    # Step 5: Match coronal holes detected to previous frame detections.
+    # Step 6: Match coronal holes detected to previous frame detections.
     # ================================================================================================================
     ch_lib.assign_new_coronal_holes(contour_list=contour_list_pruned,
                                     timestamp=times[ch_lib.frame_num - 1])
 
     # ================================================================================================================
-    # Step 6: Save Frame list of coronal holes.
+    # Step 7: Save Frame list of coronal holes.
     # ================================================================================================================
     # save the contours found in the latest frame as a pickle file.
     with open(os.path.join(dir_name + folder_name + str(times[ch_lib.frame_num - 1]) + ".pkl"), 'wb') as f:
@@ -114,7 +135,7 @@ while ch_lib.frame_num <= 100:
     # plot coronal holes in the latest frame.
     plot_coronal_hole(ch_list=ch_lib.window_holder[-1].contour_list, n_t=ch_lib.Mesh.n_t, n_p=ch_lib.Mesh.n_p,
                       title="Frame: " + str(ch_lib.frame_num) + ", Time: " + str(times[ch_lib.frame_num - 1]),
-                      filename=dir_name + folder_name + image_file_name, plot_rect=True, plot_circle=True,
+                      filename=dir_name + folder_name + image_file_name, plot_rect=False, plot_circle=True,
                       fontscale=0.7, circle_radius=100, thickness_rect=1)
 
     # plot current graph in the latest window.
@@ -122,7 +143,7 @@ while ch_lib.frame_num <= 100:
     # plt.show()
 
     # print diagnostic.
-    print("Frame num = ", ch_lib.frame_num)
+    print("Timestamp = " + str(times[ch_lib.frame_num - 1]) + ", frame num = " + str(ch_lib.frame_num))
 
     # update frame iteration.
     ch_lib.frame_num += 1

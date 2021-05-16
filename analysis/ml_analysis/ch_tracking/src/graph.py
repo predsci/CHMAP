@@ -336,8 +336,6 @@ class CoronalHoleGraph:
                         if timestamps:
                             ax.set_yticklabels(timestamps)
 
-                        # invert the y axis.
-                        ax.invert_yaxis()
                         ax.axis('on')
                         ax.set_ylabel("frame number")
 
@@ -356,8 +354,6 @@ class CoronalHoleGraph:
                 plt.title("Coronal Hole Connectivity")
                 plt.show()
 
-            # if save_dir is not False:
-            #     plt.savefig(save_dir + "/connected_sub_graph_" + str(ii) + ".png")
             ii += 1
 
         if len(del_axes) > 0:

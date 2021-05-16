@@ -312,8 +312,11 @@ class CoronalHoleDB:
         # initialize the returned list containing the average area overlap.
         area_overlap_ratio_list = []
 
+        # iterator
+        ii = 0
+
         # loop over suggested matches from KNN.
-        for ii, ch_list in enumerate(area_check_list):
+        for ch_list in area_check_list:
             # corresponding average ratio.
             holder = []
             # loop over every "suggested match" based on KNN.
@@ -336,6 +339,8 @@ class CoronalHoleDB:
                 # save the weighted average -> later used to dictate the ch id number.
                 holder.append(sum(p)/weight_sum)
             area_overlap_ratio_list.append(holder)
+
+            ii += 1
         return area_overlap_ratio_list
 
     def update_connectivity_prev_frame(self, contour_list):

@@ -269,7 +269,7 @@ class Contour:
             return int(Mesh.interp_t2index(t)), int(Mesh.interp_p2index(p))
         else:
             raise ValueError('When converting spherical coordinates to image coordinates,'
-                             ' 0 <= phi < 2pi and 0 <= theta <= pi.')
+                             ' 0 <= phi < 2pi and 0 <= theta <= pi. p =' + str(p) + ", t =" + str(t))
 
     @staticmethod
     def _image_coordinates_to_spherical_coordinates(t, p, Mesh):
@@ -330,9 +330,9 @@ class Contour:
             if w == 0 and h == 0:
                 return Mesh.da[x, y]
             elif w == 0 and h > 0:
-                np.sum(Mesh.da[x: x + w, y])
+                return np.sum(Mesh.da[x, y: y + h])
             elif w > 0 and h == 0:
-                np.sum(Mesh.da[x, y:y + h])
+                return np.sum(Mesh.da[x: x + w, y])
             else:
                 return np.sum(Mesh.da[x: x + w, y: y + h])
 

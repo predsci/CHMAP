@@ -53,7 +53,7 @@ def force_periodicity(contour_list, Mesh):
         if c1.periodic_at_zero:
             # check for all other periodic 2pi.
             jj = ii + 1
-            while jj <= len(contour_list) - 1:
+            while jj <= len(contour_list) - 1 and len(contour_list) > 0:
                 c2 = contour_list[jj]
                 if c2.periodic_at_2pi:
                     # get interval of latitude at 0.
@@ -73,7 +73,7 @@ def force_periodicity(contour_list, Mesh):
         if c1.periodic_at_2pi:
             # check for all other periodic 0.
             jj = ii + 1
-            while jj <= len(contour_list) - 1:
+            while jj <= len(contour_list) - 1 and len(contour_list) > 0:
                 c2 = contour_list[jj]
                 if c2.periodic_at_zero:
                     # get interval of latitude at 2pi.
@@ -127,6 +127,7 @@ def merge_contours(c1, c2, Mesh):
     c1.straight_box = np.append(c1.straight_box, c2.straight_box)
 
     # update bounding box area.
+
     c1.straight_box_area = c1.straight_box_area + c2.straight_box_area
 
     # todo: fix this....

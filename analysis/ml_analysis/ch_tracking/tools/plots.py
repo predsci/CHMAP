@@ -10,7 +10,7 @@ import cv2
 
 
 def plot_coronal_hole(ch_list, n_t, n_p, title, filename=False, plot_rect=True, plot_circle=True,
-                      circle_radius=50, thickness_circle=1, thickness_rect=2, fontscale=0.3):
+                      circle_radius=50, thickness_circle=1, thickness_rect=2, fontscale=0.3, origin=None):
     """
 
     Parameters
@@ -21,6 +21,7 @@ def plot_coronal_hole(ch_list, n_t, n_p, title, filename=False, plot_rect=True, 
     title: title of the plot
     filename: save file directory
     plot_rect: if True then we plot the bounding box.
+    origin: origin of the image.
     plot_circle: if True then we plot the circle relative to area size.
     circle_radius: default is 50. depends on the image dimensions.
     thickness_rect: default is 2. depends on the image dimensions.
@@ -72,14 +73,15 @@ def plot_coronal_hole(ch_list, n_t, n_p, title, filename=False, plot_rect=True, 
                     fontFace=cv2.FONT_HERSHEY_TRIPLEX, fontScale=fontscale, color=(0, 0, 0), thickness=1)
 
     # plot using matplotlib
-    set_up_plt_figure(image=final_image, n_p=n_p, n_t=n_t, title=title, filename=filename)
+    set_up_plt_figure(image=final_image, n_p=n_p, n_t=n_t, title=title, filename=filename, origin=origin)
 
 
-def set_up_plt_figure(image, n_p, n_t, title, filename, cmap=None):
+def set_up_plt_figure(image, n_p, n_t, title, filename, origin, cmap=None):
     """Set up proper axis labels and ticks, include title and save figure.
 
     Parameters
     ----------
+    origin: origin of the image.
     image: numpy array the image plotted.
     n_t: theta dimensions
     n_p: phi dimensions
@@ -93,7 +95,7 @@ def set_up_plt_figure(image, n_p, n_t, title, filename, cmap=None):
     """
     fig, ax = plt.subplots()
     # plot using matplotlib.imshow function.
-    ax.imshow(image, cmap=cmap, aspect=n_p/(2*n_t))
+    ax.imshow(image, cmap=cmap, aspect=n_p/(2*n_t), origin=origin)
 
     # pixel coordinates + set ticks.
     p_pixel = np.linspace(0, n_p, 5)
