@@ -49,27 +49,30 @@ t, b, r, l = 47, -55, 110, -55
 # ================================================================================================================
 # Step 2: Specify Algorithm Hyper-Parameters
 # ================================================================================================================
-# coronal hole video database.
-ch_lib = CoronalHoleDB()
 # specify hyper parameters.
 # contour binary threshold.
-ch_lib.BinaryThreshold = 0.7
+CoronalHoleDB.BinaryThreshold = 0.7
 # coronal hole area threshold.
-ch_lib.AreaThreshold = 5E-3
+CoronalHoleDB.AreaThreshold = 5E-3
 # window to match coronal holes.
-ch_lib.window = 20
+CoronalHoleDB.window = 20
 # parameter for longitude dilation (this should be changed for larger image dimensions).
-ch_lib.gamma = 25
+CoronalHoleDB.gamma = 25
 # parameter for latitude dilation (this should be changed for larger image dimensions).
-ch_lib.beta = 15
+CoronalHoleDB.beta = 15
 # connectivity threshold.
-ch_lib.ConnectivityThresh = 0.1
+CoronalHoleDB.ConnectivityThresh = 0.1
 # connectivity threshold.
-ch_lib.AreaMatchThresh = 0.1
+CoronalHoleDB.AreaMatchThresh = 0.1
 # knn k hyper parameter
-ch_lib.kHyper = 10
+CoronalHoleDB.kHyper = 10
 # knn thresh
-ch_lib.kNNThresh =1E-3
+CoronalHoleDB.kNNThresh = 1E-3
+
+
+# coronal hole video database.
+ch_lib = CoronalHoleDB()
+
 
 # initialize frame index.
 ch_lib.frame_num = 1

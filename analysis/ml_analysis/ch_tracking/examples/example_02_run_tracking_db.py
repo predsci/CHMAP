@@ -53,29 +53,29 @@ folder_name = "2011-01-01-2011-04-01/"
 # ================================================================================================================
 # Step 3: Algorithm Hyper Parameters
 # ================================================================================================================
-# initialize coronal hole tracking database.
-ch_lib = CoronalHoleDB()
-
 # specify hyper parameters.
 # contour binary threshold.
-ch_lib.BinaryThreshold = 0.7
+CoronalHoleDB.BinaryThreshold = 0.7
 # coronal hole area threshold.
-ch_lib.AreaThreshold = 5E-3
+CoronalHoleDB.AreaThreshold = 5E-3
 # window to match coronal holes.
-ch_lib.window = 20
+CoronalHoleDB.window = 25
 # parameter for longitude dilation (this should be changed for larger image dimensions).
-ch_lib.gamma = 20
+CoronalHoleDB.gamma = 20
 # parameter for latitude dilation (this should be changed for larger image dimensions).
-ch_lib.beta = 12
+CoronalHoleDB.beta = 12
 # connectivity threshold.
-ch_lib.ConnectivityThresh = 0.1
+CoronalHoleDB.ConnectivityThresh = 0.1
 # connectivity threshold.
-ch_lib.AreaMatchThresh = 0.1
+CoronalHoleDB.AreaMatchThresh = 0.1
 # knn k hyper parameter
-ch_lib.kHyper = 15
+CoronalHoleDB.kHyper = 15
 # knn thresh
-ch_lib.kNNThresh = 1E-3
+CoronalHoleDB.kNNThresh = 1E-3
 
+
+# initialize coronal hole tracking database.
+ch_lib = CoronalHoleDB()
 # ================================================================================================================
 # Step 3: Read in detected images from the database.
 # ================================================================================================================
