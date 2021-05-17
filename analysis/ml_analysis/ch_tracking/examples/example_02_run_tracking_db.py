@@ -13,7 +13,7 @@ This Module includes the following operations:
 4. Save image of the coronal hole detected frame in each iteration + save a plot of the graph then create a side
     by side (.mov)
 
-Last Modified: May 6th, 2021 (Opal)
+Last Modified: May 17th, 2021 (Opal)
 """
 
 
@@ -49,6 +49,9 @@ query_end = datetime.datetime(year=2011, month=4, day=8, hour=12, minute=0, seco
 # --- User Parameters ----------------------
 dir_name = "/Users/opalissan/desktop/CHT_RESULTS/"
 folder_name = "2010-12-29-2011-04-08c4hr/"
+graph_folder = "graphs/"
+frame_folder = "frames/"
+pickle_folder = "pkl/"
 
 
 # ================================================================================================================
@@ -64,7 +67,7 @@ CoronalHoleDB.window = 25
 # parameter for longitude dilation (this should be changed for larger image dimensions).
 CoronalHoleDB.gamma = 20
 # parameter for latitude dilation (this should be changed for larger image dimensions).
-CoronalHoleDB.beta = 12
+CoronalHoleDB.beta = 10
 # connectivity threshold.
 CoronalHoleDB.ConnectivityThresh = 0.1
 # connectivity threshold.
@@ -122,8 +125,6 @@ ii = 0
 # iterate through the rows of map_info
 for row_index, row in map_info.iterrows():
     if ii % 2 == 0:
-        if ch_lib.frame_num == 27:
-            print("debugggggg")
         print("Processing map for:" + str(row.date_mean) + ", Frame num = " + str(ch_lib.frame_num))
         # load map (some older maps have a leading '/' that messes with os.path.join
         if row.fname[0] == "/":
@@ -183,7 +184,7 @@ for row_index, row in map_info.iterrows():
         # Step 7: Save Frame list of coronal holes.
         # ================================================================================================================
         # save the contours found in the latest frame as a pickle file.
-        with open(os.path.join(dir_name + folder_name + str(mean_timestamp) + ".pkl"), 'wb') as f:
+        with open(os.path.join(dir_name + folder_name + pickle_folder + str(mean_timestamp) + ".pkl"), 'wb') as f:
             pickle.dump(ch_lib.window_holder[-1], f)
 
         # ================================================================================================================
@@ -196,11 +197,11 @@ for row_index, row in map_info.iterrows():
         # plot coronal holes in the latest frame.
         plot_coronal_hole(ch_list=ch_lib.window_holder[-1].contour_list, n_t=ch_lib.Mesh.n_t, n_p=ch_lib.Mesh.n_p,
                           title="Frame: " + str(ch_lib.frame_num) + ", Time: " + str(mean_timestamp),
-                          filename=dir_name + folder_name + image_file_name, plot_rect=False, plot_circle=True,
+                          filename=dir_name + folder_name + frame_folder + image_file_name, plot_rect=False, plot_circle=True,
                           fontscale=0.3, circle_radius=80, thickness_rect=1, thickness_circle=1)
 
         # plot current graph in the latest window.
-        ch_lib.Graph.create_plots(save_dir=dir_name + folder_name + graph_file_name)
+        ch_lib.Graph.create_plots(save_dir=dir_name + folder_name + graph_folder + graph_file_name)
         # plt.show()
 
         # iterate over frame number.
@@ -230,8 +231,8 @@ if SaveVid:
     for j in range(1, ch_lib.frame_num - 1):
         graph_file_name = "graph_frame_" + str(j) + ".png"
         image_file_name = "classified_frame_" + str(j) + ".png"
-        img1 = cv2.imread(dir_name + folder_name + image_file_name)
-        img2 = cv2.imread(dir_name + folder_name + graph_file_name)
+        img1 = cv2.imread(dir_name + folder_name + frame_folder + image_file_name)
+        img2 = cv2.imread(dir_name + folder_name + graph_folder + graph_file_name)
         video.write(np.hstack((img1, img2)))
 
     cv2.destroyAllWindows()

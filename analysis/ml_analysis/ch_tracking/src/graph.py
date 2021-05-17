@@ -3,9 +3,9 @@ Here, we analyze coronal hole connectivity- when do coronal holes merge? split? 
 
 Note: this module imports networkx library.
 
-Last Modified: May 6th, 2021 (Opal)
+Last Modified: May 17th, 2021 (Opal)
 
-# todo: fix graph node x position when plotting.
+# todo: plot only on one axes???
 """
 
 import networkx as nx
@@ -137,7 +137,7 @@ class CoronalHoleGraph:
 
         pp = 0  # x-pos starter for this id number.
         for id in dup_max.keys():
-            dup_max[id] = dup_max[id] + pp
+            dup_max[id] = pp
             # update x-pos starter for the next duplicated id.
             pp += dup_max[id]
             # remove this id from the list of counts.

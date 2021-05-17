@@ -34,6 +34,10 @@ from astropy.time import Time
 dir_name = "/Users/opalissan/desktop/CHT_RESULTS/"
 folder_name = "2011-02-17-2011-04-01/"
 
+graph_folder = "graphs/"
+frame_folder = "frames/"
+pickle_folder = "pkl/"
+
 # Upload coronal hole video.
 cap = cv2.VideoCapture("../data/maps_r101_chm_low_res_1_Trim.mp4")
 length = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
@@ -126,7 +130,7 @@ while ch_lib.frame_num <= length:
     # Step 7: Save Frame list of coronal holes.
     # ================================================================================================================
     # save the contours found in the latest frame as a pickle file.
-    with open(os.path.join(dir_name + folder_name + str(times[ch_lib.frame_num - 1]) + ".pkl"), 'wb') as f:
+    with open(os.path.join(dir_name + folder_name + pickle_folder + str(times[ch_lib.frame_num - 1]) + ".pkl"), 'wb') as f:
         pickle.dump(ch_lib.window_holder[-1], f)
 
     # ================================================================================================================
@@ -139,11 +143,11 @@ while ch_lib.frame_num <= length:
     # plot coronal holes in the latest frame.
     plot_coronal_hole(ch_list=ch_lib.window_holder[-1].contour_list, n_t=ch_lib.Mesh.n_t, n_p=ch_lib.Mesh.n_p,
                       title="Frame: " + str(ch_lib.frame_num) + ", Time: " + str(times[ch_lib.frame_num - 1]),
-                      filename=dir_name + folder_name + image_file_name, plot_rect=False, plot_circle=True,
+                      filename=dir_name + folder_name + frame_folder + image_file_name, plot_rect=False, plot_circle=True,
                       fontscale=0.7, circle_radius=100, thickness_rect=1)
 
     # plot current graph in the latest window.
-    ch_lib.Graph.create_plots(save_dir=dir_name + folder_name + graph_file_name)
+    ch_lib.Graph.create_plots(save_dir=dir_name + folder_name + graph_folder + graph_file_name)
     # plt.show()
 
     # print diagnostic.
@@ -173,8 +177,8 @@ if SaveVid:
     for j in range(1, ch_lib.frame_num-1):
         graph_file_name = "graph_frame_" + str(j) + ".png"
         image_file_name = "classified_frame_" + str(j) + ".png"
-        img1 = cv2.imread(dir_name + folder_name + image_file_name)
-        img2 = cv2.imread(dir_name + folder_name + graph_file_name)
+        img1 = cv2.imread(dir_name + folder_name + frame_folder + image_file_name)
+        img2 = cv2.imread(dir_name + folder_name + graph_folder + graph_file_name)
         video.write(np.hstack((img1, img2)))
 
     cv2.destroyAllWindows()

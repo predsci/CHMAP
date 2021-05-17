@@ -3,7 +3,7 @@
 Coronal Hole properties to keep in mind:
         - on average a coronal hole exists for 2 weeks.
 
-Last Modified: May 6th, 2021 (Opal).
+Last Modified: May 17th, 2021 (Opal).
 """
 
 import json
@@ -27,8 +27,9 @@ class Frame:
         # frame time stamp: usually a string or astropy timestamp.
         self.timestamp = timestamp
 
-        # frame MapMesh
-        self.image_coordinates = map_mesh
+        # frame grid t/p 1d arrays.
+        self.t = map_mesh.t
+        self.p = map_mesh.p
 
     def __str__(self):
         return json.dumps(
