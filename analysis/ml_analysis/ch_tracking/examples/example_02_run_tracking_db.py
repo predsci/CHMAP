@@ -48,7 +48,7 @@ query_end = datetime.datetime(year=2011, month=4, day=8, hour=12, minute=0, seco
 # ================================================================================================================
 # --- User Parameters ----------------------
 dir_name = "/Users/opalissan/desktop/CHT_RESULTS/"
-folder_name = "2010-12-29-2011-04-08b/"
+folder_name = "2010-12-29-2011-04-08c4hr/"
 
 
 # ================================================================================================================
@@ -122,8 +122,8 @@ ii = 0
 # iterate through the rows of map_info
 for row_index, row in map_info.iterrows():
     if ii % 2 == 0:
-        if ch_lib.frame_num == 3:
-            print("debuggggg ops")
+        if ch_lib.frame_num == 27:
+            print("debugggggg")
         print("Processing map for:" + str(row.date_mean) + ", Frame num = " + str(ch_lib.frame_num))
         # load map (some older maps have a leading '/' that messes with os.path.join
         if row.fname[0] == "/":

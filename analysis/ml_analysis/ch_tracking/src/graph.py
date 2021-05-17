@@ -126,13 +126,22 @@ class CoronalHoleGraph:
         tuple_list = list(zip(frame_list, id_list))
         dup_max = dict()
 
-        pp = 0  # first index.
         for frame, id in set(tuple_list):
             appearances = tuple_list.count((frame, id))
             if appearances > 1:
-                dup_max[id] = pp
-                pp += appearances
-                count_list.remove(id)
+                if id in dup_max.keys():
+                    if dup_max[id] < appearances:
+                        dup_max[id] = appearances
+                else:
+                    dup_max[id] = appearances
+
+        pp = 0  # x-pos starter for this id number.
+        for id in dup_max.keys():
+            dup_max[id] = dup_max[id] + pp
+            # update x-pos starter for the next duplicated id.
+            pp += dup_max[id]
+            # remove this id from the list of counts.
+            count_list.remove(id)
 
         # assign (x-axis position) to each node
         count_len = len(count_list)
