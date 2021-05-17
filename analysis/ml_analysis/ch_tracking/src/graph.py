@@ -293,22 +293,22 @@ class CoronalHoleGraph:
 
                 if sub_graph.number_of_nodes() == 1:
                     # plot nodes and labels.
-                    nx.draw(sub_graph, pos=pos, font_weight='bold', ax=ax, node_size=100, font_size=7,
+                    nx.draw(sub_graph, pos=pos, font_weight='bold', ax=ax, node_size=80,
                             node_color=[c.to_rgba(np.array(sub_graph.nodes[ch]["color"]) / 255)
                                         for ch in sub_graph.nodes])
 
-                    nx.draw_networkx_labels(G=sub_graph, pos=pos, labels=labels, ax=ax)
+                    nx.draw_networkx_labels(G=sub_graph, pos=pos, labels=labels, ax=ax, font_size=8)
 
                 else:
                     edge_weights = nx.get_edge_attributes(G=sub_graph, name='weight')
                     edges, weights = zip(*edge_weights.items())
 
                     # plot nodes and labels.
-                    nx.draw(sub_graph, pos=pos, font_weight='bold', ax=ax, node_size=100,
+                    nx.draw(sub_graph, pos=pos, font_weight='bold', ax=ax, node_size=80,
                             node_color=[c.to_rgba(np.array(sub_graph.nodes[ch]["color"]) / 255)
-                                        for ch in sub_graph.nodes],
-                            edgelist=[])
-                    nx.draw_networkx_labels(G=sub_graph, pos=pos, labels=labels, ax=ax)
+                                        for ch in sub_graph.nodes], edgelist=[])
+
+                    nx.draw_networkx_labels(G=sub_graph, pos=pos, labels=labels, ax=ax, font_size=8)
 
                     edge_color_bar = nx.draw_networkx_edges(sub_graph, pos=pos, edge_color=weights, edgelist=edges,
                                                             edge_cmap=plt.cm.get_cmap('Greys'), edge_vmin=0,
