@@ -66,7 +66,6 @@ def force_periodicity(contour_list, Mesh):
                         contour_list[ii] = merge_contours(c1=c1, c2=c2, Mesh=Mesh)
                         c1 = contour_list[ii]
                         contour_list.remove(c2)
-                        ii += -1
                 jj += 1
 
         # check if it overlaps phi=2pi.
@@ -84,8 +83,8 @@ def force_periodicity(contour_list, Mesh):
                     if interval_overlap(t1, t2, t3, t4):
                         # merge the two contours by appending c2 to c1.
                         contour_list[ii] = merge_contours(c1=c1, c2=c2, Mesh=Mesh)
+                        c1 = contour_list[ii]
                         contour_list.remove(c2)
-                        ii += -1
                 jj += 1
         ii += 1
     return contour_list

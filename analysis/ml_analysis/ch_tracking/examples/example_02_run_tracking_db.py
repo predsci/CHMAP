@@ -38,8 +38,8 @@ import matplotlib.pyplot as plt
 # Step 1: Choose a test case - time interval
 # ================================================================================================================
 # define map query start and end times
-query_start = datetime.datetime(year=2011, month=1, day=1, hour=1, minute=0, second=0)
-query_end = datetime.datetime(year=2011, month=4, day=1, hour=1, minute=0, second=0)
+query_start = datetime.datetime(year=2010, month=12, day=29, hour=1, minute=0, second=0)
+query_end = datetime.datetime(year=2011, month=4, day=8, hour=12, minute=0, second=0)
 
 
 # ================================================================================================================
@@ -47,7 +47,7 @@ query_end = datetime.datetime(year=2011, month=4, day=1, hour=1, minute=0, secon
 # ================================================================================================================
 # --- User Parameters ----------------------
 dir_name = "/Users/opalissan/desktop/CHT_RESULTS/"
-folder_name = "2011-01-01-2011-04-01/"
+folder_name = "2010-12-29-2011-04-08/"
 
 
 # ================================================================================================================
@@ -63,7 +63,7 @@ CoronalHoleDB.window = 25
 # parameter for longitude dilation (this should be changed for larger image dimensions).
 CoronalHoleDB.gamma = 20
 # parameter for latitude dilation (this should be changed for larger image dimensions).
-CoronalHoleDB.beta = 12
+CoronalHoleDB.beta = 8
 # connectivity threshold.
 CoronalHoleDB.ConnectivityThresh = 0.1
 # connectivity threshold.
@@ -121,6 +121,8 @@ ii = 0
 # iterate through the rows of map_info
 for row_index, row in map_info.iterrows():
     if ii % 2 == 0:
+        if ch_lib.frame_num == 3:
+            print("debuggggg ops")
         print("Processing map for:" + str(row.date_mean) + ", Frame num = " + str(ch_lib.frame_num))
         # load map (some older maps have a leading '/' that messes with os.path.join
         if row.fname[0] == "/":
