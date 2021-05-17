@@ -75,7 +75,7 @@ CoronalHoleDB.AreaMatchThresh = 0.1
 # knn k hyper parameter
 CoronalHoleDB.kHyper = 15
 # knn thresh
-CoronalHoleDB.kNNThresh = 1E-3
+CoronalHoleDB.kNNThresh = 0
 
 
 # initialize coronal hole tracking database.
@@ -125,6 +125,8 @@ ii = 0
 # iterate through the rows of map_info
 for row_index, row in map_info.iterrows():
     if ii % 2 == 0:
+        if ch_lib.frame_num == 30:
+            print("debuggggg")
         print("Processing map for:" + str(row.date_mean) + ", Frame num = " + str(ch_lib.frame_num))
         # load map (some older maps have a leading '/' that messes with os.path.join
         if row.fname[0] == "/":

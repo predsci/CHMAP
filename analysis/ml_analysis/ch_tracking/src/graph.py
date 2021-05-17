@@ -137,9 +137,11 @@ class CoronalHoleGraph:
 
         pp = 0  # x-pos starter for this id number.
         for id in dup_max.keys():
+            holder = dup_max[id]
+            # update x-pos starter.
             dup_max[id] = pp
             # update x-pos starter for the next duplicated id.
-            pp += dup_max[id]
+            pp += holder
             # remove this id from the list of counts.
             count_list.remove(id)
 
