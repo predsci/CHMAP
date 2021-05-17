@@ -36,12 +36,13 @@ folder_name = "2011-02-17-2011-04-01/"
 
 # Upload coronal hole video.
 cap = cv2.VideoCapture("../data/maps_r101_chm_low_res_1_Trim.mp4")
+length = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
 
 # time interval
 times = ['2011-02-17T18:00:30', '2011-04-01T23:58:00']
 t = Time(times)
 dt = t[1] - t[0]
-times = t[0] + dt * np.linspace(0., 1., 11*30)
+times = t[0] + dt * np.linspace(0., 1., length)
 
 # cut out the axis and title.
 t, b, r, l = 47, -55, 110, -55
@@ -78,7 +79,7 @@ ch_lib = CoronalHoleDB()
 ch_lib.frame_num = 1
 
 # loop over each frame.
-while ch_lib.frame_num <= 330:
+while ch_lib.frame_num <= length:
     # ================================================================================================================
     # Step 3: Read in first frame.
     # ================================================================================================================
