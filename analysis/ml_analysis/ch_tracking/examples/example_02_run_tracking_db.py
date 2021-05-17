@@ -38,6 +38,7 @@ import matplotlib.pyplot as plt
 # Step 1: Choose a test case - time interval
 # ================================================================================================================
 # define map query start and end times
+# paper test case: Dec 29th 2010 to April 8th 2011.
 query_start = datetime.datetime(year=2010, month=12, day=29, hour=1, minute=0, second=0)
 query_end = datetime.datetime(year=2011, month=4, day=8, hour=12, minute=0, second=0)
 
@@ -47,7 +48,7 @@ query_end = datetime.datetime(year=2011, month=4, day=8, hour=12, minute=0, seco
 # ================================================================================================================
 # --- User Parameters ----------------------
 dir_name = "/Users/opalissan/desktop/CHT_RESULTS/"
-folder_name = "2010-12-29-2011-04-08/"
+folder_name = "2010-12-29-2011-04-08b/"
 
 
 # ================================================================================================================
@@ -63,7 +64,7 @@ CoronalHoleDB.window = 25
 # parameter for longitude dilation (this should be changed for larger image dimensions).
 CoronalHoleDB.gamma = 20
 # parameter for latitude dilation (this should be changed for larger image dimensions).
-CoronalHoleDB.beta = 8
+CoronalHoleDB.beta = 12
 # connectivity threshold.
 CoronalHoleDB.ConnectivityThresh = 0.1
 # connectivity threshold.

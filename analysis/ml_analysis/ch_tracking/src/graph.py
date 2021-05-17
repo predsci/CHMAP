@@ -124,27 +124,25 @@ class CoronalHoleGraph:
 
         # check if there are multiple nodes of the same id in the same list.
         tuple_list = list(zip(frame_list, id_list))
-        rep_list = []
+        dup_max = dict()
 
-        for ii in set(tuple_list):
-            if tuple_list.count(ii) > 1:
-                rep_list.append((ii, tuple_list.count(ii)))
+        pp = 0  # first index.
+        for frame, id in set(tuple_list):
+            appearances = tuple_list.count((frame, id))
+            if appearances > 1:
+                dup_max[id] = pp
+                pp += appearances
+                count_list.remove(id)
 
-        # assign count (x-axis position) to each node
+        # assign (x-axis position) to each node
+        count_len = len(count_list)
         for node in sub_graph:
-            sub_graph.nodes[node]["x-pos"] = count_list.index(sub_graph.nodes[node]["id"])
-
-        # loop over the contours that have duplicate id in the same frame_num
-        for tup, count in rep_list:
-            frame_num, id_num = tup
-            node_list = [node for node in sub_graph if
-                         sub_graph.nodes[node]["frame_num"] == frame_num
-                         and sub_graph.nodes[node]["id"] == id_num]
-
-            for jj, node in enumerate(node_list):
-                if jj != 0:
-                    sub_graph.nodes[node]["x-pos"] = -jj
-
+            if sub_graph.nodes[node]["id"] in count_list:
+                sub_graph.nodes[node]["x-pos"] = count_list.index(sub_graph.nodes[node]["id"])
+            else:
+                # it has multiple nodes with the same id in the same frame instance.
+                sub_graph.nodes[node]["x-pos"] = sub_graph.nodes[node]["count"] + count_len + \
+                                                 dup_max[sub_graph.nodes[node]["id"]]
         return sub_graph
 
     def get_plot_features(self, sub_graph):
@@ -286,7 +284,7 @@ class CoronalHoleGraph:
 
                 if sub_graph.number_of_nodes() == 1:
                     # plot nodes and labels.
-                    nx.draw(sub_graph, pos=pos, font_weight='bold', ax=ax, node_size=100,
+                    nx.draw(sub_graph, pos=pos, font_weight='bold', ax=ax, node_size=100, font_size=7,
                             node_color=[c.to_rgba(np.array(sub_graph.nodes[ch]["color"]) / 255)
                                         for ch in sub_graph.nodes])
 
@@ -362,7 +360,7 @@ class CoronalHoleGraph:
 
             kk = 1
             for ii in range(len(sub_graph_list) - len(del_axes)):
-                axes[kk-1].change_geometry(1, len(sub_graph_list) - len(del_axes), int(kk))
+                axes[kk - 1].change_geometry(1, len(sub_graph_list) - len(del_axes), int(kk))
                 kk += 1
 
         if subplots:

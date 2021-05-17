@@ -207,7 +207,7 @@ class CoronalHoleDB:
 
         # update window holder.
         self.update_previous_frames(frame=Frame(contour_list=contour_list, identity=self.frame_num,
-                                                timestamp=timestamp))
+                                                timestamp=timestamp, map_mesh=self.Mesh))
 
     def global_matching_algorithm(self, contour_list):
         """Match coronal holes between sequential frames using KNN and area overlap probability.
