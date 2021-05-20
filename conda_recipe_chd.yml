@@ -1,0 +1,17 @@
+name: chd
+channels:
+  - defaults
+  - conda-forge
+dependencies:
+  - alembic
+  - astropy-healpix
+  - drms
+  - h5py
+  - matplotlib
+  - mysqlclient
+  - numpy
+  - pyhdf
+  - python=3.7
+  - scipy
+  - sqlalchemy-utils
+  - sunpy=1.1.2
