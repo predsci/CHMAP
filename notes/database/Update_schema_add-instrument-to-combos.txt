@@ -1,0 +1,24 @@
+
+
+
+Changes to MySQL database 
+
+
+# add 'instrument' column to image_combos table
+ALTER TABLE image_combos
+    ADD COLUMN instrument VARCHAR(10);
+
+
+# alter 'mean_time' index to include 'meth_id' and 'instrument' columns
+ALTER TABLE image_combos DROP INDEX mean_time;
+ALTER TABLE image_combos ADD INDEX mean_time (date_mean, meth_id, instrument);
+
+
+
+# alter 'hist_index' to include common query columns
+ALTER TABLE histogram DROP INDEX hist_index;
+ALTER TABLE histogram ADD INDEX hist_index (date_obs, meth_id, lat_band, instrument, n_mu_bins, 
+                                            n_intensity_bins, wavelength);
+
+
+

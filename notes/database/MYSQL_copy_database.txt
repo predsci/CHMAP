@@ -1,0 +1,14 @@
+# login to mysql as root to create the new database
+$ sudo mysql -u root -p
+
+# at MySQL prompt, create new database
+mysql> CREATE DATABASE chd_test;
+# Then give user privileges
+mysql> GRANT ALL ON chd_test.* TO turtle@'%';
+mysql> quit
+
+# depending on how user database privileges are setup, this may not require sudo(Q)/root(MySQL)
+# back at command line, copy original database to a file
+$ sudo mysqldump -u root -p chd > ~/CHD/chd.sql
+# now load that file into the new database 'chd_test'
+$ sudo mysql -u root -p chd_test < ~/CHD/chd.sql
