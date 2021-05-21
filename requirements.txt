@@ -10,3 +10,6 @@ python >= 3.7
 scipy
 sqlalchemy-utils
 sunpy == 1.1.2
+opencv
+scikit-learn
+networkx
