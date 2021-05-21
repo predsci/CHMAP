@@ -48,7 +48,7 @@ query_end = datetime.datetime(year=2011, month=4, day=8, hour=12, minute=0, seco
 # ================================================================================================================
 # --- User Parameters ----------------------
 dir_name = "/Users/opalissan/desktop/CHT_RESULTS/"
-folder_name = "2010-12-29-2011-04-08c4hr/"
+folder_name = "2010-12-29-2011-04-08c4hrb/"
 graph_folder = "graphs/"
 frame_folder = "frames/"
 pickle_folder = "pkl/"
@@ -63,13 +63,13 @@ CoronalHoleDB.BinaryThreshold = 0.7
 # coronal hole area threshold.
 CoronalHoleDB.AreaThreshold = 5E-3
 # window to match coronal holes.
-CoronalHoleDB.window = 25
+CoronalHoleDB.window = 30
 # parameter for longitude dilation (this should be changed for larger image dimensions).
-CoronalHoleDB.gamma = 20
+CoronalHoleDB.gamma = 12
 # parameter for latitude dilation (this should be changed for larger image dimensions).
-CoronalHoleDB.beta = 10
+CoronalHoleDB.beta = 8
 # connectivity threshold.
-CoronalHoleDB.ConnectivityThresh = 0.1
+CoronalHoleDB.ConnectivityThresh = 0.2
 # connectivity threshold.
 CoronalHoleDB.AreaMatchThresh = 0.1
 # knn k hyper parameter
@@ -134,8 +134,8 @@ for row_index, row in map_info.iterrows():
         else:
             rel_path = row.fname
         map_path = os.path.join(map_dir, rel_path)
+        # if os.path.isfile(map_path):
         my_map = psi_datatype.read_psi_map(map_path)
-
         # ================================================================================================================
         # Step 4: Input image, coordinates, mesh spacing, and timestamp.
         # ================================================================================================================

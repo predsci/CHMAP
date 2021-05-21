@@ -15,3 +15,6 @@ dependencies:
   - scipy
   - sqlalchemy-utils
   - sunpy=1.1.2
+  - opencv>=4.5.1.48
+  - scikit-learn>=0.24.1
+  - networkx>=2.5
