@@ -598,7 +598,7 @@ def add_euv_map(db_session, psi_map, base_path=None, map_type=None):
                                                                        EUV_Maps.meth_combo_id == meth_combo_id)
         combo_matches = pd.read_sql(combo_matches_query.statement, db_session.bind)
         if len(combo_matches) > 0:
-            map_matches = combo_matches
+            map_matches = combo_matches.copy()
             no_match = False
             # check variable values
             for index, row in psi_map.method_info.iterrows():
@@ -618,6 +618,9 @@ def add_euv_map(db_session, psi_map, base_path=None, map_type=None):
                     # if any variable is different, this map does not exist in the DB
                     no_match = True
                     break
+                else:
+                    # replace map_matches with maps that match this variable
+                    map_matches = query_result
         else:
             no_match = True
 

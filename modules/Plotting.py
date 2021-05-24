@@ -192,10 +192,10 @@ def map_movie_frame(map_plot, int_range, save_path='maps/synoptic/',
     # convert map x-extents to degrees
     x_range = [180 * map_plot.x.min() / np.pi, 180 * map_plot.x.max() / np.pi]
     # setup xticks
-    xticks = np.arange(x_range[0], x_range[1] + 1, 60)
+    xticks = np.arange(x_range[0], x_range[1]+0.1, 60)
 
     # setup yticks
-    yticks = np.arange(map_plot.y[0], map_plot.y[-1], 0.5)
+    yticks = np.arange(map_plot.y[0], map_plot.y[-1]+0.01, 0.5)
 
     plt.style.use('dark_background')
     plt.rcParams.update({
@@ -229,7 +229,8 @@ def map_movie_frame(map_plot, int_range, save_path='maps/synoptic/',
     plt.ylabel("Sine Latitude")
     plt.xticks(xticks)
     plt.yticks(yticks)
-    plt.grid(alpha=0.6, linestyle='dashed', lw=1.0)
+    plt.grid(alpha=0.6, linestyle='dashed', lw=0.5)
+    # plt.grid(alpha=0.6, linestyle='dotted', lw=1.0)
 
     if title is not None:
         plt.title(title)

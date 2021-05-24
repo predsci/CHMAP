@@ -1,13 +1,12 @@
 
 
 """
-Routine to create a simple EUV movie of a single Carrington rotation.
+Routine to create a simple EUV movie of a single calendar year.
 Python Package Dependency: OpenCV (cv2)
 """
 
 import os
 import datetime
-import sunpy
 
 from modules import DB_funs
 import modules.DB_classes as DBClass
@@ -17,8 +16,11 @@ import modules.Plotting as psi_plot
 map_dir = App.MAP_FILE_HOME
 
 # --- User Parameters ----------------------
-# select Carrington rotation for video (2054 to 2239)
-cr_rot = 2124
+# select calendar year
+year = 2011
+
+movie_start = datetime.datetime(year, 1, 1, 0, 0, 0)
+movie_end   = datetime.datetime(year+1, 1, 1, 0, 0, 0)
 
 # intensity range for log colorscale
 int_range = [1.0, 4000.0]
@@ -36,19 +38,17 @@ map_vars = {"n_phi": [grid_size[0]-0.1, grid_size[0]+0.1],
 unique_str = "del-mu06"  # additional filename component
 
 # generate a movie filename
-save_dir = "/Users/turtle/Dropbox/MyNACD/video"
-file_base = "CR_rot"
-full_filename = file_base + "_" + str(cr_rot) + ".mp4"
+save_dir = "/Users/turtle/CHD/video"
+file_base = "EUV"
+full_filename = file_base + "_" + str(year) + ".mp4"
 full_path = os.path.join(save_dir, full_filename)
 # designate a directory for the frames (png) to be saved
-temp_png = "/Users/turtle/Dropbox/MyNACD/video/test_pngs"
-# temp_png = "/Users/turtle/CHD/tmp"
+temp_png = "/Users/turtle/CHD/tmp"
 
 # set movie frames-per-second
 fps = 12    # one day per second
 # set frame dots per inch
 dpi = 300   # set to None for automatic dpi estimation
-
 
 # designate which database to connect to
 use_db = "mysql-Q"      # 'sqlite'  Use local sqlite file-based db
@@ -63,15 +63,6 @@ db_session = DB_funs.init_db_conn(db_name=use_db, chd_base=DBClass.Base, user=us
                                   password=password)
 
 # --- Begin execution ----------------------
-# estimate dates for start/end of rotation
-CR_start = datetime.datetime(1853, 11, 9)
-CR_dur = datetime.timedelta(days=27.2753)
-estimated_center_date = CR_start + (cr_rot-0.5)*CR_dur
-# get the decimal Carrington number for Earth at this time
-cr_earth = sunpy.coordinates.sun.carrington_rotation_number(estimated_center_date)
-# calc reasonable estimate of rotation start/end
-movie_start = estimated_center_date - (cr_earth-cr_rot)*CR_dur
-movie_end = estimated_center_date + (cr_rot+1-cr_earth)*CR_dur
 
 # query maps in time range
 map_info, data_info, method_info, image_assoc = DB_funs.query_euv_maps(

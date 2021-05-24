@@ -6,14 +6,11 @@
 
 
 import os
-import datetime
 import numpy as np
 
 import modules.datatypes as psi_datatype
 from settings.app import App
-from settings.info import DTypes
 import modules.map_manip as map_manip
-import modules.lmsal_helpers as lmsal_helpers
 import matplotlib.pyplot as plt
 
 # load reference maps
