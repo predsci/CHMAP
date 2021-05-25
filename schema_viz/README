@@ -32,11 +32,21 @@ The basic process is this:
 	mysql/mysql.properties, but you will need to enter your username
 	as an argument in the command line. It will then prompt for 
 	password. 
+	
+	The files 'schemaspy-6.1.0.jar', 'sqlite-jdbc-3.27.2.1.jar', and 
+	'mysql-connector-java-8.0.12.jar' are third party applications and 
+ 	not included with this distribution.  Download urls are listed below.
+	The commands listed above should work for more recent versions of these
+	files, but user mileage may vary.
+	File download urls and expected locations:
+		schemaspy: https://schemaspy.readthedocs.io/en/latest/installation.html
+			   schema_viz/schemaspy-6.1.0.jar
+		mysql-connector: https://www.mysql.com/products/connector/
+				 schema_viz/mysql/mysql-connector-java-8.0.12.jar
+		sqlite-connector: https://mvnrepository.com/artifact/org.xerial/sqlite-jdbc
+				  schema_viz/sqlite/sqlite-jdbc-3.27.2.1.jar
 
 4. View results
       - In the output/ directory, open index.html. The subdirectories of 
         output/ also contain some nice PNG images of table relationships.
 
-
-NOTE: This directory probably should not be included for distribution, due
-to the java codes being distributed by third parties.
