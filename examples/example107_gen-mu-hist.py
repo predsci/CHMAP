@@ -10,10 +10,9 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from settings.app import App
-import modules.DB_classes as db_class
-from modules.DB_funs import init_db_conn, query_euv_images
+import database.db_classes as db_class
+from database.db_funs import init_db_conn, query_euv_images
 import modules.datatypes as psi_d_types
-import modules.Plotting as EasyPlot
 
 # --- 1. Select Images -----------------------------------------------------
 # In this example we use the 'reference_data' fits files supplied with repo

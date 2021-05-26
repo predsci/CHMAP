@@ -5,10 +5,9 @@ code to apply IIT correction and plot resulting images
 import os
 import datetime
 import time
-import numpy as np
 from settings.app import App
-import modules.DB_funs as db_funcs
-import modules.DB_classes as db_class
+import database.db_funs as db_funcs
+import database.db_classes as db_class
 import analysis.lbcc_analysis.LBCC_theoretic_funcs as lbcc_funcs
 import analysis.iit_analysis.IIT_pipeline_funcs as iit_funcs
 import modules.Plotting as Plotting

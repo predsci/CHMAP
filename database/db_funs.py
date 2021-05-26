@@ -20,7 +20,7 @@ from sqlalchemy import create_engine, func, or_, union_all, case, distinct
 from sqlalchemy.orm import sessionmaker, aliased
 
 from settings.app import App
-from modules.DB_classes import *
+from database.db_classes import *
 from modules.misc_funs import get_metadata
 from helpers import misc_helpers
 from modules import datatypes, misc_funs

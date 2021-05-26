@@ -17,7 +17,7 @@ import datetime
 
 import modules.Plotting as Plotting
 import ezseg.ezsegwrapper as ezsegwrapper
-import modules.DB_funs as db_funcs
+import database.db_funs as db_funcs
 from modules.map_manip import combine_maps
 import modules.datatypes as datatypes
 import analysis.lbcc_analysis.LBCC_theoretic_funcs as lbcc_funcs

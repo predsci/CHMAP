@@ -19,8 +19,8 @@ HISTORY:
 """
 import pandas as pd
 import datetime
-from modules.DB_funs import init_db_conn, update_image_val, query_euv_images
-from modules.DB_classes import Base, EUV_Images
+from database.db_funs import init_db_conn, update_image_val, query_euv_images
+from database.db_classes import Base, EUV_Images
 from helpers.misc_helpers import print_full_dataframe
 
 # setup the mysql session

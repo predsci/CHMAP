@@ -5,8 +5,8 @@ import os
 import pandas as pd
 
 from settings.app import App
-from modules.DB_funs import init_db_conn
-import modules.DB_classes as db_class
+from database.db_funs import init_db_conn
+import database.db_classes as db_class
 
 
 # define database paths

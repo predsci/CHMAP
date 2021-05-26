@@ -11,8 +11,8 @@ import numpy as np
 import datetime
 
 from settings.app import App
-from modules.DB_funs import init_db_conn, query_euv_images, query_lbcc_fit, query_var_val
-import modules.DB_classes as db_class
+from database.db_funs import init_db_conn, query_euv_images, query_lbcc_fit
+import database.db_classes as db_class
 import modules.datatypes as psi_d_types
 import modules.Plotting as Plotting
 

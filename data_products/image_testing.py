@@ -7,13 +7,12 @@ import sys
 
 sys.path.append("/Users/tamarervin/CH_Project/CHD")
 import os
-import time
 import datetime
 import numpy as np
 import pandas as pd
 from settings.app import App
-import modules.DB_classes as db_class
-from modules.DB_funs import init_db_conn, query_euv_images, add_hist, get_method_id, update_image_val
+import database.db_classes as db_class
+from database.db_funs import init_db_conn, query_euv_images
 import modules.datatypes as psi_d_types
 import matplotlib.pyplot as plt
 import matplotlib as mpl

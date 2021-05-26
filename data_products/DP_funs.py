@@ -5,13 +5,12 @@ output data/mapping products
 
 import time
 import random
-import datetime
 import numpy as np
 import pandas as pd
 
 from scipy.stats import norm
 import modules.Plotting as Plotting
-import modules.DB_funs as db_funcs
+import database.db_funs as db_funcs
 import ezseg.ezsegwrapper as ezsegwrapper
 import modules.datatypes as datatypes
 from modules.map_manip import combine_mu_maps, combine_timewgt_maps, combine_timescale_maps

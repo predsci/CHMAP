@@ -10,14 +10,13 @@ An example deletion is given, but full functionality cannot be demonstrated with
 """
 import sys
 sys.path.append('/Users/tamarervin/work/chd')
-import os
 import datetime
 # import pandas as pd
 import os
 
 from settings.app import App
-from modules.DB_classes import Base
-from modules.DB_funs import init_db_conn, update_image_val, remove_euv_image, query_euv_images, pdseries_tohdf
+from database.db_classes import Base
+from database.db_funs import init_db_conn, update_image_val, query_euv_images, pdseries_tohdf
 
 # Assume that we are using the 'reference_data' setup supplied with repo
 # manually set the data dir

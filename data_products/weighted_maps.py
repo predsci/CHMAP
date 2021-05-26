@@ -4,22 +4,15 @@ smooth weighting curve around date you care about
 """
 
 import os
-import numpy as np
 import datetime
 
-from scipy.stats import norm
-import matplotlib.pyplot as plt
 from settings.app import App
-import modules.DB_classes as db_class
-import modules.DB_funs as db_funcs
+import database.db_classes as db_class
+import database.db_funs as db_funcs
 import analysis.chd_analysis.CHD_pipeline_funcs as chd_funcs
 import data_products.CR_mapping_funcs as cr_funcs
 import data_products.DP_funs as dp_funcs
-import seaborn as sns
 import numpy as np
-from modules.map_manip import combine_timewgt_maps
-import modules.datatypes as psi_d_types
-from settings.info import DTypes
 
 # TIME PARAMETERS
 # center date

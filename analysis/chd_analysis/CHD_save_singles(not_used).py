@@ -12,14 +12,13 @@ This pipeline first saves individual image maps to the database
 """
 sys.path.append("CHD")
 import os
-import time
 import datetime
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 from settings.app import App
-import modules.DB_classes as db_class
-import modules.DB_funs as db_funcs
+import database.db_classes as db_class
+import database.db_funs as db_funcs
 import analysis.lbcc_analysis.LBCC_theoretic_funcs as lbcc_funcs
 import analysis.iit_analysis.IIT_pipeline_funcs as iit_funcs
 from modules.map_manip import combine_maps

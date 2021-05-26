@@ -14,8 +14,8 @@ from matplotlib import cm
 from matplotlib.lines import Line2D
 
 from settings.app import App
-from modules.DB_funs import init_db_conn, query_var_val, query_inst_combo
-import modules.DB_classes as db_class
+from database.db_funs import init_db_conn, query_var_val, query_inst_combo
+import database.db_classes as db_class
 import modules.lbcc_funs as lbcc
 
 # INSTRUMENTS

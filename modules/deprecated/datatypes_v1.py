@@ -3,7 +3,6 @@ Module to hold the custom image and map types specific to the CHD project.
 """
 import numpy as np
 import pandas as pd
-from helpers import psihdf
 import sys
 import datetime
 
@@ -11,7 +10,7 @@ import sunpy.map
 import sunpy.util.metadata
 
 import helpers.psihdf as psihdf
-import modules.DB_classes as db
+import database.db_classes as db
 from modules.coord_manip import interp_los_image_to_map, image_grid_to_CR
 from settings.info import DTypes
 

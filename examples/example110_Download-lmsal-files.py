@@ -4,8 +4,7 @@ import time
 import numpy as np
 import datetime
 
-import modules.DB_classes as DBClass
-import modules.DB_funs as DB_funs
+import database.db_classes as DBClass
 from helpers import lmsal_helpers
 from helpers import misc_helpers
 from settings.app import App
@@ -48,10 +47,10 @@ if use_db == 'sqlite':
     # setup database connection to local sqlite file
     sqlite_path = os.path.join(database_dir, sqlite_filename)
 
-    db_session = DB_funs.init_db_conn(db_name=use_db, chd_base=DBClass.Base, sqlite_path=sqlite_path)
+    db_session = db_funs.init_db_conn(db_name=use_db, chd_base=DBClass.Base, sqlite_path=sqlite_path)
 elif use_db in ('mysql-Q', 'mysql-Q_test'):
     # setup database connection to MySQL database on Q
-    db_session = DB_funs.init_db_conn(db_name=use_db, chd_base=DBClass.Base, user=user, password=password)
+    db_session = db_funs.init_db_conn(db_name=use_db, chd_base=DBClass.Base, user=user, password=password)
 
 
 
@@ -77,7 +76,7 @@ for index, row in url_df.iterrows():
     # add record to session
     date_obs = row.datetime.to_pydatetime()
     fname_hdf = ""
-    db_session, write_flag = DB_funs.add_datafile2session(
+    db_session, write_flag = db_funs.add_datafile2session(
         db_session, date_obs=date_obs, data_provider=data_provider,
         data_type=data_type, fname_raw=rel_path, fname_hdf=fname_hdf
     )

@@ -12,12 +12,11 @@ import datetime
 from astropy.time import Time
 
 from settings.app import App
-from modules.DB_classes import Base
-from modules.DB_funs import init_db_conn, query_euv_images
+from database.db_classes import Base
+from database.db_funs import init_db_conn, query_euv_images
 from modules.misc_funs import get_image_set
 from helpers import idl_helper
 from modules import prep
-from modules.datatypes import read_los_image
 
 # database location
 database_dir = App.DATABASE_HOME

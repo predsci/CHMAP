@@ -10,10 +10,9 @@ import scipy.optimize as optim
 import os
 import modules.lbcc_funs as lbcc
 from settings.app import App
-from modules.DB_funs import init_db_conn, query_hist, get_combo_id, add_combo_image_assoc, get_method_id, \
-    get_var_id, get_var_val, store_lbcc_values, store_mu_values, store_beta_y_values
+from database.db_funs import init_db_conn, query_hist, store_lbcc_values, store_mu_values, store_beta_y_values
 import modules.datatypes as psi_d_types
-import modules.DB_classes as db_class
+import database.db_classes as db_class
 
 
 # HISTOGRAM PARAMETERS TO UPDATE

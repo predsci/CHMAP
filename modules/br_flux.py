@@ -4,7 +4,7 @@ import os
 import numpy as np
 import datetime
 
-import modules.DB_funs as db_funs
+import database.db_funs as db_funs
 import modules.datatypes as psi_datatype
 import modules.map_manip as map_manip
 

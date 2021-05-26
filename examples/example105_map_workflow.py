@@ -19,7 +19,7 @@ import os
 import numpy as np
 
 from settings.app import App
-from modules import DB_classes
+from database import db_classes
 from modules.deprecated.DB_funs import create_map_input_object, init_db_conn, create_method, add_map_dbase_record,\
     query_euv_maps, delete_map_dbase_record
 from modules.datatypes import PsiMap
@@ -41,7 +41,7 @@ if os.path.exists(sqlite_path):
     print("Previous file ", sqlite_filename, " deleted.")
 
 use_db = "sqlite"
-db_session = init_db_conn(db_name=use_db, chd_base=DB_classes.Base, sqlite_path=sqlite_path)
+db_session = init_db_conn(db_name=use_db, chd_base=db_classes.Base, sqlite_path=sqlite_path)
 
 # re-build euv_images table
 # print("\nGenerating images database from existing fits files. \n")

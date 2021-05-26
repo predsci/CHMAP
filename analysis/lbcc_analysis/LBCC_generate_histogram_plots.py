@@ -7,11 +7,10 @@ import os
 import time
 import datetime
 import numpy as np
-import matplotlib.pyplot as plt
 from settings.app import App
-import modules.DB_classes as db_class
+import database.db_classes as db_class
 import modules.Plotting as Plotting
-from modules.DB_funs import init_db_conn, query_hist, get_method_id, query_euv_images, query_inst_combo
+from database.db_funs import init_db_conn, query_hist, get_method_id, query_euv_images, query_inst_combo
 import analysis.iit_analysis.IIT_pipeline_funcs as iit_funcs
 import modules.datatypes as psi_d_types
 

@@ -4,12 +4,10 @@ Code for testing and setting up DB changes to include magnetic maps
 """
 
 import os
-import time
 import datetime
-import numpy as np
 from settings.app import App
-import modules.DB_funs as db_funcs
-import modules.DB_classes as db_class
+import database.db_funs as db_funcs
+import database.db_classes as db_class
 import modules.datatypes as psi_d_types
 
 ####### -------- updateable parameters ------ #######

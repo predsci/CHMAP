@@ -3,8 +3,8 @@
 import os
 
 from settings.app import App
-import modules.DB_classes as DBClass
-from modules.DB_funs import init_db_conn
+import database.db_classes as DBClass
+from database.db_funs import init_db_conn
 
 
 # data-file dirs

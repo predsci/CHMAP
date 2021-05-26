@@ -11,8 +11,8 @@ import sunpy
 import sys #if you are having an issue with finding the modules
 sys.path.append('/Users/tamarervin/work/chd') #append path to your modules
 from settings.app import App
-import modules.DB_classes as db_class
-from modules.DB_funs import init_db_conn, query_euv_images
+import database.db_classes as db_class
+from database.db_funs import init_db_conn, query_euv_images
 import modules.datatypes as psi_d_types
 import modules.Plotting as EasyPlot
 

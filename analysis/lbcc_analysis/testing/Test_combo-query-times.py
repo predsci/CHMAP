@@ -9,11 +9,9 @@ import datetime
 from sqlalchemy.sql import func
 
 from settings.app import App
-from modules.DB_funs import init_db_conn
-import modules.DB_funs as db_funcs
-import modules.DB_classes as db_class
-import modules.datatypes as psi_d_types
-import analysis.lbcc_analysis.LBCC_theoretic_funcs as lbcc_funcs
+from database.db_funs import init_db_conn
+import database.db_funs as db_funcs
+import database.db_classes as db_class
 
 ###### ------ UPDATEABLE PARAMETERS ------- #######
 # TIME RANGE FOR LBC CORRECTION AND HISTOGRAM CREATION

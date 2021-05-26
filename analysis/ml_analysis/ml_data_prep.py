@@ -19,8 +19,8 @@ import datetime
 import h5py as h5
 
 from settings.app import App
-import modules.DB_classes as db_class
-import modules.DB_funs as db_funcs
+import database.db_classes as db_class
+import database.db_funs as db_funcs
 import analysis.CHD_pipeline_funcs as chd_funcs
 import matplotlib.colors as colors
 import matplotlib as mpl

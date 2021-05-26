@@ -3,12 +3,11 @@
 # remove the files and clear their hdf_filename in the DB
 
 import os
-import pandas as pd
 import datetime
 
 from settings.app import App
-import modules.DB_classes as db_class
-import modules.DB_funs as db_funs
+import database.db_classes as db_class
+import database.db_funs as db_funs
 
 # In this example we can use the 'reference_data' fits files supplied with repo or the directories setup in App.py
 # data-file dirs

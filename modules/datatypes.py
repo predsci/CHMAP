@@ -7,8 +7,8 @@ import pickle
 import sys
 
 import helpers.psihdf as psihdf
-import modules.DB_classes as db
-import modules.DB_funs as db_fun
+import database.db_classes as db
+import database.db_funs as db_fun
 import numpy as np
 import pandas as pd
 import sunpy.map

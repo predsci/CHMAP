@@ -7,8 +7,8 @@ import numpy as np
 import datetime
 
 from settings.app import App
-import modules.DB_classes as db_class
-import modules.DB_funs as db_funcs
+import database.db_classes as db_class
+import database.db_funs as db_funcs
 
 # -------- parameters --------- #
 # TIME RANGE FOR QUERYING

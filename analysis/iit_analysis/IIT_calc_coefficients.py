@@ -15,9 +15,9 @@ import numpy as np
 from sqlalchemy import func
 
 from settings.app import App
-import modules.DB_funs as db_funcs
+import database.db_funs as db_funcs
 import modules.iit_funs as iit
-import modules.DB_classes as db_class
+import database.db_classes as db_class
 import modules.datatypes as psi_d_types
 import modules.lbcc_funs as lbcc
 

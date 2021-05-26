@@ -11,7 +11,7 @@ import matplotlib.pyplot as plt
 from matplotlib import cm
 from matplotlib.lines import Line2D
 
-import modules.DB_funs as db_funcs
+import database.db_funs as db_funcs
 import modules.datatypes as psi_d_types
 import modules.lbcc_funs as lbcc
 import modules.Plotting as Plotting

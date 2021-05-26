@@ -15,7 +15,7 @@ from sunpy.time import TimeRange
 from helpers import drms_helpers, vso_helpers
 from settings.app import App
 from modules.misc_funs import cluster_meth_1, list_available_images
-from modules.DB_classes import *
+from database.db_classes import *
 from modules.deprecated.DB_funs import init_db_conn, query_euv_images, add_image2session, update_image_val
 
 import pandas as pd

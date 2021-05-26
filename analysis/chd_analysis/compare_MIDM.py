@@ -3,14 +3,11 @@
 import os
 import numpy as np
 import matplotlib.pyplot as plt
-import cv2
 import datetime
-import time
-import pandas as pd
 import h5py as h5
 
-from modules import DB_funs
-import modules.DB_classes as DBClass
+from database import db_funs
+import database.db_classes as DBClass
 import modules.datatypes as psi_datatype
 from settings.app import App
 import modules.Plotting as EasyPlot
@@ -70,13 +67,13 @@ password = ""           # See example109 for setting-up an encrypted password.  
 
 
 # Establish connection to database
-db_session = DB_funs.init_db_conn(db_name=use_db, chd_base=DBClass.Base, user=user,
+db_session = db_funs.init_db_conn(db_name=use_db, chd_base=DBClass.Base, user=user,
                                   password=password)
 
 # --- Begin execution ----------------------
 # query maps in time range mu_merge_cutoff
 map_methods = ['Synch_Im_Sel', 'GridSize_sinLat', 'MIDM-Comb-mu_merge']
-map_info, data_info, method_info, image_assoc = DB_funs.query_euv_maps(
+map_info, data_info, method_info, image_assoc = db_funs.query_euv_maps(
     db_session, mean_time_range=(query_start, query_end), methods=map_methods,
     var_val_range=map_vars)
 
@@ -89,7 +86,7 @@ EasyPlot.PlotMap(merge_map, nfig=0)
 plt.savefig(save_to)
 
 map_methods = ['Synch_Im_Sel', 'GridSize_sinLat', 'MIDM-Comb-del_mu']
-map_info2, data_info2, method_info2, image_assoc2 = DB_funs.query_euv_maps(
+map_info2, data_info2, method_info2, image_assoc2 = db_funs.query_euv_maps(
     db_session, mean_time_range=(query_start, query_end), methods=map_methods,
     var_val_range=map_vars)
 for ii in range(map_info2.shape[0]):
@@ -200,7 +197,7 @@ h5file.close()
 losAIA = psi_datatype.LosImage(f, x, y)
 
 # query DB EUV images to use their meta data
-euv_images = DB_funs.query_euv_images(db_session, time_min=query_start, time_max=query_end)
+euv_images = db_funs.query_euv_images(db_session, time_min=query_start, time_max=query_end)
 
 A_ind = euv_images.instrument == "EUVI-A"
 A_fname = euv_images.fname_hdf[A_ind].item()

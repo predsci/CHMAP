@@ -7,12 +7,10 @@ import os
 import datetime
 import numpy as np
 import pandas as pd
-from sqlalchemy import func
 
 from settings.app import App
-import modules.DB_classes as db_class
-from modules.DB_funs import init_db_conn, query_euv_images, add_hist, get_method_id, query_hist
-
+import database.db_classes as db_class
+from database.db_funs import init_db_conn, query_euv_images, get_method_id
 
 # TIME RANGE
 hist_query_time_min = datetime.datetime(2018, 1, 1, 0, 0, 0)

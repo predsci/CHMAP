@@ -11,8 +11,8 @@ import cv2
 import datetime
 import time
 
-from modules import DB_funs
-import modules.DB_classes as DBClass
+from database import db_funs
+import database.db_classes as DBClass
 import modules.datatypes as psi_datatype
 from settings.app import App
 
@@ -75,12 +75,12 @@ password = ""           # See example109 for setting-up an encrypted password.  
 start_time = time.time()
 
 # Establish connection to database
-db_session = DB_funs.init_db_conn(db_name=use_db, chd_base=DBClass.Base, user=user,
+db_session = db_funs.init_db_conn(db_name=use_db, chd_base=DBClass.Base, user=user,
                                   password=password)
 
 # --- Begin execution ----------------------
 # query maps in time range
-map_info, data_info, method_info, image_assoc = DB_funs.query_euv_maps(
+map_info, data_info, method_info, image_assoc = db_funs.query_euv_maps(
     db_session, mean_time_range=(movie_start, movie_end), methods=map_methods,
     var_val_range=map_vars)
 # do datetime synchronic selection to filter-out periods with maps more

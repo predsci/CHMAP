@@ -7,7 +7,7 @@ This function takes a lot of memory and is therefore slow:(
 
 import time
 import datetime
-import modules.DB_funs as db_funcs
+import database.db_funs as db_funcs
 import analysis.lbcc_analysis.LBCC_theoretic_funcs as lbcc_funcs
 import analysis.iit_analysis.IIT_pipeline_funcs as iit_funcs
 

@@ -11,15 +11,14 @@ import os
 import datetime
 import numpy as np
 
-from astropy.time import Time, TimeDelta
+from astropy.time import Time
 import astropy.units as u
-from sunpy.time import TimeRange
 
 from helpers import drms_helpers, vso_helpers
 from settings.app_JT_Q import App
 from modules.misc_funs import cluster_meth_1, list_available_images
-from modules.DB_classes import *
-from modules.DB_funs import init_db_conn, query_euv_images, add_image2session
+from database.db_classes import *
+from database.db_funs import init_db_conn, query_euv_images, add_image2session
 
 
 # Specify directories on mounted Q home

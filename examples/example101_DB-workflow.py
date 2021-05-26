@@ -9,7 +9,6 @@ database querying, updating, and deleting.
 import sys
 sys.path.append('/Users/tamarervin/work/chd')
 import os
-import numpy as np
 import datetime
 
 from astropy.time import Time, TimeDelta
@@ -19,8 +18,8 @@ from sunpy.time import TimeRange
 from helpers import drms_helpers, vso_helpers
 from settings.app import App
 from modules.misc_funs import cluster_meth_1, list_available_images
-from modules.DB_classes import Base
-from modules.DB_funs import init_db_conn, query_euv_images, add_image2session, update_image_val, remove_euv_image, pdseries_tohdf
+from database.db_classes import Base
+from database.db_funs import init_db_conn, query_euv_images, add_image2session, update_image_val, remove_euv_image, pdseries_tohdf
 
 
 # to create the reference DB and files, set Create_Ref=True

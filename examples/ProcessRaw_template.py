@@ -11,8 +11,8 @@ import warnings
 from h5py.h5py_warnings import H5pyDeprecationWarning
 
 from settings.app import App
-import modules.DB_classes as DBClass
-from modules.DB_funs import init_db_conn, update_image_val, query_euv_images
+import database.db_classes as DBClass
+from database.db_funs import init_db_conn, update_image_val, query_euv_images
 
 from helpers import idl_helper
 from modules import prep

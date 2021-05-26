@@ -8,7 +8,7 @@ import datetime
 # import pandas as pd
 
 from settings.app import App
-from modules.DB_classes import *
+from database.db_classes import *
 from modules.deprecated.DB_funs import init_db_conn, get_var_id, get_method_id, add_meth_var_assoc, get_combo_id, \
     add_combo_image_assoc, add_euv_map, build_euvimages_from_fits
 

@@ -10,9 +10,9 @@ import scipy.optimize as optim
 
 import modules.lbcc_funs as lbcc
 from settings.app import App
-from modules.DB_funs import init_db_conn, query_hist, get_method_id, store_lbcc_values
+from database.db_funs import init_db_conn, query_hist, get_method_id, store_lbcc_values
 import modules.datatypes as psi_d_types
-import modules.DB_classes as db_class
+import database.db_classes as db_class
 
 # INSTRUMENT LIST
 inst_list = ["AIA", "EUVI-A", "EUVI-B"]

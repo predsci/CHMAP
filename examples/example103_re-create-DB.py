@@ -9,8 +9,8 @@ This example uses the fits files included in reference_data/
 import os
 
 from settings.app import App
-from modules.DB_classes import *
-from modules.DB_funs import init_db_conn, build_euvimages_from_fits, query_euv_images
+from database.db_classes import *
+from database.db_funs import init_db_conn, build_euvimages_from_fits, query_euv_images
 
 # In this example we can use the 'reference_data' fits files supplied with repo or the directories setup in App.py
 # data-file dirs

@@ -13,10 +13,9 @@ import numpy as np
 import pickle
 
 import modules.datatypes as psi_datatype
-from settings.info import DTypes
 from settings.app import App
-import modules.DB_classes as db_class
-import modules.DB_funs as db_funs
+import database.db_classes as db_class
+import database.db_funs as db_funs
 import modules.map_manip as map_manip
 
 

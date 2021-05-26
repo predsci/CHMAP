@@ -2,20 +2,16 @@
 functions used for EUV/CHD mapping of a full CR
 """
 
-import os
 import time
 import numpy as np
 import datetime
 import pandas as pd
 
-from settings.app import App
 from modules.map_manip import combine_cr_maps
 import modules.Plotting as Plotting
 import ezseg.ezsegwrapper as ezsegwrapper
 import modules.datatypes as datatypes
-import modules.DB_classes as db_class
-import modules.DB_funs as db_funcs
-import analysis.chd_analysis.CHD_pipeline_funcs as chd_funcs
+import database.db_funs as db_funcs
 import analysis.lbcc_analysis.LBCC_theoretic_funcs as lbcc_funcs
 import analysis.iit_analysis.IIT_pipeline_funcs as iit_funcs
 

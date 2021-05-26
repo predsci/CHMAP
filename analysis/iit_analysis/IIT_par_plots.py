@@ -9,15 +9,14 @@ import os
 import time
 import numpy as np
 import datetime
-import pandas as pd
 import pickle
 import matplotlib.pyplot as plt
 from matplotlib import cm
 from matplotlib.lines import Line2D
 
 from settings.app import App
-import modules.DB_funs as db_funs
-import modules.DB_classes as db_class
+import database.db_funs as db_funs
+import database.db_classes as db_class
 import modules.lbcc_funs as lbcc
 import modules.datatypes as psi_d_types
 
@@ -115,11 +114,11 @@ for inst_index, instrument in enumerate(inst_list):
 
     # get all instrument histograms
     inst_hist_pd = db_funs.query_hist(db_session=db_session, meth_id=method_id[1],
-                                       n_intensity_bins=n_intensity_bins,
-                                       lat_band=lat_band,
-                                       time_min=query_time_min - datetime.timedelta(days=number_of_days),
-                                       time_max=query_time_max + datetime.timedelta(days=number_of_days),
-                                       instrument=[instrument, ])
+                                      n_intensity_bins=n_intensity_bins,
+                                      lat_band=lat_band,
+                                      time_min=query_time_min - datetime.timedelta(days=number_of_days),
+                                      time_max=query_time_max + datetime.timedelta(days=number_of_days),
+                                      instrument=[instrument, ])
     # convert binary to histogram data
     mu_bin_edges, intensity_bin_edges, inst_full_hist = psi_d_types.binary_to_hist(
         hist_binary=inst_hist_pd, n_mu_bins=None, n_intensity_bins=n_intensity_bins)
@@ -333,11 +332,11 @@ for inst_index, instrument in enumerate(inst_list):
 
     # get all instrument histograms
     inst_hist_pd = db_funs.query_hist(db_session=db_session, meth_id=method_id[1],
-                                       n_intensity_bins=n_intensity_bins,
-                                       lat_band=lat_band, n_mu_bins=n_mu_bins,
-                                       time_min=query_time_min - datetime.timedelta(days=number_of_days),
-                                       time_max=query_time_max + datetime.timedelta(days=number_of_days),
-                                       instrument=[instrument, ])
+                                      n_intensity_bins=n_intensity_bins,
+                                      lat_band=lat_band, n_mu_bins=n_mu_bins,
+                                      time_min=query_time_min - datetime.timedelta(days=number_of_days),
+                                      time_max=query_time_max + datetime.timedelta(days=number_of_days),
+                                      instrument=[instrument, ])
     # convert binary to histogram data
     mu_bin_edges, intensity_bin_edges, inst_full_hist = psi_d_types.binary_to_hist(
         hist_binary=inst_hist_pd, n_mu_bins=n_mu_bins, n_intensity_bins=n_intensity_bins)

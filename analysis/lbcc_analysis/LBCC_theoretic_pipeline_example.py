@@ -8,8 +8,8 @@ import time
 import datetime
 import numpy as np
 from settings.app import App
-import modules.DB_classes as db_class
-from modules.DB_funs import init_db_conn
+import database.db_classes as db_class
+from database.db_funs import init_db_conn
 import analysis.lbcc_analysis.LBCC_theoretic_funcs as lbcc_funcs
 
 start_time_tot = time.time()

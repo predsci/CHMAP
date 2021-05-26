@@ -9,11 +9,10 @@ import datetime
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-import matplotlib as mpl
 
 from settings.app import App
-import modules.DB_classes as db_class
-from modules.DB_funs import init_db_conn, query_euv_images
+import database.db_classes as db_class
+from database.db_funs import init_db_conn, query_euv_images
 
 # query parameters
 interval_cadence = datetime.timedelta(hours=2.)

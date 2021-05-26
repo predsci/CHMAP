@@ -6,7 +6,7 @@ import numpy as np
 import time
 import datetime
 
-import modules.DB_funs as db_funcs
+import database.db_funs as db_funcs
 import modules.datatypes as psi_d_types
 import modules.lbcc_funs as lbcc
 import modules.iit_funs as iit
