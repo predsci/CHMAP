@@ -2,13 +2,11 @@
 /test_data/*
 */__pycache__/*
 
-/.idea/modules.xml
-/.idea/workspace.xml
-/.idea/CHD.iml
-/.idea/misc.xml
+/.idea
 
 settings/app.py
 settings/app_*.py
+settings/e_key.bin
 settings/e_cred.bin
 setup.conf
 setup_*
