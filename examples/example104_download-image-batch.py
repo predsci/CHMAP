@@ -3,6 +3,7 @@ Specify times for synchronic image download.
 Query available images and download best matches.
 """
 
+import sys
 import os
 import numpy as np
 import pandas as pd
@@ -10,13 +11,13 @@ from astropy.time import Time
 import astropy.units as u
 
 from settings.app import App
-import database.db_classes as DBClass
-from database.db_funs import init_db_conn
+import modules.DB_classes as DBClass
+from modules.DB_funs import init_db_conn
 from modules.image_download import synchronic_euv_download
 
 # Specify a vector of synchronic times
-period_start = Time('2021-01-01T00:00:00.000', scale='utc')
-period_end = Time('2021-01-01T04:00:00.000', scale='utc')
+period_start = Time('2020-12-25T00:00:00.000', scale='utc')
+period_end = Time('2021-01-01T00:00:00.000', scale='utc')
 # define image search interval cadence and width
 interval_cadence = 2*u.hour
 del_interval = 30*u.minute
@@ -31,7 +32,7 @@ download_results_filename = "download_results_" + period_start.__str__()
 pickle_file = os.path.join(App.APP_HOME, "test_data", download_results_filename)
 
 # data-file dirs
-raw_data_dir = '/Volumes/extdata2/CHD_DB/raw_images'
+raw_data_dir = App.RAW_DATA_HOME
 hdf_data_dir = App.PROCESSED_DATA_HOME
 # database location
 database_dir = App.DATABASE_HOME
@@ -41,7 +42,7 @@ sqlite_filename = App.DATABASE_FNAME
 # designate which database to connect to
 use_db = "mysql-Q"       # 'sqlite'  Use local sqlite file-based db
                         # 'mysql-Q' Use the remote MySQL database on Q
-user = "cdowns"         # only needed for remote databases.
+user = "turtle"         # only needed for remote databases.
 password = ""           # See example109 for setting-up an encrypted password.  In this case leave password="", and
 # init_db_conn() will automatically find and use your saved password. Otherwise, enter your MySQL password here.
 
@@ -56,7 +57,7 @@ elif use_db in ['mysql-Q', 'mysql-Q_test']:
     db_session = init_db_conn(db_name=use_db, chd_base=DBClass.Base, user=user, password=password)
 
 # query for images, download, and log to database
-download_result = synchronic_euv_download(synch_times, raw_data_dir, db_session, download=True, overwrite=False,
+download_result = synchronic_euv_download(synch_times, App.RAW_DATA_HOME, db_session, download=True, overwrite=False,
                                           verbose=True)
 
 download_result.to_pickle(pickle_file)
