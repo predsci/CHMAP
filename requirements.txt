@@ -1,6 +1,5 @@
 alembic
 astropy < 4.2
-astropy-healpix
 drms
 h5py
 matplotlib
@@ -11,6 +10,6 @@ python >= 3.7
 scipy
 sqlalchemy-utils
 sunpy == 1.1.2
-opencv >= 4.5
+opencv >= 3.4
 scikit-learn >= 0.24
 networkx >= 2.5
