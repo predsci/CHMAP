@@ -11,8 +11,8 @@ import modules.datatypes as psi_d_types
 import modules.lbcc_utils as lbcc
 import modules.iit_funs as iit
 import modules.Plotting as Plotting
-import analysis.iit_analysis.IIT_pipeline_funcs as iit_funcs
-import analysis.lbcc_analysis.LBCC_theoretic_funcs as lbcc_funcs
+import data.corrections.iit.IIT_pipeline_funcs as iit_funcs
+import data.corrections.lbcc.LBCC_theoretic_funcs as lbcc_funcs
 
 
 ##### STEP ONE: CREATE 1D HISTOGRAMS AND SAVE TO DATABASE ######

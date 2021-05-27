@@ -15,7 +15,7 @@ import modules.datatypes as psi_d_types
 ###### ------ PARAMETERS TO UPDATE -------- ########
 
 # TIME RANGE
-hist_query_time_min = datetime.datetime(2020, 1, 1, 0, 0, 0)
+hist_query_time_min = datetime.datetime(2020, 12, 31, 0, 0, 0)
 hist_query_time_max = datetime.datetime(2021, 1, 1, 0, 0, 0)
 
 # define instruments and wavelengths to include

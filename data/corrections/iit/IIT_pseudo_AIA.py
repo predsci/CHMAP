@@ -16,7 +16,7 @@ import database.db_funs as db_funs
 import database.db_classes as db_class
 
 # load IIT parameters and histogram stats
-IIT_pars_file = '/Users/turtle/Dropbox/MyNACD/analysis/iit_analysis/IIT_pars-and-hists.pkl'
+IIT_pars_file = '/Users/turtle/Dropbox/MyNACD/analysis/iit/IIT_pars-and-hists.pkl'
 
 file = open(IIT_pars_file, 'rb')
 iit_dict = pickle.load(file)
@@ -28,7 +28,7 @@ database_dir = App.DATABASE_HOME
 sqlite_filename = App.DATABASE_FNAME
 raw_data_dir = App.RAW_DATA_HOME
 hdf_data_dir = App.PROCESSED_DATA_HOME
-image_out_path = "/Users/turtle/Dropbox/MyNACD/analysis/iit_analysis/"
+image_out_path = "/Users/turtle/Dropbox/MyNACD/analysis/iit/"
 
 # DATABASE PATHS
 create = True  # true if save to database
@@ -340,7 +340,7 @@ plt.savefig(plot_fname)
 plt.close()
 
 # save resulting alpha and x time-series to a file
-IIT_pars_file2 = '/Users/turtle/Dropbox/MyNACD/analysis/iit_analysis/IIT_pseudo-AIA_pars.pkl'
+IIT_pars_file2 = '/Users/turtle/Dropbox/MyNACD/analysis/iit/IIT_pseudo-AIA_pars.pkl'
 
 psuedo_AIA_dict = {"moving_avg_centers": moving_avg_centers, "fit_index": ~trim_index,
                    "pseudo_alpha": pseudo_alpha, "pseudo_x": pseudo_x,

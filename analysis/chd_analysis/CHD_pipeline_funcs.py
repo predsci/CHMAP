@@ -20,8 +20,8 @@ import ezseg.ezsegwrapper as ezsegwrapper
 import database.db_funs as db_funcs
 from modules.map_manip import combine_maps
 import modules.datatypes as datatypes
-import analysis.lbcc_analysis.LBCC_theoretic_funcs as lbcc_funcs
-import analysis.iit_analysis.IIT_pipeline_funcs as iit_funcs
+import data.corrections.lbcc.LBCC_theoretic_funcs as lbcc_funcs
+import data.corrections.iit.IIT_pipeline_funcs as iit_funcs
 from modules.misc_funs import cluster_meth_1
 from settings.info import DTypes
 

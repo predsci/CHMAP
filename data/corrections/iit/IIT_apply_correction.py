@@ -8,8 +8,8 @@ import time
 from settings.app import App
 import database.db_funs as db_funcs
 import database.db_classes as db_class
-import analysis.lbcc_analysis.LBCC_theoretic_funcs as lbcc_funcs
-import analysis.iit_analysis.IIT_pipeline_funcs as iit_funcs
+import data.corrections.lbcc.LBCC_theoretic_funcs as lbcc_funcs
+import data.corrections.iit.IIT_pipeline_funcs as iit_funcs
 import modules.Plotting as Plotting
 
 ##### ------ updateable parameters ------- #######

@@ -37,8 +37,8 @@ color_dist = np.linspace(0., 1., n_inst)
 test_pal = ["#1b9e77", "#d95f02", "#7570b3"]
 
 # path to save plots to
-image_out_path = os.path.join(App.APP_HOME, "test_data", "analysis/iit_analysis/")
-# image_out_path = "/Users/turtle/Dropbox/MyNACD/analysis/iit_analysis/test/"
+image_out_path = os.path.join(App.APP_HOME, "test_data", "analysis/iit/")
+# image_out_path = "/Users/turtle/Dropbox/MyNACD/analysis/iit/test/"
 # TIME FRAME TO QUERY HISTOGRAMS
 query_time_min = datetime.datetime(2011, 4, 1, 0, 0, 0)
 query_time_max = datetime.datetime(2012, 9, 1, 0, 0, 0)

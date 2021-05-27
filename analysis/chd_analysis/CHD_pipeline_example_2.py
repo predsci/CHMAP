@@ -27,8 +27,8 @@ import modules.datatypes as datatypes
 
 # -------- parameters --------- #
 # TIME RANGE FOR QUERYING
-query_time_min = datetime.datetime(2012, 3, 11, 0, 0, 0)
-query_time_max = datetime.datetime(2012, 4, 1, 0, 0, 0)
+query_time_min = datetime.datetime(2018, 1, 1, 2, 0, 0)
+query_time_max = datetime.datetime(2018, 1, 1, 3, 0, 0)
 # define map interval cadence and width
 map_freq = 2  # number of hours
 interval_delta = 30  # number of minutes

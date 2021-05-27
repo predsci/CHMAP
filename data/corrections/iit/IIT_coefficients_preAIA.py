@@ -33,7 +33,7 @@ inst_list = ["EUVI-A", "EUVI-B"]
 ref_inst = "EUVI-A"
 
 # path to alpha and x values that transform EUVI-A to pseudo AIA
-IIT_pars_file2 = '/Users/turtle/Dropbox/MyNACD/analysis/iit_analysis/IIT_pseudo-AIA_pars.pkl'
+IIT_pars_file2 = '/Users/turtle/Dropbox/MyNACD/analysis/iit/IIT_pseudo-AIA_pars.pkl'
 
 # choose if Stereo A alpha and x are shifted to earliest AIA fit point
 pseudo_shifted = True
