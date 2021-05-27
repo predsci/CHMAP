@@ -4,12 +4,24 @@
 
 /.idea
 
+# ignore all python compiled binaries
+**.pyc
+
 settings/app.py
 settings/app_*.py
 settings/e_key.bin
 settings/e_cred.bin
 setup.conf
 setup_*
+
+ezseg/**
+!ezseg/*.f
+!ezseg/*.pyf
+!ezseg/*.cu
+!ezseg/*.sh
+!ezseg/CHANGELOG
+!ezseg/README_compile
+
 
 # ignore the output folders in schema_viz (except schema diagrams)
 schema_viz/mysql/output/*
