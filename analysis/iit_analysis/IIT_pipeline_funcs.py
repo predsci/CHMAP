@@ -8,7 +8,7 @@ import datetime
 
 import database.db_funs as db_funcs
 import modules.datatypes as psi_d_types
-import modules.lbcc_funs as lbcc
+import modules.lbcc_utils as lbcc
 import modules.iit_funs as iit
 import modules.Plotting as Plotting
 import analysis.iit_analysis.IIT_pipeline_funcs as iit_funcs

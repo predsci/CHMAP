@@ -5,7 +5,7 @@ Functions for Evaluation of Inter-Instrument Transformation Coefficients
 import os
 import numpy as np
 import scipy.optimize as optim
-import modules.lbcc_funs as lbcc_funcs
+import modules.lbcc_utils as lbcc_funcs
 import modules.datatypes as psi_d_types
 
 def optim_iit_linear(hist_ref, hist_fit, bin_edges, init_pars=np.asarray([1., 0.])):

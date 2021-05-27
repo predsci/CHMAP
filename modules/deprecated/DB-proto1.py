@@ -12,7 +12,7 @@ import datetime
 from astropy.time import Time, TimeDelta
 from sunpy.time import TimeRange
 
-from helpers import drms_helpers, vso_helpers
+from data.download import drms_helpers, vso_helpers
 from settings.app import App
 from modules.misc_funs import cluster_meth_1, list_available_images
 from database.db_classes import *

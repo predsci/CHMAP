@@ -13,7 +13,7 @@ from matplotlib.lines import Line2D
 
 import database.db_funs as db_funcs
 import modules.datatypes as psi_d_types
-import modules.lbcc_funs as lbcc
+import modules.lbcc_utils as lbcc
 import modules.Plotting as Plotting
 
 

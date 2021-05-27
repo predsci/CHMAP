@@ -2,7 +2,7 @@ import os
 from astropy.time import Time
 import astropy.units as u
 from sunpy.time import TimeRange
-from helpers import vso_helpers
+from data.download import vso_helpers
 
 # define directories for testing
 data_basedir=os.path.join(os.sep+'Users','cdowns','work','ch_evolution','data_tests')

@@ -9,7 +9,7 @@ import datetime
 import time
 import scipy.optimize as optim
 
-import modules.lbcc_funs as lbcc
+import modules.lbcc_utils as lbcc
 from settings.app import App
 from database.db_funs import init_db_conn, query_hist, get_method_id, store_lbcc_values
 import modules.datatypes as psi_d_types

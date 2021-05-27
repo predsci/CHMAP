@@ -12,7 +12,7 @@ import time
 import modules.datatypes
 
 from settings.app import App
-from modules.lmsal_helpers import project_lmsal_map, get_map_flux_balance, get_polar_fields, plot_map
+from modules.lmsal_utils import project_lmsal_map, get_map_flux_balance, get_polar_fields, plot_map
 from modules.map_manip import MapMesh
 from helpers.psihdf import wrh5_meta
 

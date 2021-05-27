@@ -11,7 +11,7 @@ import matplotlib.pyplot as plt
 from matplotlib.collections import LineCollection
 from matplotlib import cm
 
-import modules.lbcc_funs as lbcc
+import modules.lbcc_utils as lbcc
 
 
 image_out_path = "/Users/turtle/Dropbox/MyNACD/analysis/intensity_bins/"

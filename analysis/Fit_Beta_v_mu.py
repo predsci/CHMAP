@@ -9,7 +9,7 @@ from matplotlib.collections import LineCollection
 from matplotlib import cm
 from scipy import optimize
 
-import modules.lbcc_funs as lbcc
+import modules.lbcc_utils as lbcc
 
 
 # load data from 2011 EUVI-A

@@ -3,7 +3,7 @@ import numpy as np
 from astropy.time import Time, TimeDelta
 import astropy.units as u
 from sunpy.time import TimeRange
-from helpers import drms_helpers, vso_helpers
+from data.download import drms_helpers, vso_helpers
 
 # define directories for testing
 data_basedir=os.path.join(os.sep+'Users','cdowns','work','ch_evolution','data_tests')

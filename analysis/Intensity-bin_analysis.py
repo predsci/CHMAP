@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 from matplotlib.collections import LineCollection
 from matplotlib import cm
 
-import modules.lbcc_funs as lbcc
+import modules.lbcc_utils as lbcc
 
 instrument = 'EUVI-A'
 

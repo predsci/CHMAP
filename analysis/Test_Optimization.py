@@ -10,7 +10,7 @@ from matplotlib import rc
 from matplotlib.collections import LineCollection
 from matplotlib import cm
 
-from modules.lbcc_funs import *
+from modules.lbcc_utils import *
 
 
 image_out_path = "/Users/turtle/Dropbox/MyNACD/analysis/theoretic_lbcc/"

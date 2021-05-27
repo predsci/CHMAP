@@ -11,7 +11,7 @@ import time
 import modules.datatypes as psi_d_types
 from settings.info import DTypes
 from modules.coord_manip import s2c
-import modules.lbcc_funs as lbcc_funs
+import modules.lbcc_utils as lbcc_funs
 
 
 

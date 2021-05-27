@@ -14,7 +14,7 @@ import sunpy
 import astropy.units as u
 import sunpy.util.metadata
 
-from helpers import drms_helpers, vso_helpers
+from data.download import drms_helpers, vso_helpers
 from helpers.misc_helpers import carrington_rotation_number_relative
 from sunpy.time import TimeRange
 

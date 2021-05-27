@@ -15,7 +15,7 @@ import astropy.units as u
 from sunpy.time import TimeRange
 
 from settings.app import App
-from helpers import drms_helpers, vso_helpers
+from data.download import drms_helpers, vso_helpers
 from modules.misc_funs import get_image_set
 
 # Get the data dir from the installed app settings.

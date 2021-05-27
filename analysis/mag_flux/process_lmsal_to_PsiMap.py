@@ -15,7 +15,7 @@ from settings.app import App
 import database.db_classes as db_class
 import database.db_funs as db_funs
 import modules.map_manip as map_manip
-from modules.lmsal_helpers import project_lmsal_map
+from modules.lmsal_utils import project_lmsal_map
 import modules.datatypes as psi_d_types
 
 ###### ------ PARAMETERS TO UPDATE -------- ########

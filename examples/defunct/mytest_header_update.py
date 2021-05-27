@@ -1,6 +1,7 @@
 import astropy.io
 import astropy.io.fits
-from helpers import drms_helpers
+from data.download import drms_helpers
+
 #import fits_drms_helper_aia_euv_12s
 
 data_dir='/Users/cdowns/work/ch_evolution/data_tests/drms_rawdata'
