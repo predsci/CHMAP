@@ -5,7 +5,7 @@ import numpy.random as random
 import matplotlib.pyplot as plt
 
 import tensorflow as tf
-import analysis.ml_analysis.ch_detect.ml_functions as ml_funs
+import coronal_holes.ml_detect.ml_functions as ml_funs
 from tensorflow.keras.optimizers import Adam
 from sklearn.model_selection import train_test_split
 from tensorflow.keras.models import Model

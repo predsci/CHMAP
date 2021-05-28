@@ -2,8 +2,6 @@
 
 import cv2
 import numpy as np
-from analysis.ml_analysis.ch_tracking.tools.plots import set_up_plt_figure
-import os
 
 ex1 = False
 ex2 = True

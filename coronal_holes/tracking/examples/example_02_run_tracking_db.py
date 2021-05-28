@@ -25,9 +25,9 @@ from database import db_funs
 import database.db_classes as DBClass
 import utilities.datatypes.datatypes as psi_datatype
 from settings.app import App
-from analysis.ml_analysis.ch_tracking.src.main import CoronalHoleDB
-from analysis.ml_analysis.ch_tracking.src.classification import classify_grey_scaled_image
-from analysis.ml_analysis.ch_tracking.tools.plots import plot_coronal_hole
+from coronal_holes.tracking.src.main import CoronalHoleDB
+from coronal_holes.tracking.src.classification import classify_grey_scaled_image
+from coronal_holes.tracking.tools.plots import plot_coronal_hole
 from maps.util.map_manip import MapMesh
 
 import pickle

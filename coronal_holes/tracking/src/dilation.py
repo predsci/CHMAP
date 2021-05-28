@@ -4,8 +4,7 @@ Last Modified: May 6th, 2021 (Opal)
 """
 import cv2
 import numpy as np
-from analysis.ml_analysis.ch_tracking.src.contour import Contour
-import matplotlib.pyplot as plt
+from coronal_holes.tracking.src.contour import Contour
 
 
 def get_kernel_width(t, gamma, n_p):
