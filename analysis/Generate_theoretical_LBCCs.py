@@ -5,7 +5,7 @@ Generate, as a function of mu, a number of theoretical LBCC L(mu, T)
 import pandas as pd
 import numpy as np
 
-from modules.lbcc_utils import get_analytic_limb_brightening_curve
+from data.corrections.lbcc.lbcc_utils import get_analytic_limb_brightening_curve
 
 Temps = [1.e6, 1.5e6, 2.e6]
 R0 = 1.01

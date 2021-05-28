@@ -13,8 +13,8 @@ from settings.app import App
 from database.db_funs import init_db_conn
 import database.db_funs as db_funcs
 import database.db_classes as db_class
-import modules.datatypes as psi_d_types
-import modules.Plotting as Plotting
+import utilities.datatypes.datatypes as psi_d_types
+import utilities.plotting.psi_plotting as Plotting
 import data.corrections.lbcc.LBCC_theoretic_funcs as lbcc_funcs
 import data.corrections.iit.IIT_pipeline_funcs as iit_funcs
 

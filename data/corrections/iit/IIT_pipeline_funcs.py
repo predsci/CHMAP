@@ -7,10 +7,10 @@ import time
 import datetime
 
 import database.db_funs as db_funcs
-import modules.datatypes as psi_d_types
-import modules.lbcc_utils as lbcc
-import modules.iit_funs as iit
-import modules.Plotting as Plotting
+import utilities.datatypes.datatypes as psi_d_types
+import data.corrections.lbcc.lbcc_utils as lbcc
+import data.corrections.iit.iit_utils as iit
+import utilities.plotting.psi_plotting as Plotting
 import data.corrections.iit.IIT_pipeline_funcs as iit_funcs
 import data.corrections.lbcc.LBCC_theoretic_funcs as lbcc_funcs
 

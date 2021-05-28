@@ -15,7 +15,7 @@ import database.db_classes as DBClass
 from database.db_funs import init_db_conn, update_image_val, query_euv_images
 
 from utilities.idl_connect import idl_helper
-from modules import prep
+from data.corrections.image_prep import prep
 
 # designate which database to connect to
 use_db = "mysql-Q"  # 'sqlite'  Use local sqlite file-based db

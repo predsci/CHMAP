@@ -21,11 +21,12 @@ from sqlalchemy.orm import sessionmaker, aliased
 
 from settings.app import App
 from database.db_classes import *
-from modules.misc_funs import get_metadata
+from data.download.euv_utils import get_metadata
 from utilities.file_io import io_helpers
-from modules import datatypes, misc_funs
+from data.download import euv_utils
+from utilities.datatypes import datatypes
 import utilities.file_io.psi_hdf as psihdf
-import modules.cred_funs as creds
+import utilities.cred_funs as creds
 
 
 def init_db_conn(db_name, chd_base, sqlite_path="", user="", password=""):
@@ -319,7 +320,7 @@ def add_image2session(data_dir, subdir, fname, db_session, datatype="EUV_Image",
     # check if row already exists in DB
     existing_row_id = db_session.query(EUV_Images.data_id, Data_Files.fname_raw).filter(
         EUV_Images.instrument == file_meta['instrument'],
-        EUV_Images.date_obs == misc_funs.roundSeconds(file_meta['datetime']),
+        EUV_Images.date_obs == euv_utils.roundSeconds(file_meta['datetime']),
         EUV_Images.wavelength == file_meta['wavelength'],
         EUV_Images.data_id == Data_Files.data_id).all()
     if len(existing_row_id) == 1:

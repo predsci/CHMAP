@@ -8,9 +8,9 @@
 import os
 import numpy as np
 
-import modules.datatypes as psi_datatype
+import utilities.datatypes.datatypes as psi_datatype
 from settings.app import App
-import modules.map_manip as map_manip
+import maps.util.map_manip as map_manip
 import matplotlib.pyplot as plt
 
 # load reference maps

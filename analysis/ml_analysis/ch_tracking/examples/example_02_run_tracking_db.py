@@ -23,12 +23,12 @@ import numpy as np
 import cv2
 from database import db_funs
 import database.db_classes as DBClass
-import modules.datatypes as psi_datatype
+import utilities.datatypes.datatypes as psi_datatype
 from settings.app import App
 from analysis.ml_analysis.ch_tracking.src.main import CoronalHoleDB
 from analysis.ml_analysis.ch_tracking.src.classification import classify_grey_scaled_image
 from analysis.ml_analysis.ch_tracking.tools.plots import plot_coronal_hole
-from modules.map_manip import MapMesh
+from maps.util.map_manip import MapMesh
 
 import pickle
 

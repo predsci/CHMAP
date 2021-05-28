@@ -8,7 +8,7 @@ import datetime
 from settings.app import App
 import database.db_funs as db_funcs
 import database.db_classes as db_class
-import modules.datatypes as psi_d_types
+import utilities.datatypes.datatypes as psi_d_types
 
 ####### -------- updateable parameters ------ #######
 

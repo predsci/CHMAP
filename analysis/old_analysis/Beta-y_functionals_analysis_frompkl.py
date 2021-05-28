@@ -11,7 +11,7 @@ import os
 import matplotlib.pyplot as plt
 from matplotlib import cm
 from matplotlib.lines import Line2D
-import modules.lbcc_utils as lbcc
+import data.corrections.lbcc.lbcc_utils as lbcc
 from settings.app import App
 
 # PARAMETERS TO UPDATE

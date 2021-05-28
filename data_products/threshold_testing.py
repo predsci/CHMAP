@@ -19,7 +19,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib as mpl
 import numpy as np
-from modules.map_manip import combine_maps
+from maps.util.map_manip import combine_maps
 
 # -------- parameters --------- #
 # TIME RANGE FOR QUERYING

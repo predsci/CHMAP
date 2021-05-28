@@ -5,8 +5,8 @@ import numpy as np
 import datetime
 
 import database.db_funs as db_funs
-import modules.datatypes as psi_datatype
-import modules.map_manip as map_manip
+import utilities.datatypes.datatypes as psi_datatype
+import maps.util.map_manip as map_manip
 
 
 def coronal_flux(db_session, chd_contour, frame_timestamp, map_dir,

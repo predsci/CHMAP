@@ -10,7 +10,7 @@ import database.db_funs as db_funcs
 import database.db_classes as db_class
 import data.corrections.lbcc.LBCC_theoretic_funcs as lbcc_funcs
 import data.corrections.iit.IIT_pipeline_funcs as iit_funcs
-import modules.Plotting as Plotting
+import utilities.plotting.psi_plotting as Plotting
 
 ##### ------ updateable parameters ------- #######
 

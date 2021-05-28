@@ -8,11 +8,11 @@ import h5py as h5
 
 from database import db_funs
 import database.db_classes as DBClass
-import modules.datatypes as psi_datatype
+import utilities.datatypes.datatypes as psi_datatype
 from settings.app import App
-import modules.Plotting as EasyPlot
-import modules.coord_manip as coord_manip
-import modules.map_manip as map_manip
+import utilities.plotting.psi_plotting as EasyPlot
+import utilities.coord_manip as coord_manip
+import maps.util.map_manip as map_manip
 from settings.info import DTypes
 
 map_dir = App.MAP_FILE_HOME

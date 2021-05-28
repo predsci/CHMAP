@@ -15,14 +15,14 @@ import pandas as pd
 import numpy as np
 import datetime
 
-import modules.Plotting as Plotting
+import utilities.plotting.psi_plotting as Plotting
 import ezseg.ezsegwrapper as ezsegwrapper
 import database.db_funs as db_funcs
-from modules.map_manip import combine_maps
-import modules.datatypes as datatypes
+from maps.util.map_manip import combine_maps
+import utilities.datatypes.datatypes as datatypes
 import data.corrections.lbcc.LBCC_theoretic_funcs as lbcc_funcs
 import data.corrections.iit.IIT_pipeline_funcs as iit_funcs
-from modules.misc_funs import cluster_meth_1
+from data.download.euv_utils import cluster_meth_1
 from settings.info import DTypes
 
 
@@ -272,7 +272,7 @@ def chd(iit_list, los_list, use_indices, inst_list, thresh1, thresh2, ref_alpha,
     @return: list of chd images
     """
     start = time.time()
-    chd_image_list = [datatypes.CHDImage()] * len(inst_list)
+    chd_image_list = [datatypes.CHDImage()]*len(inst_list)
     for inst_ind, instrument in enumerate(inst_list):
         if iit_list[inst_ind] is not None:
             # define CHD parameters
@@ -323,7 +323,7 @@ def chd_2(iit_list, los_list, use_indices, thresh1, thresh2, ref_alpha, ref_x, n
     @return: list of chd images
     """
     start = time.time()
-    chd_image_list = [datatypes.CHDImage()] * len(iit_list)
+    chd_image_list = [datatypes.CHDImage()]*len(iit_list)
     for iit_ind in range(iit_list.__len__()):
         if iit_list[iit_ind] is not None:
             # define CHD parameters
@@ -374,8 +374,8 @@ def create_singles_maps(inst_list, date_pd, iit_list, chd_image_list, methods_li
     start = time.time()
     data_info = []
     map_info = []
-    map_list = [datatypes.PsiMap()] * len(inst_list)
-    chd_map_list = [datatypes.PsiMap()] * len(inst_list)
+    map_list = [datatypes.PsiMap()]*len(inst_list)
+    chd_map_list = [datatypes.PsiMap()]*len(inst_list)
 
     for inst_ind, instrument in enumerate(inst_list):
         if iit_list[inst_ind] is not None:
@@ -436,8 +436,8 @@ def create_singles_maps_2(date_pd, iit_list, chd_image_list, methods_list, map_x
     start = time.time()
     data_info = []
     map_info = []
-    map_list = [datatypes.PsiMap()] * len(iit_list)
-    chd_map_list = [datatypes.PsiMap()] * len(iit_list)
+    map_list = [datatypes.PsiMap()]*len(iit_list)
+    chd_map_list = [datatypes.PsiMap()]*len(iit_list)
 
     for iit_ind in range(iit_list.__len__()):
         if iit_list[iit_ind] is not None:

@@ -99,7 +99,7 @@ def construct_path_and_fname(base_dir, dtime, prefix, postfix, extension, inst=N
 def construct_hdf5_pre_and_post(chd_meta):
     """
     Standardize/Centralize hdf5 image filename production
-    :param chd_meta: image meta dictionary. Output of misc_funs.py - get_metadata()
+    :param chd_meta: image meta dictionary. Output of euv_utils.py - get_metadata()
     :return: prefix, postfix, and extension strings
     """
     prefix = chd_meta['instrument'].lower().replace('-', '') + '_lvl2'

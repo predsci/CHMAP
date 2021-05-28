@@ -5,12 +5,7 @@ import pickle
 import pandas as pd
 
 import matplotlib.pyplot as plt
-from matplotlib.collections import LineCollection
-from matplotlib import cm
 from scipy import optimize
-
-import modules.lbcc_utils as lbcc
-
 
 # load data from 2011 EUVI-A
 file = open('/Users/turtle/GitReps/CHD/test_data/lbcc-vals_2011_AIA.pkl', 'rb')

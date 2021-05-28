@@ -13,10 +13,10 @@ import time
 import sunpy.map
 
 from settings.app import App
-import helpers.plot
-import modules.prep as prep
+from utilities.plotting import euv_fits_plotting
+import data.corrections.image_prep.prep as prep
 from utilities.idl_connect import idl_helper
-from modules import datatypes
+from utilities.datatypes import datatypes
 
 # manually specify filenames
 fitsfile_aia = App.APP_HOME + '/reference_data/aia_lev1_euv_12s_20140413T190507_193.fits'
@@ -39,22 +39,22 @@ def plot_examples(map_raw, map_nod, map_d, lmin, lmax, rawmin, rawmax, prefix):
     cmap_name = 'sohoeit195'
 
     # limb alignment plots
-    helpers.plot.plot_alignment(map_raw, log_min=rawmin, log_max=rawmax, cmap_name=cmap_name,
-                                outfile=prefix + '_limb_raw.png')
-    helpers.plot.plot_alignment(map_nod, log_min=lmin, log_max=lmax, cmap_name=cmap_name,
-                                outfile=prefix + '_limb_no_deconv.png')
-    helpers.plot.plot_alignment(map_d, log_min=lmin, log_max=lmax, cmap_name=cmap_name,
-                                outfile=prefix + '_limb_deconv.png')
+    euv_fits_plotting.plot_alignment(map_raw, log_min=rawmin, log_max=rawmax, cmap_name=cmap_name,
+                                     outfile=prefix + '_limb_raw.png')
+    euv_fits_plotting.plot_alignment(map_nod, log_min=lmin, log_max=lmax, cmap_name=cmap_name,
+                                     outfile=prefix + '_limb_no_deconv.png')
+    euv_fits_plotting.plot_alignment(map_d, log_min=lmin, log_max=lmax, cmap_name=cmap_name,
+                                     outfile=prefix + '_limb_deconv.png')
 
     # regular image plots, specify plot range in solar coordinates (PSI/MAS Style)
     xrange = [-1.1, 1.1]
     yrange = [-1.1, 1.1]
-    helpers.plot.plot_image_rs(map_raw, log_min=rawmin, log_max=rawmax, cmap_name=cmap_name,
-                               xrange=xrange, yrange=yrange, outfile=prefix + '_image_raw.png')
-    helpers.plot.plot_image_rs(map_nod, log_min=lmin, log_max=lmax, cmap_name=cmap_name,
-                               xrange=xrange, yrange=yrange, outfile=prefix + '_image_no_deconv.png')
-    helpers.plot.plot_image_rs(map_d, log_min=lmin, log_max=lmax, cmap_name=cmap_name,
-                               xrange=xrange, yrange=yrange, outfile=prefix + '_image_deconv.png')
+    euv_fits_plotting.plot_image_rs(map_raw, log_min=rawmin, log_max=rawmax, cmap_name=cmap_name,
+                                    xrange=xrange, yrange=yrange, outfile=prefix + '_image_raw.png')
+    euv_fits_plotting.plot_image_rs(map_nod, log_min=lmin, log_max=lmax, cmap_name=cmap_name,
+                                    xrange=xrange, yrange=yrange, outfile=prefix + '_image_no_deconv.png')
+    euv_fits_plotting.plot_image_rs(map_d, log_min=lmin, log_max=lmax, cmap_name=cmap_name,
+                                    xrange=xrange, yrange=yrange, outfile=prefix + '_image_deconv.png')
 
 
 # ----------------------------------------------------------------------

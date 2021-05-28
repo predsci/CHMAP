@@ -22,8 +22,8 @@ from settings.app import App
 import database.db_classes as db_class
 import database.db_funs as db_funcs
 import analysis.chd_analysis.CHD_pipeline_funcs as chd_funcs
-import modules.map_manip as map_manip
-import modules.datatypes as datatypes
+import maps.util.map_manip as map_manip
+import utilities.datatypes.datatypes as datatypes
 
 # -------- parameters --------- #
 # TIME RANGE FOR QUERYING
@@ -145,7 +145,7 @@ for date_ind, center in enumerate(moving_avg_centers):
                                             methods_list, full_map_x, full_map_y, R0)
 
         #### STEP SIX: REDUCE MAP PIXEL GRID ####
-        reduced_maps = [datatypes.PsiMap()] * map_list.__len__()
+        reduced_maps = [datatypes.PsiMap()]*map_list.__len__()
         for ii in range(map_list.__len__()):
             # first combine chd and image into a single map object
             map_list[ii].chd = chd_map_list[ii].data.astype('float16')
@@ -153,7 +153,7 @@ for date_ind, center in enumerate(moving_avg_centers):
                   "at", map_list[ii].data_info.date_obs[0])
             # perform map reduction
             reduced_maps[ii] = map_manip.downsamp_reg_grid(map_list[ii], reduce_map_y,
-                reduce_map_x, single_origin_image=map_list[ii].data_info.data_id[0])
+                                                           reduce_map_x, single_origin_image=map_list[ii].data_info.data_id[0])
             # reduced_maps[ii], row_mat, col_mat = map_manip.downsamp_reg_grid(
             #     map_list[ii], reduce_map_y, reduce_map_x,
             #     single_origin_image=map_list[ii].data_info.data_id[0])

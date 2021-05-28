@@ -20,16 +20,13 @@ Bugfix by Takuma Torii 2.24.2013
 """
 
 import numpy as np
-from numpy import mean, size, zeros, where, transpose
-from numpy.random import normal
-from matplotlib.pyplot import hist
+from numpy import mean, size, zeros, where
 from scipy import linspace, stats
-import array
 
-import modules.datatypes as PSI_dtypes
+import utilities.datatypes.datatypes as PSI_dtypes
 
 from matplotlib.pyplot import figure, plot, xlabel, ylabel,\
-    title, show, savefig, hist
+    title, hist
 
 lat_band = [-np.pi/64., np.pi/64.]
 R0 = 1.01

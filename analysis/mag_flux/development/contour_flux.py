@@ -12,11 +12,11 @@ import datetime
 import numpy as np
 import pickle
 
-import modules.datatypes as psi_datatype
+import utilities.datatypes.datatypes as psi_datatype
 from settings.app import App
 import database.db_classes as db_class
 import database.db_funs as db_funs
-import modules.map_manip as map_manip
+import maps.util.map_manip as map_manip
 
 
 ###### ------ PARAMETERS TO UPDATE -------- ########

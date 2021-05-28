@@ -7,10 +7,10 @@ import numpy as np
 import datetime
 import pandas as pd
 
-from modules.map_manip import combine_cr_maps
-import modules.Plotting as Plotting
+from maps.util.map_manip import combine_cr_maps
+import utilities.plotting.psi_plotting as Plotting
 import ezseg.ezsegwrapper as ezsegwrapper
-import modules.datatypes as datatypes
+import utilities.datatypes.datatypes as datatypes
 import database.db_funs as db_funcs
 import data.corrections.lbcc.LBCC_theoretic_funcs as lbcc_funcs
 import data.corrections.iit.IIT_pipeline_funcs as iit_funcs

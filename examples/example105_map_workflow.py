@@ -20,9 +20,9 @@ import numpy as np
 
 from settings.app import App
 from database import db_classes
-from modules.deprecated.DB_funs import create_map_input_object, init_db_conn, create_method, add_map_dbase_record,\
+from database.deprecated.db_funs import create_map_input_object, init_db_conn, create_method, add_map_dbase_record,\
     query_euv_maps, delete_map_dbase_record
-from modules.datatypes import PsiMap
+from utilities.datatypes.datatypes import PsiMap
 
 
 # --- 1. Create a test SQLite database ----------------

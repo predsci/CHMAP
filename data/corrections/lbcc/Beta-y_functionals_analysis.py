@@ -8,10 +8,10 @@ import time
 import pandas as pd
 import scipy.optimize as optim
 import os
-import modules.lbcc_utils as lbcc
+import data.corrections.lbcc.lbcc_utils as lbcc
 from settings.app import App
 from database.db_funs import init_db_conn, query_hist, store_lbcc_values, store_mu_values, store_beta_y_values
-import modules.datatypes as psi_d_types
+import utilities.datatypes.datatypes as psi_d_types
 import database.db_classes as db_class
 
 

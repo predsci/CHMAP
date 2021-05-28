@@ -9,11 +9,11 @@ import numpy as np
 import pandas as pd
 
 from scipy.stats import norm
-import modules.Plotting as Plotting
+import utilities.plotting.psi_plotting as Plotting
 import database.db_funs as db_funcs
 import ezseg.ezsegwrapper as ezsegwrapper
-import modules.datatypes as datatypes
-from modules.map_manip import combine_mu_maps, combine_timewgt_maps, combine_timescale_maps
+import utilities.datatypes.datatypes as datatypes
+from maps.util.map_manip import combine_mu_maps, combine_timewgt_maps, combine_timescale_maps
 
 
 ### FUNCTIONS FOR MAP CREATION

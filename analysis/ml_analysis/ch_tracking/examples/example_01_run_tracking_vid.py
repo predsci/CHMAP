@@ -18,13 +18,11 @@ Last Modified: May 10th, 2021 (Opal)
 import cv2
 import numpy as np
 import pickle
-import json
 import os
-from modules.map_manip import MapMesh
+from maps.util.map_manip import MapMesh
 from analysis.ml_analysis.ch_tracking.src.main import CoronalHoleDB
 from analysis.ml_analysis.ch_tracking.tools.plots import plot_coronal_hole
 from analysis.ml_analysis.ch_tracking.src.classification import classify_grey_scaled_image
-import matplotlib.pyplot as plt
 from astropy.time import Time
 
 # ================================================================================================================

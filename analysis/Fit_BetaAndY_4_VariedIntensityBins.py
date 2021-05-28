@@ -7,11 +7,9 @@ Track 2011 histogram changes as bin size is increased.
 import numpy as np
 import pickle
 
-import matplotlib.pyplot as plt
-from matplotlib.collections import LineCollection
 from matplotlib import cm
 
-import modules.lbcc_utils as lbcc
+import data.corrections.lbcc.lbcc_utils as lbcc
 
 
 image_out_path = "/Users/turtle/Dropbox/MyNACD/analysis/intensity_bins/"

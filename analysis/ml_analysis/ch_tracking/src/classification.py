@@ -9,7 +9,7 @@ import cv2
 from analysis.ml_analysis.ch_tracking.src.dilation import latitude_weighted_dilation, find_contours, \
     get_list_of_contours_from_rbg, uniform_dilation_in_latitude
 from analysis.ml_analysis.ch_tracking.src.periodicity import prune_coronal_hole_list
-from modules.map_manip import MapMesh
+from maps.util.map_manip import MapMesh
 import matplotlib.pyplot as plt
 
 

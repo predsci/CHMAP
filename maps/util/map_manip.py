@@ -8,10 +8,10 @@ from scipy.interpolate import interp1d
 from skimage.measure import block_reduce
 import time
 
-import modules.datatypes as psi_d_types
+import utilities.datatypes.datatypes as psi_d_types
 from settings.info import DTypes
-from modules.coord_manip import s2c
-import modules.lbcc_utils as lbcc_funs
+from utilities.coord_manip import s2c
+import data.corrections.lbcc.lbcc_utils as lbcc_funs
 
 
 

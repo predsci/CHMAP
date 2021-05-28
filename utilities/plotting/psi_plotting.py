@@ -9,7 +9,7 @@ import numpy as np
 from matplotlib.lines import Line2D
 import cv2
 
-import modules.datatypes as psi_dt
+import utilities.datatypes.datatypes as psi_dt
 
 
 def PlotImage(los_image, nfig=None, mask_rad=1.5, title=None):

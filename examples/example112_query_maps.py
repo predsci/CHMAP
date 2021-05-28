@@ -5,9 +5,9 @@ import numpy as np
 
 from database import db_funs
 import database.db_classes as DBClass
-import modules.datatypes as psi_datatype
+import utilities.datatypes.datatypes as psi_datatype
 from settings.app import App
-import modules.Plotting as EasyPlot
+import utilities.plotting.psi_plotting as EasyPlot
 
 map_dir = App.MAP_FILE_HOME
 

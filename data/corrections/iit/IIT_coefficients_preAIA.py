@@ -13,10 +13,10 @@ import pickle
 
 from settings.app import App
 import database.db_funs as db_funcs
-import modules.iit_funs as iit
+import data.corrections.iit.iit_utils as iit
 import database.db_classes as db_class
-import modules.datatypes as psi_d_types
-import modules.lbcc_utils as lbcc
+import utilities.datatypes.datatypes as psi_d_types
+import data.corrections.lbcc.lbcc_utils as lbcc
 
 ####### -------- updateable parameters ------ #######
 

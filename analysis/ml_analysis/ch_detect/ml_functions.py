@@ -9,14 +9,14 @@ import matplotlib.colors as colors
 import matplotlib as mpl
 
 # my modules
-import modules.datatypes as datatypes
+import utilities.datatypes.datatypes as datatypes
 
 # machine learning modules
 import tensorflow as tf
 import matplotlib.pyplot as plt
 from IPython.display import clear_output
 from tensorflow.keras.optimizers import Adam
-from tensorflow.keras.models import Model, load_model
+from tensorflow.keras.models import Model
 from tensorflow.keras.layers import *
 
 
@@ -139,7 +139,7 @@ class DisplayCallback(tf.keras.callbacks.Callback):
 #### apply detection
 def ml_chd(model, iit_list, los_list, use_indices, inst_list):
     start = time.time()
-    chd_image_list = [datatypes.CHDImage()] * len(inst_list)
+    chd_image_list = [datatypes.CHDImage()]*len(inst_list)
     for inst_ind, instrument in enumerate(inst_list):
         if iit_list[inst_ind] is not None:
             # define CHD parameters

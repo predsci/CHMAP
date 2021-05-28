@@ -8,7 +8,7 @@ import os
 import astropy.units as u
 
 from data.download import drms_helpers, vso_helpers
-from modules.misc_funs import cluster_meth_1, list_available_images
+from data.download.euv_utils import cluster_meth_1, list_available_images
 from database.db_funs import add_image2session
 
 

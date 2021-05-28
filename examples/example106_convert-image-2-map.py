@@ -13,8 +13,8 @@ sys.path.append('/Users/tamarervin/work/chd') #append path to your modules
 from settings.app import App
 import database.db_classes as db_class
 from database.db_funs import init_db_conn, query_euv_images
-import modules.datatypes as psi_d_types
-import modules.Plotting as EasyPlot
+import utilities.datatypes.datatypes as psi_d_types
+import utilities.plotting.psi_plotting as EasyPlot
 
 # In this example we use the 'reference_data' fits files supplied with repo
 # manually set the data-file dirs

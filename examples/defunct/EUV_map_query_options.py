@@ -6,7 +6,7 @@ import pandas as pd
 
 from settings.app import App
 from database.db_classes import *
-from modules.deprecated.DB_funs import init_db_conn
+from database.deprecated.db_funs import init_db_conn
 from sqlalchemy.orm import joinedload
 
 

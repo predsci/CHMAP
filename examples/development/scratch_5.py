@@ -2,7 +2,7 @@
 import cv2
 import numpy as np
 
-import modules.datatypes as psi_dtypes
+import utilities.datatypes.datatypes as psi_dtypes
 
 map_path = "/Volumes/extdata2/CHD_DB/maps/synchronic/2008/01/01/" \
            "synchronic_EUVI-A_20080101T095541_MID3578.h5"

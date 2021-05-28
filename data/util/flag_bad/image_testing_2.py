@@ -12,10 +12,10 @@ import pandas as pd
 from settings.app import App
 import database.db_classes as db_class
 import database.db_funs as db_funs
-import modules.datatypes as psi_d_types
+import utilities.datatypes.datatypes as psi_d_types
 import matplotlib.pyplot as plt
 import matplotlib as mpl
-import modules.Plotting as EasyPlot
+import utilities.plotting.psi_plotting as EasyPlot
 
 ###### ------ PARAMETERS TO UPDATE -------- ########
 

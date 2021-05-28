@@ -5,7 +5,7 @@ Set of functions to change coordinates and interpolate between images and maps
 import numpy as np
 import scipy.interpolate as sp_interp
 
-import modules.datatypes as psi_dt
+import utilities.datatypes.datatypes as psi_dt
 import astropy_healpix
 
 

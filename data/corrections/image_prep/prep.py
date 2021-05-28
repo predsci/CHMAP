@@ -14,10 +14,10 @@ import sunpy.map
 import astropy.units as u
 import sunpy.io
 
-from modules import deconv
-from modules.misc_funs import get_metadata
+from data.corrections.image_prep import deconv
+from data.download.euv_utils import get_metadata
 import settings.info
-from modules import datatypes
+from utilities.datatypes import datatypes
 from utilities.file_io import io_helpers
 from utilities.idl_connect import idl_helper
 from settings.app import App

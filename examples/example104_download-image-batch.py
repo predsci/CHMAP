@@ -3,7 +3,6 @@ Specify times for synchronic image download.
 Query available images and download best matches.
 """
 
-import sys
 import os
 import numpy as np
 import pandas as pd
@@ -13,7 +12,7 @@ import astropy.units as u
 from settings.app import App
 import database.db_classes as DBClass
 from database.db_funs import init_db_conn
-from modules.image_download import synchronic_euv_download
+from data.download.image_download import synchronic_euv_download
 
 # Specify a vector of synchronic times
 period_start = Time('2021-01-02T00:00:00.000', scale='utc')

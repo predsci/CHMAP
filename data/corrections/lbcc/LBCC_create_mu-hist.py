@@ -10,7 +10,7 @@ import numpy as np
 from settings.app import App
 import database.db_classes as db_class
 from database.db_funs import init_db_conn, query_euv_images, add_hist, get_method_id, query_hist
-import modules.datatypes as psi_d_types
+import utilities.datatypes.datatypes as psi_d_types
 
 ###### ------ PARAMETERS TO UPDATE -------- ########
 

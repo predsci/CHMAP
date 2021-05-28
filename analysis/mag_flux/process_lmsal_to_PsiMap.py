@@ -14,9 +14,9 @@ import pandas as pd
 from settings.app import App
 import database.db_classes as db_class
 import database.db_funs as db_funs
-import modules.map_manip as map_manip
-from modules.lmsal_utils import project_lmsal_map
-import modules.datatypes as psi_d_types
+import maps.util.map_manip as map_manip
+from maps.magnetic.lmsal_utils import project_lmsal_map
+import utilities.datatypes.datatypes as psi_d_types
 
 ###### ------ PARAMETERS TO UPDATE -------- ########
 
