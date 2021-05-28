@@ -18,7 +18,9 @@ from sqlalchemy.orm import sessionmaker
 from settings.app import App
 from database.db_classes import *
 from modules.misc_funs import get_metadata
-from helpers import misc_helpers
+from utilities.file_io import io_helpers
+
+
 # from modules import datatypes
 
 
@@ -258,8 +260,8 @@ def build_euvimages_from_fits(db_session, raw_data_dir, hdf_data_dir):
         fits_path = os.path.join(raw_data_dir, row.fname_raw)
         fits_map = sunpy.map.Map(fits_path)
         chd_meta = get_metadata(fits_map)
-        prefix, postfix, extension = misc_helpers.construct_hdf5_pre_and_post(chd_meta)
-        sub_dir, fname = misc_helpers.construct_path_and_fname(
+        prefix, postfix, extension = io_helpers.construct_hdf5_pre_and_post(chd_meta)
+        sub_dir, fname = io_helpers.construct_path_and_fname(
             hdf_data_dir, fits_map.date.datetime, prefix, postfix, extension,
             mkdir=False)
         hdf_rel_path = sub_dir.replace(hdf_data_dir + os.path.sep, '')

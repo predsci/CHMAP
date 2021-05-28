@@ -12,7 +12,7 @@ import numpy as np
 import os
 from http.client import HTTPException
 
-from helpers import misc_helpers
+from utilities.file_io import io_helpers
 
 
 class EUVI:
@@ -78,7 +78,7 @@ class EUVI:
         urls = np.delete(urls, inds_bad)
 
         # now convert this output into a pandas dataframe for easy parsing/slicing
-        data_frame = misc_helpers.custom_dataframe(time_strings, jds, urls, craft, self.detector, wavelength)
+        data_frame = io_helpers.custom_dataframe(time_strings, jds, urls, craft, self.detector, wavelength)
 
         # return time_strings, jds, urls
         return data_frame
@@ -111,16 +111,16 @@ class EUVI:
         datetime = astropy.time.Time(data_series['time'], scale='utc').datetime
         postfix = str(data_series['filter'])
         ext = 'fits'
-        dir, fname = misc_helpers.construct_path_and_fname(base_dir, datetime, prefix, postfix, ext)
+        dir, fname = io_helpers.construct_path_and_fname(base_dir, datetime, prefix, postfix, ext)
         fpath = dir + os.sep + fname
 
         # download the file
-        exit_flag = misc_helpers.download_url(url, fpath, overwrite=overwrite, verbose=verbose)
+        exit_flag = io_helpers.download_url(url, fpath, overwrite=overwrite, verbose=verbose)
 
         if exit_flag == 1:
             # There was an error with download. Try again
             print(" Re-trying download....")
-            exit_flag = misc_helpers.download_url(url, fpath, verbose=verbose, overwrite=overwrite)
+            exit_flag = io_helpers.download_url(url, fpath, verbose=verbose, overwrite=overwrite)
             if exit_flag == 1:
                 # Download failed. Return None
                 return None, None, exit_flag
@@ -129,7 +129,7 @@ class EUVI:
         if compress and exit_flag in [0, 3]:
             if verbose:
                 print('  Compressing FITS data.')
-            misc_helpers.compress_uncompressed_fits_image(fpath, fpath)
+            io_helpers.compress_uncompressed_fits_image(fpath, fpath)
 
         # now separate the the sub directory from the base path (i want relative path for the DB)
         sub_dir = os.path.sep.join(dir.split(base_dir)[1].split(os.path.sep)[1:])

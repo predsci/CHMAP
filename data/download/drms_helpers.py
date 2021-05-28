@@ -21,8 +21,7 @@ import numpy as np
 import pandas as pd
 from http.client import HTTPException
 
-from helpers import misc_helpers
-
+from utilities.file_io import io_helpers
 
 # ----------------------------------------------------------------------
 # global definitions
@@ -223,7 +222,7 @@ class S12:
         urls = jsoc_url + seg_frame['image']
 
         # make the custom dataframe with the info i want
-        data_frame = misc_helpers.custom_dataframe(time_strings, jds, urls, 'SDO', 'AIA', wavelength)
+        data_frame = io_helpers.custom_dataframe(time_strings, jds, urls, 'SDO', 'AIA', wavelength)
 
         # return key_frame, seg_frame
         return data_frame
@@ -248,16 +247,16 @@ class S12:
         prefix = '_'.join(self.series.split('.'))
         postfix = str(data_series['filter'])
         ext = 'fits'
-        dir, fname = misc_helpers.construct_path_and_fname(base_dir, datetime, prefix, postfix, ext)
+        dir, fname = io_helpers.construct_path_and_fname(base_dir, datetime, prefix, postfix, ext)
         fpath = dir + os.sep + fname
 
         # download the file
-        exit_flag = misc_helpers.download_url(url, fpath, verbose=verbose, overwrite=overwrite)
+        exit_flag = io_helpers.download_url(url, fpath, verbose=verbose, overwrite=overwrite)
 
         if exit_flag == 1:
             # There was an error with download. Try again
             print(" Re-trying download....")
-            exit_flag = misc_helpers.download_url(url, fpath, verbose=verbose, overwrite=overwrite)
+            exit_flag = io_helpers.download_url(url, fpath, verbose=verbose, overwrite=overwrite)
             if exit_flag == 1:
                 # Download failed. Return None
                 return None, None, exit_flag

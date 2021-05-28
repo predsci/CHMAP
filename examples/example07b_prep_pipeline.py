@@ -15,7 +15,7 @@ from settings.app import App
 from database.db_classes import Base
 from database.db_funs import init_db_conn, query_euv_images
 from modules.misc_funs import get_image_set
-from helpers import idl_helper
+from utilities.idl_connect import idl_helper
 from modules import prep
 
 # database location

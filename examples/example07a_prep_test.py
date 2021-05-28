@@ -15,7 +15,7 @@ import sunpy.map
 from settings.app import App
 import helpers.plot
 import modules.prep as prep
-from helpers import idl_helper
+from utilities.idl_connect import idl_helper
 from modules import datatypes
 
 # manually specify filenames

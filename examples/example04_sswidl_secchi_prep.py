@@ -3,7 +3,8 @@ Quick example to illustrate how a raw STEREO EUVI image will be prepped to lvl 1
 - Here the compressed file we save via a query/download is uncompressed and sent to an IDL subprocess
   that calls secchi_prep and writes the output.
 """
-from helpers import idl_helper, misc_helpers
+from utilities.file_io import io_helpers
+from utilities.idl_connect import idl_helper
 import time
 import os.path
 from settings.app import App
@@ -17,7 +18,7 @@ print(fits_compressed)
 print(fits_uncompressed)
 
 # uncompress the image to a temporary location
-misc_helpers.uncompress_compressed_fits_image(fits_compressed, fits_uncompressed, int=True)
+io_helpers.uncompress_compressed_fits_image(fits_compressed, fits_uncompressed, int=True)
 
 # begin the IDL session (opens a subprocess)
 idl_session = idl_helper.Session()

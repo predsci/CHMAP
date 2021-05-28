@@ -1,7 +1,7 @@
 
 """
 Subroutines for reading/writing PSI style hdf5 files with metadata.
-- This is a port/modification of the PSI tools psihdf.py with HDF4
+- This is a port/modification of the PSI tools psi_hdf.py with HDF4
   stripped out.
 """
 

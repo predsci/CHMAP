@@ -9,7 +9,7 @@ import datetime
 import sunpy.map
 import sunpy.util.metadata
 
-import helpers.psihdf as psihdf
+import utilities.file_io.psi_hdf as psihdf
 import database.db_classes as db
 from modules.coord_manip import interp_los_image_to_map, image_grid_to_CR
 from settings.info import DTypes

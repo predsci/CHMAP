@@ -232,19 +232,19 @@ for inst_index, instrument in enumerate(inst_list):
 #     remove = input("Are there images from this list you would like to remove? (y/n) ")
 #     if remove == 'y':
 #         remove_image_ids = input("List of image ids to remove: ")
-#         bad_images = remove_image(remove_image_ids, bad_data)
+#         flag_bad = remove_image(remove_image_ids, bad_data)
 #     #
 #     #     # OR, add images you want to flag
 #     remove = input("Are there images from this list you would like to flag? (y/n) ")
 #     if remove == 'y':
 #         add_image_ids = input("List of image ids to flag: ")
-#         bad_images = flag_image(add_image_ids, bad_data)
+#         flag_bad = flag_image(add_image_ids, bad_data)
 #     # add_image_ids = [8482, 7398, 6891, 353, 5034, 4246, 3414, 1745]
 #
 #     #
 #     #     # flag bad image in database
 #
-#     for index, image_row in bad_images.iterrows():
+#     for index, image_row in flag_bad.iterrows():
 #         update_image_val(db_session, image_row, 'flag', -1)
 #
 #
@@ -256,11 +256,11 @@ for inst_index, instrument in enumerate(inst_list):
 # password = ""
 # db_session = init_db_conn(db_name=use_db, chd_base=db_class.Base, user=user, password=password)
 #
-# bad_images = [1745, 3414, 4246, 5034, 6170, 6891, 7398, 8482, 10665, 11705, 12796]
+# flag_bad = [1745, 3414, 4246, 5034, 6170, 6891, 7398, 8482, 10665, 11705, 12796]
 #
 # from modules.DB_classes import *
 # import pandas as pd
-# for image_id in bad_images:
+# for image_id in flag_bad:
 #     query_out = pd.read_sql(db_session.query(EUV_Images).filter(EUV_Images.image_id == image_id).statement,
 #                             db_session.bind)
 #     update_image_val(db_session, query_out, 'flag', -1)

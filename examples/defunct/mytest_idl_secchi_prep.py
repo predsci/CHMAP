@@ -1,4 +1,5 @@
-from helpers import idl_helper, misc_helpers
+from utilities.file_io import io_helpers
+from utilities.idl_connect import idl_helper
 import time
 import os.path
 from settings.app import App
@@ -13,7 +14,7 @@ print(fits_compressed)
 print(fits_uncompressed)
 print(hdf_prepped)
 
-misc_helpers.uncompress_compressed_fits_image(fits_compressed, fits_uncompressed, int=True)
+io_helpers.uncompress_compressed_fits_image(fits_compressed, fits_uncompressed, int=True)
 
 idl_session = idl_helper.Session()
 

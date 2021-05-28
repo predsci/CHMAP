@@ -6,7 +6,7 @@ import datetime
 
 import database.db_classes as DBClass
 from data.download import lmsal_helpers
-from helpers import misc_helpers
+from utilities.file_io import io_helpers
 from settings.app import App
 
 data_type = "magnetic map"
@@ -67,11 +67,11 @@ url_df = lmsal_helpers.query_lmsal_index(min_datetime, max_datetime)
 for index, row in url_df.iterrows():
     download_url = row.full_url
     # construct file path and name
-    full_dir, fname = misc_helpers.construct_path_and_fname(map_path, row.datetime, data_provider, data_type, "h5")
+    full_dir, fname = io_helpers.construct_path_and_fname(map_path, row.datetime, data_provider, data_type, "h5")
     full_path = os.path.join(full_dir, fname)
     rel_path = os.path.relpath(full_path, map_path)
     # download file
-    download_flag = misc_helpers.download_url(download_url, full_path)
+    download_flag = io_helpers.download_url(download_url, full_path)
 
     # add record to session
     date_obs = row.datetime.to_pydatetime()

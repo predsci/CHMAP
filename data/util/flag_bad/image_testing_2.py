@@ -1,8 +1,7 @@
 #!/usr/bin/env python
 """
-create histogram of image intensities for comparison
-used to determine "bad" images and flag in the database
-version 2: use existing LBC histograms from database
+use existing LBC histograms from database
+to determine "bad" images and flag in the database
 """
 import os
 import time
@@ -23,7 +22,7 @@ import modules.Plotting as EasyPlot
 view_bad_images = False
 
 # directory to save plots
-plot_dir = "/Users/turtle/Dropbox/MyNACD/analysis/bad_images"
+plot_dir = "/Users/turtle/Dropbox/MyNACD/analysis/flag_bad"
 
 # TIME RANGE
 min_year = 2007
@@ -365,7 +364,7 @@ if view_bad_images:
             plt.waitforbuttonpress()
             plt.close(0)
 
-# loop through bad_images and change flag in database
+# loop through flag_bad and change flag in database
 for inst_index, instrument in enumerate(inst_list):
     # query images
     query_pd = pd.read_sql(db_session.query(db_class.EUV_Images, db_class.Data_Files).filter(

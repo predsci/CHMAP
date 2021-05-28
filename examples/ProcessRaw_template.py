@@ -14,7 +14,7 @@ from settings.app import App
 import database.db_classes as DBClass
 from database.db_funs import init_db_conn, update_image_val, query_euv_images
 
-from helpers import idl_helper
+from utilities.idl_connect import idl_helper
 from modules import prep
 
 # designate which database to connect to

@@ -12,9 +12,8 @@ Quick example illustrating how to get the metadata that we'll need from the raw 
 import os
 
 from settings.app import App
-from helpers.misc_helpers import carrington_rotation_number_relative
+from utilities.file_io.io_helpers import carrington_rotation_number_relative
 
-import numpy as np
 import pandas as pd
 
 import sunpy.map

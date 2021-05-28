@@ -18,7 +18,8 @@ from modules import deconv
 from modules.misc_funs import get_metadata
 import settings.info
 from modules import datatypes
-from helpers import misc_helpers, idl_helper
+from utilities.file_io import io_helpers
+from utilities.idl_connect import idl_helper
 from settings.app import App
 
 # default bad or missing value for an EUV image
@@ -67,8 +68,8 @@ def prep_euv_image(fitsfile, processed_home_dir, deconvolve=True, write=True, id
     # prefix = los.info['instrument'].lower().replace('-', '') + '_lvl2'
     # postfix = str(los.info['wavelength'])
     # extension = 'h5'
-    prefix, postfix, extension = misc_helpers.construct_hdf5_pre_and_post(los.info)
-    sub_dir, fname = misc_helpers.construct_path_and_fname(
+    prefix, postfix, extension = io_helpers.construct_hdf5_pre_and_post(los.info)
+    sub_dir, fname = io_helpers.construct_path_and_fname(
         processed_home_dir, dtime, prefix, postfix, extension,
         mkdir=write)
     rel_sub_dir = sub_dir.replace(processed_home_dir + os.path.sep, '')
@@ -186,7 +187,7 @@ def prep_euvi_image(map_raw, deconvolve=True, idl_session=None):
 
     # first save the data as a temporary, uncompressed uint16 fits file
     fits_raw = os.path.join(App.TMP_HOME, 'tmp_euvi_raw.fits')
-    misc_helpers.write_sunpy_map_as_fits(fits_raw, map_raw, dtype=np.uint16)
+    io_helpers.write_sunpy_map_as_fits(fits_raw, map_raw, dtype=np.uint16)
 
     # call secchi prep (open a new subprocess if one does not exist)
     new_session = False

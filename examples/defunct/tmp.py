@@ -127,7 +127,7 @@ else:
     time_array = []
     jds = []
 
-from helpers import misc_helpers
+from utilities.file_io import io_helpers
 
 # downlaod manually via the urllib
 if len(keys) > 0:
@@ -137,9 +137,9 @@ if len(keys) > 0:
     prefix='_'.join(series.split('.'))
     postfix=str(wavelength)
     ext='fits'
-    dir, fname = misc_helpers.construct_path_and_fname(data_dir, dtime, prefix, postfix, ext)
+    dir, fname = io_helpers.construct_path_and_fname(data_dir, dtime, prefix, postfix, ext)
     fpath=dir+os.sep+fname
-    misc_helpers.download_url(url, fpath)
+    io_helpers.download_url(url, fpath)
 
 
 """

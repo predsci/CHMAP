@@ -21,7 +21,7 @@ import pandas as pd
 import datetime
 from database.db_funs import init_db_conn, update_image_val, query_euv_images
 from database.db_classes import Base, EUV_Images
-from helpers.misc_helpers import print_full_dataframe
+from utilities.file_io.io_helpers import print_full_dataframe
 
 # setup the mysql session
 use_db = "mysql-Q"

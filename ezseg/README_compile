@@ -1,3 +1,7 @@
 The dynamic library 'ezsegwrapper.so' allows the fortran code ezseg.f to be imported into python and likely needs to be compiled locally in order to correctly link necessary libraries.  This is done using f2py (or f2py3 for import into Python 3).  An example f2py3 call is below including (most of) the gfortran flags listed in 'compile_exseg.sh'.
 
 $ f2py3 -c --verbose --opt='-mtune=native -fPIC -O3 -DNDEBUG -Wall -Wextra' ezsegwrapper.pyf ezseg.f -m ezsegwrapper
+
+
+More details on f2py here:
+https://numpy.org/devdocs/f2py/f2py.getting-started.html

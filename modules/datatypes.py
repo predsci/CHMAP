@@ -6,7 +6,7 @@ import os
 import pickle
 import sys
 
-import helpers.psihdf as psihdf
+import utilities.file_io.psi_hdf as psihdf
 import database.db_classes as db
 import database.db_funs as db_fun
 import numpy as np
