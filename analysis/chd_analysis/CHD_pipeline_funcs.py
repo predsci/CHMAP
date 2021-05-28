@@ -16,7 +16,7 @@ import numpy as np
 import datetime
 
 import utilities.plotting.psi_plotting as Plotting
-import ezseg.ezsegwrapper as ezsegwrapper
+import software.ezseg.ezsegwrapper as ezsegwrapper
 import database.db_funs as db_funcs
 from maps.util.map_manip import combine_maps
 import utilities.datatypes.datatypes as datatypes

@@ -9,7 +9,7 @@ import pandas as pd
 
 from maps.util.map_manip import combine_cr_maps
 import utilities.plotting.psi_plotting as Plotting
-import ezseg.ezsegwrapper as ezsegwrapper
+import software.ezseg.ezsegwrapper as ezsegwrapper
 import utilities.datatypes.datatypes as datatypes
 import database.db_funs as db_funcs
 import data.corrections.lbcc.LBCC_theoretic_funcs as lbcc_funcs

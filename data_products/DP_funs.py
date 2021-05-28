@@ -11,7 +11,7 @@ import pandas as pd
 from scipy.stats import norm
 import utilities.plotting.psi_plotting as Plotting
 import database.db_funs as db_funcs
-import ezseg.ezsegwrapper as ezsegwrapper
+import software.ezseg.ezsegwrapper as ezsegwrapper
 import utilities.datatypes.datatypes as datatypes
 from maps.util.map_manip import combine_mu_maps, combine_timewgt_maps, combine_timescale_maps
 
