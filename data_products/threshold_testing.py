@@ -13,7 +13,7 @@ sys.path.append("/Users/tamarervin/CH_Project/CHD")
 from settings.app import App
 import database.db_classes as db_class
 import database.db_funs as db_funcs
-import analysis.chd_analysis.CHD_pipeline_funcs as chd_funcs
+import maps.synchronic.chd_pipeline.CHD_pipeline_funcs as chd_funcs
 
 import pandas as pd
 import matplotlib.pyplot as plt

@@ -177,7 +177,7 @@ for file_index, row in query_pd.iterrows():
     br_map.append_map_info(map_info_df)
 
     # write map to database
-    db_session = br_map.write_to_file(map_dir, map_type='mag_flux',
+    db_session = br_map.write_to_file(map_dir, map_type='flux',
                                       db_session=db_session)
     end_time = time.time()
     print(f' {end_time - tstart:8.5f} seconds elapsed processing flux map.')
