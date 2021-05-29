@@ -8,18 +8,19 @@ import os
 import datetime
 
 import sys
-
 sys.path.append("/Users/tamarervin/CH_Project/CHD")
 from settings.app import App
 import database.db_classes as db_class
 import database.db_funs as db_funcs
-import maps.synchronic.chd_pipeline.CHD_pipeline_funcs as chd_funcs
+import coronal_holes.detection.chd_funcs as chd_funcs
 
 import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib as mpl
 import numpy as np
+import data.corrections.apply_lbc_iit as apply_lbc_iit
 from maps.util.map_manip import combine_maps
+import maps.image2map as image2map
 
 # -------- parameters --------- #
 # TIME RANGE FOR QUERYING
@@ -81,9 +82,9 @@ map_x = np.linspace(x_range[0], x_range[1], map_nxcoord, dtype='<f4')
 # chd_combined = [[datatypes.PsiMap() for j in range(len(query_times))] for i in range(len(threshold_values1))]
 
 ### get instrument combos
-lbc_combo_query, iit_combo_query = chd_funcs.get_inst_combos(db_session, inst_list,
-                                                             time_min=min(query_times),
-                                                             time_max=max(query_times))
+lbc_combo_query, iit_combo_query = apply_lbc_iit.get_inst_combos(db_session, inst_list,
+                                                                                  time_min=min(query_times),
+                                                                                  time_max=max(query_times))
 
 ### LOOP THROUGH EACH OF THE DATES ###
 for index, date in enumerate(query_times):
@@ -99,15 +100,15 @@ for index, date in enumerate(query_times):
     methods_list = db_funcs.generate_methdf(query_pd)
 
     #### STEP TWO: APPLY PRE-PROCESSING CORRECTIONS ####
-    date_pd, los_list, iit_list, use_indices, methods_list, ref_alpha, ref_x = chd_funcs.apply_ipp(db_session, date,
-                                                                                                   query_pd,
-                                                                                                   inst_list,
-                                                                                                   hdf_data_dir,
-                                                                                                   lbc_combo_query,
-                                                                                                   iit_combo_query,
-                                                                                                   methods_list,
-                                                                                                   n_intensity_bins,
-                                                                                                   R0)
+    date_pd, los_list, iit_list, use_indices, methods_list, ref_alpha, ref_x = apply_lbc_iit.apply_ipp(db_session, date,
+                                                                                                                        query_pd,
+                                                                                                                        inst_list,
+                                                                                                                        hdf_data_dir,
+                                                                                                                        lbc_combo_query,
+                                                                                                                        iit_combo_query,
+                                                                                                                        methods_list,
+                                                                                                                        n_intensity_bins,
+                                                                                                                        R0)
     #### STEP THREE: CORONAL HOLE DETECTION ####
     if los_list[0] is not None:
         for t1_index, thresh1 in enumerate(threshold_values1):
@@ -117,13 +118,13 @@ for index, date in enumerate(query_times):
                                           thresh2,
                                           ref_alpha, ref_x, nc, iters)
                 #### STEP FOUR: CONVERT TO MAP ####
-                map_list, chd_map_list, methods_list, data_info, map_info = chd_funcs.create_singles_maps(inst_list,
-                                                                                                           date_pd,
-                                                                                                           iit_list,
-                                                                                                           chd_image,
-                                                                                                           methods_list,
-                                                                                                           map_x,
-                                                                                                           map_y, R0)
+                map_list, chd_map_list, methods_list, data_info, map_info = image2map.create_singles_maps(inst_list,
+                                                                                                               date_pd,
+                                                                                                               iit_list,
+                                                                                                               chd_image,
+                                                                                                               methods_list,
+                                                                                                               map_x,
+                                                                                                               map_y, R0)
 
                 #### STEP FIVE: CREATE COMBINED MAPS####
                 # create combined maps

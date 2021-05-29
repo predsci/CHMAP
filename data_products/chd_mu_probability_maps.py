@@ -8,10 +8,10 @@ import os
 import numpy as np
 import datetime
 
+import data.corrections.apply_lbc_iit as apply_lbc_iit
 from settings.app import App
 import database.db_classes as db_class
 import database.db_funs as db_funcs
-import maps.synchronic.chd_pipeline.CHD_pipeline_funcs as chd_funcs
 import data_products.CR_mapping_funcs as cr_funcs
 import data_products.DP_funs as dp_funcs
 
@@ -74,8 +74,8 @@ query_pd = db_funcs.query_euv_images(db_session=db_session, time_min=query_time_
 methods_list = db_funcs.generate_methdf(query_pd)
 
 # 3.) get instrument combos
-lbc_combo_query, iit_combo_query = chd_funcs.get_inst_combos(db_session, inst_list, time_min=query_time_min,
-                                                             time_max=query_time_max)
+lbc_combo_query, iit_combo_query = apply_lbc_iit.get_inst_combos(db_session, inst_list, time_min=query_time_min,
+                                                                                  time_max=query_time_max)
 
 #### LOOP THROUGH IMAGES ####
 euv_combined = None

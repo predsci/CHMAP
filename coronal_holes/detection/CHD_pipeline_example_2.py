@@ -21,9 +21,13 @@ import time
 from settings.app import App
 import database.db_classes as db_class
 import database.db_funs as db_funcs
-import maps.synchronic.chd_pipeline.CHD_pipeline_funcs as chd_funcs
+import data.corrections.apply_lbc_iit as apply_lbc_iit
+import coronal_holes.detection.chd_funcs as chd_funcs
 import maps.util.map_manip as map_manip
 import utilities.datatypes.datatypes as datatypes
+import maps.image2map as image2map
+import maps.midm as midm
+import maps.synchronic.synch_utils as synch_utils
 
 # -------- parameters --------- #
 # TIME RANGE FOR QUERYING
@@ -113,20 +117,20 @@ query_pd = db_funcs.query_euv_images(db_session=db_session, time_min=query_time_
 
 #### STEP TWO: APPLY PRE-PROCESSING CORRECTIONS ####
 # 1.) get dates
-moving_avg_centers = chd_funcs.get_dates(time_min=query_time_min, time_max=query_time_max, map_freq=map_freq)
+moving_avg_centers = synch_utils.get_dates(time_min=query_time_min, time_max=query_time_max, map_freq=map_freq)
 
 # 3.) loop through center dates
 for date_ind, center in enumerate(moving_avg_centers):
     # choose which images to use in the same way we choose images for synchronic download
-    synch_images, cluster_method = chd_funcs.select_synchronic_images(
+    synch_images, cluster_method = synch_utils.select_synchronic_images(
         center, del_interval, query_pd, inst_list)
     if synch_images is None:
         # no images fall in the appropriate range, skip
         continue
     # apply corrections to those images
     date_pd, los_list, iit_list, use_indices, methods_list, ref_alpha, ref_x = \
-        chd_funcs.apply_ipp_2(db_session, center, synch_images, inst_list, hdf_data_dir,
-                              n_intensity_bins, R0)
+        apply_lbc_iit.apply_ipp_2(db_session, center, synch_images, inst_list, hdf_data_dir,
+                                                   n_intensity_bins, R0)
 
     #### STEP THREE: CORONAL HOLE DETECTION ####
     if los_list[0] is not None:
@@ -141,8 +145,8 @@ for date_ind, center in enumerate(moving_avg_centers):
 
         #### STEP FOUR: CONVERT TO MAP ####
         map_list, chd_map_list, methods_list, data_info, map_info = \
-            chd_funcs.create_singles_maps_2(synch_images, iit_list, chd_image_list,
-                                            methods_list, full_map_x, full_map_y, R0)
+            image2map.create_singles_maps_2(synch_images, iit_list, chd_image_list,
+                                                 methods_list, full_map_x, full_map_y, R0)
 
         #### STEP SIX: REDUCE MAP PIXEL GRID ####
         reduced_maps = [datatypes.PsiMap()]*map_list.__len__()
@@ -163,7 +167,7 @@ for date_ind, center in enumerate(moving_avg_centers):
         #     # synchronic_map = reduced_maps[0].__copy__()
         #     synchronic_map = reduced_maps[0]
         # else:
-        synchronic_map = chd_funcs.create_combined_maps_2(
+        synchronic_map = midm.create_combined_maps_2(
             reduced_maps.copy(), mu_merge_cutoff=mu_merge_cutoff, del_mu=del_mu,
             mu_cutoff=mu_cutoff, EUV_CHD_sep=EUV_CHD_sep)
         # add synchronic clustering method to final map
@@ -185,7 +189,7 @@ for date_ind, center in enumerate(moving_avg_centers):
                 map_list[ii], low_res_y, low_res_x,
                 single_origin_image=map_list[ii].data_info.data_id[0],
                 uniform_no_data=False)
-        low_synch_map = chd_funcs.create_combined_maps_2(
+        low_synch_map = midm.create_combined_maps_2(
             low_res_maps.copy(), mu_merge_cutoff=mu_merge_cutoff, del_mu=del_mu,
             mu_cutoff=mu_cutoff, EUV_CHD_sep=EUV_CHD_sep)
         # add synchronic clustering method to final map

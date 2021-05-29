@@ -15,10 +15,13 @@ import os
 import numpy as np
 import datetime
 
+import data.corrections.apply_lbc_iit as apply_lbc_iit
+import maps.image2map as image2map
+import maps.synchronic.synch_utils as synch_utils
 from settings.app import App
 import database.db_classes as db_class
 import database.db_funs as db_funcs
-import maps.synchronic.chd_pipeline.CHD_pipeline_funcs as chd_funcs
+import coronal_holes.detection.chd_funcs as chd_funcs
 
 # -------- parameters --------- #
 # TIME RANGE FOR QUERYING
@@ -92,35 +95,35 @@ methods_list = db_funcs.generate_methdf(query_pd)
 
 #### STEP TWO: APPLY PRE-PROCESSING CORRECTIONS ####
 # 1.) get dates
-moving_avg_centers = chd_funcs.get_dates(time_min=query_time_min, time_max=query_time_max, map_freq=map_freq)
+moving_avg_centers = synch_utils.get_dates(time_min=query_time_min, time_max=query_time_max, map_freq=map_freq)
 
 # 2.) get instrument combos
-lbc_combo_query, iit_combo_query = chd_funcs.get_inst_combos(db_session, inst_list, time_min=query_time_min,
-                                                             time_max=query_time_max)
+lbc_combo_query, iit_combo_query = apply_lbc_iit.get_inst_combos(db_session, inst_list, time_min=query_time_min,
+                                                                                  time_max=query_time_max)
 
 # 3.) loop through center dates
 for date_ind, center in enumerate(moving_avg_centers):
-    date_pd, los_list, iit_list, use_indices, methods_list, ref_alpha, ref_x = chd_funcs.apply_ipp(db_session, center,
-                                                                                                   query_pd,
-                                                                                                   inst_list,
-                                                                                                   hdf_data_dir,
-                                                                                                   lbc_combo_query,
-                                                                                                   iit_combo_query,
-                                                                                                   methods_list,
-                                                                                                   n_intensity_bins,
-                                                                                                   R0)
+    date_pd, los_list, iit_list, use_indices, methods_list, ref_alpha, ref_x = apply_lbc_iit.apply_ipp(db_session, center,
+                                                                                                                        query_pd,
+                                                                                                                        inst_list,
+                                                                                                                        hdf_data_dir,
+                                                                                                                        lbc_combo_query,
+                                                                                                                        iit_combo_query,
+                                                                                                                        methods_list,
+                                                                                                                        n_intensity_bins,
+                                                                                                                        R0)
     #### STEP THREE: CORONAL HOLE DETECTION ####
     if los_list[0] is not None:
         chd_image_list = chd_funcs.chd(iit_list, los_list, use_indices, inst_list, thresh1, thresh2, ref_alpha, ref_x,
                                        nc, iters)
         #### STEP FOUR: CONVERT TO MAP ####
-        map_list, chd_map_list, methods_list, data_info, map_info = chd_funcs.create_singles_maps(inst_list, date_pd,
-                                                                                                   iit_list,
-                                                                                                   chd_image_list,
-                                                                                                   methods_list, map_x,
-                                                                                                   map_y, R0)
+        map_list, chd_map_list, methods_list, data_info, map_info = image2map.create_singles_maps(inst_list, date_pd,
+                                                                                                       iit_list,
+                                                                                                       chd_image_list,
+                                                                                                       methods_list, map_x,
+                                                                                                       map_y, R0)
         #### STEP FIVE: CREATE COMBINED MAPS AND SAVE TO DB ####
         euv_combined, chd_combined = chd_funcs.creaionte_combined_maps(db_session, map_data_dir, map_list, chd_map_list,
-                                                                    methods_list, data_info, map_info,
-                                                                    mu_merge_cutoff=mu_merge_cutoff, mu_cutoff=mu_cutoff)
+                                                                       methods_list, data_info, map_info,
+                                                                       mu_merge_cutoff=mu_merge_cutoff, mu_cutoff=mu_cutoff)
 

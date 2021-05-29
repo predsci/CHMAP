@@ -7,10 +7,10 @@ import os
 import numpy as np
 import datetime
 
+import data.corrections.apply_lbc_iit as apply_lbc_iit
 from settings.app import App
 import database.db_classes as db_class
 import database.db_funs as db_funcs
-import maps.synchronic.chd_pipeline.CHD_pipeline_funcs as chd_funcs
 import data_products.CR_mapping_funcs as cr_funcs
 import data_products.DP_funs as dp_funcs
 
@@ -88,8 +88,8 @@ map_info_timescale = [None] * len(timescales)
 max_time = max(timescales)
 max_time_min = center_time - (max_time / 2)
 max_time_max = center_time + (max_time / 2)
-lbc_combo_query, iit_combo_query = chd_funcs.get_inst_combos(db_session, inst_list, time_min=max_time_min,
-                                                             time_max=max_time_max)
+lbc_combo_query, iit_combo_query = apply_lbc_iit.get_inst_combos(db_session, inst_list, time_min=max_time_min,
+                                                                                  time_max=max_time_max)
 
 for time_ind, timescale in enumerate(timescales):
     print("Starting map creation for maps of timescale:", timescale, "\n")
