@@ -11,6 +11,7 @@ outline to create combination EUV maps
 5. Combine Maps and Save to DB
 """
 import sys
+
 sys.path.append("/Users/tamarervin/CH_Project/CHD")
 import os
 import numpy as np
@@ -18,19 +19,17 @@ import datetime
 import h5py as h5
 
 from settings.app import App
-import database.db_classes as db_class
-import database.db_funs as db_funcs
-import data.corrections.apply_lbc_iit as apply_lbc_iit
-import coronal_holes.detection.chd_funcs as chd_funcs
+import modules.DB_classes as db_class
+import modules.DB_funs as db_funcs
+import analysis.chd_analysis.CHD_pipeline_funcs as chd_funcs
 import matplotlib.colors as colors
 import matplotlib as mpl
-import maps.synchronic.synch_utils as synch_utils
 
 
 # -------- parameters --------- #
 # TIME RANGE FOR QUERYING
 query_time_min = datetime.datetime(2011, 12, 1, 0, 0, 0)
-query_time_max = datetime.datetime(2011, 12, 1, 3, 0, 0)
+query_time_max = datetime.datetime(2011, 12, 1, 12, 0, 0)
 map_freq = 2  # number of hours
 
 # INITIALIZE DATABASE CONNECTION
@@ -42,16 +41,16 @@ database_dir = App.DATABASE_HOME
 sqlite_filename = App.DATABASE_FNAME
 # initialize database connection
 # using mySQL
-# use_db = "mysql-Q"
-# user = "tervin"
-# password = ""
+use_db = "mysql-Q"
+user = "tervin"
+password = ""
 
 # initialize database connection
-use_db = "sqlite"
-sqlite_path = os.path.join(database_dir, sqlite_filename)
+# use_db = "sqlite"
+# sqlite_path = os.path.join(database_dir, sqlite_filename)
 
 # hdf file info
-h5_filename = 'h5_datasets/data_test_SMALL.h5'
+h5_filename = '/Volumes/CHD_DB/data_images_small.h5'
 
 # INSTRUMENTS
 inst_list = ["AIA", "EUVI-A", "EUVI-B"]
@@ -106,37 +105,38 @@ methods_list = db_funcs.generate_methdf(query_pd)
 
 #### STEP TWO: APPLY PRE-PROCESSING CORRECTIONS ####
 # 1.) get dates
-moving_avg_centers = synch_utils.get_dates(time_min=query_time_min, time_max=query_time_max, map_freq=map_freq)
+moving_avg_centers = chd_funcs.get_dates(time_min=query_time_min, time_max=query_time_max, map_freq=map_freq)
 
 # 2.) get instrument combos
-lbc_combo_query, iit_combo_query = apply_lbc_iit.get_inst_combos(db_session, inst_list, time_min=query_time_min,
-                                                                                  time_max=query_time_max)
+lbc_combo_query, iit_combo_query = chd_funcs.get_inst_combos(db_session, inst_list, time_min=query_time_min,
+                                                             time_max=query_time_max)
 
 # 3.) loop through center dates
 h5file = h5.File(h5_filename, 'w')
 for date_ind, center in enumerate(moving_avg_centers):
-    date_pd, los_list, iit_list, use_indices, methods_list, ref_alpha, ref_x = apply_lbc_iit.apply_ipp(db_session, center,
-                                                                                                                        query_pd,
-                                                                                                                        inst_list,
-                                                                                                                        hdf_data_dir,
-                                                                                                                        lbc_combo_query,
-                                                                                                                        iit_combo_query,
-                                                                                                                        methods_list,
-                                                                                                                        n_intensity_bins,
-                                                                                                                        R0)
-    chd_image_list = chd_funcs.chd(iit_list, los_list, use_indices, inst_list, thresh1, thresh2,
-                                   ref_alpha, ref_x, nc, iters)
+    date_pd, los_list, iit_list, use_indices, methods_list, ref_alpha, ref_x = chd_funcs.apply_ipp(db_session, center,
+                                                                                                   query_pd,
+                                                                                                   inst_list,
+                                                                                                   hdf_data_dir,
+                                                                                                   lbc_combo_query,
+                                                                                                   iit_combo_query,
+                                                                                                   methods_list,
+                                                                                                   n_intensity_bins,
+                                                                                                   R0)
+    # chd_image_list = chd_funcs.chd(iit_list, los_list, use_indices, inst_list, thresh1, thresh2,
+    #                                ref_alpha, ref_x, nc, iters)
     for i, iit_image in enumerate(iit_list):
         if iit_image is not None:
-            # g = h5file.create_group(str(center) + "_" + str(iit_image.instrument))
+            g = h5file.create_group(str(center) + "_" + str(iit_image.instrument))
             # create euv image in file
-            scalarMap = mpl.cm.ScalarMappable(norm=colors.LogNorm(vmin=1.0, vmax=np.max(iit_image.iit_data)),
-                                              cmap='sohoeit195')
-            colorVal = scalarMap.to_rgba(iit_image.iit_data, norm=True)
-            # g.create_dataset("euv_image", data=colorVal[:, :, :3])
+            # scalarMap = mpl.cm.ScalarMappable(norm=colors.LogNorm(vmin=1.0, vmax=np.max(iit_image.iit_data)),
+            #                                   cmap='sohoeit195')
+            # colorVal = scalarMap.to_rgba(iit_image.iit_data, norm=True)
+            g.create_dataset("euv_image", data=iit_image.iit_data)
+
             # create chd mask in file
-            arr = chd_image_list[i].data
-            arr3D = np.repeat(arr[..., None], 1, axis=2)
+            # arr = chd_image_list[i].data
+            # arr3D = np.repeat(arr[..., None], 1, axis=2)
             # g.create_dataset("chd_data", data=arr3D[:, :, :3])
 h5file.close()
 

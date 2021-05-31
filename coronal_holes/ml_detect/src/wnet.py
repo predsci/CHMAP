@@ -1,6 +1,5 @@
 """
 Author: Tamar Ervin
-Date: February 25, 2021
 
 W-Net model for unsupervised image segmentation
 goal: unsupervised method to detect coronal holes from EUV maps
@@ -10,14 +9,16 @@ W-Net Architecture: U-Net encoder to U-net decoder
 """
 
 # imports
+import os
 import h5py as h5
 import numpy as np
 import tensorflow as tf
+from skimage.future import graph
 from tensorflow.keras.layers import *
 from tensorflow.keras.models import Model
 from tensorflow.keras.optimizers import Adam
 from tensorflow.keras.losses import BinaryCrossentropy
-import coronal_holes.ml_detect.ml_functions as ml_funs
+import analysis.ml_analysis.ch_detect.ml_functions as ml_funs
 
 # Image size that we are going to use
 IMG_HEIGHT = 96
@@ -32,31 +33,29 @@ BATCH_SIZE = 32
 
 # data
 # read hdf5 file
-map_h5 = '/Volumes/CHD_DB/map_data.h5'
+map_h5 = '/Volumes/CHD_DB/map_data_small.h5'
 hf = h5.File(map_h5, 'r')
 
 # create list of images and masks
 train_image = []
-train_mask = []
+# train_mask = []
 for date in hf.keys():
     g = hf.get(date)
     train_image.append(np.array(g['euv_image']))
-    train_mask.append(np.array(g['chd_data']))
+    # train_mask.append(np.array(g['chd_data']))
 hf.close()
 
 ### create tensorflow dataset
 # convert to dictionaries
 train_dict = {key: value for key, value in zip(["image"], [train_image])}
-train_dict['segmentation_mask'] = train_mask
+# train_dict['segmentation_mask'] = train_mask
 
 del train_image
-del train_mask
+# del train_mask
 
 map_norm = ml_funs.load_image_train(train_dict, size=(IMG_HEIGHT, IMG_WIDTH))
 map_dset = tf.data.Dataset.from_tensor_slices(map_norm)
 # train_dset = map_dset.map(ml_funs.load_image_train(size=(IMG_HEIGHT, IMG_WIDTH)), num_parallel_calls=tf.data.experimental.AUTOTUNE)
-train_dataset = map_dset.cache().shuffle(BUFFER_SIZE).batch(BATCH_SIZE)
-train_dataset = train_dataset.prefetch(buffer_size=tf.data.experimental.AUTOTUNE)
 
 
 # convolution function
@@ -99,7 +98,7 @@ def sep_conv2d_block(input_tensor, n_filters, kernel_size=3, batchnorm=True):
     return x
 
 # unet encoder model
-def uenc(img, n_filters, kernel_size=3, dropout=0.1, batchnorm=True):
+def uenc_model(img, n_filters, kernel_size=3, dropout=0.1, batchnorm=True):
     # Contracting Path
     c1 = conv2d_block(img, n_filters * 1, kernel_size=kernel_size, batchnorm=batchnorm)
     p1 = MaxPooling2D((2, 2))(c1)
@@ -146,7 +145,7 @@ def uenc(img, n_filters, kernel_size=3, dropout=0.1, batchnorm=True):
 
 
 # unet decoder model
-def udec(img, n_filters, kernel_size=3, dropout=0.1, batchnorm=True):
+def udec_model(img, n_filters, kernel_size=3, dropout=0.1, batchnorm=True):
     # Softmax Layer
     sm = Softmax()
     c0 = sm(img)
@@ -196,24 +195,24 @@ def udec(img, n_filters, kernel_size=3, dropout=0.1, batchnorm=True):
     return model
 
 # soft normalized cut loss
-def softncut_loss(V, K):
-    J = None
+def softncut_loss(img, labels):
+    rag = graph.rag_mean_color(img, labels, mode="similarity")
+    J = graph.cut_normalized(labels, rag)
     return J
 
 # reconstruction loss
-def recon_loss(V, K):
-    R = None
+def recon_loss(recon_images, org_inputs):
+    R = tf.keras.losses.mae(recon_images, org_inputs)
     return R
 
 
-print('la-di-da')
 # compile models
 input_image = Input((IMG_HEIGHT, IMG_WIDTH, N_CHANNELS), name='img')
 
-uenc = uenc(input_image, n_filters=64, kernel_size=3, dropout=0.05, batchnorm=True)
+uenc = uenc_model(input_image, n_filters=64, kernel_size=3, dropout=0.05, batchnorm=True)
 uenc.compile(optimizer=Adam(), loss=BinaryCrossentropy(), metrics=["accuracy"])
 
-udec = udec(input_image, n_filters=64, kernel_size=3, dropout=0.05, batchnorm=True)
+udec = udec_model(input_image, n_filters=64, kernel_size=3, dropout=0.05, batchnorm=True)
 udec.compile(optimizer=Adam(), loss=BinaryCrossentropy(), metrics=["accuracy"])
 
 
@@ -222,20 +221,28 @@ def wnet(x, uenc, udec, epochs):
     """Wnet convolutional model for unsupervised segmentation
     Parameters
     ----------
-    x
-    uenc
-    udec
-    epochs
+    x: input images
+    uenc: U-Net encoder pathway
+    udec: U-Net decoder pathway
+    epochs: number of training epochs
 
     """
 
-    # for i in epochs:
+    for i in range(epochs):
+
         # sample minibatch of new input images
+        batch_dset = x.cache().shuffle(BUFFER_SIZE).batch(BATCH_SIZE)
+        batch_dset = batch_dset.prefetch(buffer_size=tf.data.experimental.AUTOTUNE)
 
         # update Uenc by minimizing Jsoft-Ncut
+        labels = uenc.fit(batch_dset)
+        snc_loss = softncut_loss(batch_dset, labels)
 
         # update W-net by minimizing Jreconstr
-
+        recon_images = udec.fit(labels)
+        rc_loss = recon_loss(recon_images, batch_dset)
+        
     return uenc
+
 
 

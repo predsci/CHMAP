@@ -5,7 +5,7 @@ import numpy.random as random
 import matplotlib.pyplot as plt
 
 import tensorflow as tf
-import coronal_holes.ml_detect.ml_functions as ml_funs
+import analysis.ml_analysis.ch_detect.ml_functions as ml_funs
 from tensorflow.keras.optimizers import Adam
 from sklearn.model_selection import train_test_split
 from tensorflow.keras.models import Model
@@ -21,7 +21,7 @@ EPOCHS = 50
 
 # h5 file name
 train_h5 = '/Volumes/CHD_DB/map_data_small.h5'
-test_h5 = 'h5_datasets/data_test.h5'
+# test_h5 = 'h5_datasets/data_test.h5'
 model_h5 = 'map_unet_model.h5'
 
 ### metrics

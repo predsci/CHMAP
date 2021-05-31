@@ -9,18 +9,20 @@ import matplotlib.colors as colors
 import matplotlib as mpl
 
 # my modules
-import utilities.datatypes.datatypes as datatypes
+import modules.datatypes as datatypes
 
 # machine learning modules
 import tensorflow as tf
 import matplotlib.pyplot as plt
 from IPython.display import clear_output
+from sklearn.cluster import KMeans
+from skimage import measure
 from tensorflow.keras.optimizers import Adam
-from tensorflow.keras.models import Model
+from tensorflow.keras.models import Model, load_model
 from tensorflow.keras.layers import *
 
 
-def normalize(input_image, input_mask):
+def normalize(input_image):
     """
     normalizes image
     :param input_image:
@@ -29,23 +31,25 @@ def normalize(input_image, input_mask):
     """
     input_image = tf.cast(input_image, tf.float32) / 255.0
     # input_mask -= 1
-    return input_image, input_mask
+    return input_image
 
 
 def load_image_train(datapoint, size):
-    input_image = tf.image.resize(datapoint['image'], size)
+    input_image = tf.image.resize(datapoint, size)
     # input_image = tf.image.resize(datapoint, (128, 128))
 
-    input_mask = tf.image.resize(datapoint['segmentation_mask'], size)
-    # input_mask = tf.image.resize(segmentation_mask, (128, 128))
+    # if datapoint['segmentation_mask']:
+    #     input_mask = tf.image.resize(datapoint['segmentation_mask'], size)
+    # # input_mask = tf.image.resize(segmentation_mask, (128, 128))
 
     if tf.random.uniform(()) > 0.5:
         input_image = tf.image.flip_left_right(input_image)
-        input_mask = tf.image.flip_left_right(input_mask)
+        # if input_mask:
+        #     input_mask = tf.image.flip_left_right(input_mask)
 
-    input_image, input_mask = normalize(input_image, input_mask)
+    # input_image = normalize(input_image)
 
-    return input_image, input_mask
+    return input_image
 
 
 def load_image_val(datapoint):
@@ -139,7 +143,7 @@ class DisplayCallback(tf.keras.callbacks.Callback):
 #### apply detection
 def ml_chd(model, iit_list, los_list, use_indices, inst_list):
     start = time.time()
-    chd_image_list = [datatypes.CHDImage()]*len(inst_list)
+    chd_image_list = [datatypes.CHDImage()] * len(inst_list)
     for inst_ind, instrument in enumerate(inst_list):
         if iit_list[inst_ind] is not None:
             # define CHD parameters
@@ -157,14 +161,14 @@ def ml_chd(model, iit_list, los_list, use_indices, inst_list):
             ml_output = model.predict(data_x[tf.newaxis, ...], verbose=1)
             result = (ml_output[0] > 0.1).astype(np.uint8)
 
-            use_chd = np.logical_and(image_data != -9999, result.squeeze() > 0)
+            # use_chd = np.logical_and(image_data != -9999, result.squeeze() > 0)
             pred = np.zeros(shape=result.squeeze().shape)
             pred[use_chd] = result.squeeze()[use_chd]
 
             # pred = np.zeros(shape=ml_output.squeeze().shape)
             # pred[use_chd] = ml_output.squeeze()[use_chd]
 
-            # chd_result = np.logical_and(result == 1, use_chd == 1)
+            # chd_result = np.logical_and(pred == 1, use_chd == 1)
             # chd_result = chd_result.astype(int)
 
             # binary_result = np.logical_and(binary_output == 1, use_chd == 1)
@@ -260,3 +264,84 @@ def load_model(model_h5, IMG_SIZE=2048, N_CHANNELS=3):
     model.load_weights(model_h5)
 
     return model
+
+def cluster_brightness(clustered_img, org_img, n_clusters):
+    # create average color array
+    avg_color = []
+
+    for i in range(0, n_clusters):
+        cluster_indices = np.where(clustered_img == i)
+
+        # average per row
+        average_color_per_row = np.average(org_img[cluster_indices], axis=0)
+
+        # find average across average per row
+        avg_color.append(average_color_per_row)
+
+    return avg_color
+
+def kmeans_detection(org_map, use_data, arr, N_CLUSTERS, IMG_HEIGHT, IMG_WIDTH, map_x, map_y):
+
+    optimalk = KMeans(n_clusters=N_CLUSTERS, random_state=0, init='k-means++').fit(arr)
+    labels = optimalk.labels_
+    pred_clustered = labels.reshape(IMG_HEIGHT, IMG_WIDTH)
+
+    # get cluster brightnesses
+    avg_color = cluster_brightness(pred_clustered, use_data, N_CLUSTERS)
+    color_order = np.argsort(avg_color)
+
+    ### CH Detection
+    chd_clustered = pred_clustered + 1
+    chd_clustered = np.where(np.logical_or(chd_clustered == color_order[0] + 1, chd_clustered == color_order[1] + 1), N_CLUSTERS + 1, 0)
+    # chd_clustered = np.where(chd_clustered == color_order[0] + 1, N_CLUSTERS + 1, 0)
+    chd_clustered = np.where(chd_clustered == N_CLUSTERS + 1, 1, 0)
+
+    # area constraint
+    chd_labeled = measure.label(chd_clustered, connectivity=2, background=0, return_num=True)
+
+    # get area
+    chd_area = [props.area for props in measure.regionprops(chd_labeled[0])]
+
+    # remove CH with less than 10 pixels in area
+    chd_good_area = np.where(np.array(chd_area) > 20)
+    indices = []
+    chd_plot = np.zeros(chd_labeled[0].shape)
+    for val in chd_good_area[0]:
+        val_label = val + 1
+        indices.append(np.logical_and(chd_labeled[0] == val_label, val in chd_good_area[0]))
+    for idx in indices:
+        chd_plot[idx] = chd_labeled[0][idx] + 1
+
+    #### ACTIVE REGION DETECTION
+    # get cluster brightness
+    ar_clustered = pred_clustered + 1
+    ar_clustered = np.where(ar_clustered == color_order[-1] + 1, N_CLUSTERS + 1, 0)
+    ar_clustered = np.where(ar_clustered == N_CLUSTERS + 1, 1, 0)
+
+    # area constraint
+    ar_labeled = measure.label(ar_clustered, connectivity=2, background=0, return_num=True)
+
+    # get area
+    ar_area = [props.area for props in measure.regionprops(ar_labeled[0])]
+
+    # remove AR with less than 6 pixels in area
+    ar_good_area = np.where(np.array(ar_area) > 20)
+    indices = []
+    ar_plot = np.zeros(ar_labeled[0].shape)
+    for val in ar_good_area[0]:
+        val_label = val + 1
+        indices.append(np.logical_and(ar_labeled[0] == val_label, val in ar_good_area[0]))
+    for idx in indices:
+        ar_plot[idx] = ar_labeled[0][idx] + 1
+
+    # chd
+    chd_plot = np.where(chd_plot > 0, 1, 0)
+    chd_labeled = measure.label(chd_plot, connectivity=2, background=0, return_num=True)
+    psi_chd_map = datatypes.PsiMap(data=org_map, chd=chd_plot, x=map_x, y=map_y)
+
+    # ar
+    ar_plot = np.where(ar_plot > 0, 1, 0)
+    ar_labeled = measure.label(ar_plot, connectivity=2, background=0, return_num=True)
+    psi_ar_map = datatypes.PsiMap(data=org_map, chd=ar_plot, x=map_x, y=map_y)
+
+    return psi_chd_map, psi_ar_map, chd_labeled, ar_labeled
