@@ -22,7 +22,7 @@ from settings.app import App
 import database.db_classes as db_class
 import database.db_funs as db_funcs
 import coronal_holes.detection.chd_funcs as chd_funcs
-from data_products.DP_funs import quality_map
+from maps.time_averaged.dp_funs import quality_map
 
 # -------- parameters --------- #
 # TIME RANGE FOR QUERYING

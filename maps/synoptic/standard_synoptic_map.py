@@ -1,7 +1,6 @@
 """
-methods to create full CR maps with an unknown number of images
-inputs needed: min and max time, instrument list
-do we want to switch this to map an exact CR??
+pipeline for creation of a "standard" synoptic map
+weighting over a CR favoring central longitudes
 """
 
 import os
@@ -12,14 +11,25 @@ import data.corrections.apply_lbc_iit as apply_lbc_iit
 from settings.app import App
 import database.db_classes as db_class
 import database.db_funs as db_funcs
-import data_products.CR_mapping_funcs as cr_funcs
-from data_products.DP_funs import quality_map
+import maps.synoptic.cr_mapping_funcs as cr_funcs
+import maps.time_averaged.dp_funs as dp_funcs
 
-# -------- UPDATEABLE PARAMETERS --------- #
+#### INPUT PARAMETERS ####
+
+#### ----- choose one of the below time range options ----- #
+# CARRINGTON ROTATION
+cr_rot = None
 # TIME RANGE FOR QUERYING
-query_time_min = datetime.datetime(2011, 5, 1, 0, 0, 0)
-query_time_max = datetime.datetime(2011, 5, 4, 0, 0, 0)
+# query_time_min = datetime.datetime(2011, 5, 1, 0, 0, 0)
+query_time_min = None
+# query_time_max = datetime.datetime(2011, 5, 4, 0, 0, 0)
+query_time_max = None
+# INTEREST DATE TO CARRINGTION ROTATION
+interest_date = datetime.datetime(2011, 5, 1, 0, 0, 0)
+ref_inst = "AIA"  # reference instrument for creating full CR
+center = True  # true if interest date is center date, false if start date
 
+#### ----- map creation parameters ----- ####
 # INSTRUMENTS
 inst_list = ["AIA", "EUVI-A", "EUVI-B"]
 # COLOR LIST FOR INSTRUMENT QUALITY MAPS
@@ -64,10 +74,11 @@ use_db = "sqlite"
 sqlite_path = os.path.join(database_dir, sqlite_filename)
 db_session = db_funcs.init_db_conn(db_name=use_db, chd_base=db_class.Base, sqlite_path=sqlite_path)
 
-### --------- NOTHING TO UPDATE BELOW -------- ###
+#### ------- nothing to update below ------- ####
 #### STEP ONE: SELECT IMAGES ####
 # 1.) query some images
-query_pd = db_funcs.query_euv_images(db_session=db_session, time_min=query_time_min, time_max=query_time_max)
+query_pd = cr_funcs.query_datebase_cr(db_session, query_time_min, query_time_max, interest_date, center, ref_inst,
+                                      cr_rot)
 
 # 2.) generate a dataframe to record methods
 methods_list = db_funcs.generate_methdf(query_pd)
@@ -97,15 +108,18 @@ for row in query_pd.iterrows():
 
     #### STEP FIVE: CREATE COMBINED MAPS ####
     euv_combined, chd_combined, combined_method, chd_combined_method = cr_funcs.cr_map(euv_map, chd_map, euv_combined,
-                                                                  chd_combined, data_info,
-                                                                  map_info,
-                                                                  mu_cutoff=mu_cutoff,
-                                                                  mu_merge_cutoff=mu_merge_cutoff)
+                                                                                       chd_combined, data_info,
+                                                                                       map_info,
+                                                                                       mu_cutoff=mu_cutoff,
+                                                                                       mu_merge_cutoff=mu_merge_cutoff)
 
 #### STEP SIX: PLOT COMBINED MAP AND SAVE TO DATABASE ####
 cr_funcs.save_maps(db_session, map_data_dir, euv_combined, chd_combined, data_info, map_info, methods_list,
-              combined_method, chd_combined_method)
-
+                   combined_method, chd_combined_method)
 
 #### CREATE QUALITY MAPS
-quality_map(db_session, map_data_dir, inst_list, query_pd, euv_combined, chd_combined=None, color_list=color_list)
+dp_funcs.quality_map(db_session, map_data_dir, inst_list, query_pd, euv_combined,
+                     chd_combined=None, color_list=color_list)
+
+
+
