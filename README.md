@@ -15,3 +15,9 @@ Raw data reduction steps may also require [SSW/IDL](https://www.lmsal.com/solars
 ## Documentation
 Documentation site is hosted by GitHub [here](https://predsci.github.io/CHD/).
 
+Updates to the documentation site:
+- update markdown files in CHD-mkdocs folder
+- commit and push the changes
+- go to the CHD-mkdocs folder 
+- mkdocs gh-deploy
+
