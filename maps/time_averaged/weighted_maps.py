@@ -6,7 +6,7 @@ smooth weighting curve around date you care about
 import os
 import datetime
 
-import data.corrections.apply_lbc_iit as apply_lbc_iit
+import chmap.data.corrections.apply_lbc_iit as apply_lbc_iit
 from settings.app import App
 import database.db_classes as db_class
 import database.db_funs as db_funcs
@@ -71,7 +71,7 @@ db_session = db_funcs.init_db_conn(db_name=use_db, chd_base=db_class.Base, sqlit
 query_time_min = center_time - (timescale / 2)
 query_time_max = center_time + (timescale / 2)
 lbc_combo_query, iit_combo_query = apply_lbc_iit.get_inst_combos(db_session, inst_list, time_min=query_time_min,
-                                                                                  time_max=query_time_max)
+                                                                 time_max=query_time_max)
 
 #### STEP ONE: SELECT IMAGES ####
 # 1.) query some images

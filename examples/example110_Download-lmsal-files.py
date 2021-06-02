@@ -5,7 +5,7 @@ import numpy as np
 import datetime
 
 import database.db_classes as DBClass
-from data.download import lmsal_helpers
+from chmap.data.download import lmsal_helpers
 from utilities.file_io import io_helpers
 from settings.app import App
 

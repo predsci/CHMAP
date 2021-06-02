@@ -21,9 +21,9 @@ from sqlalchemy.orm import sessionmaker, aliased
 
 from settings.app import App
 from database.db_classes import *
-from data.download.euv_utils import get_metadata
+from chmap.data.download.euv_utils import get_metadata
 from utilities.file_io import io_helpers
-from data.download import euv_utils
+from chmap.data.download import euv_utils
 from utilities.datatypes import datatypes
 import utilities.file_io.psi_hdf as psihdf
 import utilities.cred_funs as creds

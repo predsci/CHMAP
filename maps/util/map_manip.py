@@ -11,7 +11,7 @@ import time
 import utilities.datatypes.datatypes as psi_d_types
 from settings.info import DTypes
 from utilities.coord_manip import s2c
-import data.corrections.lbcc.lbcc_utils as lbcc_funs
+import chmap.data.corrections.lbcc.lbcc_utils as lbcc_funs
 
 
 

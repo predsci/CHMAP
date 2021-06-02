@@ -12,7 +12,7 @@ import astropy.units as u
 from settings.app import App
 import database.db_classes as DBClass
 from database.db_funs import init_db_conn
-from data.download.image_download import synchronic_euv_download
+from chmap.data.download.image_download import synchronic_euv_download
 
 # Specify a vector of synchronic times
 period_start = Time('2021-01-02T00:00:00.000', scale='utc')

@@ -12,8 +12,8 @@ import utilities.plotting.psi_plotting as Plotting
 import software.ezseg.ezsegwrapper as ezsegwrapper
 import utilities.datatypes.datatypes as datatypes
 import database.db_funs as db_funcs
-import data.corrections.lbcc.LBCC_theoretic_funcs as lbcc_funcs
-import data.corrections.iit.IIT_pipeline_funcs as iit_funcs
+import chmap.data.corrections.lbcc.LBCC_theoretic_funcs as lbcc_funcs
+import chmap.data.corrections.iit.IIT_pipeline_funcs as iit_funcs
 
 
 #### STEP ONE: SELECT IMAGES ####

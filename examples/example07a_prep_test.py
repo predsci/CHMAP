@@ -14,7 +14,7 @@ import sunpy.map
 
 from settings.app import App
 from utilities.plotting import euv_fits_plotting
-import data.corrections.image_prep.prep as prep
+import chmap.data.corrections.image_prep.prep as prep
 from utilities.idl_connect import idl_helper
 from utilities.datatypes import datatypes
 

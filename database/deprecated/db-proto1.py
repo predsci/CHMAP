@@ -12,9 +12,9 @@ import datetime
 from astropy.time import Time, TimeDelta
 from sunpy.time import TimeRange
 
-from data.download import drms_helpers, vso_helpers
+from chmap.data.download import drms_helpers, vso_helpers
 from settings.app import App
-from data.download.euv_utils import cluster_meth_1, list_available_images
+from chmap.data.download.euv_utils import cluster_meth_1, list_available_images
 from database.db_classes import *
 from database.deprecated.db_funs import init_db_conn, query_euv_images, add_image2session, update_image_val
 

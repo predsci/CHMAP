@@ -25,7 +25,7 @@ import time
 from settings.app import App
 import database.db_classes as db_class
 import database.db_funs as db_funcs
-import data.corrections.apply_lbc_iit as apply_lbc_iit
+import chmap.data.corrections.apply_lbc_iit as apply_lbc_iit
 import chmap.coronal_holes.detection.chd_funcs as chd_funcs
 import maps.util.map_manip as map_manip
 import utilities.datatypes.datatypes as datatypes
@@ -134,7 +134,7 @@ for date_ind, center in enumerate(moving_avg_centers):
     # apply corrections to those images
     date_pd, los_list, iit_list, use_indices, methods_list, ref_alpha, ref_x = \
         apply_lbc_iit.apply_ipp_2(db_session, center, synch_images, inst_list, hdf_data_dir,
-                                                   n_intensity_bins, R0)
+                                  n_intensity_bins, R0)
 
     #### STEP THREE: CORONAL HOLE DETECTION ####
     if los_list[0] is not None:

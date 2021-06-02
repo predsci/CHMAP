@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 
-from data.download.euv_utils import cluster_meth_1
+from chmap.data.download.euv_utils import cluster_meth_1
 
 
 def select_synchronic_images(center_time, del_interval, image_pd, inst_list):

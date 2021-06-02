@@ -14,7 +14,7 @@ import os
 import numpy as np
 import datetime
 
-import data.corrections.apply_lbc_iit as apply_lbc_iit
+import chmap.data.corrections.apply_lbc_iit as apply_lbc_iit
 import maps.image2map as image2map
 import maps.midm as midm
 import maps.synchronic.synch_utils as synch_utils
@@ -87,19 +87,19 @@ moving_avg_centers = synch_utils.get_dates(time_min=query_time_min, time_max=que
 
 # 2.) get instrument combos
 lbc_combo_query, iit_combo_query = apply_lbc_iit.get_inst_combos(db_session, inst_list, time_min=query_time_min,
-                                                                                  time_max=query_time_max)
+                                                                 time_max=query_time_max)
 
 for date_ind, center in enumerate(moving_avg_centers):
     #### STEP TWO: APPLY PRE-PROCESSING CORRECTIONS ####
     date_pd, los_list, iit_list, use_indices, methods_list, ref_alpha, ref_x = apply_lbc_iit.apply_ipp(db_session, center,
-                                                                                                                        query_pd,
-                                                                                                                        inst_list,
-                                                                                                                        hdf_data_dir,
-                                                                                                                        lbc_combo_query,
-                                                                                                                        iit_combo_query,
-                                                                                                                        methods_list,
-                                                                                                                        n_intensity_bins,
-                                                                                                                        R0)
+                                                                                                       query_pd,
+                                                                                                       inst_list,
+                                                                                                       hdf_data_dir,
+                                                                                                       lbc_combo_query,
+                                                                                                       iit_combo_query,
+                                                                                                       methods_list,
+                                                                                                       n_intensity_bins,
+                                                                                                       R0)
     #### STEP THREE: CORONAL HOLE DETECTION ####
     if los_list[0] is not None:
         chd_image_list = chd_funcs.chd(iit_list, los_list, use_indices, inst_list, thresh1, thresh2, ref_alpha, ref_x,

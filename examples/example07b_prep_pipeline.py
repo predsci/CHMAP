@@ -14,9 +14,9 @@ from astropy.time import Time
 from settings.app import App
 from database.db_classes import Base
 from database.db_funs import init_db_conn, query_euv_images
-from data.download.euv_utils import get_image_set
+from chmap.data.download.euv_utils import get_image_set
 from utilities.idl_connect import idl_helper
-from data.corrections.image_prep import prep
+from chmap.data.corrections.image_prep import prep
 
 # database location
 database_dir = App.DATABASE_HOME

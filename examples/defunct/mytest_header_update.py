@@ -1,6 +1,6 @@
 import astropy.io
 import astropy.io.fits
-from data.download import drms_helpers
+from chmap.data.download import drms_helpers
 
 #import fits_drms_helper_aia_euv_12s
 

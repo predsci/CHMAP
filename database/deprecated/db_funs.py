@@ -17,7 +17,7 @@ from sqlalchemy.orm import sessionmaker
 
 from settings.app import App
 from database.db_classes import *
-from data.download.euv_utils import get_metadata
+from chmap.data.download.euv_utils import get_metadata
 from utilities.file_io import io_helpers
 
 

@@ -15,8 +15,8 @@ import astropy.units as u
 from sunpy.time import TimeRange
 
 from settings.app import App
-from data.download import drms_helpers, vso_helpers
-from data.download.euv_utils import get_image_set
+from chmap.data.download import drms_helpers, vso_helpers
+from chmap.data.download.euv_utils import get_image_set
 
 # Get the data dir from the installed app settings.
 data_dir = App.RAW_DATA_HOME

@@ -18,7 +18,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib as mpl
 import numpy as np
-import data.corrections.apply_lbc_iit as apply_lbc_iit
+import chmap.data.corrections.apply_lbc_iit as apply_lbc_iit
 from maps.util.map_manip import combine_maps
 import maps.image2map as image2map
 
@@ -83,8 +83,8 @@ map_x = np.linspace(x_range[0], x_range[1], map_nxcoord, dtype='<f4')
 
 ### get instrument combos
 lbc_combo_query, iit_combo_query = apply_lbc_iit.get_inst_combos(db_session, inst_list,
-                                                                                  time_min=min(query_times),
-                                                                                  time_max=max(query_times))
+                                                                 time_min=min(query_times),
+                                                                 time_max=max(query_times))
 
 ### LOOP THROUGH EACH OF THE DATES ###
 for index, date in enumerate(query_times):
@@ -101,14 +101,14 @@ for index, date in enumerate(query_times):
 
     #### STEP TWO: APPLY PRE-PROCESSING CORRECTIONS ####
     date_pd, los_list, iit_list, use_indices, methods_list, ref_alpha, ref_x = apply_lbc_iit.apply_ipp(db_session, date,
-                                                                                                                        query_pd,
-                                                                                                                        inst_list,
-                                                                                                                        hdf_data_dir,
-                                                                                                                        lbc_combo_query,
-                                                                                                                        iit_combo_query,
-                                                                                                                        methods_list,
-                                                                                                                        n_intensity_bins,
-                                                                                                                        R0)
+                                                                                                       query_pd,
+                                                                                                       inst_list,
+                                                                                                       hdf_data_dir,
+                                                                                                       lbc_combo_query,
+                                                                                                       iit_combo_query,
+                                                                                                       methods_list,
+                                                                                                       n_intensity_bins,
+                                                                                                       R0)
     #### STEP THREE: CORONAL HOLE DETECTION ####
     if los_list[0] is not None:
         for t1_index, thresh1 in enumerate(threshold_values1):
