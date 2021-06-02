@@ -39,6 +39,7 @@ class CoronalHoleGraph:
             'num_of_connected_sub_graphs': len(nx.connected_components(self.G))
         }
 
+    
     def insert_node(self, node):
         """Insert the coronal hole (node) to graph.
 
@@ -51,13 +52,16 @@ class CoronalHoleGraph:
 
         """
         # add node to the connectivity graph.
-        self.G.add_node(id(node),
-                        area=node.area,
-                        id=node.id,
-                        frame_num=node.frame_num,
-                        frame_timestamp=node.frame_timestamp,
-                        count=node.count,
-                        color=node.color)
+        name = self.get_unique_id(node)
+
+        if not self.G.has_node(name):
+            self.G.add_node(name,
+                            area=node.area,
+                            id=node.id,
+                            frame_num=node.frame_num,
+                            frame_timestamp=node.frame_timestamp,
+                            count=node.count,
+                            color=node.color)
 
     def insert_edge(self, node_1, node_2, weight=0):
         """Insert an edge between two nodes (coronal hole objects)
@@ -72,9 +76,34 @@ class CoronalHoleGraph:
         -------
 
         """
-        if not self.G.has_edge(id(node_1), id(node_2)):
+        # get contour's unique ID.
+        n1 = self.get_unique_id(node_1)
+        n2 = self.get_unique_id(node_2)
+
+        # if the edge does not exist then we create it.
+        if not self.G.has_edge(n1, n2):
+            # check if the two nodes are in the graph.
+            if not self.G.has_node(n1):
+                self.insert_node(node_1)
+            if not self.G.has_node(n2):
+                self.insert_node(node_2)
+
             # add edge between two node in Graph, with an edge weight between 0 and 1.
-            self.G.add_edge(u_of_edge=id(node_1), v_of_edge=id(node_2), weight=weight)
+            self.G.add_edge(u_of_edge=n1, v_of_edge=n2, weight=weight)
+
+    @staticmethod
+    def get_unique_id(contour):
+        """Get a unique ID for a given contour.
+
+        Parameters
+        ----------
+        contour: Contour() object.
+
+        Returns
+        -------
+        float
+        """
+        return str(contour.frame_num) + "_" + str(contour.id) + "_" + str(contour.count)
 
     @staticmethod
     def get_sub_graph_pos(sub_graph):
