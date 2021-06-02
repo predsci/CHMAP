@@ -2,7 +2,6 @@
 # Delete all maps in a timeframe
 
 import os
-os.environ["OMP_NUM_THREADS"] = "4"  # limit number of threads numpy can spawn
 import numpy as np
 import datetime
 

@@ -3,7 +3,11 @@ construct mu-histogram and push to database for any time period
 """
 
 import os
-os.environ["OMP_NUM_THREADS"] = "4"  # limit number of threads numpy can spawn
+
+# This can be a computationally intensive process.
+# To limit number of threads numpy can spawn:
+# os.environ["OMP_NUM_THREADS"] = "4"
+
 import time
 import datetime
 import numpy as np

@@ -3,7 +3,11 @@ Track beta-y functional fits
 for theoretical fit.
 """
 import os
-os.environ["OMP_NUM_THREADS"] = "4"  # limit number of threads numpy can spawn
+
+# This can be a computationally intensive process.
+# To limit number of threads numpy can spawn:
+# os.environ["OMP_NUM_THREADS"] = "4"
+
 import numpy as np
 import datetime
 import time

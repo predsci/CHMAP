@@ -12,8 +12,11 @@ outline to create combination EUV maps
 """
 
 import os
-os.environ["OMP_NUM_THREADS"] = "4"  # limit number of threads numpy can spawn
-import numpy as np
+
+# This can be a computationally intensive process.
+# To limit number of threads numpy can spawn:
+# os.environ["OMP_NUM_THREADS"] = "4"import numpy as np
+
 import datetime
 import time
 # import pandas as pd
