@@ -8,8 +8,8 @@ Python Package Dependency: OpenCV (cv2)
 import os
 import datetime
 
-from database import db_funs
-import database.db_classes as DBClass
+from chmap.database import db_funs
+import chmap.database.db_classes as DBClass
 from settings.app import App
 import utilities.plotting.psi_plotting as psi_plot
 

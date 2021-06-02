@@ -11,7 +11,7 @@ import matplotlib.pyplot as plt
 from matplotlib import cm
 from matplotlib.lines import Line2D
 
-import database.db_funs as db_funcs
+import chmap.database.db_funs as db_funcs
 import utilities.datatypes.datatypes as psi_d_types
 import chmap.data.corrections.lbcc.lbcc_utils as lbcc
 import utilities.plotting.psi_plotting as Plotting

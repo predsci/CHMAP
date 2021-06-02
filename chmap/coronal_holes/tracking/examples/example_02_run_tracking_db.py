@@ -21,8 +21,8 @@ import os
 import datetime
 import numpy as np
 import cv2
-from database import db_funs
-import database.db_classes as DBClass
+from chmap.database import db_funs
+import chmap.database.db_classes as DBClass
 import utilities.datatypes.datatypes as psi_datatype
 from settings.app import App
 from chmap.coronal_holes.tracking.src import CoronalHoleDB

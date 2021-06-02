@@ -17,8 +17,8 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 from settings.app import App
-import database.db_classes as db_class
-import database.db_funs as db_funcs
+import chmap.database.db_classes as db_class
+import chmap.database.db_funs as db_funcs
 import chmap.data.corrections.lbcc.LBCC_theoretic_funcs as lbcc_funcs
 import chmap.data.corrections.iit.IIT_pipeline_funcs as iit_funcs
 from maps.util.map_manip import combine_maps

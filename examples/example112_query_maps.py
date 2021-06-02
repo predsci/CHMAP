@@ -3,8 +3,8 @@ import os
 import datetime
 import numpy as np
 
-from database import db_funs
-import database.db_classes as DBClass
+from chmap.database import db_funs
+import chmap.database.db_classes as DBClass
 import utilities.datatypes.datatypes as psi_datatype
 from settings.app import App
 import utilities.plotting.psi_plotting as EasyPlot

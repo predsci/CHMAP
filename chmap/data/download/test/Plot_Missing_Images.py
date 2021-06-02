@@ -11,8 +11,8 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 from settings.app import App
-import database.db_classes as db_class
-from database.db_funs import init_db_conn, query_euv_images
+import chmap.database.db_classes as db_class
+from chmap.database.db_funs import init_db_conn, query_euv_images
 
 # query parameters
 interval_cadence = datetime.timedelta(hours=2.)

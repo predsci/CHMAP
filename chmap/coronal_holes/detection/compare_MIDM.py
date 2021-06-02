@@ -6,8 +6,8 @@ import matplotlib.pyplot as plt
 import datetime
 import h5py as h5
 
-from database import db_funs
-import database.db_classes as DBClass
+from chmap.database import db_funs
+import chmap.database.db_classes as DBClass
 import utilities.datatypes.datatypes as psi_datatype
 from settings.app import App
 import utilities.plotting.psi_plotting as EasyPlot

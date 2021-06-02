@@ -6,7 +6,7 @@ import numpy as np
 import time
 import datetime
 
-import database.db_funs as db_funcs
+import chmap.database.db_funs as db_funcs
 import utilities.datatypes.datatypes as psi_d_types
 import chmap.data.corrections.lbcc.lbcc_utils as lbcc
 import chmap.data.corrections.iit.iit_utils as iit

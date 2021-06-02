@@ -11,8 +11,6 @@ settings/app.py
 settings/app_*.py
 settings/e_key.bin
 settings/e_cred.bin
-setup.conf
-setup_*
 
 software/ezseg/**
 !software/ezseg/*.f

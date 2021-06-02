@@ -8,8 +8,8 @@ import time
 import numpy as np
 import datetime
 from settings.app import App
-from database.db_funs import init_db_conn, query_euv_images, query_var_val, query_inst_combo
-import database.db_classes as db_class
+from chmap.database.db_funs import init_db_conn, query_euv_images, query_var_val, query_inst_combo
+import chmap.database.db_classes as db_class
 import utilities.datatypes.datatypes as psi_d_types
 import utilities.plotting.psi_plotting as Plotting
 import chmap.data.corrections.lbcc.lbcc_utils as lbcc

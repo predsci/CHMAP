@@ -6,8 +6,8 @@ import os
 import datetime
 
 from settings.app import App
-import database.db_classes as db_class
-import database.db_funs as db_funs
+import chmap.database.db_classes as db_class
+import chmap.database.db_funs as db_funs
 
 # In this example we can use the 'reference_data' fits files supplied with repo or the directories setup in App.py
 # data-file dirs

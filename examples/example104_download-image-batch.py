@@ -10,8 +10,8 @@ from astropy.time import Time
 import astropy.units as u
 
 from settings.app import App
-import database.db_classes as DBClass
-from database.db_funs import init_db_conn
+import chmap.database.db_classes as DBClass
+from chmap.database.db_funs import init_db_conn
 from chmap.data.download.image_download import synchronic_euv_download
 
 # Specify a vector of synchronic times

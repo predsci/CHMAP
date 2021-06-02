@@ -15,8 +15,8 @@ from matplotlib import cm
 from matplotlib.lines import Line2D
 
 from settings.app import App
-import database.db_funs as db_funs
-import database.db_classes as db_class
+import chmap.database.db_funs as db_funs
+import chmap.database.db_classes as db_class
 import chmap.data.corrections.lbcc.lbcc_utils as lbcc
 import utilities.datatypes.datatypes as psi_d_types
 

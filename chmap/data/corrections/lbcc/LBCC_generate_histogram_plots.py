@@ -8,9 +8,9 @@ import time
 import datetime
 import numpy as np
 from settings.app import App
-import database.db_classes as db_class
+import chmap.database.db_classes as db_class
 import utilities.plotting.psi_plotting as Plotting
-from database.db_funs import init_db_conn, query_hist, get_method_id, query_euv_images, query_inst_combo
+from chmap.database.db_funs import init_db_conn, query_hist, get_method_id, query_euv_images, query_inst_combo
 import chmap.data.corrections.iit.IIT_pipeline_funcs as iit_funcs
 import utilities.datatypes.datatypes as psi_d_types
 

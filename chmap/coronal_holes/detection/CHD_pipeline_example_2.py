@@ -23,8 +23,8 @@ import time
 # import pandas as pd
 
 from settings.app import App
-import database.db_classes as db_class
-import database.db_funs as db_funcs
+import chmap.database.db_classes as db_class
+import chmap.database.db_funs as db_funcs
 import chmap.data.corrections.apply_lbc_iit as apply_lbc_iit
 import chmap.coronal_holes.detection.chd_funcs as chd_funcs
 import maps.util.map_manip as map_manip

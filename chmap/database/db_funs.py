@@ -20,7 +20,7 @@ from sqlalchemy import create_engine, func, or_, union_all, case, distinct
 from sqlalchemy.orm import sessionmaker, aliased
 
 from settings.app import App
-from database.db_classes import *
+from chmap.database.db_classes import *
 from chmap.data.download.euv_utils import get_metadata
 from utilities.file_io import io_helpers
 from chmap.data.download import euv_utils

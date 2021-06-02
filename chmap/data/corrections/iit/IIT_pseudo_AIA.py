@@ -12,8 +12,8 @@ from mpl_toolkits.axes_grid1 import make_axes_locatable
 import matplotlib as mpl
 
 from settings.app import App
-import database.db_funs as db_funs
-import database.db_classes as db_class
+import chmap.database.db_funs as db_funs
+import chmap.database.db_classes as db_class
 
 # load IIT parameters and histogram stats
 IIT_pars_file = '/Users/turtle/Dropbox/MyNACD/analysis/iit/IIT_pars-and-hists.pkl'

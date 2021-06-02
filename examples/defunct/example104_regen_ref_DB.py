@@ -8,8 +8,8 @@ import datetime
 # import pandas as pd
 
 from settings.app import App
-from database.db_classes import *
-from database.deprecated.db_funs import init_db_conn, get_var_id, get_method_id, add_meth_var_assoc, get_combo_id, \
+from chmap.database.db_classes import *
+from chmap.database.deprecated.db_funs import init_db_conn, get_var_id, get_method_id, add_meth_var_assoc, get_combo_id, \
     add_combo_image_assoc, add_euv_map, build_euvimages_from_fits
 
 

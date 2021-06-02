@@ -19,8 +19,8 @@ import os
 import numpy as np
 
 from settings.app import App
-from database import db_classes
-from database.deprecated.db_funs import create_map_input_object, init_db_conn, create_method, add_map_dbase_record,\
+from chmap.database import db_classes
+from chmap.database.deprecated.db_funs import create_map_input_object, init_db_conn, create_method, add_map_dbase_record,\
     query_euv_maps, delete_map_dbase_record
 from utilities.datatypes.datatypes import PsiMap
 

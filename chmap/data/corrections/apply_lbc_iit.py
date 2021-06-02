@@ -6,7 +6,7 @@ import pandas as pd
 
 from chmap.data.corrections.iit import IIT_pipeline_funcs as iit_funcs
 from chmap.data.corrections.lbcc import LBCC_theoretic_funcs as lbcc_funcs
-from database import db_funs as db_funcs
+from chmap.database import db_funs as db_funcs
 
 
 def get_inst_combos(db_session, inst_list, time_min, time_max):

@@ -10,8 +10,8 @@ import datetime
 import sys
 sys.path.append("/Users/tamarervin/CH_Project/CHD")
 from settings.app import App
-import database.db_classes as db_class
-import database.db_funs as db_funcs
+import chmap.database.db_classes as db_class
+import chmap.database.db_funs as db_funcs
 import chmap.coronal_holes.detection.chd_funcs as chd_funcs
 
 import pandas as pd

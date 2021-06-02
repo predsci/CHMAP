@@ -8,8 +8,8 @@ import datetime
 from sqlalchemy.sql import func
 
 from settings.app import App
-import database.db_classes as db_class
-from database.db_funs import init_db_conn, get_method_id, query_inst_combo
+import chmap.database.db_classes as db_class
+from chmap.database.db_funs import init_db_conn, get_method_id, query_inst_combo
 
 
 ###### ------ PARAMETERS TO UPDATE -------- ########
