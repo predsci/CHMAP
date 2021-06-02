@@ -6,9 +6,9 @@ Last modified: May 6th, 2021 (Opal)
 """
 
 import cv2
-from coronal_holes.tracking.src.dilation import latitude_weighted_dilation, find_contours, \
+from chmap.coronal_holes.tracking.src import latitude_weighted_dilation, find_contours, \
     get_list_of_contours_from_rbg, uniform_dilation_in_latitude
-from coronal_holes.tracking.src.periodicity import prune_coronal_hole_list
+from chmap.coronal_holes.tracking.src import prune_coronal_hole_list
 from maps.util.map_manip import MapMesh
 import matplotlib.pyplot as plt
 
@@ -99,8 +99,8 @@ def classify_grey_scaled_image(greyscale_image, lat_coord, lon_coord, gamma=10, 
 
 if __name__ == "__main__":
     import numpy as np
-    from coronal_holes.tracking.src.dilation import generate_ch_color
-    from coronal_holes.tracking.tools.plots import plot_coronal_hole
+    from chmap.coronal_holes.tracking.src import generate_ch_color
+    from chmap.coronal_holes.tracking.tools.plots import plot_coronal_hole
 
     # read in an example image
     image = cv2.imread("data/example_frame.png")

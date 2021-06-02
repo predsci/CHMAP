@@ -32,4 +32,4 @@ schema_viz/sqlite/output/*
 !schema_viz/sqlite/output/diagrams
 schema_viz/sqlite/output/diagrams/*
 !schema_viz/sqlite/output/diagrams/summary
-/coronal_holes/tracking/results/
+/chmap/coronal_holes/tracking/results/

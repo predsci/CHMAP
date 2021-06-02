@@ -20,9 +20,9 @@ import numpy as np
 import pickle
 import os
 from maps.util.map_manip import MapMesh
-from coronal_holes.tracking.src.main import CoronalHoleDB
-from coronal_holes.tracking.tools.plots import plot_coronal_hole
-from coronal_holes.tracking.src.classification import classify_grey_scaled_image
+from chmap.coronal_holes.tracking.src import CoronalHoleDB
+from chmap.coronal_holes.tracking.tools.plots import plot_coronal_hole
+from chmap.coronal_holes.tracking.src import classify_grey_scaled_image
 from astropy.time import Time
 
 # ================================================================================================================

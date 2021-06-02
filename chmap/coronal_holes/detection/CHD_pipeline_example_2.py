@@ -15,8 +15,9 @@ import os
 
 # This can be a computationally intensive process.
 # To limit number of threads numpy can spawn:
-# os.environ["OMP_NUM_THREADS"] = "4"import numpy as np
+# os.environ["OMP_NUM_THREADS"] = "4"
 
+import numpy as np
 import datetime
 import time
 # import pandas as pd
@@ -25,7 +26,7 @@ from settings.app import App
 import database.db_classes as db_class
 import database.db_funs as db_funcs
 import data.corrections.apply_lbc_iit as apply_lbc_iit
-import coronal_holes.detection.chd_funcs as chd_funcs
+import chmap.coronal_holes.detection.chd_funcs as chd_funcs
 import maps.util.map_manip as map_manip
 import utilities.datatypes.datatypes as datatypes
 import maps.image2map as image2map
