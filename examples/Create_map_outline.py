@@ -23,7 +23,7 @@ from settings.app import App
 import chmap.database.db_classes as db_class
 from chmap.database.db_funs import init_db_conn, query_euv_images
 import utilities.datatypes.datatypes as psi_d_types
-from maps.util.map_manip import combine_maps
+from chmap.maps.util.map_manip import combine_maps
 # import modules.coord_manip as coord
 import utilities.plotting.psi_plotting as EasyPlot
 

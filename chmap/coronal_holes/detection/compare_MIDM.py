@@ -12,7 +12,7 @@ import utilities.datatypes.datatypes as psi_datatype
 from settings.app import App
 import utilities.plotting.psi_plotting as EasyPlot
 import utilities.coord_manip as coord_manip
-import maps.util.map_manip as map_manip
+import chmap.maps.util.map_manip as map_manip
 from settings.info import DTypes
 
 map_dir = App.MAP_FILE_HOME

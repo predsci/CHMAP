@@ -7,7 +7,7 @@ import numpy as np
 import datetime
 import pandas as pd
 
-from maps.util.map_manip import combine_cr_maps
+from chmap.maps.util.map_manip import combine_cr_maps
 import utilities.plotting.psi_plotting as Plotting
 import software.ezseg.ezsegwrapper as ezsegwrapper
 import utilities.datatypes.datatypes as datatypes

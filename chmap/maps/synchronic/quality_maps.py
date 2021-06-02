@@ -15,14 +15,14 @@ import numpy as np
 import datetime
 
 import chmap.data.corrections.apply_lbc_iit as apply_lbc_iit
-import maps.image2map as image2map
-import maps.midm as midm
-import maps.synchronic.synch_utils as synch_utils
+import chmap.maps.image2map as image2map
+import chmap.maps.midm as midm
+import chmap.maps.synchronic.synch_utils as synch_utils
 from settings.app import App
 import chmap.database.db_classes as db_class
 import chmap.database.db_funs as db_funcs
 import chmap.coronal_holes.detection.chd_funcs as chd_funcs
-from maps.time_averaged.dp_funs import quality_map
+from chmap.maps.time_averaged.dp_funs import quality_map
 
 # -------- parameters --------- #
 # TIME RANGE FOR QUERYING
@@ -106,15 +106,15 @@ for date_ind, center in enumerate(moving_avg_centers):
                                        nc, iters)
         #### STEP FOUR: CONVERT TO MAP ####
         map_list, chd_map_list, methods_list, data_info, map_info = image2map.create_singles_maps(inst_list, date_pd,
-                                                                                                       iit_list,
-                                                                                                       chd_image_list,
-                                                                                                       methods_list, map_x,
-                                                                                                       map_y, R0)
+                                                                                                  iit_list,
+                                                                                                  chd_image_list,
+                                                                                                  methods_list, map_x,
+                                                                                                  map_y, R0)
         #### STEP FIVE: CREATE COMBINED MAPS AND SAVE TO DB ####
         euv_combined, chd_combined = midm.create_combined_maps(db_session, map_data_dir, map_list, chd_map_list,
-                                                                    methods_list, data_info, map_info,
-                                                                    mu_merge_cutoff=mu_merge_cutoff,
-                                                                    mu_cutoff=mu_cutoff)
+                                                               methods_list, data_info, map_info,
+                                                               mu_merge_cutoff=mu_merge_cutoff,
+                                                               mu_cutoff=mu_cutoff)
 
         #### STEP SIX: CREATE A QUALITY MAP FOR CORRESPONDING CHD MAP ####
         quality_map(db_session, map_data_dir, inst_list, query_pd, euv_combined, chd_combined, color_list=color_list)

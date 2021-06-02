@@ -1,39 +1,29 @@
 """
-pipeline for creation of a "standard" synoptic map
-weighting over a CR favoring central longitudes
+weight maps based off dates
+smooth weighting curve around date you care about
 """
 
 import os
-import numpy as np
 import datetime
 
 import chmap.data.corrections.apply_lbc_iit as apply_lbc_iit
 from settings.app import App
 import chmap.database.db_classes as db_class
 import chmap.database.db_funs as db_funcs
-import maps.synoptic.cr_mapping_funcs as cr_funcs
-import maps.time_averaged.dp_funs as dp_funcs
+import chmap.maps.synoptic.cr_mapping_funcs as cr_funcs
+import chmap.maps.time_averaged.dp_funs as dp_funcs
+import numpy as np
 
-#### INPUT PARAMETERS ####
+# TIME PARAMETERS
+# center date
+center_time = datetime.datetime(2011, 5, 16, 12, 0, 0)
+# map frequency, in hours
+map_freq = 2
+# timescale
+timescale = datetime.timedelta(weeks=4, days=3)
 
-#### ----- choose one of the below time range options ----- #
-# CARRINGTON ROTATION
-cr_rot = None
-# TIME RANGE FOR QUERYING
-# query_time_min = datetime.datetime(2011, 5, 1, 0, 0, 0)
-query_time_min = None
-# query_time_max = datetime.datetime(2011, 5, 4, 0, 0, 0)
-query_time_max = None
-# INTEREST DATE TO CARRINGTION ROTATION
-interest_date = datetime.datetime(2011, 5, 1, 0, 0, 0)
-ref_inst = "AIA"  # reference instrument for creating full CR
-center = True  # true if interest date is center date, false if start date
-
-#### ----- map creation parameters ----- ####
 # INSTRUMENTS
 inst_list = ["AIA", "EUVI-A", "EUVI-B"]
-# COLOR LIST FOR INSTRUMENT QUALITY MAPS
-color_list = ["Blues", "Greens", "Reds", "Oranges", "Purples"]
 # CORRECTION PARAMETERS
 n_intensity_bins = 200
 R0 = 1.01
@@ -51,6 +41,7 @@ iters = 1000
 del_mu = None  # optional between this method and mu_merge_cutoff method
 mu_cutoff = 0.0  # lower mu cutoff value
 mu_merge_cutoff = 0.4  # mu cutoff in overlap areas
+sigma = 0.15  # sigma value for time weighted gaussian distribution
 
 # MAP PARAMETERS
 x_range = [0, 2 * np.pi]
@@ -74,25 +65,34 @@ use_db = "sqlite"
 sqlite_path = os.path.join(database_dir, sqlite_filename)
 db_session = db_funcs.init_db_conn(db_name=use_db, chd_base=db_class.Base, sqlite_path=sqlite_path)
 
-#### ------- nothing to update below ------- ####
+
+### --------- NOTHING TO UPDATE BELOW -------- ###
+# 1.) get instrument combos based on timescale
+query_time_min = center_time - (timescale / 2)
+query_time_max = center_time + (timescale / 2)
+lbc_combo_query, iit_combo_query = apply_lbc_iit.get_inst_combos(db_session, inst_list, time_min=query_time_min,
+                                                                 time_max=query_time_max)
+
 #### STEP ONE: SELECT IMAGES ####
 # 1.) query some images
-query_pd = cr_funcs.query_datebase_cr(db_session, query_time_min, query_time_max, interest_date, center, ref_inst,
-                                      cr_rot)
+query_pd = db_funcs.query_euv_images(db_session=db_session, time_min=query_time_min, time_max=query_time_max)
 
 # 2.) generate a dataframe to record methods
 methods_list = db_funcs.generate_methdf(query_pd)
 
-# 3.) get instrument combos
-lbc_combo_query, iit_combo_query = apply_lbc_iit.get_inst_combos(db_session, inst_list, time_min=query_time_min,
-                                                                 time_max=query_time_max)
+# 3.) generate normal distribution
+norm_dist = dp_funcs.gauss_time(query_pd, sigma)
 
 #### LOOP THROUGH IMAGES ####
 euv_combined = None
 chd_combined = None
 data_info = []
 map_info = []
+sum_wgt = 0
 for row in query_pd.iterrows():
+    # determine correct weighting based off date
+    date_time = row[1].date_obs
+    weight = norm_dist[row[0]]  # normal distribution at row index
     #### STEP TWO: APPLY PRE-PROCESSING CORRECTIONS ####
     los_image, iit_image, methods_list, use_indices = cr_funcs.apply_ipp(db_session, hdf_data_dir, inst_list, row,
                                                                          methods_list, lbc_combo_query,
@@ -100,26 +100,41 @@ for row in query_pd.iterrows():
                                                                          n_intensity_bins=n_intensity_bins, R0=R0)
 
     #### STEP THREE: CORONAL HOLE DETECTION ####
-    chd_image = cr_funcs.chd(db_session, inst_list, los_image, iit_image, use_indices, iit_combo_query, thresh1=thresh1,
+    chd_image = cr_funcs.chd(db_session, inst_list, los_image, iit_image, use_indices, iit_combo_query,
+                             thresh1=thresh1,
                              thresh2=thresh2, nc=nc, iters=iters)
 
     #### STEP FOUR: CONVERT TO MAP ####
     euv_map, chd_map = cr_funcs.create_map(iit_image, chd_image, methods_list, row, map_x=map_x, map_y=map_y, R0=R0)
 
     #### STEP FIVE: CREATE COMBINED MAPS ####
-    euv_combined, chd_combined, combined_method, chd_combined_method = cr_funcs.cr_map(euv_map, chd_map, euv_combined,
-                                                                                       chd_combined, data_info,
-                                                                                       map_info,
-                                                                                       mu_cutoff=mu_cutoff,
-                                                                                       mu_merge_cutoff=mu_merge_cutoff)
-
-#### STEP SIX: PLOT COMBINED MAP AND SAVE TO DATABASE ####
-cr_funcs.save_maps(db_session, map_data_dir, euv_combined, chd_combined, data_info, map_info, methods_list,
-                   combined_method, chd_combined_method)
-
-#### CREATE QUALITY MAPS
-dp_funcs.quality_map(db_session, map_data_dir, inst_list, query_pd, euv_combined,
-                     chd_combined=None, color_list=color_list)
+    euv_combined, chd_combined, sum_wgt, combined_method = dp_funcs.time_wgt_map(euv_map, chd_map, euv_combined,
+                                                                                 chd_combined, data_info, map_info,
+                                                                                 weight, sum_wgt, sigma, mu_cutoff)
 
 
+#### STEP SIX: SAVE TO DATABASE ####
+dp_funcs.save_gauss_time_maps(db_session, map_data_dir, euv_combined, chd_combined, data_info, map_info, methods_list,
+                               combined_method)
 
+# ### TESTERS
+# # UPPER TIME SERIES
+# date_time = center_time
+# sum = 0
+# while query_time_max >= date_time >= query_time_min:
+#     date_time += datetime.timedelta(hours=map_freq)
+#
+# # LOWER TIME SERIES
+# date_time = center_time
+# while query_time_max >= date_time >= query_time_min:
+#     # determine correct image row
+#     date_time -= datetime.timedelta(hours=map_freq)
+#     row = query_pd[query_pd.date_obs == date_time]
+#
+# import numpy as np
+# from scipy.stats import norm
+# import matplotlib.pyplot as plt
+# #x = np.linspace(norm.ppf(0.01), norm.ppf(0.99), 100)
+# x = np.arange(0, 2, len(query_pd))
+# norm_dist = norm.pdf(x, loc=1, scale=0.15)
+# plt.plot(x, norm_dist)

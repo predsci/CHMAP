@@ -27,11 +27,11 @@ import chmap.database.db_classes as db_class
 import chmap.database.db_funs as db_funcs
 import chmap.data.corrections.apply_lbc_iit as apply_lbc_iit
 import chmap.coronal_holes.detection.chd_funcs as chd_funcs
-import maps.util.map_manip as map_manip
+import chmap.maps.util.map_manip as map_manip
 import utilities.datatypes.datatypes as datatypes
-import maps.image2map as image2map
-import maps.midm as midm
-import maps.synchronic.synch_utils as synch_utils
+import chmap.maps.image2map as image2map
+import chmap.maps.midm as midm
+import chmap.maps.synchronic.synch_utils as synch_utils
 
 # -------- parameters --------- #
 # TIME RANGE FOR QUERYING
@@ -150,7 +150,7 @@ for date_ind, center in enumerate(moving_avg_centers):
         #### STEP FOUR: CONVERT TO MAP ####
         map_list, chd_map_list, methods_list, data_info, map_info = \
             image2map.create_singles_maps_2(synch_images, iit_list, chd_image_list,
-                                                 methods_list, full_map_x, full_map_y, R0)
+                                            methods_list, full_map_x, full_map_y, R0)
 
         #### STEP SIX: REDUCE MAP PIXEL GRID ####
         reduced_maps = [datatypes.PsiMap()]*map_list.__len__()

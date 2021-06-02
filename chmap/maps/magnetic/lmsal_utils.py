@@ -32,7 +32,7 @@ import numpy as np
 from matplotlib import pyplot as plt
 
 from utilities.coord_manip import get_arclength, s2c
-from maps.util.map_manip import MapMesh
+from chmap.maps.util.map_manip import MapMesh
 
 # Flux Conversion factor to Gauss. The units of the flux elements are in units of 10^18 Mx
 # so they are converted through the area division

@@ -9,8 +9,8 @@ import chmap.data.corrections.apply_lbc_iit as apply_lbc_iit
 from settings.app import App
 import chmap.database.db_classes as db_class
 import chmap.database.db_funs as db_funcs
-import maps.synoptic.cr_mapping_funcs as cr_funcs
-import maps.time_averaged.dp_funs as dp_funcs
+import chmap.maps.synoptic.cr_mapping_funcs as cr_funcs
+import chmap.maps.time_averaged.dp_funs as dp_funcs
 
 #### PARAMETERS ####
 # TIME RANGE FOR QUERYING

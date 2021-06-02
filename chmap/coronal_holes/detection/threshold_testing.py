@@ -19,8 +19,8 @@ import matplotlib.pyplot as plt
 import matplotlib as mpl
 import numpy as np
 import chmap.data.corrections.apply_lbc_iit as apply_lbc_iit
-from maps.util.map_manip import combine_maps
-import maps.image2map as image2map
+from chmap.maps.util.map_manip import combine_maps
+import chmap.maps.image2map as image2map
 
 # -------- parameters --------- #
 # TIME RANGE FOR QUERYING
@@ -119,12 +119,12 @@ for index, date in enumerate(query_times):
                                           ref_alpha, ref_x, nc, iters)
                 #### STEP FOUR: CONVERT TO MAP ####
                 map_list, chd_map_list, methods_list, data_info, map_info = image2map.create_singles_maps(inst_list,
-                                                                                                               date_pd,
-                                                                                                               iit_list,
-                                                                                                               chd_image,
-                                                                                                               methods_list,
-                                                                                                               map_x,
-                                                                                                               map_y, R0)
+                                                                                                          date_pd,
+                                                                                                          iit_list,
+                                                                                                          chd_image,
+                                                                                                          methods_list,
+                                                                                                          map_x,
+                                                                                                          map_y, R0)
 
                 #### STEP FIVE: CREATE COMBINED MAPS####
                 # create combined maps

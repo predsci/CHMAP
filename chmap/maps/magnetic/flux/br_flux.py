@@ -6,7 +6,7 @@ import datetime
 
 import chmap.database.db_funs as db_funs
 import utilities.datatypes.datatypes as psi_datatype
-import maps.util.map_manip as map_manip
+import chmap.maps.util.map_manip as map_manip
 
 
 def coronal_flux(db_session, chd_contour, frame_timestamp, map_dir,

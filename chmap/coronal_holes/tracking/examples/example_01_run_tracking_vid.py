@@ -19,7 +19,7 @@ import cv2
 import numpy as np
 import pickle
 import os
-from maps.util.map_manip import MapMesh
+from chmap.maps.util.map_manip import MapMesh
 from chmap.coronal_holes.tracking.src import CoronalHoleDB
 from chmap.coronal_holes.tracking.tools.plots import plot_coronal_hole
 from chmap.coronal_holes.tracking.src import classify_grey_scaled_image

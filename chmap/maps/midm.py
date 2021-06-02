@@ -3,7 +3,7 @@ import time
 
 import pandas as pd
 
-from maps.util.map_manip import combine_maps
+from chmap.maps.util.map_manip import combine_maps
 from settings.info import DTypes
 from utilities.plotting import psi_plotting as Plotting
 
