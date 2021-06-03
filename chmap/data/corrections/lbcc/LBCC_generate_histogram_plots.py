@@ -10,7 +10,7 @@ import numpy as np
 from chmap.settings.app import App
 import chmap.database.db_classes as db_class
 import chmap.utilities.plotting.psi_plotting as Plotting
-from chmap.database.db_funs import init_db_conn, query_hist, get_method_id, query_euv_images, query_inst_combo
+from chmap.database.db_funs import init_db_conn_old, query_hist, get_method_id, query_euv_images, query_inst_combo
 import chmap.data.corrections.iit.IIT_pipeline_funcs as iit_funcs
 import chmap.utilities.datatypes.datatypes as psi_d_types
 
@@ -41,7 +41,7 @@ sqlite_filename = App.DATABASE_FNAME
 # setup database connection
 use_db = "sqlite"
 sqlite_path = os.path.join(database_dir, sqlite_filename)
-db_session = init_db_conn(db_name=use_db, chd_base=db_class.Base, sqlite_path=sqlite_path)
+db_session = init_db_conn_old(db_name=use_db, chd_base=db_class.Base, sqlite_path=sqlite_path)
 
 # ------------ NO NEED TO UPDATE ANYTHING BELOW  ------------- #
 # start time

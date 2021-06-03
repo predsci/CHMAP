@@ -12,7 +12,7 @@ import numpy as np
 import pandas as pd
 from chmap.settings.app import App
 import chmap.database.db_classes as db_class
-from chmap.database.db_funs import init_db_conn, query_euv_images
+from chmap.database.db_funs import init_db_conn_old, query_euv_images
 import chmap.utilities.datatypes.datatypes as psi_d_types
 import matplotlib.pyplot as plt
 import matplotlib as mpl
@@ -44,7 +44,7 @@ sqlite_filename = App.DATABASE_FNAME
 # setup database connection
 use_db = "sqlite"
 sqlite_path = os.path.join(database_dir, sqlite_filename)
-db_session = init_db_conn(db_name=use_db, chd_base=db_class.Base, sqlite_path=sqlite_path)
+db_session = init_db_conn_old(db_name=use_db, chd_base=db_class.Base, sqlite_path=sqlite_path)
 
 
 #### FUNCTIONS
@@ -249,12 +249,12 @@ for inst_index, instrument in enumerate(inst_list):
 #
 #
 # #### query and flagging bad images
-# from modules.DB_funs import init_db_conn, update_image_val
+# from modules.DB_funs import init_db_conn_old, update_image_val
 # import modules.DB_classes as db_class
 # use_db = "mysql-Q"
 # user = "tervin"
 # password = ""
-# db_session = init_db_conn(db_name=use_db, chd_base=db_class.Base, user=user, password=password)
+# db_session = init_db_conn_old(db_name=use_db, chd_base=db_class.Base, user=user, password=password)
 #
 # flag_bad = [1745, 3414, 4246, 5034, 6170, 6891, 7398, 8482, 10665, 11705, 12796]
 #

@@ -21,7 +21,7 @@ import numpy as np
 
 from chmap.settings.app import App
 import chmap.database.db_classes as db_class
-from chmap.database.db_funs import init_db_conn, query_euv_images
+from chmap.database.db_funs import init_db_conn_old, query_euv_images
 import chmap.utilities.datatypes.datatypes as psi_d_types
 from chmap.maps.util.map_manip import combine_maps
 # import modules.coord_manip as coord
@@ -38,7 +38,7 @@ sqlite_filename = App.DATABASE_FNAME
 # initialize database connection
 use_db = "sqlite"
 sqlite_path = os.path.join(database_dir, sqlite_filename)
-db_session = init_db_conn(db_name=use_db, chd_base=db_class.Base, sqlite_path=sqlite_path)
+db_session = init_db_conn_old(db_name=use_db, chd_base=db_class.Base, sqlite_path=sqlite_path)
 
 # query some images
 query_time_min = datetime.datetime(2011, 4, 1, 0, 0, 0)

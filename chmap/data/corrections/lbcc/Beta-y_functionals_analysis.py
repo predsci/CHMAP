@@ -10,7 +10,7 @@ import scipy.optimize as optim
 import os
 import chmap.data.corrections.lbcc.lbcc_utils as lbcc
 from chmap.settings.app import App
-from chmap.database.db_funs import init_db_conn, query_hist, store_lbcc_values, store_mu_values, store_beta_y_values
+from chmap.database.db_funs import init_db_conn_old, query_hist, store_lbcc_values, store_mu_values, store_beta_y_values
 import chmap.utilities.datatypes.datatypes as psi_d_types
 import chmap.database.db_classes as db_class
 
@@ -34,7 +34,7 @@ sqlite_filename = App.DATABASE_FNAME
 # initialize database connection
 use_db = "sqlite"
 sqlite_path = os.path.join(database_dir, sqlite_filename)
-db_session = init_db_conn(db_name=use_db, chd_base=db_class.Base, sqlite_path=sqlite_path)
+db_session = init_db_conn_old(db_name=use_db, chd_base=db_class.Base, sqlite_path=sqlite_path)
 
 # ------------ NO NEED TO UPDATE ANYTHING BELOW  ------------- #
 

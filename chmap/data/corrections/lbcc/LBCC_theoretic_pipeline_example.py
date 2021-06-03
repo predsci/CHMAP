@@ -9,7 +9,7 @@ import datetime
 import numpy as np
 from chmap.settings.app import App
 import chmap.database.db_classes as db_class
-from chmap.database.db_funs import init_db_conn
+from chmap.database.db_funs import init_db_conn_old
 import chmap.data.corrections.lbcc.LBCC_theoretic_funcs as lbcc_funcs
 
 start_time_tot = time.time()
@@ -63,7 +63,7 @@ sqlite_filename = App.DATABASE_FNAME
 create = True  # true if you want to add to database
 use_db = "sqlite"
 sqlite_path = os.path.join(database_dir, sqlite_filename)
-db_session = init_db_conn(db_name=use_db, chd_base=db_class.Base, sqlite_path=sqlite_path)
+db_session = init_db_conn_old(db_name=use_db, chd_base=db_class.Base, sqlite_path=sqlite_path)
 
 # STORAGE PATHS AND TITLES FOR BETA/Y PLOTS
 year = "2011"  # used for naming plot file

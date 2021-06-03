@@ -15,7 +15,7 @@ import scipy.optimize as optim
 
 import chmap.data.corrections.lbcc.lbcc_utils as lbcc
 from chmap.settings.app import App
-from chmap.database.db_funs import init_db_conn, query_hist, get_method_id, store_lbcc_values
+from chmap.database.db_funs import init_db_conn_old, query_hist, get_method_id, store_lbcc_values
 import chmap.utilities.datatypes.datatypes as psi_d_types
 import chmap.database.db_classes as db_class
 
@@ -48,7 +48,7 @@ use_db = "mysql-Q"       # 'sqlite'  Use local sqlite file-based db
                         # 'mysql-Q' Use the remote MySQL database on Q
 user = "turtle"         # only needed for remote databases.
 password = ""           # See example109 for setting-up an encrypted password.  In this case leave password="", and
-# init_db_conn() will automatically find and use your saved password. Otherwise, enter your MySQL password here.
+# init_db_conn_old() will automatically find and use your saved password. Otherwise, enter your MySQL password here.
 
 
 # ------------ NO NEED TO UPDATE ANYTHING BELOW  ------------- #
@@ -59,10 +59,10 @@ if use_db == 'sqlite':
     # setup database connection to local sqlite file
     sqlite_path = os.path.join(database_dir, sqlite_filename)
 
-    db_session = init_db_conn(db_name=use_db, chd_base=db_class.Base, sqlite_path=sqlite_path)
+    db_session = init_db_conn_old(db_name=use_db, chd_base=db_class.Base, sqlite_path=sqlite_path)
 elif use_db in ['mysql-Q', 'mysql-Q_test']:
     # setup database connection to MySQL database on Q
-    db_session = init_db_conn(db_name=use_db, chd_base=db_class.Base, user=user, password=password)
+    db_session = init_db_conn_old(db_name=use_db, chd_base=db_class.Base, user=user, password=password)
 
 # calculate moving averages
 moving_avg_centers, moving_width = lbcc.moving_averages(query_time_min, query_time_max, weekday,

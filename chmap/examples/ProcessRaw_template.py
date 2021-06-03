@@ -12,7 +12,7 @@ from h5py.h5py_warnings import H5pyDeprecationWarning
 
 from chmap.settings.app import App
 import chmap.database.db_classes as DBClass
-from chmap.database.db_funs import init_db_conn, update_image_val, query_euv_images
+from chmap.database.db_funs import init_db_conn_old, update_image_val, query_euv_images
 
 from chmap.utilities.idl_connect import idl_helper
 from chmap.data.corrections.image_prep import prep
@@ -22,16 +22,16 @@ use_db = "mysql-Q"  # 'sqlite'  Use local sqlite file-based db
 # 'mysql-Q' Use the remote MySQL database on Q
 user = "cdowns"  # only needed for remote databases.
 password = ""  # See example109 for setting-up an encrypted password.  In this case leave password="", and
-# init_db_conn() will automatically find and use your saved password. Otherwise, enter your MySQL password here.
+# init_db_conn_old() will automatically find and use your saved password. Otherwise, enter your MySQL password here.
 
 # Establish connection to database
 if use_db == 'sqlite':
     # setup database connection to local sqlite file
     sqlite_path = os.path.join(database_dir, sqlite_filename)
-    db_session = init_db_conn(db_name=use_db, chd_base=DBClass.Base, sqlite_path=sqlite_path)
+    db_session = init_db_conn_old(db_name=use_db, chd_base=DBClass.Base, sqlite_path=sqlite_path)
 elif use_db == 'mysql-Q':
     # setup database connection to MySQL database on Q
-    db_session = init_db_conn(db_name=use_db, chd_base=DBClass.Base, user=user, password=password)
+    db_session = init_db_conn_old(db_name=use_db, chd_base=DBClass.Base, user=user, password=password)
 
 # Flag to do everything that hasn't been processed yet or a specific query for testing
 do_all_unprocessed = True

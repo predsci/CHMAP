@@ -16,7 +16,7 @@ import os
 
 from chmap.settings.app import App
 from chmap.database.db_classes import Base
-from chmap.database.db_funs import init_db_conn, update_image_val, query_euv_images, pdseries_tohdf
+from chmap.database.db_funs import init_db_conn_old, update_image_val, query_euv_images, pdseries_tohdf
 
 # Assume that we are using the 'reference_data' setup supplied with repo
 # manually set the data dir
@@ -30,7 +30,7 @@ database_dir = os.path.join(App.APP_HOME, 'reference_data')
 use_db = "sqlite"
 sqlite_filename = "dbtest.db"
 sqlite_path = os.path.join(database_dir, sqlite_filename)
-db_session = init_db_conn(db_name=use_db, chd_base=Base, sqlite_path=sqlite_path)
+db_session = init_db_conn_old(db_name=use_db, chd_base=Base, sqlite_path=sqlite_path)
 
 # query_EUV_images function:
 # requires time_min and time_max (datetime).  do we need to code 'jd' time option?

@@ -13,7 +13,7 @@ from astropy.time import Time
 
 from chmap.settings.app import App
 from chmap.database.db_classes import Base
-from chmap.database.db_funs import init_db_conn, query_euv_images
+from chmap.database.db_funs import init_db_conn_old, query_euv_images
 from chmap.data.download.euv_utils import get_image_set
 from chmap.utilities.idl_connect import idl_helper
 from chmap.data.corrections.image_prep import prep
@@ -31,15 +31,15 @@ use_db = "mysql-Q"  # 'sqlite'  Use local sqlite file-based db
 # 'mysql-Q' Use the remote MySQL database on Q
 user = "cdowns"  # only needed for remote databases.
 password = ""  # See example109 for setting-up an encrypted password.  In this case leave password="", and
-# init_db_conn() will automatically find and use your saved password. Otherwise, enter your MySQL password here.
+# init_db_conn_old() will automatically find and use your saved password. Otherwise, enter your MySQL password here.
 
 if use_db == 'sqlite':
     # setup database connection to local sqlite file
     sqlite_path = os.path.join(database_dir, sqlite_filename)
-    db_session = init_db_conn(db_name=use_db, chd_base=Base, sqlite_path=sqlite_path)
+    db_session = init_db_conn_old(db_name=use_db, chd_base=Base, sqlite_path=sqlite_path)
 elif use_db == 'mysql-Q':
     # setup database connection to MySQL database on Q
-    db_session = init_db_conn(db_name=use_db, chd_base=Base, user=user, password=password)
+    db_session = init_db_conn_old(db_name=use_db, chd_base=Base, user=user, password=password)
 
 # setup the time range for the query
 query_time_min = datetime.datetime(2014, 8, 13, 18, 0, 0)

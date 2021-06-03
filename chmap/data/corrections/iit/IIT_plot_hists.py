@@ -10,7 +10,7 @@ import datetime
 import numpy as np
 import time
 from chmap.settings.app import App
-from chmap.database.db_funs import init_db_conn
+from chmap.database.db_funs import init_db_conn_old
 import chmap.database.db_funs as db_funcs
 import chmap.database.db_classes as db_class
 import chmap.utilities.datatypes.datatypes as psi_d_types
@@ -43,12 +43,12 @@ sqlite_filename = App.DATABASE_FNAME
 # setup database connection
 use_db = "sqlite"
 sqlite_path = os.path.join(database_dir, sqlite_filename)
-db_session = init_db_conn(db_name=use_db, chd_base=db_class.Base, sqlite_path=sqlite_path)
+db_session = init_db_conn_old(db_name=use_db, chd_base=db_class.Base, sqlite_path=sqlite_path)
 # use_db = "mysql-Q"
 # user = "tervin"
 # password = ""
 # sqlite_path = os.path.join(database_dir, sqlite_filename)
-# db_session = db_funcs.init_db_conn(db_name=use_db, chd_base=db_class.Base, user=user, password=password)
+# db_session = db_funcs.init_db_conn_old(db_name=use_db, chd_base=db_class.Base, user=user, password=password)
 
 #### ----- GENERATE HISTOGRAMS ---- ####
 # start time

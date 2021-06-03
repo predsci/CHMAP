@@ -29,7 +29,7 @@ import chmap.utilities.file_io.psi_hdf as psihdf
 import chmap.utilities.cred_funs as creds
 
 
-def init_db_conn(db_name, chd_base, sqlite_path="", user="", password=""):
+def init_db_conn_old(db_name, chd_base, sqlite_path="", user="", password=""):
     """
     Connect to the database specified by db_name.
     Then establish the SQLAlchemy declarative base

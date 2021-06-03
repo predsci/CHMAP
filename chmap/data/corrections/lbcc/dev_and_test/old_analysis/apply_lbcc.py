@@ -11,7 +11,7 @@ import numpy as np
 import datetime
 
 from chmap.settings.app import App
-from chmap.database.db_funs import init_db_conn, query_euv_images, query_lbcc_fit
+from chmap.database.db_funs import init_db_conn_old, query_euv_images, query_lbcc_fit
 import chmap.database.db_classes as db_class
 import chmap.utilities.datatypes.datatypes as psi_d_types
 import chmap.utilities.plotting.psi_plotting as Plotting
@@ -44,7 +44,7 @@ hdf_data_dir = App.PROCESSED_DATA_HOME
 
 use_db = "sqlite"
 sqlite_path = os.path.join(database_dir, sqlite_filename)
-db_session = init_db_conn(db_name=use_db, chd_base=db_class.Base, sqlite_path=sqlite_path)
+db_session = init_db_conn_old(db_name=use_db, chd_base=db_class.Base, sqlite_path=sqlite_path)
 
 ##### QUERY IMAGES ######
 

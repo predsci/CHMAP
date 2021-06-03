@@ -58,7 +58,7 @@ use_db = "mysql-Q"       # 'sqlite'  Use local sqlite file-based db
                         # 'mysql-Q' Use the remote MySQL database on Q
 user = "turtle"         # only needed for remote databases.
 password = ""           # See example109 for setting-up an encrypted password.  In this case leave password="", and
-# init_db_conn() will automatically find and use your saved password. Otherwise, enter your MySQL password here.
+# init_db_conn_old() will automatically find and use your saved password. Otherwise, enter your MySQL password here.
 
 ###### ------- nothing to update below -------- #######
 # start time
@@ -69,10 +69,10 @@ if use_db == 'sqlite':
     # setup database connection to local sqlite file
     sqlite_path = os.path.join(database_dir, sqlite_filename)
 
-    db_session = db_funcs.init_db_conn(db_name=use_db, chd_base=db_class.Base, sqlite_path=sqlite_path)
+    db_session = db_funcs.init_db_conn_old(db_name=use_db, chd_base=db_class.Base, sqlite_path=sqlite_path)
 elif use_db == 'mysql-Q':
     # setup database connection to MySQL database on Q
-    db_session = db_funcs.init_db_conn(db_name=use_db, chd_base=db_class.Base, user=user, password=password)
+    db_session = db_funcs.init_db_conn_old(db_name=use_db, chd_base=db_class.Base, user=user, password=password)
 
 # determine first AIA LBC combo
 aia_combo_query = db_session.query(func.min(db_class.Data_Combos.date_mean),

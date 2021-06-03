@@ -9,7 +9,7 @@ from sqlalchemy.sql import func
 
 from chmap.settings.app import App
 import chmap.database.db_classes as db_class
-from chmap.database.db_funs import init_db_conn, get_method_id, query_inst_combo
+from chmap.database.db_funs import init_db_conn_old, get_method_id, query_inst_combo
 
 
 ###### ------ PARAMETERS TO UPDATE -------- ########
@@ -34,7 +34,7 @@ use_db = "mysql-Q"       # 'sqlite'  Use local sqlite file-based db
                         # 'mysql-Q' Use the remote MySQL database on Q
 user = "turtle"         # only needed for remote databases.
 password = ""           # See example109 for setting-up an encrypted password.  In this case leave password="", and
-# init_db_conn() will automatically find and use your saved password. Otherwise, enter your MySQL password here.
+# init_db_conn_old() will automatically find and use your saved password. Otherwise, enter your MySQL password here.
 # setup local database paths (only used for use_db='sqlite')
 database_dir = App.DATABASE_HOME
 sqlite_filename = App.DATABASE_FNAME
@@ -51,10 +51,10 @@ if use_db == 'sqlite':
         os.remove(sqlite_path)
         print("\nPrevious file ", sqlite_filename, " deleted.\n")
 
-    db_session = init_db_conn(db_name=use_db, chd_base=db_class.Base, sqlite_path=sqlite_path)
+    db_session = init_db_conn_old(db_name=use_db, chd_base=db_class.Base, sqlite_path=sqlite_path)
 elif use_db == 'mysql-Q':
     # setup database connection to MySQL database on Q
-    db_session = init_db_conn(db_name=use_db, chd_base=db_class.Base, user=user, password=password)
+    db_session = init_db_conn_old(db_name=use_db, chd_base=db_class.Base, user=user, password=password)
 
 # query LBC method id
 meth_name = 'LBCC'

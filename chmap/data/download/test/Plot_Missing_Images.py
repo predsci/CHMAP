@@ -12,7 +12,7 @@ import matplotlib.pyplot as plt
 
 from chmap.settings.app import App
 import chmap.database.db_classes as db_class
-from chmap.database.db_funs import init_db_conn, query_euv_images
+from chmap.database.db_funs import init_db_conn_old, query_euv_images
 
 # query parameters
 interval_cadence = datetime.timedelta(hours=2.)
@@ -48,17 +48,17 @@ use_db = "mysql-Q"       # 'sqlite'  Use local sqlite file-based db
                         # 'mysql-Q' Use the remote MySQL database on Q
 user = "turtle"         # only needed for remote databases.
 password = ""           # See example109 for setting-up an encrypted password.  In this case leave password="", and
-# init_db_conn() will automatically find and use your saved password. Otherwise, enter your MySQL password here.
+# init_db_conn_old() will automatically find and use your saved password. Otherwise, enter your MySQL password here.
 
 # connect to database
 if use_db == 'sqlite':
     # setup database connection to local sqlite file
     sqlite_path = os.path.join(database_dir, sqlite_filename)
 
-    db_session = init_db_conn(db_name=use_db, chd_base=db_class.Base, sqlite_path=sqlite_path)
+    db_session = init_db_conn_old(db_name=use_db, chd_base=db_class.Base, sqlite_path=sqlite_path)
 elif use_db == 'mysql-Q':
     # setup database connection to MySQL database on Q
-    db_session = init_db_conn(db_name=use_db, chd_base=db_class.Base, user=user, password=password)
+    db_session = init_db_conn_old(db_name=use_db, chd_base=db_class.Base, user=user, password=password)
 
 # query a list of images in query range for each instrument. sort by time
 aia_images = query_euv_images(db_session, time_min=query_start, time_max=query_end, instrument=("AIA", ),

@@ -6,7 +6,7 @@ import os
 import datetime
 import numpy as np
 from chmap.settings.app import App
-from chmap.database.db_funs import init_db_conn
+from chmap.database.db_funs import init_db_conn_old
 import chmap.database.db_classes as db_class
 import chmap.data.corrections.iit.IIT_pipeline_funcs as iit_funcs
 
@@ -53,7 +53,7 @@ sqlite_filename = App.DATABASE_FNAME
 create = True  # true if you want to add to database
 use_db = "sqlite"
 sqlite_path = os.path.join(database_dir, sqlite_filename)
-db_session = init_db_conn(db_name=use_db, chd_base=db_class.Base, sqlite_path=sqlite_path)
+db_session = init_db_conn_old(db_name=use_db, chd_base=db_class.Base, sqlite_path=sqlite_path)
 
 ##### ------ INTER INSTRUMENT TRANSFORMATION FUNCTIONS BELOW ------- ########
 

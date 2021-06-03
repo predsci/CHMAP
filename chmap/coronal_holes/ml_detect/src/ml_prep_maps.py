@@ -46,7 +46,7 @@ db_session = db_funcs.init_db_conn(db_name=use_db, chd_base=db_class.Base, user=
 # initialize database connection
 # use_db = "sqlite"
 # sqlite_path = os.path.join(database_dir, sqlite_filename)
-# db_session = db_funcs.init_db_conn(db_name=use_db, chd_base=db_class.Base, sqlite_path=sqlite_path)
+# db_session = db_funcs.init_db_conn_old(db_name=use_db, chd_base=db_class.Base, sqlite_path=sqlite_path)
 
 # hdf file info
 h5_filename = '/Volumes/CHD_DB/map_data_large.h5'

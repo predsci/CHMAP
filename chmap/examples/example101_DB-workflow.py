@@ -19,7 +19,7 @@ from chmap.data.download import drms_helpers, vso_helpers
 from chmap.settings.app import App
 from chmap.data.download.euv_utils import cluster_meth_1, list_available_images
 from chmap.database.db_classes import Base
-from chmap.database.db_funs import init_db_conn, query_euv_images, add_image2session, update_image_val, remove_euv_image, pdseries_tohdf
+from chmap.database.db_funs import init_db_conn_old, query_euv_images, add_image2session, update_image_val, remove_euv_image, pdseries_tohdf
 
 
 # to create the reference DB and files, set Create_Ref=True
@@ -73,7 +73,7 @@ if Create_Ref:
     sqlite_path = os.path.join(App.APP_HOME, "test_data", sqlite_filename)
 else:
     sqlite_path = os.path.join(App.DATABASE_HOME, sqlite_filename)
-db_session = init_db_conn(db_name=use_db, chd_base=Base, sqlite_path=sqlite_path)
+db_session = init_db_conn_old(db_name=use_db, chd_base=Base, sqlite_path=sqlite_path)
 print(db_session)
 
 # setup a longer list of imins to test multiple cluster download and enter into DB

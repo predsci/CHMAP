@@ -8,7 +8,7 @@ import time
 import numpy as np
 import datetime
 from chmap.settings.app import App
-from chmap.database.db_funs import init_db_conn, query_euv_images, query_var_val, query_inst_combo
+from chmap.database.db_funs import init_db_conn_old, query_euv_images, query_var_val, query_inst_combo
 import chmap.database.db_classes as db_class
 import chmap.utilities.datatypes.datatypes as psi_d_types
 import chmap.utilities.plotting.psi_plotting as Plotting
@@ -49,10 +49,10 @@ if use_db == 'sqlite':
     # setup database connection to local sqlite file
     sqlite_path = os.path.join(database_dir, sqlite_filename)
 
-    db_session = init_db_conn(db_name=use_db, chd_base=db_class.Base, sqlite_path=sqlite_path)
+    db_session = init_db_conn_old(db_name=use_db, chd_base=db_class.Base, sqlite_path=sqlite_path)
 elif use_db == 'mysql-Q':
     # setup database connection to MySQL database on Q
-    db_session = init_db_conn(db_name=use_db, chd_base=db_class.Base, user=user, password=password)
+    db_session = init_db_conn_old(db_name=use_db, chd_base=db_class.Base, user=user, password=password)
 
 # method information
 meth_name = "LBCC"

@@ -9,7 +9,7 @@ import numpy as np
 import pickle
 from chmap.settings.app import App
 import chmap.database.db_classes as db_class
-from chmap.database.db_funs import init_db_conn, query_euv_images
+from chmap.database.db_funs import init_db_conn_old, query_euv_images
 import chmap.utilities.datatypes.datatypes as psi_d_types
 
 # --- 1. Select Images -----------------------------------------------------
@@ -46,7 +46,7 @@ sqlite_filename = App.DATABASE_FNAME
 # setup database connection
 use_db = "sqlite"
 sqlite_path = os.path.join(database_dir, sqlite_filename)
-db_session = init_db_conn(db_name=use_db, chd_base=db_class.Base, sqlite_path=sqlite_path)
+db_session = init_db_conn_old(db_name=use_db, chd_base=db_class.Base, sqlite_path=sqlite_path)
 
 # loop over instrument
 for instrument in inst_list:

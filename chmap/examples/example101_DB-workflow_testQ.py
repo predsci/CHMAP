@@ -18,7 +18,7 @@ from chmap.data.download import drms_helpers, vso_helpers
 from settings.app_JT_Q import App
 from chmap.data.download.euv_utils import cluster_meth_1, list_available_images
 from chmap.database.db_classes import *
-from chmap.database.db_funs import init_db_conn, query_euv_images, add_image2session
+from chmap.database.db_funs import init_db_conn_old, query_euv_images, add_image2session
 
 
 # Specify directories on mounted Q home
@@ -31,7 +31,7 @@ db_home_dir  = App.DATABASE_HOME
 use_db = "sqlite"
 sqlite_filename = App.DATABASE_FNAME
 sqlite_path = os.path.join(db_home_dir, sqlite_filename)
-db_session = init_db_conn(db_name=use_db, chd_base=Base, sqlite_path=sqlite_path)
+db_session = init_db_conn_old(db_name=use_db, chd_base=Base, sqlite_path=sqlite_path)
 
 # initialize the jsoc drms helper for aia.lev1_euv_12
 s12 = drms_helpers.S12(verbose=True)

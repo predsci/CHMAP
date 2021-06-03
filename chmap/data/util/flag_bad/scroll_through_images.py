@@ -38,11 +38,11 @@ use_db = "mysql-Q"      # 'sqlite'  Use local sqlite file-based db
                         # 'mysql-Q_test' Use the development database on Q
 user = "turtle"         # only needed for remote databases.
 password = ""           # See example109 for setting-up an encrypted password.  In this case leave password="", and
-# init_db_conn() will automatically find and use your saved password. Otherwise, enter your MySQL password here.
+# init_db_conn_old() will automatically find and use your saved password. Otherwise, enter your MySQL password here.
 
 # Establish connection to database
-db_session = db_funs.init_db_conn(db_name=use_db, chd_base=db_class.Base, user=user,
-                                  password=password)
+db_session = db_funs.init_db_conn_old(db_name=use_db, chd_base=db_class.Base, user=user,
+                                      password=password)
 
 # ------------ NO NEED TO UPDATE ANYTHING BELOW  ------------- #
 
