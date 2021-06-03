@@ -16,11 +16,11 @@ import sunpy.io
 
 from chmap.data.corrections.image_prep import deconv
 from chmap.data.download.euv_utils import get_metadata
-import settings.info
+import chmap.settings.info
 from utilities.datatypes import datatypes
 from utilities.file_io import io_helpers
 from utilities.idl_connect import idl_helper
-from settings.app import App
+from chmap.settings.app import App
 
 # default bad or missing value for an EUV image
 euv_bad_value = 1e-16
@@ -136,7 +136,7 @@ def prep_aia_image(map_raw, deconvolve=True):
     map.meta['lvl_num'] = level
     map.meta['history'] = map.meta['history'] + \
                           ' Processed to lvl {0:.1f} by prep_aia_image (CHD v{1})'.format(
-                              level, settings.info.version)
+                              level, chmap.settings.info.version)
 
     # divide by the exposure time, manually update the metadata
     map = sunpy.map.Map(map.data/map.exposure_time, map.meta)
@@ -254,7 +254,7 @@ def prep_euvi_image(map_raw, deconvolve=True, idl_session=None):
     map.meta['lvl_num'] = level
     map.meta['history'] = map.meta['history'] + \
                           ' Processed to lvl {0:.1f} by prep_euvi_image (CHD v{1})'.format(
-                              level, settings.info.version)
+                              level, chmap.settings.info.version)
 
     # replace the exposure time flag since it was normalized by secchi_prep
     map.meta['exptime'] = 1.0

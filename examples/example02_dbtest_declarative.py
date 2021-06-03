@@ -5,16 +5,16 @@ This is based off of a python tutorial here: https://www.pythoncentral.io/sqlalc
 
 import os
 
-from sqlalchemy import Column, DateTime, String, Integer, Float, ForeignKey, func
-from sqlalchemy.orm import relationship, backref
-from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy import Column, DateTime, String, Integer, Float, ForeignKey
+ from sqlalchemy.orm import relationship
+ from sqlalchemy.ext.declarative import declarative_base
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
 from astropy.time import Time
 
-from settings.app import App
+from chmap.settings.app import App
 
 # This is the basic class for defining a database schema
 Base = declarative_base()

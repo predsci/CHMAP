@@ -9,11 +9,11 @@ import h5py as h5
 from chmap.database import db_funs
 import chmap.database.db_classes as DBClass
 import utilities.datatypes.datatypes as psi_datatype
-from settings.app import App
+from chmap.settings.app import App
 import utilities.plotting.psi_plotting as EasyPlot
 import utilities.coord_manip as coord_manip
 import chmap.maps.util.map_manip as map_manip
-from settings.info import DTypes
+from chmap.settings.info import DTypes
 
 map_dir = App.MAP_FILE_HOME
 image_hdf_dir = App.PROCESSED_DATA_HOME

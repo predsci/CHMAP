@@ -9,7 +9,7 @@ import numpy as np
 import json
 import h5py as h5
 import pandas as pd
-import settings.info as chd_info
+import chmap.settings.info as chd_info
 
 
 def wrh5_meta(h5_filename, x, y, z, f, chd_meta=None, sunpy_meta=None):

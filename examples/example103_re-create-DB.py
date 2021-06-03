@@ -8,7 +8,7 @@ This example uses the fits files included in reference_data/
 
 import os
 
-from settings.app import App
+from chmap.settings.app import App
 from chmap.database.db_classes import *
 from chmap.database.db_funs import init_db_conn, build_euvimages_from_fits, query_euv_images
 

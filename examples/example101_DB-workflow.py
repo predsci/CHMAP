@@ -16,7 +16,7 @@ import astropy.units as u
 from sunpy.time import TimeRange
 
 from chmap.data.download import drms_helpers, vso_helpers
-from settings.app import App
+from chmap.settings.app import App
 from chmap.data.download.euv_utils import cluster_meth_1, list_available_images
 from chmap.database.db_classes import Base
 from chmap.database.db_funs import init_db_conn, query_euv_images, add_image2session, update_image_val, remove_euv_image, pdseries_tohdf

@@ -10,7 +10,7 @@ import datetime
 import warnings
 from h5py.h5py_warnings import H5pyDeprecationWarning
 
-from settings.app import App
+from chmap.settings.app import App
 import chmap.database.db_classes as DBClass
 from chmap.database.db_funs import init_db_conn, update_image_val, query_euv_images
 

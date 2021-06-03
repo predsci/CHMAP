@@ -7,7 +7,7 @@ import datetime
 import matplotlib.pyplot as plt
 import numpy as np
 import pickle
-from settings.app import App
+from chmap.settings.app import App
 import chmap.database.db_classes as db_class
 from chmap.database.db_funs import init_db_conn, query_euv_images
 import utilities.datatypes.datatypes as psi_d_types

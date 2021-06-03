@@ -11,7 +11,7 @@ Quick example illustrating how to get the metadata that we'll need from the raw 
 """
 import os
 
-from settings.app import App
+from chmap.settings.app import App
 from utilities.file_io.io_helpers import carrington_rotation_number_relative
 
 import pandas as pd

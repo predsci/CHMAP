@@ -18,13 +18,10 @@ import numpy as np
 import datetime
 import h5py as h5
 
-from settings.app import App
+from chmap.settings.app import App
 import modules.DB_classes as db_class
 import modules.DB_funs as db_funcs
 import analysis.chd_analysis.CHD_pipeline_funcs as chd_funcs
-import matplotlib.colors as colors
-import matplotlib as mpl
-
 
 # -------- parameters --------- #
 # TIME RANGE FOR QUERYING

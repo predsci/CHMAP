@@ -11,7 +11,7 @@ import datetime
 import numpy as np
 import pandas as pd
 
-from settings.app import App
+from chmap.settings.app import App
 import chmap.database.db_classes as db_class
 import chmap.database.db_funs as db_funs
 import chmap.maps.util.map_manip as map_manip

@@ -24,7 +24,7 @@ import cv2
 from chmap.database import db_funs
 import chmap.database.db_classes as DBClass
 import utilities.datatypes.datatypes as psi_datatype
-from settings.app import App
+from chmap.settings.app import App
 from chmap.coronal_holes.tracking.src import CoronalHoleDB
 from chmap.coronal_holes.tracking.src import classify_grey_scaled_image
 from chmap.coronal_holes.tracking.tools.plots import plot_coronal_hole

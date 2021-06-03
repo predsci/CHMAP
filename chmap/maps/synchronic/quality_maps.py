@@ -18,7 +18,7 @@ import chmap.data.corrections.apply_lbc_iit as apply_lbc_iit
 import chmap.maps.image2map as image2map
 import chmap.maps.midm as midm
 import chmap.maps.synchronic.synch_utils as synch_utils
-from settings.app import App
+from chmap.settings.app import App
 import chmap.database.db_classes as db_class
 import chmap.database.db_funs as db_funcs
 import chmap.coronal_holes.detection.chd_funcs as chd_funcs

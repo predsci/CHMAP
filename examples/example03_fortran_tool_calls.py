@@ -4,7 +4,7 @@ Quick example illustrating how to call our command line fortran tools from pytho
   installed correctly.
 """
 import os
-from settings.app import App
+from chmap.settings.app import App
 
 fits_infile = os.path.join(App.APP_HOME, 'reference_data', 'sta_euvi_20140413T190530_195.fits')
 header_outfile = os.path.join(App.TMP_HOME, 'tmp_header.txt')

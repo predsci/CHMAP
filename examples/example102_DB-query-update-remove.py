@@ -14,7 +14,7 @@ import datetime
 # import pandas as pd
 import os
 
-from settings.app import App
+from chmap.settings.app import App
 from chmap.database.db_classes import Base
 from chmap.database.db_funs import init_db_conn, update_image_val, query_euv_images, pdseries_tohdf
 

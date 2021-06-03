@@ -6,7 +6,7 @@ import numpy as np
 import datetime
 
 import chmap.data.corrections.apply_lbc_iit as apply_lbc_iit
-from settings.app import App
+from chmap.settings.app import App
 import chmap.database.db_classes as db_class
 import chmap.database.db_funs as db_funcs
 import chmap.maps.synoptic.cr_mapping_funcs as cr_funcs

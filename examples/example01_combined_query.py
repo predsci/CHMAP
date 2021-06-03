@@ -14,7 +14,7 @@ from astropy.time import Time, TimeDelta
 import astropy.units as u
 from sunpy.time import TimeRange
 
-from settings.app import App
+from chmap.settings.app import App
 from chmap.data.download import drms_helpers, vso_helpers
 from chmap.data.download.euv_utils import get_image_set
 

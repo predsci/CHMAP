@@ -5,7 +5,7 @@
 import os
 import datetime
 
-from settings.app import App
+from chmap.settings.app import App
 import chmap.database.db_classes as db_class
 import chmap.database.db_funs as db_funs
 

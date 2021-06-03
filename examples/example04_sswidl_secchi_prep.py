@@ -7,7 +7,7 @@ from utilities.file_io import io_helpers
 from utilities.idl_connect import idl_helper
 import time
 import os.path
-from settings.app import App
+from chmap.settings.app import App
 
 # file locations
 fits_compressed = os.path.join(App.APP_HOME, 'reference_data', 'sta_euvi_20140413T190530_195.fits')

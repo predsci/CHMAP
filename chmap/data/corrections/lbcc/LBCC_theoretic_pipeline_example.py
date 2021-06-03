@@ -7,7 +7,7 @@ import os
 import time
 import datetime
 import numpy as np
-from settings.app import App
+from chmap.settings.app import App
 import chmap.database.db_classes as db_class
 from chmap.database.db_funs import init_db_conn
 import chmap.data.corrections.lbcc.LBCC_theoretic_funcs as lbcc_funcs

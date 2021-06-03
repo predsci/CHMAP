@@ -10,7 +10,7 @@ import time
 
 # workaround for circular import issue between datatypes and coord manip
 
-from settings.app import App
+from chmap.settings.app import App
 from chmap.maps.magnetic.lmsal_utils import project_lmsal_map, get_map_flux_balance, get_polar_fields, plot_map
 from chmap.maps.util.map_manip import MapMesh
 from utilities.file_io.psi_hdf import wrh5_meta

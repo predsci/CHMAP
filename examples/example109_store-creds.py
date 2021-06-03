@@ -3,7 +3,7 @@
 
 import os
 from cryptography.fernet import Fernet
-from settings.app import App
+from chmap.settings.app import App
 
 key_file = os.path.join(App.APP_HOME, "settings", "e_key.bin")
 

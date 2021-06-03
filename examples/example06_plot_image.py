@@ -8,7 +8,7 @@ Quick example showing how to plot a sunpy map
 """
 import os
 
-from settings.app import App
+from chmap.settings.app import App
 
 import sunpy.map
 import matplotlib.pyplot as plt

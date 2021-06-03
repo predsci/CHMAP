@@ -16,7 +16,7 @@ fileConfig(config.config_file_name)
 
 
 sys.path.insert(0, os.path.dirname(os.path.dirname('../')))
-from settings.app import App
+from chmap.settings.app import App
 database_dir = App.DATABASE_HOME
 sqlite_filename = App.DATABASE_FNAME
 sqlite_path = os.path.join(database_dir, sqlite_filename)

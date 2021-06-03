@@ -3,7 +3,7 @@
 
 import os
 from cryptography.fernet import Fernet
-from settings.app import App
+from chmap.settings.app import App
 
 
 def recover_pwd():

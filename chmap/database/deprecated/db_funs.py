@@ -15,7 +15,7 @@ import sunpy.map
 from sqlalchemy import create_engine, func, or_
 from sqlalchemy.orm import sessionmaker
 
-from settings.app import App
+from chmap.settings.app import App
 from chmap.database.db_classes import *
 from chmap.data.download.euv_utils import get_metadata
 from utilities.file_io import io_helpers

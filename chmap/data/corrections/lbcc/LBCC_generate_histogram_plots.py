@@ -7,7 +7,7 @@ import os
 import time
 import datetime
 import numpy as np
-from settings.app import App
+from chmap.settings.app import App
 import chmap.database.db_classes as db_class
 import utilities.plotting.psi_plotting as Plotting
 from chmap.database.db_funs import init_db_conn, query_hist, get_method_id, query_euv_images, query_inst_combo

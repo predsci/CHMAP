@@ -7,10 +7,10 @@
 # ignore all python compiled binaries
 **.pyc
 
-settings/app.py
-settings/app_*.py
-settings/e_key.bin
-settings/e_cred.bin
+chmap/settings/app.py
+chmap/settings/app_*.py
+chmap/settings/e_key.bin
+chmap/settings/e_cred.bin
 
 software/ezseg/**
 !software/ezseg/*.f

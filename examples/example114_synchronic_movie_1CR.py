@@ -11,7 +11,7 @@ import sunpy
 
 from chmap.database import db_funs
 import chmap.database.db_classes as DBClass
-from settings.app import App
+from chmap.settings.app import App
 import utilities.plotting.psi_plotting as psi_plot
 
 map_dir = App.MAP_FILE_HOME

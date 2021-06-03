@@ -8,7 +8,7 @@ import datetime
 import numpy as np
 import pandas as pd
 
-from settings.app import App
+from chmap.settings.app import App
 import chmap.database.db_classes as db_class
 from chmap.database.db_funs import init_db_conn, query_euv_images, get_method_id
 

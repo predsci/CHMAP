@@ -7,7 +7,7 @@ import datetime
 import chmap.database.db_classes as DBClass
 from chmap.data.download import lmsal_helpers
 from utilities.file_io import io_helpers
-from settings.app import App
+from chmap.settings.app import App
 
 data_type = "magnetic map"
 data_provider = "lmsal"

@@ -9,7 +9,7 @@ import time
 import scipy.optimize as optim
 
 import chmap.data.corrections.lbcc.lbcc_utils as lbcc
-from settings.app import App
+from chmap.settings.app import App
 from chmap.database.db_funs import init_db_conn, query_hist, get_method_id, store_lbcc_values
 import utilities.datatypes.datatypes as psi_d_types
 import chmap.database.db_classes as db_class

@@ -9,7 +9,7 @@ import os
 import numpy as np
 
 import utilities.datatypes.datatypes as psi_datatype
-from settings.app import App
+from chmap.settings.app import App
 import chmap.maps.util.map_manip as map_manip
 import matplotlib.pyplot as plt
 

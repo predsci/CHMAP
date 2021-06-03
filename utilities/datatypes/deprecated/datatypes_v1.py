@@ -12,7 +12,7 @@ import sunpy.util.metadata
 import utilities.file_io.psi_hdf as psihdf
 import chmap.database.db_classes as db
 from utilities.coord_manip import interp_los_image_to_map, image_grid_to_CR
-from settings.info import DTypes
+from chmap.settings.info import DTypes
 
 class LosImage:
     """

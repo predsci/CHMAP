@@ -9,7 +9,7 @@ from skimage.measure import block_reduce
 import time
 
 import utilities.datatypes.datatypes as psi_d_types
-from settings.info import DTypes
+from chmap.settings.info import DTypes
 from utilities.coord_manip import s2c
 import chmap.data.corrections.lbcc.lbcc_utils as lbcc_funs
 

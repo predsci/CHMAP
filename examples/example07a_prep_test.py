@@ -12,7 +12,7 @@ import time
 
 import sunpy.map
 
-from settings.app import App
+from chmap.settings.app import App
 from utilities.plotting import euv_fits_plotting
 import chmap.data.corrections.image_prep.prep as prep
 from utilities.idl_connect import idl_helper

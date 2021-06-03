@@ -11,7 +11,7 @@ from matplotlib import cm
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 import matplotlib as mpl
 
-from settings.app import App
+from chmap.settings.app import App
 import chmap.database.db_funs as db_funs
 import chmap.database.db_classes as db_class
 

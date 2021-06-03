@@ -12,7 +12,7 @@ import matplotlib.pyplot as plt
 from matplotlib import cm
 from matplotlib.lines import Line2D
 import chmap.data.corrections.lbcc.lbcc_utils as lbcc
-from settings.app import App
+from chmap.settings.app import App
 
 # PARAMETERS TO UPDATE
 bin_n = 400

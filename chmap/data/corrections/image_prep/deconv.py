@@ -20,7 +20,7 @@ import os
 import time
 from utilities.file_io.io_helpers import read_uncompressed_fits_image, write_array_as_compressed_fits
 
-from settings.app import App
+from chmap.settings.app import App
 
 sgp_dtype = np.float64
 

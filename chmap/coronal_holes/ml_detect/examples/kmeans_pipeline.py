@@ -15,11 +15,9 @@ import sys
 
 sys.path.append("/Users/tamarervin/CH_Project/CHD")
 import os
-import pandas as pd
 import numpy as np
 import datetime
-from skimage import measure
-from settings.app import App
+from chmap.settings.app import App
 import modules.DB_classes as db_class
 import modules.DB_funs as db_funcs
 import matplotlib.pyplot as plt

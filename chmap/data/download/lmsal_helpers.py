@@ -3,10 +3,9 @@ import os
 import requests
 import h5py
 import pandas as pd
-import datetime
 from astropy.time import Time, TimeDelta
 
-from settings.app import App
+from chmap.settings.app import App
 
 
 def download_lmsal_index(file_write):

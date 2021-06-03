@@ -4,7 +4,7 @@
 import os
 import pandas as pd
 
-from settings.app import App
+from chmap.settings.app import App
 from chmap.database.db_funs import init_db_conn
 import chmap.database.db_classes as db_class
 
