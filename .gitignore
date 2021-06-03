@@ -1,17 +1,20 @@
-/examples/defunct/test2_dbtest.py
+# ignore contents of test_data directory
 /test_data/*
-*/__pycache__/*
 
+# ignore pycharm project files
 /.idea
 
 # ignore all python compiled binaries
+*/__pycache__/*
 **.pyc
 
+# do not track local user settings/credentials
 chmap/settings/app.py
 chmap/settings/app_*.py
 chmap/settings/e_key.bin
 chmap/settings/e_cred.bin
 
+# ignore compiled binaries in ezseg
 software/ezseg/**
 !software/ezseg/*.f
 !software/ezseg/*.pyf
