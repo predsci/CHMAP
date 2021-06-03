@@ -6,14 +6,14 @@ import os
 import pickle
 import sys
 
-import utilities.file_io.psi_hdf as psihdf
+import chmap.utilities.file_io.psi_hdf as psihdf
 import chmap.database.db_classes as db
 import chmap.database.db_funs as db_fun
 import numpy as np
 import pandas as pd
 import sunpy.map
 import sunpy.util.metadata
-from utilities.coord_manip import interp_los_image_to_map, image_grid_to_CR, interp_los_image_to_map2
+from chmap.utilities.coord_manip import interp_los_image_to_map, image_grid_to_CR, interp_los_image_to_map2
 from chmap.settings.info import DTypes
 
 

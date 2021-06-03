@@ -18,7 +18,7 @@ from chmap.settings.app import App
 from chmap.database.db_funs import init_db_conn
 import chmap.database.db_funs as db_funcs
 import chmap.database.db_classes as db_class
-import utilities.datatypes.datatypes as psi_d_types
+import chmap.utilities.datatypes.datatypes as psi_d_types
 import chmap.data.corrections.lbcc.LBCC_theoretic_funcs as lbcc_funcs
 
 ###### ------ UPDATEABLE PARAMETERS ------- #######

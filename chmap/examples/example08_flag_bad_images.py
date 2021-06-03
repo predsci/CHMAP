@@ -21,7 +21,7 @@ import pandas as pd
 import datetime
 from chmap.database.db_funs import init_db_conn, update_image_val, query_euv_images
 from chmap.database.db_classes import Base, EUV_Images
-from utilities.file_io.io_helpers import print_full_dataframe
+from chmap.utilities.file_io.io_helpers import print_full_dataframe
 
 # setup the mysql session
 use_db = "mysql-Q"

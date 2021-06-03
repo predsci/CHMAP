@@ -13,7 +13,7 @@ import time
 from chmap.settings.app import App
 from chmap.maps.magnetic.lmsal_utils import project_lmsal_map, get_map_flux_balance, get_polar_fields, plot_map
 from chmap.maps.util.map_manip import MapMesh
-from utilities.file_io.psi_hdf import wrh5_meta
+from chmap.utilities.file_io.psi_hdf import wrh5_meta
 
 # Reference file parameters
 sflux_file = os.path.join(App.APP_HOME, 'reference_data', 'kitrun076_20190617_120400.h5')

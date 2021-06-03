@@ -13,10 +13,10 @@ import time
 import sunpy.map
 
 from chmap.settings.app import App
-from utilities.plotting import euv_fits_plotting
+from chmap.utilities.plotting import euv_fits_plotting
 import chmap.data.corrections.image_prep.prep as prep
-from utilities.idl_connect import idl_helper
-from utilities.datatypes import datatypes
+from chmap.utilities.idl_connect import idl_helper
+from chmap.utilities.datatypes import datatypes
 
 # manually specify filenames
 fitsfile_aia = App.APP_HOME + '/reference_data/aia_lev1_euv_12s_20140413T190507_193.fits'

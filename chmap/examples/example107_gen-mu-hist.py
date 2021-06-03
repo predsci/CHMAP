@@ -12,7 +12,7 @@ import numpy as np
 from chmap.settings.app import App
 import chmap.database.db_classes as db_class
 from chmap.database.db_funs import init_db_conn, query_euv_images
-import utilities.datatypes.datatypes as psi_d_types
+import chmap.utilities.datatypes.datatypes as psi_d_types
 
 # --- 1. Select Images -----------------------------------------------------
 # In this example we use the 'reference_data' fits files supplied with repo

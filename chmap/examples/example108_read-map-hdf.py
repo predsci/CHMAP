@@ -4,7 +4,7 @@ Open a map-hdf file into a PsiMap object
 
 import os
 
-import utilities.datatypes.datatypes as psi_dt
+import chmap.utilities.datatypes.datatypes as psi_dt
 import MySQLdb
 
 # explicitly specify a map file

@@ -12,7 +12,7 @@ import datetime
 import numpy as np
 import pickle
 
-import utilities.datatypes.datatypes as psi_datatype
+import chmap.utilities.datatypes.datatypes as psi_datatype
 from chmap.settings.app import App
 import chmap.database.db_classes as db_class
 import chmap.database.db_funs as db_funs

@@ -5,7 +5,7 @@ import numpy as np
 import datetime
 
 import chmap.database.db_funs as db_funs
-import utilities.datatypes.datatypes as psi_datatype
+import chmap.utilities.datatypes.datatypes as psi_datatype
 import chmap.maps.util.map_manip as map_manip
 
 

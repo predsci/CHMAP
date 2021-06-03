@@ -1,5 +1,5 @@
-from utilities.file_io import io_helpers
-from utilities.idl_connect import idl_helper
+from chmap.utilities.file_io import io_helpers
+from chmap.utilities.idl_connect import idl_helper
 import time
 import os.path
 from chmap.settings.app import App

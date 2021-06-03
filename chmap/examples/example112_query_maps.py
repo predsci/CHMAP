@@ -5,9 +5,9 @@ import numpy as np
 
 from chmap.database import db_funs
 import chmap.database.db_classes as DBClass
-import utilities.datatypes.datatypes as psi_datatype
+import chmap.utilities.datatypes.datatypes as psi_datatype
 from chmap.settings.app import App
-import utilities.plotting.psi_plotting as EasyPlot
+import chmap.utilities.plotting.psi_plotting as EasyPlot
 
 map_dir = App.MAP_FILE_HOME
 

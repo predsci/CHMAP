@@ -3,7 +3,7 @@ import time
 import numpy as np
 import pandas as pd
 
-from utilities.datatypes import datatypes as datatypes
+from chmap.utilities.datatypes import datatypes as datatypes
 
 
 def create_singles_maps(inst_list, date_pd, iit_list, chd_image_list, methods_list, map_x=None, map_y=None, R0=1.01):

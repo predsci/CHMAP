@@ -13,8 +13,8 @@ sys.path.append('/Users/tamarervin/work/chd') #append path to your modules
 from chmap.settings.app import App
 import chmap.database.db_classes as db_class
 from chmap.database.db_funs import init_db_conn, query_euv_images
-import utilities.datatypes.datatypes as psi_d_types
-import utilities.plotting.psi_plotting as EasyPlot
+import chmap.utilities.datatypes.datatypes as psi_d_types
+import chmap.utilities.plotting.psi_plotting as EasyPlot
 
 # In this example we use the 'reference_data' fits files supplied with repo
 # manually set the data-file dirs

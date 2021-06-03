@@ -22,7 +22,7 @@ import chmap.database.db_funs as db_funcs
 import chmap.data.corrections.lbcc.LBCC_theoretic_funcs as lbcc_funcs
 import chmap.data.corrections.iit.IIT_pipeline_funcs as iit_funcs
 from chmap.maps.util.map_manip import combine_maps
-import utilities.plotting.psi_plotting as EasyPlot
+import chmap.utilities.plotting.psi_plotting as EasyPlot
 
 #### ------------ QUERYING PARAMETERS TO UPDATE ------------- #####
 

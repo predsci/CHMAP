@@ -16,7 +16,7 @@ import chmap.database.db_classes as db_class
 import chmap.database.db_funs as db_funs
 import chmap.maps.util.map_manip as map_manip
 from chmap.maps.magnetic.lmsal_utils import project_lmsal_map
-import utilities.datatypes.datatypes as psi_d_types
+import chmap.utilities.datatypes.datatypes as psi_d_types
 
 ###### ------ PARAMETERS TO UPDATE -------- ########
 

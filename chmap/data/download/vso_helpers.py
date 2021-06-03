@@ -12,7 +12,7 @@ import numpy as np
 import os
 from http.client import HTTPException
 
-from utilities.file_io import io_helpers
+from chmap.utilities.file_io import io_helpers
 
 
 class EUVI:

@@ -14,7 +14,7 @@ import time
 import numpy as np
 
 import software.ezseg.ezsegwrapper as ezsegwrapper
-import utilities.datatypes.datatypes as datatypes
+import chmap.utilities.datatypes.datatypes as datatypes
 
 
 #### STEP ONE: SELECT IMAGES ####

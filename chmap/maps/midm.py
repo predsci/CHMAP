@@ -5,7 +5,7 @@ import pandas as pd
 
 from chmap.maps.util.map_manip import combine_maps
 from chmap.settings.info import DTypes
-from utilities.plotting import psi_plotting as Plotting
+from chmap.utilities.plotting import psi_plotting as Plotting
 
 
 def create_combined_maps(db_session, map_data_dir, map_list, chd_map_list, methods_list,

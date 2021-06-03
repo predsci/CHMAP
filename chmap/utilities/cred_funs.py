@@ -8,7 +8,7 @@ from chmap.settings.app import App
 
 def recover_pwd():
 
-    key_file = os.path.join(App.APP_HOME, "settings", "e_key.bin")
+    key_file = os.path.join(App.APP_HOME, "chmap", "settings", "e_key.bin")
 
     with open(key_file, 'rb') as file_object:
         for line in file_object:
@@ -16,7 +16,7 @@ def recover_pwd():
 
     cipher_suite = Fernet(chd_key)
 
-    creds_file = os.path.join(App.APP_HOME, "settings", "e_cred.bin")
+    creds_file = os.path.join(App.APP_HOME, "chmap", "settings", "e_cred.bin")
 
     with open(creds_file, 'rb') as file_object:
         for line in file_object:

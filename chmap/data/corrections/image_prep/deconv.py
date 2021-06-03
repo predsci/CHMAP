@@ -18,7 +18,7 @@ Helper module for working with PSF deconvolution algorithms.
 import numpy as np
 import os
 import time
-from utilities.file_io.io_helpers import read_uncompressed_fits_image, write_array_as_compressed_fits
+from chmap.utilities.file_io.io_helpers import read_uncompressed_fits_image, write_array_as_compressed_fits
 
 from chmap.settings.app import App
 

@@ -12,9 +12,9 @@ from matplotlib import cm
 from matplotlib.lines import Line2D
 
 import chmap.database.db_funs as db_funcs
-import utilities.datatypes.datatypes as psi_d_types
+import chmap.utilities.datatypes.datatypes as psi_d_types
 import chmap.data.corrections.lbcc.lbcc_utils as lbcc
-import utilities.plotting.psi_plotting as Plotting
+import chmap.utilities.plotting.psi_plotting as Plotting
 
 
 ####### STEP ONE: CREATE AND SAVE HISTOGRAMS #######

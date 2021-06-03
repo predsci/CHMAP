@@ -23,7 +23,7 @@ import numpy as np
 from numpy import mean, size, zeros, where
 from scipy import linspace, stats
 
-import utilities.datatypes.datatypes as PSI_dtypes
+import chmap.utilities.datatypes.datatypes as PSI_dtypes
 
 from matplotlib.pyplot import figure, plot, xlabel, ylabel,\
     title, hist

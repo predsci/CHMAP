@@ -13,7 +13,7 @@ import pandas as pd
 from chmap.settings.app import App
 import chmap.database.db_classes as db_class
 from chmap.database.db_funs import init_db_conn, query_euv_images
-import utilities.datatypes.datatypes as psi_d_types
+import chmap.utilities.datatypes.datatypes as psi_d_types
 import matplotlib.pyplot as plt
 import matplotlib as mpl
 

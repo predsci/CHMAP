@@ -15,7 +15,7 @@ from chmap.settings.app import App
 from chmap.database.db_classes import Base
 from chmap.database.db_funs import init_db_conn, query_euv_images
 from chmap.data.download.euv_utils import get_image_set
-from utilities.idl_connect import idl_helper
+from chmap.utilities.idl_connect import idl_helper
 from chmap.data.corrections.image_prep import prep
 
 # database location

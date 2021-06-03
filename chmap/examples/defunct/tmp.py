@@ -127,7 +127,7 @@ else:
     time_array = []
     jds = []
 
-from utilities.file_io import io_helpers
+from chmap.utilities.file_io import io_helpers
 
 # downlaod manually via the urllib
 if len(keys) > 0:

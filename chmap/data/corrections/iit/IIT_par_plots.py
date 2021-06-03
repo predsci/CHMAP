@@ -18,7 +18,7 @@ from chmap.settings.app import App
 import chmap.database.db_funs as db_funs
 import chmap.database.db_classes as db_class
 import chmap.data.corrections.lbcc.lbcc_utils as lbcc
-import utilities.datatypes.datatypes as psi_d_types
+import chmap.utilities.datatypes.datatypes as psi_d_types
 
 # INSTRUMENTS
 inst_list = ["AIA", "EUVI-A", "EUVI-B"]

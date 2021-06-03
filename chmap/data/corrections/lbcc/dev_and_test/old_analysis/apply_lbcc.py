@@ -13,8 +13,8 @@ import datetime
 from chmap.settings.app import App
 from chmap.database.db_funs import init_db_conn, query_euv_images, query_lbcc_fit
 import chmap.database.db_classes as db_class
-import utilities.datatypes.datatypes as psi_d_types
-import utilities.plotting.psi_plotting as Plotting
+import chmap.utilities.datatypes.datatypes as psi_d_types
+import chmap.utilities.plotting.psi_plotting as Plotting
 
 # define time range to query
 query_time_min = datetime.datetime(2011, 4, 1, 0, 0, 0)

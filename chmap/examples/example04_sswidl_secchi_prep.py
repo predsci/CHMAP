@@ -3,8 +3,8 @@ Quick example to illustrate how a raw STEREO EUVI image will be prepped to lvl 1
 - Here the compressed file we save via a query/download is uncompressed and sent to an IDL subprocess
   that calls secchi_prep and writes the output.
 """
-from utilities.file_io import io_helpers
-from utilities.idl_connect import idl_helper
+from chmap.utilities.file_io import io_helpers
+from chmap.utilities.idl_connect import idl_helper
 import time
 import os.path
 from chmap.settings.app import App

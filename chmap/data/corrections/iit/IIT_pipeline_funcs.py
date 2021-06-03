@@ -7,10 +7,10 @@ import time
 import datetime
 
 import chmap.database.db_funs as db_funcs
-import utilities.datatypes.datatypes as psi_d_types
+import chmap.utilities.datatypes.datatypes as psi_d_types
 import chmap.data.corrections.lbcc.lbcc_utils as lbcc
 import chmap.data.corrections.iit.iit_utils as iit
-import utilities.plotting.psi_plotting as Plotting
+import chmap.utilities.plotting.psi_plotting as Plotting
 import chmap.data.corrections.iit.IIT_pipeline_funcs as iit_funcs
 import chmap.data.corrections.lbcc.LBCC_theoretic_funcs as lbcc_funcs
 

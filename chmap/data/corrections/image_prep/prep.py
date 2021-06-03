@@ -17,9 +17,9 @@ import sunpy.io
 from chmap.data.corrections.image_prep import deconv
 from chmap.data.download.euv_utils import get_metadata
 import chmap.settings.info
-from utilities.datatypes import datatypes
-from utilities.file_io import io_helpers
-from utilities.idl_connect import idl_helper
+from chmap.utilities.datatypes import datatypes
+from chmap.utilities.file_io import io_helpers
+from chmap.utilities.idl_connect import idl_helper
 from chmap.settings.app import App
 
 # default bad or missing value for an EUV image

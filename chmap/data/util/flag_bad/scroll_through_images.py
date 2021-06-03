@@ -9,9 +9,9 @@ import numpy as np
 from chmap.settings.app import App
 import chmap.database.db_classes as db_class
 import chmap.database.db_funs as db_funs
-import utilities.datatypes.datatypes as psi_d_types
+import chmap.utilities.datatypes.datatypes as psi_d_types
 import matplotlib.pyplot as plt
-import utilities.plotting.psi_plotting as EasyPlot
+import chmap.utilities.plotting.psi_plotting as EasyPlot
 
 ###### ------ PARAMETERS TO UPDATE -------- ########
 

@@ -8,9 +8,9 @@ from scipy.interpolate import interp1d
 from skimage.measure import block_reduce
 import time
 
-import utilities.datatypes.datatypes as psi_d_types
+import chmap.utilities.datatypes.datatypes as psi_d_types
 from chmap.settings.info import DTypes
-from utilities.coord_manip import s2c
+from chmap.utilities.coord_manip import s2c
 import chmap.data.corrections.lbcc.lbcc_utils as lbcc_funs
 
 

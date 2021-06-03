@@ -22,11 +22,11 @@ from sqlalchemy.orm import sessionmaker, aliased
 from chmap.settings.app import App
 from chmap.database.db_classes import *
 from chmap.data.download.euv_utils import get_metadata
-from utilities.file_io import io_helpers
+from chmap.utilities.file_io import io_helpers
 from chmap.data.download import euv_utils
-from utilities.datatypes import datatypes
-import utilities.file_io.psi_hdf as psihdf
-import utilities.cred_funs as creds
+from chmap.utilities.datatypes import datatypes
+import chmap.utilities.file_io.psi_hdf as psihdf
+import chmap.utilities.cred_funs as creds
 
 
 def init_db_conn(db_name, chd_base, sqlite_path="", user="", password=""):
