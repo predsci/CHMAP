@@ -29,6 +29,55 @@ import chmap.utilities.file_io.psi_hdf as psihdf
 import chmap.utilities.cred_funs as creds
 
 
+def init_db_conn(db_type, chd_base, db_loc, db_name='chd', port="3306", user="",
+                 password=""):
+    """
+    Connect to the database specified by db_name.
+    Then establish the SQLAlchemy declarative base
+    and engine.
+    db_type - should be 'sqlite' or 'mysql'.
+    chd_base - sqlalchemy declarative base that
+    defines SQL table structures.
+    db_loc - character string. sqlite: a path to the local DB file
+                               mysql: an IP address or host name
+    db_name - for mysql, designate which database to open
+    port - for mysql, allows user to designate a different port
+           where appropriate.
+    :return: an SQLAlchemy session
+    """
+
+    # first define the engine connection
+    if db_type == 'mysql':
+        db_user = user
+        if password == "":
+            db_psswd = creds.recover_pwd()
+        else:
+            db_psswd = password
+        url_psswd = urllib.parse.quote_plus(db_psswd)
+        connect_string = 'mysql://' + db_user + ':' + url_psswd + '@' + db_loc + \
+                         ':' + port + '/' + db_name
+        print_string = 'mysql://' + db_user + ':****pwd****@' + db_loc + ':' + \
+                       port + '/' + db_name
+        print("Attempting to connect to DB server ", print_string)  # print to check
+    elif db_type == 'sqlite':
+        print("Attempting to connect to SQLite DB server " + db_loc)
+        connect_string = 'sqlite:///' + db_loc
+    else:
+        sys.exit("At this time, 'db_type' must be either 'sqlite' or 'mysql'.")
+
+    # now establish the engine
+    engine = create_engine(connect_string)
+    # import base declarative table definitions into the engine. Also instructs the
+    # engine to create tables if they don't exist.
+    chd_base.metadata.create_all(engine)
+    # define the session
+    session = sessionmaker(bind=engine)
+    # open session/connection to DB
+    db = session()
+    print("Connection successful\n")
+    return db
+
+
 def init_db_conn_old(db_name, chd_base, sqlite_path="", user="", password=""):
     """
     Connect to the database specified by db_name.
@@ -43,13 +92,7 @@ def init_db_conn_old(db_name, chd_base, sqlite_path="", user="", password=""):
     """
 
     # first define the engine connection
-    if db_name == 'mysql-shadow':
-        db_user = "test_beta"
-        db_psswd = "ATlz8d40gh^W7Ge6"
-        url_psswd = urllib.parse.quote_plus(db_psswd)
-        connect_string = 'mysql://' + db_user + ':' + url_psswd + '@shadow.predsci.com:3306/CHD'
-        print("Attempting to connect to DB file", connect_string)  # print to check
-    elif db_name == 'sqlite':
+    if db_name == 'sqlite':
         print("Attempting to connect to SQLite DB server " + sqlite_path)
         connect_string = 'sqlite:///' + sqlite_path
     elif db_name == 'chd-db':
