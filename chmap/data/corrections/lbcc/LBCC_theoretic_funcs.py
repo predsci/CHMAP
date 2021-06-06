@@ -14,6 +14,7 @@ from matplotlib.lines import Line2D
 import chmap.database.db_funs as db_funcs
 import chmap.utilities.datatypes.datatypes as psi_d_types
 import chmap.data.corrections.lbcc.lbcc_utils as lbcc
+import chmap.maps.synchronic.synch_utils as synch_utils
 import chmap.utilities.plotting.psi_plotting as Plotting
 
 
@@ -51,9 +52,26 @@ def save_histograms(db_session, hdf_data_dir, inst_list, hist_query_time_min, hi
 
         # query EUV images
         query_instrument = [instrument, ]
-        query_pd = db_funcs.query_euv_images(db_session=db_session, time_min=hist_query_time_min,
-                                             time_max=hist_query_time_max, instrument=query_instrument,
-                                             wavelength=wavelengths)
+        query_pd_all = db_funcs.query_euv_images(db_session=db_session, time_min=hist_query_time_min,
+                                                 time_max=hist_query_time_max, instrument=query_instrument,
+                                                 wavelength=wavelengths)
+
+        # query LBCC histograms
+        hist_pd = db_funcs.query_hist(db_session, meth_id=method_id[1], n_mu_bins=n_mu_bins,
+                                      n_intensity_bins=n_intensity_bins, lat_band=lat_band,
+                                      time_min=hist_query_time_min, time_max=hist_query_time_max,
+                                      instrument=query_instrument, wavelength=wavelengths)
+
+        # compare image results to hist results based on image_id
+        in_index = query_pd_all.data_id.isin(hist_pd.image_id)
+
+        # return only images that do not have corresponding histograms
+        query_pd = query_pd_all[~in_index]
+
+        # check that images remain that need histograms
+        if query_pd.shape[0] == 0:
+            print("All" + instrument + " images in timeframe already have associated histograms.")
+            continue
 
         for index, row in query_pd.iterrows():
             print("Processing image number", row.data_id, ".")
@@ -61,7 +79,12 @@ def save_histograms(db_session, hdf_data_dir, inst_list, hist_query_time_min, hi
                 print("Warning: Image # " + str(row.data_id) + " does not have an associated hdf file. Skipping")
                 continue
             hdf_path = os.path.join(hdf_data_dir, row.fname_hdf)
-            los_temp = psi_d_types.read_los_image(hdf_path)
+            # attempt to open and read file
+            try:
+                los_temp = psi_d_types.read_los_image(hdf_path)
+            except:
+                print("Something went wrong opening: ", hdf_path, ". Skipping")
+                continue
             # add coordinates to los object
             los_temp.get_coordinates(R0=R0)
             # perform 2D histogram on mu and image intensity
@@ -82,8 +105,8 @@ def save_histograms(db_session, hdf_data_dir, inst_list, hist_query_time_min, hi
 
 ###### STEP TWO: CALCULATE AND SAVE THEORETIC FIT PARAMETERS #######
 def calc_theoretic_fit(db_session, inst_list, calc_query_time_min, calc_query_time_max, weekday=0, number_of_days=180,
-                       n_mu_bins=18, n_intensity_bins=200, lat_band=[-np.pi / 64., np.pi / 64.], create=False,
-                       wavelengths=None):
+                       image_freq=2, image_del=np.timedelta64(30, 'm'), n_mu_bins=18, n_intensity_bins=200,
+                       lat_band=[-np.pi / 64., np.pi / 64.], create=False, wavelengths=None):
     """
     calculate and save (to database) theoretic LBC fit parameters
     @param db_session: connected database session to query histograms from and save fit parameters
@@ -92,53 +115,81 @@ def calc_theoretic_fit(db_session, inst_list, calc_query_time_min, calc_query_ti
     @param calc_query_time_max: end time for creation of moving average centers
     @param weekday: weekday for the moving average
     @param number_of_days: number of days for creation of moving width
+    @param image_freq: number of hours between images in moving average
+    @param image_del: numpy.timedelta64(); Half of image window size
     @param n_mu_bins: number mu bins
     @param n_intensity_bins: number intensity bins
     @param lat_band: latitude band
     @param create: boolean, whether to create new variable values in database (True if create new)
+    @param wavelengths: list of integers. image wavelengths to be included.
     @return: None, saves theoretic fit parameters to database
     """
     # start time
     start_time_tot = time.time()
-    # calculate moving averages
+    # calculate moving average centers
     moving_avg_centers, moving_width = lbcc.moving_averages(calc_query_time_min, calc_query_time_max, weekday,
                                                             number_of_days)
+    # calculate image cadence centers
+    range_min_date = moving_avg_centers[0] - moving_width/2
+    range_max_date = moving_avg_centers[-1] + moving_width/2
+    image_centers = synch_utils.get_dates(
+        time_min=range_min_date.astype(datetime.datetime),
+        time_max=range_max_date.astype(datetime.datetime), map_freq=image_freq)
+
     optim_vals_theo = ["a1", "a2", "b1", "b2", "n", "log_alpha", "SSE", "optim_time", "optim_status"]
     results_theo = np.zeros((len(moving_avg_centers), len(inst_list), len(optim_vals_theo)))
 
     # get method id
     meth_name = 'LBCC'
     meth_desc = 'LBCC Theoretic Fit Method'
-    method_id = db_funcs.get_method_id(db_session, meth_name, meth_desc=None, var_names=None, var_descs=None,
-                                       create=False)
+    method_id = db_funcs.get_method_id(db_session, meth_name, meth_desc=None,
+                                       var_names=None, var_descs=None, create=False)
 
-    for date_index, center_date in enumerate(moving_avg_centers):
-        print("Begin date " + str(center_date))
+    for inst_index, instrument in enumerate(inst_list):
+        print("\nStarting calculations for " + instrument + "\n")
 
-        # determine time range based off moving average centers
-        min_date = center_date - moving_width / 2
-        max_date = center_date + moving_width / 2
+        # download all histograms needed for this instrument
 
-        for inst_index, instrument in enumerate(inst_list):
-            print("\nStarting calculations for " + instrument)
+        # query the histograms
+        query_instrument = [instrument, ]
+        pd_hist_all = db_funcs.query_hist(
+            db_session=db_session, meth_id=method_id[1], n_mu_bins=n_mu_bins,
+            n_intensity_bins=n_intensity_bins, lat_band=lat_band,
+            time_min=(range_min_date-image_del).astype(datetime.datetime),
+            time_max=(range_max_date+image_del).astype(datetime.datetime),
+            instrument=query_instrument, wavelength=wavelengths
+        )
 
-            # query the histograms for time range based off moving average centers
-            query_instrument = [instrument, ]
-            pd_hist = db_funcs.query_hist(db_session=db_session, meth_id=method_id[1], n_mu_bins=n_mu_bins,
-                                          n_intensity_bins=n_intensity_bins, lat_band=lat_band,
-                                          time_min=np.datetime64(min_date).astype(datetime.datetime),
-                                          time_max=np.datetime64(max_date).astype(datetime.datetime),
-                                          instrument=query_instrument, wavelength=wavelengths)
-            print(pd_hist)
-            # convert the binary types back to arrays
-            mu_bin_array, intensity_bin_array, full_hist = psi_d_types.binary_to_hist(pd_hist, n_mu_bins,
-                                                                                      n_intensity_bins)
+        # check if instrument has any histograms for this timerange
+        if pd_hist_all.shape[0] == 0:
+            print("No histograms for", instrument, "in this time range. Skipping")
+            continue
+
+        # keep only one observation-histogram per image_center window
+        keep_ind = lbcc.cadence_choose(pd_hist.date_obs, image_centers, image_del)
+        pd_hist = pd_hist.iloc[keep_ind]
+
+        # convert the binary types back to arrays
+        mu_bin_array, intensity_bin_array, full_hist = psi_d_types.binary_to_hist(
+            pd_hist, n_mu_bins, n_intensity_bins
+        )
+
+        for date_index, center_date in enumerate(moving_avg_centers):
+            print("Begin date " + str(center_date))
+
+            if center_date > pd_hist.date_obs.max() or center_date < pd_hist.date_obs.min():
+                print("Date is out of instrument range, skipping.")
+                continue
+
+            # determine time range based off moving average centers
+            min_date = center_date - moving_width/2
+            max_date = center_date + moving_width/2
 
             # create list of observed dates in time frame
             date_obs_npDT64 = pd_hist['date_obs']
 
             # creates array of mu bin centers
-            mu_bin_centers = (mu_bin_array[1:] + mu_bin_array[:-1]) / 2
+            mu_bin_centers = (mu_bin_array[1:] + mu_bin_array[:-1])/2
 
             # determine appropriate date range
             date_ind = (date_obs_npDT64 >= min_date) & (date_obs_npDT64 <= max_date)
@@ -151,10 +202,10 @@ def calc_theoretic_fit(db_session, inst_list, calc_query_time_min, calc_query_ti
             row_sums = summed_hist.sum(axis=1, keepdims=True)
             # but do not divide by zero
             zero_row_index = np.where(row_sums != 0)
-            norm_hist[zero_row_index[0]] = summed_hist[zero_row_index[0]] / row_sums[zero_row_index[0]]
+            norm_hist[zero_row_index[0]] = summed_hist[zero_row_index[0]]/row_sums[zero_row_index[0]]
 
             # separate the reference bin from the fitted bins
-            hist_ref = norm_hist[-1, ]
+            hist_ref = norm_hist[-1,]
             hist_mat = norm_hist[:-1, ]
             mu_vec = mu_bin_centers[:-1]
 
@@ -166,7 +217,8 @@ def calc_theoretic_fit(db_session, inst_list, calc_query_time_min, calc_query_ti
 
             start_time = time.time()
             optim_out_theo = optim.minimize(lbcc.get_functional_sse, init_pars,
-                                            args=(hist_ref, hist_mat, mu_vec, intensity_bin_array, model),
+                                            args=(hist_ref, hist_mat, mu_vec,
+                                                  intensity_bin_array, model),
                                             method=method)
 
             end_time = time.time()
@@ -180,8 +232,10 @@ def calc_theoretic_fit(db_session, inst_list, calc_query_time_min, calc_query_ti
             meth_desc = 'LBCC Theoretic Fit Method'
             var_name = "TheoVar"
             var_desc = "Theoretic fit parameter at index "
-            db_funcs.store_lbcc_values(db_session, pd_hist, meth_name, meth_desc, var_name, var_desc, date_index,
-                                       inst_index, optim_vals=optim_vals_theo[0:6], results=results_theo, create=create)
+            db_funcs.store_lbcc_values(db_session, pd_hist[date_ind], meth_name,
+                                       meth_desc, var_name, var_desc, date_index,
+                                       inst_index, optim_vals=optim_vals_theo[0:6],
+                                       results=results_theo, create=create)
 
     end_time_tot = time.time()
     print("Theoretical fit parameters have been calculated and saved to the database.")

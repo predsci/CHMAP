@@ -25,6 +25,9 @@ calc_query_time_min = datetime.datetime(2011, 4, 1, 0, 0, 0)
 calc_query_time_max = datetime.datetime(2011, 10, 1, 0, 0, 0)
 weekday_calc = 0  # start at 0 for Monday
 days = 180  # days for moving average
+# TIME WINDOWS FOR IMAGE INCLUSION
+image_freq = 2      # number of hours between window centers
+image_del = np.timedelta64(30, 'm') # one-half window width
 
 # TIME RANGE FOR LBC CORRECTION AND IMAGE PLOTTING
 lbc_query_time_min = datetime.datetime(2011, 4, 1, 0, 0, 0)
@@ -79,9 +82,11 @@ lbcc_funcs.save_histograms(db_session, hdf_data_dir, inst_list, hist_query_time_
                            wavelengths=wavelengths)
 
 ###### STEP TWO: CALCULATE AND SAVE THEORETIC FIT PARAMETERS #######
-lbcc_funcs.calc_theoretic_fit(db_session, inst_list, calc_query_time_min, calc_query_time_max, weekday=weekday_calc,
-                              number_of_days=days, n_mu_bins=n_mu_bins, n_intensity_bins=n_intensity_bins,
-                              lat_band=lat_band, create=create, wavelengths=wavelengths)
+lbcc_funcs.calc_theoretic_fit(db_session, inst_list, calc_query_time_min,
+                              calc_query_time_max, weekday=weekday_calc, image_freq=image_freq,
+                              image_del=image_del, number_of_days=days, n_mu_bins=n_mu_bins,
+                              n_intensity_bins=n_intensity_bins, lat_band=lat_band, create=create,
+                              wavelengths=wavelengths)
 
 end_time_tot = time.time()
 tot_time = end_time_tot - start_time_tot

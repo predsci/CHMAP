@@ -18,6 +18,7 @@ from chmap.settings.app import App
 from chmap.database.db_funs import init_db_conn_old, query_hist, get_method_id, store_lbcc_values
 import chmap.utilities.datatypes.datatypes as psi_d_types
 import chmap.database.db_classes as db_class
+import chmap.maps.synchronic.synch_utils as synch_utils
 
 # INSTRUMENT LIST
 inst_list = ["AIA", "EUVI-A", "EUVI-B"]
@@ -35,9 +36,12 @@ hdf_data_dir = App.PROCESSED_DATA_HOME
 # TIME FRAME TO QUERY HISTOGRAMS
 query_time_min = datetime.datetime(2009, 1, 1, 0, 0, 0)
 query_time_max = datetime.datetime(2011, 4, 1, 0, 0, 0)
-
+# moving average params
 weekday = 0
 number_of_days = 180
+# image window params
+image_freq = 2
+image_del = np.timedelta64(30, 'm')
 
 # DATABASE PATHS
 create = True  # true if save to database
@@ -67,6 +71,14 @@ elif use_db in ['mysql-Q', 'mysql-Q_test']:
 # calculate moving averages
 moving_avg_centers, moving_width = lbcc.moving_averages(query_time_min, query_time_max, weekday,
                                                         number_of_days)
+
+# calculate image cadence centers
+range_min_date = moving_avg_centers[0] - moving_width/2
+range_max_date = moving_avg_centers[-1] + moving_width/2
+image_centers = synch_utils.get_dates(
+    time_min=range_min_date.astype(datetime.datetime),
+    time_max=range_max_date.astype(datetime.datetime), map_freq=image_freq)
+
 optim_vals_theo = ["a1", "a2", "b1", "b2", "n", "log_alpha", "SSE", "optim_time", "optim_status"]
 results_theo = np.zeros((len(moving_avg_centers), len(inst_list), len(optim_vals_theo)))
 
@@ -83,16 +95,20 @@ for inst_index, instrument in enumerate(inst_list):
     range_max_date = np.datetime64(query_time_max) + moving_width/2
     # query the histograms
     query_instrument = [instrument, ]
-    pd_hist = query_hist(db_session=db_session, meth_id=method_id[1], n_mu_bins=n_mu_bins,
-                         n_intensity_bins=n_intensity_bins, lat_band=lat_band,
-                         time_min=np.datetime64(range_min_date).astype(datetime.datetime),
-                         time_max=np.datetime64(range_max_date).astype(datetime.datetime),
-                         instrument=query_instrument, wavelength=wavelengths)
+    pd_hist_all = query_hist(db_session=db_session, meth_id=method_id[1], n_mu_bins=n_mu_bins,
+                             n_intensity_bins=n_intensity_bins, lat_band=lat_band,
+                             time_min=np.datetime64(range_min_date).astype(datetime.datetime),
+                             time_max=np.datetime64(range_max_date).astype(datetime.datetime),
+                             instrument=query_instrument, wavelength=wavelengths)
 
     # check if instrument has any histograms for this timerange
-    if pd_hist.shape[0] == 0:
+    if pd_hist_all.shape[0] == 0:
         print("No histograms for", instrument, "in this time range. Skipping")
         continue
+
+    # keep only one observation-histogram per image_center window
+    keep_ind = lbcc.cadence_choose(pd_hist.date_obs, image_centers, image_del)
+    pd_hist = pd_hist.iloc[keep_ind]
 
     # convert the binary types back to arrays
     mu_bin_array, intensity_bin_array, full_hist = psi_d_types.binary_to_hist(pd_hist, n_mu_bins,
@@ -158,5 +174,5 @@ for inst_index, instrument in enumerate(inst_list):
         store_lbcc_values(db_session, pd_hist[date_ind], meth_name, meth_desc, var_name, var_desc, date_index,
                           inst_index, optim_vals=optim_vals_theo[0:6], results=results_theo, create=create)
 
-        end_time_tot = time.time()
-        print("Total elapsed time: " + str(round(end_time_tot - start_time_tot, 3)) + " seconds.")
+end_time_tot = time.time()
+print("Total elapsed time: " + str(round(end_time_tot - start_time_tot, 3)) + " seconds.")

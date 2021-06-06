@@ -494,6 +494,62 @@ def get_beta_y_theoretic_continuous_1d_indices(x, los_image, mu_limit=0.1):
     return beta1d, y1d, mu_indices, use_indices
 
 
+def cadence_choose(all_times, window_centers, window_del, method='default'):
+    """
+    Choose only one observation/datetime per selection window.
+
+    Of the available observation datetimes 'all_times', choose a single observation
+    time in each selection window.  Selection windows are defined by multiple
+    window_centers and a one-half window width defined by window_del.
+    :param all_times: pandas.Series (dtype: datetime64)
+                      The available observation times.
+    :param window_centers: numpy.ndarray (dtype='datetime64')
+                           A one-dimensional array of selection window center times.
+    :param window_del: numpy.timedelta64
+                       Scalar that defines one half of the selection window width.
+    :param method: string {'default', 'sorted'}
+                   Choose 'sorted' when all_times is sorted in ascending order. This
+                   will result in a shorter computation time.
+    :return: list (boolean)
+             A logical list that indicates which elements of 'all_times' are the
+             best match for the specified selection windows.
+    """
+    n_times = len(all_times)
+    keep_ind = [False, ] * n_times
+    # assume window_centers is sorted-ascending
+    for center_time in window_centers:
+        window_min = center_time - window_del
+        window_max = center_time + window_del
+        # determine if there are any new candidates
+        if (all_times.iloc[0] > window_max) or (all_times.iloc[-1] < window_min):
+            # there are no observation times in this window, skip
+            continue
+        if method == "default":
+            match_cands = (all_times <= window_max) & (all_times >= window_min) & (
+                np.logical_not(keep_ind))
+            if not any(match_cands):
+                continue
+            else:
+                cand_ind = np.where(match_cands)[0]
+        elif method == "sorted":
+            lower_ind = all_times.searchsorted(window_min, 'left')
+            upper_ind = all_times.searchsorted(window_max, 'left')
+            if upper_ind == lower_ind:
+                continue
+            else:
+                cand_ind = np.arange(lower_ind, upper_ind, step=1)
+
+        # of the selected candidates, choose the closest one
+        if len(cand_ind) > 1:
+            cand_diff = np.abs(center_time - all_times[match_cands])
+            cand_select = cand_ind[np.argmin(cand_diff)]
+            keep_ind[cand_select] = True
+        else:
+            keep_ind[cand_ind[0]] = True
+
+    return keep_ind
+
+
 def moving_averages(time_min, time_max, weekday, days=None):
     # find day of the week of start time
     day_start = time_min.weekday()
