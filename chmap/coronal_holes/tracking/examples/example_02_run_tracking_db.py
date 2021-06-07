@@ -13,7 +13,7 @@ This Module includes the following operations:
 4. Save image of the coronal hole detected frame in each iteration + save a plot of the graph then create a side
     by side (.mov)
 
-Last Modified: May 17th, 2021 (Opal)
+Last Modified: June 6th, 2021 (Opal)
 """
 
 
