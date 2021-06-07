@@ -4,7 +4,7 @@ Last Modified: May 6th, 2021 (Opal)
 """
 import cv2
 import numpy as np
-from chmap.coronal_holes.tracking.src import Contour
+from chmap.coronal_holes.tracking.src.contour import Contour
 
 
 def get_kernel_width(t, gamma, n_p):
