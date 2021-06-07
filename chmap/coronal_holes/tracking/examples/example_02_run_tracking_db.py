@@ -14,11 +14,6 @@ This Module includes the following operations:
     by side (.mov)
 
 Last Modified: June 6th, 2021 (Opal)
-
-
-# TODO: fix database bug (Jamie?)
-    from chmap.settings.app import App
-    ModuleNotFoundError: No module named 'chmap.settings.app'
 """
 
 
@@ -26,15 +21,14 @@ import os
 import datetime
 import numpy as np
 import cv2
-from chmap.database import db_funs
-import chmap.database.db_classes as DBClass
+import pickle
+import chmap.database.db_classes as db_class
+import chmap.database.db_funs as db_funcs
 import chmap.utilities.datatypes.datatypes as psi_datatype
-from chmap.coronal_holes.tracking.src import CoronalHoleDB
+from chmap.coronal_holes.tracking.src.main import CoronalHoleDB
 from chmap.coronal_holes.tracking.src.classification import classify_grey_scaled_image
 from chmap.coronal_holes.tracking.tools.plots import plot_coronal_hole
 from chmap.maps.util.map_manip import MapMesh
-
-import pickle
 
 # ================================================================================================================
 # Step 1: Choose a test case - time interval
@@ -54,7 +48,6 @@ folder_name = "2010-12-29-2011-04-08c2hrc/"
 graph_folder = "graphs/"
 frame_folder = "frames/"
 pickle_folder = "pkl/"
-
 
 # ================================================================================================================
 # Step 3: Algorithm Hyper Parameters
@@ -86,7 +79,18 @@ ch_lib = CoronalHoleDB()
 # Step 3: Read in detected images from the database.
 # ================================================================================================================
 # --- User Parameters ----------------------
-map_dir = "/Users/opalissan/desktop/CH_DB"
+# map_dir = "/Users/opalissan/desktop/CH_DB"
+
+# INITIALIZE DATABASE CONNECTION
+# Database paths
+map_data_dir = "/Users/opalissan/desktop/CH_DB"
+hdf_data_dir = "/Users/opalissan/desktop/CH_DB/processed_images"
+db_type = "mysql"
+user = "opalissan"
+password = ""
+cred_dir = "/Users/opalissan/PycharmProjects/CHDv1/chmap/settings"
+db_loc = "q.predsci.com"
+mysql_db_name = "chd"
 
 # define map type and grid to query
 map_methods = ['Synch_Im_Sel', 'GridSize_sinLat', 'MIDM-Comb-del_mu']
@@ -100,21 +104,13 @@ map_vars = {"n_phi": [grid_size[0] - 0.1, grid_size[0] + 0.1],
             "n_SinLat": [grid_size[1] - 0.1, grid_size[1] + 0.1],
             "del_mu": [0.59, 0.61]}
 
-# designate which database to connect to
-use_db = "mysql-Q"  # 'sqlite'  Use local sqlite file-based db
-# 'mysql-Q' Use the remote MySQL database on Q
-# 'mysql-Q_test' Use the development database on Q
-user = "opalissan"  # only needed for remote databases.
-password = ""  # See example109 for setting-up an encrypted password.  In this case leave password="", and
-# init_db_conn_old() will automatically find and use your saved password. Otherwise, enter your MySQL password here.
-
 # Establish connection to database
-db_session = db_funs.init_db_conn_old(db_name=use_db, chd_base=DBClass.Base, user=user,
-                                      password=password)
+db_session = db_funcs.init_db_conn(db_type, db_class.Base, db_loc, db_name=mysql_db_name,
+                                   user=user, password=password, cred_dir=cred_dir)
 
 # --- Begin execution ----------------------
 # query maps in time range
-map_info, data_info, method_info, image_assoc = db_funs.query_euv_maps(
+map_info, data_info, method_info, image_assoc = db_funcs.query_euv_maps(
     db_session, mean_time_range=(query_start, query_end), methods=map_methods,
     var_val_range=map_vars)
 
@@ -132,7 +128,7 @@ for row_index, row in map_info.iterrows():
         rel_path = row.fname[1:]
     else:
         rel_path = row.fname
-    map_path = os.path.join(map_dir, rel_path)
+    map_path = os.path.join(map_data_dir, rel_path)
     # if os.path.isfile(map_path):
     my_map = psi_datatype.read_psi_map(map_path)
     # ================================================================================================================

@@ -18,8 +18,6 @@ from scipy import interpolate
 
 from sqlalchemy import create_engine, func, or_, union_all, case, distinct
 from sqlalchemy.orm import sessionmaker, aliased
-
-from chmap.settings.app import App
 from chmap.database.db_classes import *
 from chmap.data.download.euv_utils import get_metadata
 from chmap.utilities.file_io import io_helpers
@@ -1428,7 +1426,7 @@ def delete_map_dbase_record(db_session, map_object, data_dir=None):
     return exit_status
 
 
-def update_method_existing_map(db_session, map_id, psi_map, map_path=App.MAP_FILE_HOME):
+def update_method_existing_map(db_session, map_id, psi_map, map_path):
     """
     Given an existing map and DB map record, update method info/combo.  A method change implies a change to the data,
     mu, origin_image, or chd fields. So in addition to updating the database, this function also overwrites the map

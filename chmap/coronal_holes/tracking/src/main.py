@@ -6,10 +6,10 @@ Last Modified: May 6th, 2021 (Opal).
 
 import json
 import numpy as np
-from chmap.coronal_holes.tracking.src import Frame
-from chmap.coronal_holes.tracking.src import KNN
-from chmap.coronal_holes.tracking.src import area_overlap, max_area_overlap
-from chmap.coronal_holes.tracking.src import CoronalHoleGraph
+from chmap.coronal_holes.tracking.src.frame import Frame
+from chmap.coronal_holes.tracking.src.knn import KNN
+from chmap.coronal_holes.tracking.src.areaoverlap import area_overlap, max_area_overlap
+from chmap.coronal_holes.tracking.src.graph import CoronalHoleGraph
 
 
 class CoronalHoleDB:
