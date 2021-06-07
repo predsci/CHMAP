@@ -24,8 +24,6 @@ import cv2
 from chmap.database import db_funs
 import chmap.database.db_classes as DBClass
 import chmap.utilities.datatypes.datatypes as psi_datatype
-# from chmap.settings.app import App
-
 from chmap.coronal_holes.tracking.src import CoronalHoleDB
 from chmap.coronal_holes.tracking.src.classification import classify_grey_scaled_image
 from chmap.coronal_holes.tracking.tools.plots import plot_coronal_hole
@@ -83,7 +81,7 @@ ch_lib = CoronalHoleDB()
 # Step 3: Read in detected images from the database.
 # ================================================================================================================
 # --- User Parameters ----------------------
-map_dir = App.MAP_FILE_HOME
+map_dir = "/Users/opalissan/desktop/CH_DB"
 
 # define map type and grid to query
 map_methods = ['Synch_Im_Sel', 'GridSize_sinLat', 'MIDM-Comb-del_mu']
