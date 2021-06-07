@@ -2,13 +2,13 @@
 Input: Greyscale image.
 Output: list of contours and their attributes: coronal hole centroid, area, tilt, bounding box, etc ...
 
-Last modified: May 6th, 2021 (Opal)
+Last modified: June 7th, 2021 (Opal)
 """
 
 import cv2
-from chmap.coronal_holes.tracking.src import latitude_weighted_dilation, find_contours, \
+from chmap.coronal_holes.tracking.src.dilation import latitude_weighted_dilation, find_contours, \
     get_list_of_contours_from_rbg, uniform_dilation_in_latitude
-from chmap.coronal_holes.tracking.src import prune_coronal_hole_list
+from chmap.coronal_holes.tracking.src.periodicity import prune_coronal_hole_list
 from chmap.maps.util.map_manip import MapMesh
 import matplotlib.pyplot as plt
 

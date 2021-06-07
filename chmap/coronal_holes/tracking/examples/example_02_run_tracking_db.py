@@ -24,9 +24,10 @@ import cv2
 from chmap.database import db_funs
 import chmap.database.db_classes as DBClass
 import chmap.utilities.datatypes.datatypes as psi_datatype
-from chmap.settings.app import App
+# from chmap.settings.app import App
+
 from chmap.coronal_holes.tracking.src import CoronalHoleDB
-from chmap.coronal_holes.tracking.src import classify_grey_scaled_image
+from chmap.coronal_holes.tracking.src.classification import classify_grey_scaled_image
 from chmap.coronal_holes.tracking.tools.plots import plot_coronal_hole
 from chmap.maps.util.map_manip import MapMesh
 
@@ -46,7 +47,7 @@ query_end = datetime.datetime(year=2011, month=4, day=8, hour=12, minute=0, seco
 # ================================================================================================================
 # --- User Parameters ----------------------
 dir_name = "/Users/opalissan/desktop/CHT_RESULTS/"
-folder_name = "2010-12-29-2011-04-08c4hrb/"
+folder_name = "2010-12-29-2011-04-08c4hrc/"
 graph_folder = "graphs/"
 frame_folder = "frames/"
 pickle_folder = "pkl/"
