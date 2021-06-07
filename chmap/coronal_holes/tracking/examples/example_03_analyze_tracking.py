@@ -15,7 +15,6 @@ import datetime
 import numpy as np
 import cv2
 from chmap.coronal_holes.tracking.tools.plots import set_up_plt_figure
-
 import pickle
 import matplotlib.pyplot as plt
 

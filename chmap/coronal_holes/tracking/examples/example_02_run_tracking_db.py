@@ -14,6 +14,11 @@ This Module includes the following operations:
     by side (.mov)
 
 Last Modified: June 6th, 2021 (Opal)
+
+
+# TODO: fix database bug (Jamie?)
+    from chmap.settings.app import App
+    ModuleNotFoundError: No module named 'chmap.settings.app'
 """
 
 
