@@ -24,6 +24,10 @@ password = ""           # See example109 for setting-up an encrypted password.  
                         # this case leave password="", and init_db_conn() will
                         # automatically find and use your saved password. Otherwise,
                         # enter your MySQL password here.
+# If password=="", then be sure to specify the directory where encrypted credentials
+# are stored.  Setting cred_dir=None will cause the code to attempt to automatically
+# determine a path to the settings/ directory.
+cred_dir = "/Users/turtle/GitReps/CHD/chmap/settings"
 
 # Specify the database location. In the case of MySQL, this will be an IP address or
 # remote host name. For SQLite, this will be the full path to a database file.
@@ -36,8 +40,8 @@ db_loc = "q.predsci.com"
 mysql_db_name = "chd"
 
 # Establish connection to database
-db_session = db_funcs.init_db_conn(db_type, db_class.Base, db_loc,
-                                   db_name=mysql_db_name, user=user, password=password)
+db_session = db_funcs.init_db_conn(db_type, db_class.Base, db_loc, db_name=mysql_db_name,
+                                   user=user, password=password, cred_dir=cred_dir)
 
 # SAMPLE QUERY
 # use database session to query available pre-processed images

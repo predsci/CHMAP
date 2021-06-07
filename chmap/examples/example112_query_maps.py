@@ -41,10 +41,14 @@ use_db = "mysql-Q"      # 'sqlite'  Use local sqlite file-based db
 user = "turtle"         # only needed for remote databases.
 password = ""           # See example109 for setting-up an encrypted password.  In this case leave password="", and
 # init_db_conn_old() will automatically find and use your saved password. Otherwise, enter your MySQL password here.
+# If password=="", then be sure to specify the directory where encrypted credentials
+# are stored.  Setting cred_dir=None will cause the code to attempt to automatically
+# determine a path to the settings/ directory.
+cred_dir = "/Users/turtle/GitReps/CHD/chmap/settings"
 
 # Establish connection to database
 db_session = db_funs.init_db_conn_old(db_name=use_db, chd_base=DBClass.Base, user=user,
-                                      password=password)
+                                      password=password, cred_dir=cred_dir)
 
 # --- Begin execution ----------------------
 # query maps in time range

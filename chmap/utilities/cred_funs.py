@@ -3,12 +3,14 @@
 
 import os
 from cryptography.fernet import Fernet
-from chmap.settings.app import App
 
 
-def recover_pwd():
+def recover_pwd(cred_dir):
+    if cred_dir is None:
+        proj_dir = os.path.dirname(os.path.abspath(__file__))
+        cred_dir = os.path.join(proj_dir, 'chmap', 'settings')
 
-    key_file = os.path.join(App.APP_HOME, "chmap", "settings", "e_key.bin")
+    key_file = os.path.join(cred_dir, "e_key.bin")
 
     with open(key_file, 'rb') as file_object:
         for line in file_object:
@@ -16,7 +18,7 @@ def recover_pwd():
 
     cipher_suite = Fernet(chd_key)
 
-    creds_file = os.path.join(App.APP_HOME, "chmap", "settings", "e_cred.bin")
+    creds_file = os.path.join(cred_dir, "e_cred.bin")
 
     with open(creds_file, 'rb') as file_object:
         for line in file_object:

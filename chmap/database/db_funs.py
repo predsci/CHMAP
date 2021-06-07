@@ -30,7 +30,7 @@ import chmap.utilities.cred_funs as creds
 
 
 def init_db_conn(db_type, chd_base, db_loc, db_name='chd', port="3306", user="",
-                 password=""):
+                 password="", cred_dir=None):
     """
     Connect to the database specified by db_name.
     Then establish the SQLAlchemy declarative base
@@ -50,7 +50,7 @@ def init_db_conn(db_type, chd_base, db_loc, db_name='chd', port="3306", user="",
     if db_type == 'mysql':
         db_user = user
         if password == "":
-            db_psswd = creds.recover_pwd()
+            db_psswd = creds.recover_pwd(cred_dir)
         else:
             db_psswd = password
         url_psswd = urllib.parse.quote_plus(db_psswd)
@@ -78,7 +78,8 @@ def init_db_conn(db_type, chd_base, db_loc, db_name='chd', port="3306", user="",
     return db
 
 
-def init_db_conn_old(db_name, chd_base, sqlite_path="", user="", password=""):
+def init_db_conn_old(db_name, chd_base, sqlite_path="", user="", password="",
+                     cred_dir=None):
     """
     Connect to the database specified by db_name.
     Then establish the SQLAlchemy declarative base
@@ -104,7 +105,7 @@ def init_db_conn_old(db_name, chd_base, sqlite_path="", user="", password=""):
     elif db_name == 'mysql-Q':
         db_user = user
         if password == "":
-            db_psswd = creds.recover_pwd()
+            db_psswd = creds.recover_pwd(cred_dir)
         else:
             db_psswd = password
         url_psswd = urllib.parse.quote_plus(db_psswd)
@@ -120,7 +121,7 @@ def init_db_conn_old(db_name, chd_base, sqlite_path="", user="", password=""):
     elif db_name == 'mysql-Q_test':
         db_user = user
         if password == "":
-            db_psswd = creds.recover_pwd()
+            db_psswd = creds.recover_pwd(cred_dir)
         else:
             db_psswd = password
         url_psswd = urllib.parse.quote_plus(db_psswd)
