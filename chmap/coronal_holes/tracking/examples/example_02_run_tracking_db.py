@@ -50,7 +50,7 @@ query_end = datetime.datetime(year=2011, month=4, day=8, hour=12, minute=0, seco
 # ================================================================================================================
 # --- User Parameters ----------------------
 dir_name = "/Users/opalissan/desktop/CHT_RESULTS/"
-folder_name = "2010-12-29-2011-04-08c4hrc/"
+folder_name = "2010-12-29-2011-04-08c2hrc/"
 graph_folder = "graphs/"
 frame_folder = "frames/"
 pickle_folder = "pkl/"
@@ -123,95 +123,88 @@ map_info, data_info, method_info, image_assoc = db_funs.query_euv_maps(
 # dataframe.  It contains one row per map with a number of information columns:
 map_info.keys()
 
-ii = 0
+
 # iterate through the rows of map_info
 for row_index, row in map_info.iterrows():
-    if ii % 2 == 0:
-        if ch_lib.frame_num == 30:
-            print("debuggggg")
-        print("Processing map for:" + str(row.date_mean) + ", Frame num = " + str(ch_lib.frame_num))
-        # load map (some older maps have a leading '/' that messes with os.path.join
-        if row.fname[0] == "/":
-            rel_path = row.fname[1:]
-        else:
-            rel_path = row.fname
-        map_path = os.path.join(map_dir, rel_path)
-        # if os.path.isfile(map_path):
-        my_map = psi_datatype.read_psi_map(map_path)
-        # ================================================================================================================
-        # Step 4: Input image, coordinates, mesh spacing, and timestamp.
-        # ================================================================================================================
-        # note that the grid has been reduced since the coronal
-        # hole detection was performed, so values are floats between 0. and 1.
-        chd_data = my_map.chd.astype('float32')
-        # flip image to correspond 0 - 0 and pi - n_t
-        input_image = cv2.flip(chd_data, 0)
+    print("Processing map for:" + str(row.date_mean) + ", Frame num = " + str(ch_lib.frame_num))
+    # load map (some older maps have a leading '/' that messes with os.path.join
+    if row.fname[0] == "/":
+        rel_path = row.fname[1:]
+    else:
+        rel_path = row.fname
+    map_path = os.path.join(map_dir, rel_path)
+    # if os.path.isfile(map_path):
+    my_map = psi_datatype.read_psi_map(map_path)
+    # ================================================================================================================
+    # Step 4: Input image, coordinates, mesh spacing, and timestamp.
+    # ================================================================================================================
+    # note that the grid has been reduced since the coronal
+    # hole detection was performed, so values are floats between 0. and 1.
+    chd_data = my_map.chd.astype('float32')
+    # flip image to correspond 0 - 0 and pi - n_t
+    input_image = cv2.flip(chd_data, 0)
 
-        # restrict chd_data to be positive.
-        input_image[input_image < 0] = 0
-        input_image[input_image > 1] = 1
+    # restrict chd_data to be positive.
+    input_image[input_image < 0] = 0
+    input_image[input_image > 1] = 1
 
-        # image coordinates (latitude and longitude).
-        phi_coords = my_map.x
-        sinlat_coords = my_map.y
-        theta_coords = np.pi / 2 + np.arcsin(sinlat_coords)
+    # image coordinates (latitude and longitude).
+    phi_coords = my_map.x
+    sinlat_coords = my_map.y
+    theta_coords = np.pi / 2 + np.arcsin(sinlat_coords)
+    mean_timestamp = row.T[2]
 
-        # TODO: ASK JAMIE WHAT IS THE CORRECT TIMESTAMP?
-        mean_timestamp = row.T[2]
+    # save mesh map
+    ch_lib.Mesh = MapMesh(p=phi_coords, t=theta_coords)
 
-        # save mesh map
-        ch_lib.Mesh = MapMesh(p=phi_coords, t=theta_coords)
+    # ================================================================================================================
+    # Step 5: Latitude Weighted Dilation (in longitude) + Uniform dilation (in latitude)
+    #         Compute all contour features +
+    #         Force periodicity and delete small contours.
+    # ================================================================================================================
+    # get list of contours.
+    contour_list_pruned = classify_grey_scaled_image(greyscale_image=input_image,
+                                                     lat_coord=ch_lib.Mesh.t,
+                                                     lon_coord=ch_lib.Mesh.p,
+                                                     AreaThreshold=ch_lib.AreaThreshold,
+                                                     frame_num=ch_lib.frame_num,
+                                                     frame_timestamp=mean_timestamp,
+                                                     BinaryThreshold=ch_lib.BinaryThreshold,
+                                                     gamma=ch_lib.gamma,
+                                                     beta=ch_lib.beta)
 
-        # ================================================================================================================
-        # Step 5: Latitude Weighted Dilation (in longitude) + Uniform dilation (in latitude)
-        #         Compute all contour features +
-        #         Force periodicity and delete small contours.
-        # ================================================================================================================
-        # get list of contours.
-        contour_list_pruned = classify_grey_scaled_image(greyscale_image=input_image,
-                                                         lat_coord=ch_lib.Mesh.t,
-                                                         lon_coord=ch_lib.Mesh.p,
-                                                         AreaThreshold=ch_lib.AreaThreshold,
-                                                         frame_num=ch_lib.frame_num,
-                                                         frame_timestamp=mean_timestamp,
-                                                         BinaryThreshold=ch_lib.BinaryThreshold,
-                                                         gamma=ch_lib.gamma,
-                                                         beta=ch_lib.beta)
+    # ================================================================================================================
+    # Step 6: Match coronal holes detected to previous frame detections.
+    # ================================================================================================================
+    ch_lib.assign_new_coronal_holes(contour_list=contour_list_pruned,
+                                    timestamp=mean_timestamp)
 
-        # ================================================================================================================
-        # Step 6: Match coronal holes detected to previous frame detections.
-        # ================================================================================================================
-        ch_lib.assign_new_coronal_holes(contour_list=contour_list_pruned,
-                                        timestamp=mean_timestamp)
+    # ================================================================================================================
+    # Step 7: Save Frame list of coronal holes.
+    # ================================================================================================================
+    # save the contours found in the latest frame as a pickle file.
+    with open(os.path.join(dir_name + folder_name + pickle_folder + str(mean_timestamp) + ".pkl"), 'wb') as f:
+        pickle.dump(ch_lib.window_holder[-1], f)
 
-        # ================================================================================================================
-        # Step 7: Save Frame list of coronal holes.
-        # ================================================================================================================
-        # save the contours found in the latest frame as a pickle file.
-        with open(os.path.join(dir_name + folder_name + pickle_folder + str(mean_timestamp) + ".pkl"), 'wb') as f:
-            pickle.dump(ch_lib.window_holder[-1], f)
+    # ================================================================================================================
+    # Step 8: Plot results.
+    # ================================================================================================================
+    # plot connectivity sub-graphs.
+    graph_file_name = "graph_frame_" + str(ch_lib.frame_num) + ".png"
+    image_file_name = "classified_frame_" + str(ch_lib.frame_num) + ".png"
 
-        # ================================================================================================================
-        # Step 8: Plot results.
-        # ================================================================================================================
-        # plot connectivity sub-graphs.
-        graph_file_name = "graph_frame_" + str(ch_lib.frame_num) + ".png"
-        image_file_name = "classified_frame_" + str(ch_lib.frame_num) + ".png"
+    # plot coronal holes in the latest frame.
+    plot_coronal_hole(ch_list=ch_lib.window_holder[-1].contour_list, n_t=ch_lib.Mesh.n_t, n_p=ch_lib.Mesh.n_p,
+                      title="Frame: " + str(ch_lib.frame_num) + ", Time: " + str(mean_timestamp),
+                      filename=dir_name + folder_name + frame_folder + image_file_name, plot_rect=False, plot_circle=True,
+                      fontscale=0.3, circle_radius=80, thickness_rect=1, thickness_circle=1)
 
-        # plot coronal holes in the latest frame.
-        plot_coronal_hole(ch_list=ch_lib.window_holder[-1].contour_list, n_t=ch_lib.Mesh.n_t, n_p=ch_lib.Mesh.n_p,
-                          title="Frame: " + str(ch_lib.frame_num) + ", Time: " + str(mean_timestamp),
-                          filename=dir_name + folder_name + frame_folder + image_file_name, plot_rect=False, plot_circle=True,
-                          fontscale=0.3, circle_radius=80, thickness_rect=1, thickness_circle=1)
+    # plot current graph in the latest window.
+    ch_lib.Graph.create_plots(save_dir=dir_name + folder_name + graph_folder + graph_file_name)
+    # plt.show()
 
-        # plot current graph in the latest window.
-        ch_lib.Graph.create_plots(save_dir=dir_name + folder_name + graph_folder + graph_file_name)
-        # plt.show()
-
-        # iterate over frame number.
-        ch_lib.frame_num += 1
-
-    ii += 1
+    # iterate over frame number.
+    ch_lib.frame_num += 1
 # close database connection
 db_session.close()
 
