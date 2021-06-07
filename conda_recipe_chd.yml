@@ -18,3 +18,4 @@ dependencies:
   - opencv >= 3.4
   - scikit-learn >= 0.24
   - networkx >= 2.5
+  - notebook
