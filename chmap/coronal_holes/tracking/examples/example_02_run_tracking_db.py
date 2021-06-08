@@ -44,7 +44,7 @@ query_end = datetime.datetime(year=2011, month=4, day=8, hour=12, minute=0, seco
 # ================================================================================================================
 # --- User Parameters ----------------------
 dir_name = "/Users/opalissan/desktop/CHT_RESULTS/"
-folder_name = "2010-12-29-2011-04-08c2hrc/"
+folder_name = "2010-12-29-2011-04-08c2hr/"
 graph_folder = "graphs/"
 frame_folder = "frames/"
 pickle_folder = "pkl/"
@@ -58,7 +58,7 @@ CoronalHoleDB.BinaryThreshold = 0.7
 # coronal hole area threshold.
 CoronalHoleDB.AreaThreshold = 5E-3
 # window to match coronal holes.
-CoronalHoleDB.window = 30
+CoronalHoleDB.window = 40
 # parameter for longitude dilation (this should be changed for larger image dimensions).
 CoronalHoleDB.gamma = 12
 # parameter for latitude dilation (this should be changed for larger image dimensions).
@@ -79,8 +79,6 @@ ch_lib = CoronalHoleDB()
 # Step 3: Read in detected images from the database.
 # ================================================================================================================
 # --- User Parameters ----------------------
-# map_dir = "/Users/opalissan/desktop/CH_DB"
-
 # INITIALIZE DATABASE CONNECTION
 # Database paths
 map_data_dir = "/Users/opalissan/desktop/CH_DB"
@@ -122,7 +120,7 @@ map_info.keys()
 
 # iterate through the rows of map_info
 for row_index, row in map_info.iterrows():
-    print("Processing map for:" + str(row.date_mean) + ", Frame num = " + str(ch_lib.frame_num))
+    print("Processing map for: " + str(row.date_mean) + ", Frame num = " + str(ch_lib.frame_num))
     # load map (some older maps have a leading '/' that messes with os.path.join
     if row.fname[0] == "/":
         rel_path = row.fname[1:]
@@ -179,7 +177,9 @@ for row_index, row in map_info.iterrows():
     # Step 7: Save Frame list of coronal holes.
     # ================================================================================================================
     # save the contours found in the latest frame as a pickle file.
-    with open(os.path.join(dir_name + folder_name + pickle_folder + str(mean_timestamp) + ".pkl"), 'wb') as f:
+    file_name_pkl = str(mean_timestamp).replace(':', '-')
+    file_name_pkl = file_name_pkl.replace(' ', '-')
+    with open(os.path.join(dir_name + folder_name + pickle_folder + file_name_pkl + ".pkl"), 'wb') as f:
         pickle.dump(ch_lib.window_holder[-1], f)
 
     # ================================================================================================================
@@ -208,7 +208,7 @@ db_session.close()
 # Step 9: Save Connectivity Graph.
 # ================================================================================================================
 # save object to pickle file.
-with open(os.path.join(dir_name + folder_name + str(mean_timestamp) + "_graph" + ".pkl"), 'wb') as f:
+with open(os.path.join(dir_name + folder_name + "connectivity_graph" + ".pkl"), 'wb') as f:
     pickle.dump(ch_lib.Graph, f)
 
 # ======================================================================================================================
