@@ -8,7 +8,7 @@ from cryptography.fernet import Fernet
 def recover_pwd(cred_dir):
     if cred_dir is None:
         proj_dir = os.path.dirname(os.path.abspath(__file__))
-        cred_dir = os.path.join(proj_dir, 'chmap', 'settings')
+        cred_dir = os.path.join(proj_dir, '..', 'settings')
 
     key_file = os.path.join(cred_dir, "e_key.bin")
 

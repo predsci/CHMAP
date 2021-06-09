@@ -6,7 +6,7 @@ import numpy as np
 import scipy.interpolate as sp_interp
 
 import chmap.utilities.datatypes.datatypes as psi_dt
-import astropy_healpix
+# import astropy_healpix
 
 
 def c2s(x, y, z):
@@ -301,23 +301,23 @@ def interp_los_image_to_map2(image_in, R0, map_x, map_y, no_data_val=-9999.):
     return out_obj
 
 
-def interpolate2D_regular2irregular2(lon, lat, values, eval_x, eval_y):
-    """
-    For a 2D MxN regular grid, interpolate values to the K grid points in eval_x and eval_y.
-    :param reg_x: numpy vector of x-coordinates (length N)
-    :param reg_y: numpy vector of y-coordinates (length M)
-    :param reg_vals: numpy MxN array_like containing the grid values
-    :param eval_x: numpy column vector (length K) of x-coordinates to evaluate at.
-    :param eval_y: numpy column vector (length K) of y-coordinates to evaluate at.
-    :return: vector length K of interpolation results.
-    """
-    # Setup interpolation function and grd to evaluate on
-    # interp_fn = sp_interp.RegularGridInterpolator((reg_x, reg_y), reg_vals)
-    hp = astropy_healpix.HEALPix(values)
-    interp_fn = astropy_healpix.interpolate_bilinear_lonlat(lon, lat, values)
-    eval_pts = np.array([eval_y, eval_x]).transpose()
-
-    # Do interpolation
-    interp_result_vec = interp_fn(eval_pts)
-
-    return interp_result_vec
+# def interpolate2D_regular2irregular2(lon, lat, values, eval_x, eval_y):
+#     """
+#     For a 2D MxN regular grid, interpolate values to the K grid points in eval_x and eval_y.
+#     :param reg_x: numpy vector of x-coordinates (length N)
+#     :param reg_y: numpy vector of y-coordinates (length M)
+#     :param reg_vals: numpy MxN array_like containing the grid values
+#     :param eval_x: numpy column vector (length K) of x-coordinates to evaluate at.
+#     :param eval_y: numpy column vector (length K) of y-coordinates to evaluate at.
+#     :return: vector length K of interpolation results.
+#     """
+#     # Setup interpolation function and grd to evaluate on
+#     # interp_fn = sp_interp.RegularGridInterpolator((reg_x, reg_y), reg_vals)
+#     hp = astropy_healpix.HEALPix(values)
+#     interp_fn = astropy_healpix.interpolate_bilinear_lonlat(lon, lat, values)
+#     eval_pts = np.array([eval_y, eval_x]).transpose()
+#
+#     # Do interpolation
+#     interp_result_vec = interp_fn(eval_pts)
+#
+#     return interp_result_vec
