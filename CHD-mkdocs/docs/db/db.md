@@ -1,5 +1,5 @@
 # Database Information
-The Image Pre-Processing Pipeline is built upon a [database](https://github.com/predsci/CHD/blob/master/modules/DB_classes)
+The Image Pre-Processing Pipeline is built upon a [database](https://github.com/predsci/CHD/blob/master/chmap/database/db_classes.py)
  to store images, histograms, and fit parameter values. 
 
 ## Updating the Database
@@ -19,7 +19,7 @@ the necessary updates to run the code, do the following:
     * run a specific number of revisions (n is the number of revisions to either upgrade/downgrade)  
     <code>alembic upgrade +n</code>  
     <code>alembic downgrade -n</code>  
-    * run a specific upgrade/downgrade: scripts are found [here](https://github.com/predsci/CHD/blob/master/alembic/versions)  
+    * run a specific upgrade/downgrade: scripts are found [here](https://github.com/predsci/CHD/blob/master/chmap/alembic/versions)  
     <code>alembic upgrade "revision"</code>  
     <code>alembic downgrade "revision"</code>  
         * "revision" refers to the first 3+ identifying characters from the specific script  

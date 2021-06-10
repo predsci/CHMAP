@@ -3,11 +3,17 @@ There are currently two methods of creating time-varying maps.
 
 The first creates maps of varying timescale based on user entered intervals around a 
 specific user inputted center date. These [maps](#running-average-maps) are then combined with a weighted
-average - either user inputted, or evenly weighted.
+average - either user inputted, or evenly weighted.  
+
+The code for running average maps is found [here](https://github.com/predsci/CHD/blob/master/chmap/maps/time_averaged/running_average_maps.py).   
+
 
 The second method uses a Gaussian distribution and a user inputted center date. 
 The closer an image is to the center date, the more weight it has. Images are added
-one at a time to create the resultant [maps](#gaussian-time-varying-maps).
+one at a time to create the resultant [maps](#gaussian-time-varying-maps).  
+  
+The code for gaussian time weighted maps is found [here](https://github.com/predsci/CHD/blob/master/chmap/maps/time_averaged/running_average_maps.py).   
+
 
 ## Running Average Maps
 [EUV Map](../img/dp/time_wgt/EUV_Map_Timescale_Weighted_052011.png) | [CHD Map](../img/dp/time_wgt/CHD_Map_Timescale_Weighted_052011.png)
@@ -25,7 +31,7 @@ one at a time to create the resultant [maps](#gaussian-time-varying-maps).
 ### Running Average Maps
 This outline creates individual combined maps based on user defined 
 timescales (1 day, 1 week, 2 weeks, etc.), then combines the maps based
-on user defined weighting. 
+on user defined weighting.  
 
 ```python
 if timescale_weight is None:
@@ -62,7 +68,7 @@ dp_funcs.save_timescale_maps(db_session, map_data_dir, euv_combined, chd_combine
 * 8.) <code>cr_funcs.cr_map</code>
     * create combined maps using the method for synoptic mapping
 * 9.) <code>dp_funcs.create_timescale_maps</code>
-    * combine the timescale maps to create a running average map, based off the [timescale combination function](https://github.com/predsci/CHD/blob/master/modules/map_manip.py)
+    * combine the timescale maps to create a running average map, based off the [timescale combination function](https://github.com/predsci/CHD/blob/master/chmap/maps/util/map_manip.py)
 * 10.) <code>dp_funcs.save_timescale_maps</code>
     * plot and save timescale maps to the database, including the methods combination
     

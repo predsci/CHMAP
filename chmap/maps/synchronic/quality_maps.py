@@ -18,11 +18,10 @@ import chmap.data.corrections.apply_lbc_iit as apply_lbc_iit
 import chmap.maps.image2map as image2map
 import chmap.maps.midm as midm
 import chmap.maps.synchronic.synch_utils as synch_utils
-from chmap.settings.app import App
 import chmap.database.db_classes as db_class
 import chmap.database.db_funs as db_funcs
 import chmap.coronal_holes.detection.chd_funcs as chd_funcs
-from chmap.maps.time_averaged.dp_funs import quality_map
+from chmap.maps.time_averaged.dp_funcs import quality_map
 
 # -------- parameters --------- #
 # TIME RANGE FOR QUERYING
@@ -32,15 +31,32 @@ map_freq = 2  # number of hours
 
 # INITIALIZE DATABASE CONNECTION
 # DATABASE PATHS
-map_data_dir = App.MAP_FILE_HOME
-raw_data_dir = App.RAW_DATA_HOME
-hdf_data_dir = App.PROCESSED_DATA_HOME
-database_dir = App.DATABASE_HOME
-sqlite_filename = App.DATABASE_FNAME
-# initialize database connection
-use_db = "sqlite"
-sqlite_path = os.path.join(database_dir, sqlite_filename)
-db_session = db_funcs.init_db_conn_old(db_name=use_db, chd_base=db_class.Base, sqlite_path=sqlite_path)
+# USER MUST INITIALIZE
+map_data_dir = 'path/to/map/directory'
+raw_data_dir = 'path/to/raw_data/directory'
+hdf_data_dir = 'path/to/processed_data/directory'
+database_dir = 'path/to/database/directory'
+sqlite_filename = 'path/to/database/filename'
+# designate which database to connect to
+use_db = "mysql-Q" # 'sqlite'  Use local sqlite file-based db
+                        # 'mysql-Q' Use the remote MySQL database on Q
+                        # 'mysql-Q_test' Use the development database on Q
+user = "turtle"         # only needed for remote databases.
+password = ""           # See example109 for setting-up an encrypted password.  In this case leave password="", and
+# init_db_conn_old() will automatically find and use your saved password. Otherwise, enter your MySQL password here.
+
+
+### --------- NOTHING TO UPDATE BELOW -------- ###
+# Establish connection to database
+if use_db == 'sqlite':
+    # setup database connection to local sqlite file
+    sqlite_path = os.path.join(database_dir, sqlite_filename)
+
+    db_session = db_funcs.init_db_conn_old(db_name=use_db, chd_base=db_class.Base, sqlite_path=sqlite_path)
+elif use_db in ('mysql-Q', 'mysql-Q_test'):
+    # setup database connection to MySQL database on Q
+    db_session = db_funcs.init_db_conn_old(db_name=use_db, chd_base=db_class.Base, user=user, password=password)
+
 
 # INSTRUMENTS
 inst_list = ["AIA", "EUVI-A", "EUVI-B"]

@@ -126,8 +126,12 @@ def PlotMap(map_plot, nfig=None, title=None, map_type=None, save_map=False,
     plt.figure(nfig)
     if map_type == 'Contour':
         x_extent = np.linspace(x_range[0], x_range[1], len(map_plot.x))
-        plt.contour(x_extent, map_plot.y, map_plot.data, origin="lower", cmap=im_cmap,
-                    extent=[x_range[0], x_range[1], map_plot.y.min(), map_plot.y.max()])
+        plt.contour(x_extent, map_plot.y, map_plot.chd, origin="lower", colors='r',
+                    extent=[x_range[0], x_range[1], map_plot.y.min(), map_plot.y.max()], linewidths=0.3)
+    elif map_type == 'AR_Contour':
+        x_extent = np.linspace(x_range[0], x_range[1], len(map_plot.x))
+        plt.contour(x_extent, map_plot.y, map_plot.chd, origin="lower", colors='b',
+                    extent=[x_range[0], x_range[1], map_plot.y.min(), map_plot.y.max()], linewidths=0.3)
     else:
         plt.imshow(plot_mat, extent=[x_range[0], x_range[1], map_plot.y.min(), map_plot.y.max()],
                    origin="lower", cmap=im_cmap, aspect=90.0, norm=norm)

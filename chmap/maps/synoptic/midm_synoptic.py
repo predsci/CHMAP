@@ -9,11 +9,10 @@ import numpy as np
 import datetime
 
 import chmap.data.corrections.apply_lbc_iit as apply_lbc_iit
-from chmap.settings.app import App
 import chmap.database.db_classes as db_class
 import chmap.database.db_funs as db_funcs
-import chmap.maps.synoptic.cr_mapping_funcs as cr_funcs
-from chmap.maps.time_averaged.dp_funs import quality_map
+import chmap.maps.synoptic.synoptic_funcs as cr_funcs
+from chmap.maps.time_averaged.dp_funcs import quality_map
 
 # -------- UPDATEABLE PARAMETERS --------- #
 # TIME RANGE FOR QUERYING
@@ -54,11 +53,12 @@ map_x = np.linspace(x_range[0], x_range[1], map_nxcoord, dtype='<f4')
 
 # INITIALIZE DATABASE CONNECTION
 # DATABASE PATHS
-map_data_dir = App.MAP_FILE_HOME
-raw_data_dir = App.RAW_DATA_HOME
-hdf_data_dir = App.PROCESSED_DATA_HOME
-database_dir = App.DATABASE_HOME
-sqlite_filename = App.DATABASE_FNAME
+map_data_dir = 'path/to/map/directory'
+raw_data_dir = 'path/to/raw_data/directory'
+hdf_data_dir = 'path/to/processed_data/directory'
+database_dir = 'path/to/database/directory'
+sqlite_filename = 'path/to/database/filename'
+
 # initialize database connection
 use_db = "sqlite"
 sqlite_path = os.path.join(database_dir, sqlite_filename)

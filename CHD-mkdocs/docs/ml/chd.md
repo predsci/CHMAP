@@ -1,78 +1,17 @@
-# Techniques to detect coronal holes using neural networks and K-means algorithm
+# Machine Learning Methods for Coronal Hole Detection
 
-## Where we are
-* Fortran region growing algorithm
-* CNN Supervised Learning Algorithm
-    * advantages: floating point
-* GOAL: unsupervised algorithm
+Machine learning is a method of data analysis that has grown significantly in popularity over the past
+decades specifically in regards to dealing with large datasets. It is useful for variety of problems
+and can limit human interaction with the problem's solution. Coronal hole detection is an image segmentation
+problem. This means we are looking at how to partition an image into segments to locate objects 
+and boundaries. This is useful for coronal hole detection as this is a sort of fuzzy problem with 
+various definitions that are person dependent.  
 
-## CNN - Supervised Learning to Detect CH
-
-* labeled image data based on Fortran two-threshold detection algorithm
-* U-Net Convolutional Network 
-* built using tensorflow
-
-### Example Images
-
-####[Test Data](images/pred_test.png)
-![Test Data](images/pred_test.png)
-
-####[Training Loss](images/train_val_loss.png)
-![Training Loss](images/train_val_loss.png)
-
-## K-Means Clustering
-
-* unsupervised learning method
-* centroid based clustering algorithm to generate CH/non-CH groups
-
-Advantages:  
-* unsupervised  
-    * no requirement of segmentation masks or labeling  
-* easy to create multiple cluster types (find AR as well)  
-* can basically regenerate EUV map — use for prediction  
-
-Concerns/Questions:
-* can this be trained on a lot of images??  
-* can be trained on a lot of data points but thus far that seems like
-training on one image  
-
-K-Nearest Neighbor:
-* this would allow us to add pixels to a class -- perhaps track a CH over time  
-
-### Example Images
-
-#### Basic Clustering v. CHD
-
-[Two Clusters](images/k2_clusters.png)  
-
-![Two Clusters](images/k2_clusters.png)  
-
-[Five Clusters](images/k5_clusters.png)  
-
-![Five Clusters](images/k5_clusters.png)  
-
-#### CHD Clustering
-
-[Two Clusters](images/clustering2.png)  
-
-![Two Clusters](images/clustering2.png)  
-
-[Five Clusters](images/clustering5.png)  
-
-![Five Clusters](images/clustering5.png) 
-
-#### Predicted CHD
-
-[Two Clusters](images/clustering2_chd.png)  
-
-![Two Clusters](images/clustering2_chd.png)  
-
-[Five Clusters](images/clustering5_chd.png)  
-
-![Five Clusters](images/clustering5_chd.png) 
-
-
-
+There are two main methods of machine learning: supervised and unsupervised. We have detection
+algorithms using both types of machine learning. For this problem, unsupervised learning provides
+more promising results as it directly works to counteract the issue of the fuzzy definition
+of a coronal hole. Additionally, unsupervised learning allows us to detect other features of 
+interest on the solar disk such as active regions.  
 
 
 

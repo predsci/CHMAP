@@ -4,17 +4,28 @@ methods and resulting maps to the database.
 
 ## Tables
 
+### Data Files
+This tables stores the informtion and file names of the data files
+used in our pipeline.  
+
+__Columns:__   
+> *data_id:* auto-incremented integer id associated with the image (Primary Key, Integer)  
+> *date_obs:* time of image observation (DateTime)  
+> *provider:* data file origin (String)  
+> *type:* type of data file (String)  
+> *fname_raw:* associated fits file (String)  
+> *fname_hdf:* associated hdf5 file (String)   
+> *flag:* default 0 (Integer)  
+
 ### EUV Images
-This table stores files and information associated with EUV Images. It is queried to get the original EUV Images before 
+This table stores information associated with EUV Images. It is queried to get the original EUV Images before 
 applying Image Pre-Processing (LBC and IIT) Corrections.  
 
 __Columns:__  
-> *image_id:* auto-incremented integer id associated with the image (Primary Key, Integer)  
+> *data_id:* auto-incremented integer id associated with the image (Primary Key, Integer)  
 > *date_obs:* time of image observation (DateTime)  
 > *instrument:* observation instrument (String)  
 > *wavelength:* observation wavelength (Integer)  
-> *fname_raw:* associated fits file (String)  
-> *fname_hdf:* associated hdf5 file (String)  
 > *distance:* associated distance (Float)  
 > *cr_lon:* Carrington Longitude (Float)  
 > *cr_lat:* Carrington Latitude (Float)  

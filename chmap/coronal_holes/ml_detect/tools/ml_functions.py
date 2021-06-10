@@ -9,7 +9,7 @@ import matplotlib.colors as colors
 import matplotlib as mpl
 
 # my modules
-import modules.datatypes as datatypes
+import chmap.utilities.datatypes.datatypes as datatypes
 
 # machine learning modules
 import tensorflow as tf
@@ -293,7 +293,6 @@ def kmeans_detection(org_map, use_data, arr, N_CLUSTERS, IMG_HEIGHT, IMG_WIDTH, 
     ### CH Detection
     chd_clustered = pred_clustered + 1
     chd_clustered = np.where(np.logical_or(chd_clustered == color_order[0] + 1, chd_clustered == color_order[1] + 1), N_CLUSTERS + 1, 0)
-    # chd_clustered = np.where(chd_clustered == color_order[0] + 1, N_CLUSTERS + 1, 0)
     chd_clustered = np.where(chd_clustered == N_CLUSTERS + 1, 1, 0)
 
     # area constraint
@@ -303,7 +302,7 @@ def kmeans_detection(org_map, use_data, arr, N_CLUSTERS, IMG_HEIGHT, IMG_WIDTH, 
     chd_area = [props.area for props in measure.regionprops(chd_labeled[0])]
 
     # remove CH with less than 10 pixels in area
-    chd_good_area = np.where(np.array(chd_area) > 20)
+    chd_good_area = np.where(np.array(chd_area) > 25)
     indices = []
     chd_plot = np.zeros(chd_labeled[0].shape)
     for val in chd_good_area[0]:
@@ -325,7 +324,7 @@ def kmeans_detection(org_map, use_data, arr, N_CLUSTERS, IMG_HEIGHT, IMG_WIDTH, 
     ar_area = [props.area for props in measure.regionprops(ar_labeled[0])]
 
     # remove AR with less than 6 pixels in area
-    ar_good_area = np.where(np.array(ar_area) > 20)
+    ar_good_area = np.where(np.array(ar_area) > 25)
     indices = []
     ar_plot = np.zeros(ar_labeled[0].shape)
     for val in ar_good_area[0]:

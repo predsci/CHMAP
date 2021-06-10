@@ -24,7 +24,7 @@ __Columns:__
 > *hist:* histogram associated with image (Blob)  
 
 
-### Image Combos
+### Data Combos
 This table stores information regarding the combination of images used to calculate the fit parameter. 
 
 __Columns:__  
@@ -36,7 +36,7 @@ __Columns:__
 > *date_min:* minimum date of images in image combination (DateTime)
 
 
-### Image Combo Assoc
+### Data Combo Assoc
 This table stores specific image ids with the associated combo id. 
 
 __Columns:__  

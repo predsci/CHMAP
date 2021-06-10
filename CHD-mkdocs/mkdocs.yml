@@ -24,14 +24,14 @@ nav:
       - Combining Maps: map/cmb.md
   - Data Products:
       - Synoptic Maps: dp/cr.md
-      - Quality Maps: dp/qm.md
       - Ensemble Detection: dp/ed.md
       - Varying Threshold Maps: dp/vt.md
+      - Quality Maps: dp/qm.md
   - Database:
       - Database Basics: db/db.md
       - Database for LBC: db/lbc.md
       - Database for IIT: db/iit.md
-      - Database for CHD Mapping: db/map.md
+      - Database for Mapping: db/map.md
   - Tracking Algorithm:
       - Overview: ml/tracking_overview.md
       - Polar Projection: ml/polarprojection.md
@@ -43,8 +43,10 @@ nav:
           - Area Overlap: ml/areaoverlap.md
       - CH Connectivity: ml/connectivity.md
       - Graph Analysis: ml/traversal.md
-
-  - Machine Learning Detection: ml/chd.md
+  - Machine Learning Detection:
+      - Overview: ml/chd.md
+      - Supervised Detection: ml/supervised.md
+      - Unsupervised Detection: ml/unsupervised.md
   - CH-Net Future Frame Predictions: ml/pred.md
 
 # theme

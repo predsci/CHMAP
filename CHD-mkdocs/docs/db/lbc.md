@@ -4,6 +4,19 @@ These fit parameter values can then be queried in order to apply the Limb-Bright
 
 ## Tables
 
+### Data Files
+This tables stores the informtion and file names of the data files
+used in our pipeline.  
+
+__Columns:__   
+> *data_id:* auto-incremented integer id associated with the image (Primary Key, Integer)  
+> *date_obs:* time of image observation (DateTime)  
+> *provider:* data file origin (String)  
+> *type:* type of data file (String)  
+> *fname_raw:* associated fits file (String)  
+> *fname_hdf:* associated hdf5 file (String)   
+> *flag:* default 0 (Integer)  
+
 ### EUV Images
 This table stores files and information associated with EUV Images. 
 

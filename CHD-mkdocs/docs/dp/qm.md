@@ -1,7 +1,10 @@
 # Quality Assurance Maps
 
 The goal of these maps is to determine where data at each pixel came from, and the mu value of the origin image at that 
-point.
+point.  
+
+The code for these maps is found [here](https://github.com/predsci/CHD/blob/master/chmap/maps/synchronic/quality_maps.py). 
+
 
 ## Example Maps
 ### Synchronic Maps on June 18, 2011 
@@ -18,6 +21,7 @@ point.
 ![Full CR EUV Map](../img/dp/full_cr/CR_EUV_Map_052011.png) | ![Quality CR EUV Map](../img/dp/full_cr/EUV_Quality_Map_052011.png)
 
 ## Code Outline
+
 ```python
 def quality_map(db_session, map_data_dir, inst_list, query_pd, euv_combined, chd_combined=None, color_list=None):
     euv_origin_image = euv_combined.origin_image

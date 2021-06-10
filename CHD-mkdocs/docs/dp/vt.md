@@ -6,15 +6,16 @@ selected. The only different data product produced here is the Coronal Hole Dete
 EUV map is the same as the [synoptic EUV maps](cr.md#cr-euv-map) created.
 
 In these Gaussian weighted CHD Maps, coronal hole detections are weighted to produce
-a probability type map just as in the [synoptic CHD Maps](cr.md#cr-chd-map).
+a probability type map just as in the [synoptic CHD Maps](cr.md#cr-chd-map).  
 
+The code for these maps is found [here](https://github.com/predsci/CHD/blob/master/chmap/maps/synoptic/varying_threshold_maps.py). 
 
 ## Example Maps
 ###[EUV Map](../img/dp/var_thresh/EUV_Map_052011.png)
 ![EUV Map](../img/dp/var_thresh/EUV_Map_052011.png)
 
 ###[CHD Map](../img/dp/var_thresh/Varying_Threshold_CHD_Map_052011.png)
-![CHD Map](../img/dp/var_thresh/Varying_Threshold_CHD_Map_052011.png)  
+![CHD Map](../img/dp/var_thresh/Varying_Threshold_CHD_Map_052011.png)
 
 ## Code Outline
 

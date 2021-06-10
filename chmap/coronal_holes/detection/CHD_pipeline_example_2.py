@@ -22,7 +22,6 @@ import datetime
 import time
 # import pandas as pd
 
-from chmap.settings.app import App
 import chmap.database.db_classes as db_class
 import chmap.database.db_funs as db_funcs
 import chmap.data.corrections.apply_lbc_iit as apply_lbc_iit
@@ -32,6 +31,7 @@ import chmap.utilities.datatypes.datatypes as datatypes
 import chmap.maps.image2map as image2map
 import chmap.maps.midm as midm
 import chmap.maps.synchronic.synch_utils as synch_utils
+from chmap.maps.time_averaged.dp_funcs import quality_map
 
 # -------- parameters --------- #
 # TIME RANGE FOR QUERYING
@@ -45,11 +45,12 @@ del_interval = np.timedelta64(interval_delta, 'm')
 
 # INITIALIZE DATABASE CONNECTION
 # DATABASE PATHS
-map_data_dir = App.MAP_FILE_HOME
-raw_data_dir = App.RAW_DATA_HOME
-hdf_data_dir = App.PROCESSED_DATA_HOME
-database_dir = App.DATABASE_HOME
-sqlite_filename = App.DATABASE_FNAME
+# USER MUST INITIALIZE
+map_data_dir = 'path/to/map/directory'
+raw_data_dir = 'path/to/raw_data/directory'
+hdf_data_dir = 'path/to/processed_data/directory'
+database_dir = 'path/to/database/directory'
+sqlite_filename = 'path/to/database/filename'
 # designate which database to connect to
 use_db = "mysql-Q" # 'sqlite'  Use local sqlite file-based db
                         # 'mysql-Q' Use the remote MySQL database on Q
@@ -60,6 +61,8 @@ password = ""           # See example109 for setting-up an encrypted password.  
 
 # INSTRUMENTS
 inst_list = ["AIA", "EUVI-A", "EUVI-B"]
+# COLOR LIST FOR INSTRUMENT QUALITY MAPS
+color_list = ["Blues", "Greens", "Reds", "Oranges", "Purples"]
 # CORRECTION PARAMETERS
 n_intensity_bins = 200
 R0 = 1.01
@@ -200,6 +203,10 @@ for date_ind, center in enumerate(moving_avg_centers):
         low_synch_map.append_method_info(cluster_method)
         db_session = low_synch_map.write_to_file(map_data_dir, map_type='synchronic',
                                                  db_session=db_session)
+
+        #### STEP EIGHT: CREATE QUALITY MAP ####
+        quality_map = quality_map(db_session, map_data_dir, inst_list, query_pd, euv_combined, chd_combined=None,
+                    color_list=color_list)
 
 end_time = time.time()
 print("Total elapsed time: ", end_time-start_time)

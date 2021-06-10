@@ -15,7 +15,7 @@ outline to create combination EUV/CHD maps using ML Algorithm
 import os
 import numpy as np
 import datetime
-import matplotlib.pyplot as plt
+import time
 import chmap.utilities.plotting.psi_plotting as Plotting
 import chmap.database.db_classes as db_class
 import chmap.database.db_funs as db_funcs
@@ -42,14 +42,13 @@ raw_data_dir = 'path/to/raw_data/directory'
 hdf_data_dir = 'path/to/processed_data/directory'
 database_dir = 'path/to/database/directory'
 sqlite_filename = 'path/to/database/filename'
-# initialize database connection
-# using mySQL
-use_db = "mysql-Q"
-user = "tervin"
-password = ""
-# using sqlite
-# use_db = "sqlite"
-# sqlite_path = os.path.join(database_dir, sqlite_filename)
+# designate which database to connect to
+use_db = "mysql-Q" # 'sqlite'  Use local sqlite file-based db
+                        # 'mysql-Q' Use the remote MySQL database on Q
+                        # 'mysql-Q_test' Use the development database on Q
+user = "tervin"         # only needed for remote databases.
+password = ""           # See example109 for setting-up an encrypted password.  In this case leave password="", and
+# init_db_conn_old() will automatically find and use your saved password. Otherwise, enter your MySQL password here.
 
 # INSTRUMENTS
 inst_list = ["AIA", "EUVI-A", "EUVI-B"]
@@ -63,12 +62,13 @@ weight = 1.4
 del_mu = None  # optional between this method and mu_merge_cutoff method
 mu_cutoff = 0.0  # lower mu cutoff value
 mu_merge_cutoff = 0.4  # mu cutoff in overlap areas
+EUV_CHD_sep = False  # Do separate minimum intensity merges for image and CHD
 
 # MAP PARAMETERS
 x_range = [0, 2 * np.pi]
 y_range = [-1, 1]
-map_nycoord = 360
-map_nxcoord = 900
+map_nycoord = 720
+map_nxcoord = 1800
 
 # generate map x,y grids. y grid centered on equator, x referenced from lon=0
 map_y = np.linspace(y_range[0], y_range[1], map_nycoord, dtype='<f4')
@@ -96,6 +96,7 @@ elif use_db in ('mysql-Q', 'mysql-Q_test'):
     db_session = db_funcs.init_db_conn_old(db_name=use_db, chd_base=db_class.Base, user=user, password=password)
 
 #### STEP ONE: SELECT IMAGES ####
+start_time = time.time()
 # 1.) query some images
 query_pd = db_funcs.query_euv_images(db_session=db_session, time_min=query_time_min - del_interval_dt,
                                      time_max=query_time_max + del_interval_dt)
@@ -125,12 +126,12 @@ for date_ind, center in enumerate(moving_avg_centers):
                                             methods_list=methods_list, map_x=map_x, map_y=map_y, R0=R0)
 
         #### STEP FIVE: CREATE COMBINED MAPS AND SAVE TO DB ####
-        euv_combined = midm.create_combined_maps_2(
+        synchronic_map = midm.create_combined_maps_2(
             map_list, mu_merge_cutoff=mu_merge_cutoff, del_mu=del_mu,
             mu_cutoff=mu_cutoff, EUV_CHD_sep=False)
 
-        #### STEP SIX: APPLY CH AND AR DETECTION ####img = img_array[i]
-        map = np.where(euv_combined.data == -9999, 0, euv_combined.data)
+        #### STEP SIX: APPLY CH AND AR DETECTION ####
+        map = np.where(synchronic_map.data == -9999, 0, synchronic_map.data)
         map2 = np.log(map)
         map2 = np.where(map2 == -np.inf, 0, map2)
 
@@ -139,7 +140,7 @@ for date_ind, center in enumerate(moving_avg_centers):
         arr[:, 1] = idx_row_flt * weight
         arr[:, 2] = map2.flatten() * 2
 
-        psi_chd_map, psi_ar_map, chd_labeled, ar_labeled = ml_funcs.kmeans_detection(euv_combined.data, map2, arr, N_CLUSTERS,
+        psi_chd_map, psi_ar_map, chd_labeled, ar_labeled = ml_funcs.kmeans_detection(synchronic_map.data, map2, arr, N_CLUSTERS,
                                                                                      map_nycoord, map_nxcoord, map_x, map_y)
 
         title = 'Minimum Intensity Merge: Unsupervised Detection Map\nDate: ' + str(center)
@@ -147,6 +148,7 @@ for date_ind, center in enumerate(moving_avg_centers):
         Plotting.PlotMap(psi_chd_map, map_type='Contour', title=title, nfig=date_ind)
         Plotting.PlotMap(psi_ar_map, map_type='Contour1', title=title, nfig=date_ind)
 
-
+end_time = time.time()
+print("Total elapsed time: ", end_time-start_time)
 
 
