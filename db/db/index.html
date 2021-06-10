@@ -435,18 +435,6 @@
 
 
   <li class="md-nav__item">
-    <a href="../../dp/qm/" title="Quality Maps" class="md-nav__link">
-      Quality Maps
-    </a>
-  </li>
-
-        
-          
-          
-          
-
-
-  <li class="md-nav__item">
     <a href="../../dp/ed/" title="Ensemble Detection" class="md-nav__link">
       Ensemble Detection
     </a>
@@ -461,6 +449,18 @@
   <li class="md-nav__item">
     <a href="../../dp/vt/" title="Varying Threshold Maps" class="md-nav__link">
       Varying Threshold Maps
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../../dp/qm/" title="Quality Maps" class="md-nav__link">
+      Quality Maps
     </a>
   </li>
 
@@ -588,8 +588,8 @@
 
 
   <li class="md-nav__item">
-    <a href="../map/" title="Database for CHD Mapping" class="md-nav__link">
-      Database for CHD Mapping
+    <a href="../map/" title="Database for Mapping" class="md-nav__link">
+      Database for Mapping
     </a>
   </li>
 
@@ -750,6 +750,18 @@
   </li>
 
         
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../../ml/traversal/" title="Graph Analysis" class="md-nav__link">
+      Graph Analysis
+    </a>
+  </li>
+
+        
       </ul>
     </nav>
   </li>
@@ -760,10 +772,64 @@
       
 
 
-  <li class="md-nav__item">
-    <a href="../../ml/chd/" title="Machine Learning Detection" class="md-nav__link">
+  <li class="md-nav__item md-nav__item--nested">
+    
+      <input class="md-nav__toggle md-toggle" data-md-toggle="nav-9" type="checkbox" id="nav-9">
+    
+    <label class="md-nav__link" for="nav-9">
       Machine Learning Detection
+      <span class="md-nav__icon md-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M8.59 16.58L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.42z"/></svg>
+      </span>
+    </label>
+    <nav class="md-nav" aria-label="Machine Learning Detection" data-md-level="1">
+      <label class="md-nav__title" for="nav-9">
+        <span class="md-nav__icon md-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"/></svg>
+        </span>
+        Machine Learning Detection
+      </label>
+      <ul class="md-nav__list" data-md-scrollfix>
+        
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../../ml/chd/" title="Overview" class="md-nav__link">
+      Overview
     </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../../ml/supervised/" title="Supervised Detection" class="md-nav__link">
+      Supervised Detection
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../../ml/unsupervised/" title="Unsupervised Detection" class="md-nav__link">
+      Unsupervised Detection
+    </a>
+  </li>
+
+        
+      </ul>
+    </nav>
   </li>
 
     
@@ -839,7 +905,7 @@
                 
                 
                 <h1 id="database-information">Database Information</h1>
-<p>The Image Pre-Processing Pipeline is built upon a <a href="https://github.com/predsci/CHD/blob/master/modules/DB_classes">database</a>
+<p>The Image Pre-Processing Pipeline is built upon a <a href="https://github.com/predsci/CHD/blob/master/chmap/database/db_classes.py">database</a>
  to store images, histograms, and fit parameter values. </p>
 <h2 id="updating-the-database">Updating the Database</h2>
 <p>The original database is now quite different than the database needed to query and save calculated parameters. In order to generate
@@ -864,7 +930,7 @@ the necessary updates to run the code, do the following:  </p>
 <li>run a specific number of revisions (n is the number of revisions to either upgrade/downgrade)<br />
 <code>alembic upgrade +n</code><br />
 <code>alembic downgrade -n</code>  </li>
-<li>run a specific upgrade/downgrade: scripts are found <a href="https://github.com/predsci/CHD/blob/master/alembic/versions">here</a><br />
+<li>run a specific upgrade/downgrade: scripts are found <a href="https://github.com/predsci/CHD/blob/master/chmap/alembic/versions">here</a><br />
 <code>alembic upgrade "revision"</code><br />
 <code>alembic downgrade "revision"</code>  <ul>
 <li>"revision" refers to the first 3+ identifying characters from the specific script  </li>
@@ -898,7 +964,7 @@ the necessary updates to run the code, do the following:  </p>
     <div class="md-footer-nav">
       <nav class="md-footer-nav__inner md-grid" aria-label="Footer">
         
-          <a href="../../dp/vt/" title="Varying Threshold Maps" class="md-footer-nav__link md-footer-nav__link--prev" rel="prev">
+          <a href="../../dp/qm/" title="Quality Maps" class="md-footer-nav__link md-footer-nav__link--prev" rel="prev">
             <div class="md-footer-nav__button md-icon">
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"/></svg>
             </div>
@@ -907,7 +973,7 @@ the necessary updates to run the code, do the following:  </p>
                 <span class="md-footer-nav__direction">
                   Previous
                 </span>
-                Varying Threshold Maps
+                Quality Maps
               </div>
             </div>
           </a>

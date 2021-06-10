@@ -435,18 +435,6 @@
 
 
   <li class="md-nav__item">
-    <a href="../../dp/qm/" title="Quality Maps" class="md-nav__link">
-      Quality Maps
-    </a>
-  </li>
-
-        
-          
-          
-          
-
-
-  <li class="md-nav__item">
     <a href="../../dp/ed/" title="Ensemble Detection" class="md-nav__link">
       Ensemble Detection
     </a>
@@ -461,6 +449,18 @@
   <li class="md-nav__item">
     <a href="../../dp/vt/" title="Varying Threshold Maps" class="md-nav__link">
       Varying Threshold Maps
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../../dp/qm/" title="Quality Maps" class="md-nav__link">
+      Quality Maps
     </a>
   </li>
 
@@ -577,15 +577,15 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#image-combos" class="md-nav__link">
-    Image Combos
+  <a href="#data-combos" class="md-nav__link">
+    Data Combos
   </a>
   
 </li>
         
           <li class="md-nav__item">
-  <a href="#image-combo-assoc" class="md-nav__link">
-    Image Combo Assoc
+  <a href="#data-combo-assoc" class="md-nav__link">
+    Data Combo Assoc
   </a>
   
 </li>
@@ -629,8 +629,8 @@
 
 
   <li class="md-nav__item">
-    <a href="../map/" title="Database for CHD Mapping" class="md-nav__link">
-      Database for CHD Mapping
+    <a href="../map/" title="Database for Mapping" class="md-nav__link">
+      Database for Mapping
     </a>
   </li>
 
@@ -791,6 +791,18 @@
   </li>
 
         
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../../ml/traversal/" title="Graph Analysis" class="md-nav__link">
+      Graph Analysis
+    </a>
+  </li>
+
+        
       </ul>
     </nav>
   </li>
@@ -801,10 +813,64 @@
       
 
 
-  <li class="md-nav__item">
-    <a href="../../ml/chd/" title="Machine Learning Detection" class="md-nav__link">
+  <li class="md-nav__item md-nav__item--nested">
+    
+      <input class="md-nav__toggle md-toggle" data-md-toggle="nav-9" type="checkbox" id="nav-9">
+    
+    <label class="md-nav__link" for="nav-9">
       Machine Learning Detection
+      <span class="md-nav__icon md-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M8.59 16.58L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.42z"/></svg>
+      </span>
+    </label>
+    <nav class="md-nav" aria-label="Machine Learning Detection" data-md-level="1">
+      <label class="md-nav__title" for="nav-9">
+        <span class="md-nav__icon md-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"/></svg>
+        </span>
+        Machine Learning Detection
+      </label>
+      <ul class="md-nav__list" data-md-scrollfix>
+        
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../../ml/chd/" title="Overview" class="md-nav__link">
+      Overview
     </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../../ml/supervised/" title="Supervised Detection" class="md-nav__link">
+      Supervised Detection
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../../ml/unsupervised/" title="Unsupervised Detection" class="md-nav__link">
+      Unsupervised Detection
+    </a>
+  </li>
+
+        
+      </ul>
+    </nav>
   </li>
 
     
@@ -861,15 +927,15 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#image-combos" class="md-nav__link">
-    Image Combos
+  <a href="#data-combos" class="md-nav__link">
+    Data Combos
   </a>
   
 </li>
         
           <li class="md-nav__item">
-  <a href="#image-combo-assoc" class="md-nav__link">
-    Image Combo Assoc
+  <a href="#data-combo-assoc" class="md-nav__link">
+    Data Combo Assoc
   </a>
   
 </li>
@@ -943,7 +1009,7 @@ of Inter-Instrument Transformation Correction.</p>
 <em>intensity_bin_edges:</em> array of intensity bin edges from number of intensity bins (Blob)<br />
 <em>hist:</em> histogram associated with image (Blob)  </p>
 </blockquote>
-<h3 id="image-combos">Image Combos</h3>
+<h3 id="data-combos">Data Combos</h3>
 <p>This table stores information regarding the combination of images used to calculate the fit parameter. </p>
 <p><strong>Columns:</strong>  </p>
 <blockquote>
@@ -954,7 +1020,7 @@ of Inter-Instrument Transformation Correction.</p>
 <em>date_max:</em> maximum date of images in image combination (DateTime)<br />
 <em>date_min:</em> minimum date of images in image combination (DateTime)</p>
 </blockquote>
-<h3 id="image-combo-assoc">Image Combo Assoc</h3>
+<h3 id="data-combo-assoc">Data Combo Assoc</h3>
 <p>This table stores specific image ids with the associated combo id. </p>
 <p><strong>Columns:</strong>  </p>
 <blockquote>
@@ -1024,13 +1090,13 @@ and during the creation of histogram plots (<a href="../../ipp/iit/#generate-his
           </a>
         
         
-          <a href="../map/" title="Database for CHD Mapping" class="md-footer-nav__link md-footer-nav__link--next" rel="next">
+          <a href="../map/" title="Database for Mapping" class="md-footer-nav__link md-footer-nav__link--next" rel="next">
             <div class="md-footer-nav__title">
               <div class="md-ellipsis">
                 <span class="md-footer-nav__direction">
                   Next
                 </span>
-                Database for CHD Mapping
+                Database for Mapping
               </div>
             </div>
             <div class="md-footer-nav__button md-icon">

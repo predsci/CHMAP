@@ -435,18 +435,6 @@
 
 
   <li class="md-nav__item">
-    <a href="../../dp/qm/" title="Quality Maps" class="md-nav__link">
-      Quality Maps
-    </a>
-  </li>
-
-        
-          
-          
-          
-
-
-  <li class="md-nav__item">
     <a href="../../dp/ed/" title="Ensemble Detection" class="md-nav__link">
       Ensemble Detection
     </a>
@@ -461,6 +449,18 @@
   <li class="md-nav__item">
     <a href="../../dp/vt/" title="Varying Threshold Maps" class="md-nav__link">
       Varying Threshold Maps
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../../dp/qm/" title="Quality Maps" class="md-nav__link">
+      Quality Maps
     </a>
   </li>
 
@@ -558,6 +558,13 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#data-files" class="md-nav__link">
+    Data Files
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#euv-images" class="md-nav__link">
     EUV Images
   </a>
@@ -636,8 +643,8 @@
 
 
   <li class="md-nav__item">
-    <a href="../map/" title="Database for CHD Mapping" class="md-nav__link">
-      Database for CHD Mapping
+    <a href="../map/" title="Database for Mapping" class="md-nav__link">
+      Database for Mapping
     </a>
   </li>
 
@@ -798,6 +805,18 @@
   </li>
 
         
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../../ml/traversal/" title="Graph Analysis" class="md-nav__link">
+      Graph Analysis
+    </a>
+  </li>
+
+        
       </ul>
     </nav>
   </li>
@@ -808,10 +827,64 @@
       
 
 
-  <li class="md-nav__item">
-    <a href="../../ml/chd/" title="Machine Learning Detection" class="md-nav__link">
+  <li class="md-nav__item md-nav__item--nested">
+    
+      <input class="md-nav__toggle md-toggle" data-md-toggle="nav-9" type="checkbox" id="nav-9">
+    
+    <label class="md-nav__link" for="nav-9">
       Machine Learning Detection
+      <span class="md-nav__icon md-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M8.59 16.58L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.42z"/></svg>
+      </span>
+    </label>
+    <nav class="md-nav" aria-label="Machine Learning Detection" data-md-level="1">
+      <label class="md-nav__title" for="nav-9">
+        <span class="md-nav__icon md-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"/></svg>
+        </span>
+        Machine Learning Detection
+      </label>
+      <ul class="md-nav__list" data-md-scrollfix>
+        
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../../ml/chd/" title="Overview" class="md-nav__link">
+      Overview
     </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../../ml/supervised/" title="Supervised Detection" class="md-nav__link">
+      Supervised Detection
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../../ml/unsupervised/" title="Unsupervised Detection" class="md-nav__link">
+      Unsupervised Detection
+    </a>
+  </li>
+
+        
+      </ul>
+    </nav>
   </li>
 
     
@@ -859,6 +932,13 @@
   
     <nav class="md-nav" aria-label="Tables">
       <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#data-files" class="md-nav__link">
+    Data Files
+  </a>
+  
+</li>
         
           <li class="md-nav__item">
   <a href="#euv-images" class="md-nav__link">
@@ -938,6 +1018,19 @@
 <p>For the Limb-Brightening Correction, the database is used to query for images, store histograms, and store fit parameter values.
 These fit parameter values can then be queried in order to apply the Limb-Brightening correction. </p>
 <h2 id="tables">Tables</h2>
+<h3 id="data-files">Data Files</h3>
+<p>This tables stores the informtion and file names of the data files
+used in our pipeline.  </p>
+<p><strong>Columns:</strong>   </p>
+<blockquote>
+<p><em>data_id:</em> auto-incremented integer id associated with the image (Primary Key, Integer)<br />
+<em>date_obs:</em> time of image observation (DateTime)<br />
+<em>provider:</em> data file origin (String)<br />
+<em>type:</em> type of data file (String)<br />
+<em>fname_raw:</em> associated fits file (String)<br />
+<em>fname_hdf:</em> associated hdf5 file (String) <br />
+<em>flag:</em> default 0 (Integer)  </p>
+</blockquote>
 <h3 id="euv-images">EUV Images</h3>
 <p>This table stores files and information associated with EUV Images. </p>
 <p><strong>Columns:</strong>  </p>

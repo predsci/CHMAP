@@ -435,18 +435,6 @@
           
           
 
-
-  <li class="md-nav__item">
-    <a href="../qm/" title="Quality Maps" class="md-nav__link">
-      Quality Maps
-    </a>
-  </li>
-
-        
-          
-          
-          
-
   
 
 
@@ -543,6 +531,18 @@
   </li>
 
         
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../qm/" title="Quality Maps" class="md-nav__link">
+      Quality Maps
+    </a>
+  </li>
+
+        
       </ul>
     </nav>
   </li>
@@ -615,8 +615,8 @@
 
 
   <li class="md-nav__item">
-    <a href="../../db/map/" title="Database for CHD Mapping" class="md-nav__link">
-      Database for CHD Mapping
+    <a href="../../db/map/" title="Database for Mapping" class="md-nav__link">
+      Database for Mapping
     </a>
   </li>
 
@@ -777,6 +777,18 @@
   </li>
 
         
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../../ml/traversal/" title="Graph Analysis" class="md-nav__link">
+      Graph Analysis
+    </a>
+  </li>
+
+        
       </ul>
     </nav>
   </li>
@@ -787,10 +799,64 @@
       
 
 
-  <li class="md-nav__item">
-    <a href="../../ml/chd/" title="Machine Learning Detection" class="md-nav__link">
+  <li class="md-nav__item md-nav__item--nested">
+    
+      <input class="md-nav__toggle md-toggle" data-md-toggle="nav-9" type="checkbox" id="nav-9">
+    
+    <label class="md-nav__link" for="nav-9">
       Machine Learning Detection
+      <span class="md-nav__icon md-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M8.59 16.58L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.42z"/></svg>
+      </span>
+    </label>
+    <nav class="md-nav" aria-label="Machine Learning Detection" data-md-level="1">
+      <label class="md-nav__title" for="nav-9">
+        <span class="md-nav__icon md-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"/></svg>
+        </span>
+        Machine Learning Detection
+      </label>
+      <ul class="md-nav__list" data-md-scrollfix>
+        
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../../ml/chd/" title="Overview" class="md-nav__link">
+      Overview
     </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../../ml/supervised/" title="Supervised Detection" class="md-nav__link">
+      Supervised Detection
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../../ml/unsupervised/" title="Unsupervised Detection" class="md-nav__link">
+      Unsupervised Detection
+    </a>
+  </li>
+
+        
+      </ul>
+    </nav>
   </li>
 
     
@@ -896,10 +962,12 @@
 <p>There are currently two methods of creating time-varying maps. </p>
 <p>The first creates maps of varying timescale based on user entered intervals around a 
 specific user inputted center date. These <a href="#running-average-maps">maps</a> are then combined with a weighted
-average - either user inputted, or evenly weighted.</p>
+average - either user inputted, or evenly weighted.  </p>
+<p>The code for running average maps is found <a href="https://github.com/predsci/CHD/blob/master/chmap/maps/time_averaged/running_average_maps.py">here</a>.   </p>
 <p>The second method uses a Gaussian distribution and a user inputted center date. 
 The closer an image is to the center date, the more weight it has. Images are added
-one at a time to create the resultant <a href="#gaussian-time-varying-maps">maps</a>.</p>
+one at a time to create the resultant <a href="#gaussian-time-varying-maps">maps</a>.  </p>
+<p>The code for gaussian time weighted maps is found <a href="https://github.com/predsci/CHD/blob/master/chmap/maps/time_averaged/running_average_maps.py">here</a>.   </p>
 <h2 id="running-average-maps">Running Average Maps</h2>
 <table>
 <thead>
@@ -934,7 +1002,7 @@ one at a time to create the resultant <a href="#gaussian-time-varying-maps">maps
 <h3 id="running-average-maps_1">Running Average Maps</h3>
 <p>This outline creates individual combined maps based on user defined 
 timescales (1 day, 1 week, 2 weeks, etc.), then combines the maps based
-on user defined weighting. </p>
+on user defined weighting.  </p>
 <table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
  2
  3
@@ -1001,7 +1069,7 @@ on user defined weighting. </p>
 </ul>
 </li>
 <li>9.) <code>dp_funcs.create_timescale_maps</code><ul>
-<li>combine the timescale maps to create a running average map, based off the <a href="https://github.com/predsci/CHD/blob/master/modules/map_manip.py">timescale combination function</a></li>
+<li>combine the timescale maps to create a running average map, based off the <a href="https://github.com/predsci/CHD/blob/master/chmap/maps/util/map_manip.py">timescale combination function</a></li>
 </ul>
 </li>
 <li>10.) <code>dp_funcs.save_timescale_maps</code><ul>
@@ -1082,7 +1150,7 @@ based off their closeness to a center date.  </p>
     <div class="md-footer-nav">
       <nav class="md-footer-nav__inner md-grid" aria-label="Footer">
         
-          <a href="../qm/" title="Quality Maps" class="md-footer-nav__link md-footer-nav__link--prev" rel="prev">
+          <a href="../cr/" title="Synoptic Maps" class="md-footer-nav__link md-footer-nav__link--prev" rel="prev">
             <div class="md-footer-nav__button md-icon">
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"/></svg>
             </div>
@@ -1091,7 +1159,7 @@ based off their closeness to a center date.  </p>
                 <span class="md-footer-nav__direction">
                   Previous
                 </span>
-                Quality Maps
+                Synoptic Maps
               </div>
             </div>
           </a>

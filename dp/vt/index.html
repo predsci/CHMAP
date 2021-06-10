@@ -437,18 +437,6 @@
 
 
   <li class="md-nav__item">
-    <a href="../qm/" title="Quality Maps" class="md-nav__link">
-      Quality Maps
-    </a>
-  </li>
-
-        
-          
-          
-          
-
-
-  <li class="md-nav__item">
     <a href="../ed/" title="Ensemble Detection" class="md-nav__link">
       Ensemble Detection
     </a>
@@ -536,6 +524,18 @@
   </li>
 
         
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../qm/" title="Quality Maps" class="md-nav__link">
+      Quality Maps
+    </a>
+  </li>
+
+        
       </ul>
     </nav>
   </li>
@@ -608,8 +608,8 @@
 
 
   <li class="md-nav__item">
-    <a href="../../db/map/" title="Database for CHD Mapping" class="md-nav__link">
-      Database for CHD Mapping
+    <a href="../../db/map/" title="Database for Mapping" class="md-nav__link">
+      Database for Mapping
     </a>
   </li>
 
@@ -770,6 +770,18 @@
   </li>
 
         
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../../ml/traversal/" title="Graph Analysis" class="md-nav__link">
+      Graph Analysis
+    </a>
+  </li>
+
+        
       </ul>
     </nav>
   </li>
@@ -780,10 +792,64 @@
       
 
 
-  <li class="md-nav__item">
-    <a href="../../ml/chd/" title="Machine Learning Detection" class="md-nav__link">
+  <li class="md-nav__item md-nav__item--nested">
+    
+      <input class="md-nav__toggle md-toggle" data-md-toggle="nav-9" type="checkbox" id="nav-9">
+    
+    <label class="md-nav__link" for="nav-9">
       Machine Learning Detection
+      <span class="md-nav__icon md-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M8.59 16.58L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.42z"/></svg>
+      </span>
+    </label>
+    <nav class="md-nav" aria-label="Machine Learning Detection" data-md-level="1">
+      <label class="md-nav__title" for="nav-9">
+        <span class="md-nav__icon md-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"/></svg>
+        </span>
+        Machine Learning Detection
+      </label>
+      <ul class="md-nav__list" data-md-scrollfix>
+        
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../../ml/chd/" title="Overview" class="md-nav__link">
+      Overview
     </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../../ml/supervised/" title="Supervised Detection" class="md-nav__link">
+      Supervised Detection
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../../ml/unsupervised/" title="Unsupervised Detection" class="md-nav__link">
+      Unsupervised Detection
+    </a>
+  </li>
+
+        
+      </ul>
+    </nav>
   </li>
 
     
@@ -884,12 +950,13 @@ is varied based off a Gaussian distribution with a user inputted value of sigma 
 selected. The only different data product produced here is the Coronal Hole Detection map, the
 EUV map is the same as the <a href="../cr/#cr-euv-map">synoptic EUV maps</a> created.</p>
 <p>In these Gaussian weighted CHD Maps, coronal hole detections are weighted to produce
-a probability type map just as in the <a href="../cr/#cr-chd-map">synoptic CHD Maps</a>.</p>
+a probability type map just as in the <a href="../cr/#cr-chd-map">synoptic CHD Maps</a>.  </p>
+<p>The code for these maps is found <a href="https://github.com/predsci/CHD/blob/master/chmap/maps/synoptic/varying_threshold_maps.py">here</a>. </p>
 <h2 id="example-maps">Example Maps</h2>
 <h3 id="euv-map"><a href="../../img/dp/var_thresh/EUV_Map_052011.png">EUV Map</a></h3>
 <p><img alt="EUV Map" src="../../img/dp/var_thresh/EUV_Map_052011.png" /></p>
 <h3 id="chd-map"><a href="../../img/dp/var_thresh/Varying_Threshold_CHD_Map_052011.png">CHD Map</a></h3>
-<p><img alt="CHD Map" src="../../img/dp/var_thresh/Varying_Threshold_CHD_Map_052011.png" />  </p>
+<p><img alt="CHD Map" src="../../img/dp/var_thresh/Varying_Threshold_CHD_Map_052011.png" /></p>
 <h2 id="code-outline">Code Outline</h2>
 <table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre>1
 2
@@ -970,13 +1037,13 @@ a probability type map just as in the <a href="../cr/#cr-chd-map">synoptic CHD M
           </a>
         
         
-          <a href="../../db/db/" title="Database Basics" class="md-footer-nav__link md-footer-nav__link--next" rel="next">
+          <a href="../qm/" title="Quality Maps" class="md-footer-nav__link md-footer-nav__link--next" rel="next">
             <div class="md-footer-nav__title">
               <div class="md-ellipsis">
                 <span class="md-footer-nav__direction">
                   Next
                 </span>
-                Database Basics
+                Quality Maps
               </div>
             </div>
             <div class="md-footer-nav__button md-icon">
