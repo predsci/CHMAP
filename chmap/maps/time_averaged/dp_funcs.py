@@ -57,9 +57,6 @@ def quality_map(db_session, map_data_dir, inst_list, query_pd, euv_combined, chd
                                 title='CHD Quality Map: Mu Dependent\n' + str(chd_combined.data_info.date_obs[0]),
                                 map_type='CHD')
 
-    # save these maps to database
-    # TODO: figure out how to create "one" map
-
     return None
 
 
