@@ -848,6 +848,20 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#example-movies" class="md-nav__link">
+    Example Movies
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#comparison-with-brute-force-detection" class="md-nav__link">
+    Comparison with Brute Force Detection
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -938,6 +952,20 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#example-movies" class="md-nav__link">
+    Example Movies
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#comparison-with-brute-force-detection" class="md-nav__link">
+    Comparison with Brute Force Detection
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -967,7 +995,7 @@ by the individual and these have been optimized using various industry technique
 we have the least amount of user interference as possible.  </p>
 <p>The algorithm used for our unsupervised detection model is known as K-Means. This is an unsupervised
 method of clustering. The basic idea is the algorithm assigns n samples/observations to k clusters whereby each
-observation belongs to the cluster with the nearest mean. Each sample/observation receives a cluster label 
+observation belongs to the cluster with the nearest cluster centroid. Each sample/observation receives a cluster label 
 based on both spatial and intensity data, and these labels are then grouped into coronal holes and 
 active regions. You can plot each detection individually, or both active regions and coronal holes on the 
 same map.  </p>
@@ -979,8 +1007,8 @@ The machine learning functions are found <a href="https://github.com/predsci/CHD
 <li>select cluster centers  </li>
 <li>calculate distance between each sample and cluster centers  </li>
 <li>assign data point to closest cluster center  </li>
-<li>recalculate new cluster center  </li>
-<li>recalculate the distance between each data point and new obtained cluster centers  </li>
+<li>calculate new cluster centers  </li>
+<li>recalculate the distance between each data point and newly obtained cluster centers  </li>
 <li>continue until convergence  </li>
 </ol>
 <p><img alt="K-Means Basic Idea" src="../images/kmeans_overview.png" /></p>
@@ -1003,6 +1031,45 @@ coronal hole and active region detection for a synchonic map.   </p>
 <p><img alt="CHD Unsupervised Map" src="../images/unsupervised_chd.png" /></p>
 <h4 id="chd-and-ard-unsupervised-map"><a href="../images/unsupervised_chd_ard.png">CHD and ARD Unsupervised Map</a></h4>
 <p><img alt="CHD and ARD Unsupervised Map" src="../images/unsupervised_chd_ard.png" /></p>
+<h2 id="example-movies">Example Movies</h2>
+<p>Here are some example movies of coronal hole detection over short time spans.</p>
+<figure class="video_container">
+  <iframe src="https://www.youtube.com/embed/DhoSU2QmRwM" frameborder="0" allowfullscreen="true"> </iframe>
+</figure>
+
+<figure class="video_container">
+  <iframe src="https://www.youtube.com/embed/YxgkLmwfg_c" frameborder="0" allowfullscreen="true"> </iframe>
+</figure>
+
+<figure class="video_container">
+  <iframe src="https://www.youtube.com/embed/LWBFJx3LN2U" frameborder="0" allowfullscreen="true"> </iframe>
+</figure>
+
+<h2 id="comparison-with-brute-force-detection">Comparison with Brute Force Detection</h2>
+<p>We look to compare our unsupervised learning detection method with the 
+brute force (EZSEG) detection method currently used. This comparison was done both 
+visually and by plotting coronal hole areas over time.  </p>
+<p>Here we can see a comparison of CH detection maps using the two different detection methods.  </p>
+<table>
+<thead>
+<tr>
+<th align="center"><a href="../images/ezseg_chd.png">EZSEG Detection Map</a></th>
+<th align="center"><a href="../images/unsupervised_chd.png">Unsupervised Detection Map</a></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="center"><img alt="EZSEG Detection Map" src="../images/ezseg_chd.png" /></td>
+<td align="center"><img alt="Unsupervised Detection Map" src="../images/unsupervised_chd.png" /></td>
+</tr>
+</tbody>
+</table>
+<p>Additionally, we can look at a plot of CH areas over time. We see that the two methods follow the same
+overall trend in area however the unsupervised method consistently detects less pixel-wise coronal hole 
+area. There are some outliers which are the sharp spikes and these extras coronal holes often show up 
+as flickering detections on large timescales.</p>
+<p><a href="../images/area_comparison.png">CH Area Comparison Plot</a>
+<img alt="CH Area Comparison Plot" src="../images/area_comparison.png" /></p>
                 
               
               
