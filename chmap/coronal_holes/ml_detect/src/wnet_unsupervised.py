@@ -18,7 +18,7 @@ from tensorflow.keras.layers import *
 from tensorflow.keras.models import Model
 from tensorflow.keras.optimizers import Adam
 from tensorflow.keras.losses import BinaryCrossentropy
-import analysis.ml_analysis.ch_detect.ml_functions as ml_funs
+import chmap.coronal_holes.ml_detect.tools.ml_functions as ml_funs
 
 # Image size that we are going to use
 IMG_HEIGHT = 96

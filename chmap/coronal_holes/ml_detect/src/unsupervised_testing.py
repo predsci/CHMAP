@@ -7,7 +7,8 @@ with the ezseg algorithm by comparing areas
 """
 
 import os
-
+import sys
+sys.path.append("/Users/tamarervin/CH_Project/CHD")
 # This can be a computationally intensive process.
 # To limit number of threads numpy can spawn:
 # os.environ["OMP_NUM_THREADS"] = "4"
@@ -16,7 +17,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 import datetime
 import time
-# import pandas as pd
 from skimage import measure
 import chmap.database.db_classes as db_class
 import chmap.database.db_funs as db_funcs
@@ -32,10 +32,10 @@ import chmap.utilities.plotting.psi_plotting as Plotting
 
 # -------- parameters --------- #
 # TIME RANGE FOR QUERYING
-query_time_min = datetime.datetime(2011, 8, 16, 0, 0, 0)
-query_time_max = datetime.datetime(2011, 8, 16, 3, 0, 0)
+query_time_min = datetime.datetime(2011, 10, 16, 0, 0, 0)
+query_time_max = datetime.datetime(2012, 1, 16, 0, 0, 0)
 # define map interval cadence and width
-map_freq = 2  # number of hours
+map_freq = 6  # number of hours
 interval_delta = 30  # number of minutes
 del_interval_dt = datetime.timedelta(minutes=interval_delta)
 del_interval = np.timedelta64(interval_delta, 'm')
@@ -85,8 +85,8 @@ x_range = [0, 2 * np.pi]
 y_range = [-1, 1]
 reduce_map_nycoord = 640
 reduce_map_nxcoord = 1600
-full_map_nycoord = 720
-full_map_nxcoord = 1800
+full_map_nycoord = 640
+full_map_nxcoord = 1600
 low_res_nycoord = 160
 low_res_nxcoord = 400
 
@@ -205,10 +205,47 @@ for date_ind, center in enumerate(moving_avg_centers):
         # plt.savefig('/Volumes/CHD_DB/unsupervised/kmeans_ar_' + str(date_ind))
 
 # plot area comparison
-plt.scatter(list(range(0, 2)), chd_area_ezseg/10000, color='Pink', label='EZSEG CH Area')
-plt.scatter(list(range(0, 2)), chd_area_kmeans/10000, color='Blue', label='Unsupervised CH Area')
+dates= list(moving_avg_centers)
+with open('/Volumes/CHD_DB/unsupervised/area_dates4.txt', 'w') as filehandle:
+    filehandle.writelines("%s\n" % date for date in dates)
+
+with open('/Volumes/CHD_DB/unsupervised/area_ezseg4.txt', 'w') as filehandle:
+    filehandle.writelines("%s\n" % area for area in chd_area_ezseg)
+
+with open('/Volumes/CHD_DB/unsupervised/area_kmeans4.txt', 'w') as filehandle:
+    filehandle.writelines("%s\n" % area for area in chd_area_kmeans)
+
+plt.scatter(dates, chd_area_ezseg/10000, color='Black', label='EZSEG CH Area')
+plt.scatter(dates, chd_area_kmeans/10000, color='Blue', label='Unsupervised CH Area')
 plt.title("Comparison of CH Areas between EZSEG and \n Unsupervised Learning Detection Methods")
 plt.xlabel("Dates: " + str(moving_avg_centers[0]) + " to " + str(moving_avg_centers[-1]))
 plt.ylabel("Pixel Area (10^4)")
+plt.xticks(color='w')
 plt.legend()
-plt.savefig('/Volumes/CHD_DB/unsupervised/comparison_plot')
+plt.savefig('/Volumes/CHD_DB/unsupervised/comparison_plot4')
+
+### build new comparison plot from lists in text files
+dates_file = open('/Volumes/CHD_DB/unsupervised/area_dates4.txt', 'r')
+dates_list = dates_file.readlines()
+
+ezseg_file = open('/Volumes/CHD_DB/unsupervised/area_ezseg4.txt', 'r')
+ezseg_list = ezseg_file.readlines()
+
+kmeans_file = open('/Volumes/CHD_DB/unsupervised/area_kmeans4.txt', 'r')
+kmeans_list = kmeans_file.readlines()
+
+list1 = np.zeros(len(kmeans_list))
+for i, area in enumerate(ezseg_list):
+    list1[i] = float(area)
+
+list2 = np.zeros(len(kmeans_list))
+for i, area in enumerate(kmeans_list):
+    list2[i] = float(area)
+
+plt.plot(list(range(0, len(dates_list))), list1/10000, color='Black', label='EZSEG CH Area')
+plt.plot(list(range(0, len(dates_list))), list2/10000, color='Blue', label='Unsupervised CH Area')
+plt.title("Comparison of CH Areas between EZSEG and \n Unsupervised Learning Detection Methods")
+plt.xlabel("Dates: " + str(dates_list[0]) + " to " + str(dates_list[-1]))
+plt.xticks(color='w')
+plt.ylabel("Pixel Area (10^4)")
+plt.legend()

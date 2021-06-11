@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 """
+Tamar Ervin
 outline to create combination EUV maps
 - this method doesn't automatically save individual image maps to database, bc storage
 1. Select images
@@ -10,48 +11,51 @@ outline to create combination EUV maps
 4. Convert to Map
 5. Combine Maps and Save to DB
 """
-import sys
-sys.path.append("/Users/tamarervin/CH_Project/CHD")
 import os
 import numpy as np
 import datetime
 import h5py as h5
 
-from chmap.settings.app import App
-import modules.DB_classes as db_class
-import modules.DB_funs as db_funcs
-import analysis.chd_analysis.CHD_pipeline_funcs as chd_funcs
+import chmap.database.db_classes as db_class
+import chmap.database.db_funs as db_funcs
+import chmap.coronal_holes.detection.chd_funcs as chd_funcs
+import chmap.data.corrections.apply_lbc_iit as apply_lbc_iit
+import chmap.maps.image2map as image2map
+import chmap.maps.midm as midm
+import chmap.maps.synchronic.synch_utils as synch_utils
 
 # -------- parameters --------- #
 # TIME RANGE FOR QUERYING
 query_time_min = datetime.datetime(2011, 2, 11, 0, 0, 0)
 query_time_max = datetime.datetime(2011, 2, 11, 6, 0, 0)
-map_freq = 2  # number of hours
+# define map interval cadence and width
+map_freq = 6  # number of hours
+interval_delta = 30  # number of minutes
+del_interval_dt = datetime.timedelta(minutes=interval_delta)
+del_interval = np.timedelta64(interval_delta, 'm')
 
 # INITIALIZE DATABASE CONNECTION
 # DATABASE PATHS
-map_data_dir = App.MAP_FILE_HOME
-raw_data_dir = App.RAW_DATA_HOME
-hdf_data_dir = App.PROCESSED_DATA_HOME
-database_dir = App.DATABASE_HOME
-sqlite_filename = App.DATABASE_FNAME
-# initialize database connection
-# using mySQL
-use_db = "mysql-Q"
-user = "tervin"
-password = ""
-sqlite_path = os.path.join(database_dir, sqlite_filename)
-db_session = db_funcs.init_db_conn(db_name=use_db, chd_base=db_class.Base, user=user, password=password)
-
-# initialize database connection
-# use_db = "sqlite"
-# sqlite_path = os.path.join(database_dir, sqlite_filename)
-# db_session = db_funcs.init_db_conn_old(db_name=use_db, chd_base=db_class.Base, sqlite_path=sqlite_path)
+# USER MUST INITIALIZE
+map_data_dir = 'path/to/map/directory'
+raw_data_dir = 'path/to/raw_data/directory'
+hdf_data_dir = 'path/to/processed_data/directory'
+database_dir = 'path/to/database/directory'
+sqlite_filename = 'path/to/database/filename'
 
 # hdf file info
-h5_filename = '/Volumes/CHD_DB/map_data_large.h5'
-# CHD Model
-model_h5 = '/Volumes/CHD_DB/model_unet_FINAL.h5'
+h5_filename = 'path_to_hdf5_file'
+# path to CHD Model
+model_h5 = '/chmap/coronal_holes/ml_detect/tools/model_unet.h5'
+
+# designate which database to connect to
+use_db = "mysql-Q"  # 'sqlite'  Use local sqlite file-based db
+# use_db = 'sqlite'
+# 'mysql-Q' Use the remote MySQL database on Q
+# 'mysql-Q_test' Use the development database on Q
+user = "tervin"  # only needed for remote databases.
+password = ""  # See example109 for setting-up an encrypted password.  In this case leave password="", and
+# init_db_conn_old() will automatically find and use your saved password. Otherwise, enter your MySQL password here.
 
 # INSTRUMENTS
 inst_list = ["AIA", "EUVI-A", "EUVI-B"]
@@ -78,13 +82,22 @@ x_range = [0, 2 * np.pi]
 y_range = [-1, 1]
 map_nycoord = 480
 map_nxcoord = 1200
-# del_y = (y_range[1] - y_range[0]) / (map_nycoord - 1)
-# map_nxcoord = (np.floor((x_range[1] - x_range[0]) / del_y) + 1).astype(int)
+
 # generate map x,y grids. y grid centered on equator, x referenced from lon=0
 map_y = np.linspace(y_range[0], y_range[1], map_nycoord, dtype='<f4')
 map_x = np.linspace(x_range[0], x_range[1], map_nxcoord, dtype='<f4')
 
 ### --------- NOTHING TO UPDATE BELOW -------- ###
+# Establish connection to database
+if use_db == 'sqlite':
+    # setup database connection to local sqlite file
+    sqlite_path = os.path.join(database_dir, sqlite_filename)
+
+    db_session = db_funcs.init_db_conn_old(db_name=use_db, chd_base=db_class.Base, sqlite_path=sqlite_path)
+elif use_db in ('mysql-Q', 'mysql-Q_test'):
+    # setup database connection to MySQL database on Q
+    db_session = db_funcs.init_db_conn_old(db_name=use_db, chd_base=db_class.Base, user=user, password=password)
+
 #### STEP ONE: SELECT IMAGES ####
 # 1.) query some images
 query_pd = db_funcs.query_euv_images(db_session=db_session, time_min=query_time_min, time_max=query_time_max)
@@ -97,45 +110,46 @@ methods_list = db_funcs.generate_methdf(query_pd)
 
 #### STEP TWO: APPLY PRE-PROCESSING CORRECTIONS ####
 # 1.) get dates
-moving_avg_centers = chd_funcs.get_dates(time_min=query_time_min, time_max=query_time_max, map_freq=map_freq)
+moving_avg_centers = synch_utils.get_dates(time_min=query_time_min, time_max=query_time_max, map_freq=map_freq)
 
-# 2.) get instrument combos
-lbc_combo_query, iit_combo_query = chd_funcs.get_inst_combos(db_session, inst_list, time_min=query_time_min,
-                                                             time_max=query_time_max)
-
-# 3.) loop through center dates
+# 2.) loop through center dates
 h5file = h5.File(h5_filename, 'w')
 for date_ind, center in enumerate(moving_avg_centers):
-    date_pd, los_list, iit_list, use_indices, methods_list, ref_alpha, ref_x = chd_funcs.apply_ipp(db_session, center,
-                                                                                                   query_pd,
-                                                                                                   inst_list,
-                                                                                                   hdf_data_dir,
-                                                                                                   lbc_combo_query,
-                                                                                                   iit_combo_query,
-                                                                                                   methods_list,
-                                                                                                   n_intensity_bins,
-                                                                                                   R0)
+    # choose which images to use in the same way we choose images for synchronic download
+    synch_images, cluster_method = synch_utils.select_synchronic_images(
+        center, del_interval, query_pd, inst_list)
+    if synch_images is None:
+        # no images fall in the appropriate range, skip
+        continue
+    # apply corrections to those images
+    date_pd, los_list, iit_list, use_indices, methods_list, ref_alpha, ref_x = \
+        apply_lbc_iit.apply_ipp_2(db_session, center, synch_images, inst_list, hdf_data_dir,
+                                  n_intensity_bins, R0)
     #### STEP THREE: CORONAL HOLE DETECTION ####
     if los_list[0] is not None:
         chd_image_list = chd_funcs.chd(iit_list, los_list, use_indices, inst_list, thresh1, thresh2, ref_alpha, ref_x,
                                        nc, iters)
+
         #### STEP FOUR: CONVERT TO MAP ####
-        map_list, methods_list, image_info, map_info = chd_funcs.create_singles_maps(inst_list, date_pd,
-                                                                                     iit_list,
-                                                                                     chd_image_list,
-                                                                                     methods_list, map_x,
-                                                                                     map_y, R0)
-        #### STEP FIVE: CREATE COMBINED MAPS AND SAVE TO DB ####
-        euv_combined = chd_funcs.create_combined_maps(db_session, map_data_dir, map_list,
-                                                      methods_list, image_info, map_info,
-                                                      mu_merge_cutoff=mu_merge_cutoff, mu_cutoff=mu_cutoff)
+        map_list, chd_map_list, methods_list, data_info, map_info = \
+            image2map.create_singles_maps_2(synch_images, iit_list, chd_image_list,
+                                            methods_list=methods_list, map_x=map_x, map_y=map_y, R0=R0)
+        # create one data object with EUV & CHD map
+        for ii in range(map_list.__len__()):
+            # first combine chd and image into a single map object
+            map_list[ii].chd = chd_map_list[ii].data.astype('float16')
+
+            #### STEP FIVE: CREATE COMBINED MAPS ####
+        synchronic_map = midm.create_combined_maps_2(map_list, mu_merge_cutoff=mu_merge_cutoff, del_mu=del_mu,
+                                                     mu_cutoff=mu_cutoff, EUV_CHD_sep=EUV_CHD_sep)
+
         g = h5file.create_group(str(center))
         # create euv image in file
         # scalarMap = mpl.cm.ScalarMappable(norm=colors.LogNorm(vmin=1.0, vmax=np.max(map_array[0])),
         #                                   cmap='sohoeit195')
         # colorVal = scalarMap.to_rgba(euv_combined.data, norm=True)
         # g.create_dataset("euv_image", data=colorVal[:, :, :3])
-        g.create_dataset("euv_image", data=euv_combined.data)
+        g.create_dataset("euv_image", data=synchronic_map.data)
         # # create chd mask in file
         # arr = euv_combined.chd
         # arr3D = np.repeat(arr[..., None], 1, axis=2)

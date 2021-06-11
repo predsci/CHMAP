@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 """
+Tamar Ervin
 outline to create combination EUV/CHD maps using ML Algorithm
 1. Select images
 2. Apply pre-processing corrections

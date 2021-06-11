@@ -1,4 +1,5 @@
 """
+Tamar Ervin
 using HDF5 data to make prettier plots
 """
 
@@ -10,11 +11,13 @@ from sklearn.cluster import KMeans
 from skimage import measure
 from scipy.spatial.distance import cdist
 import tensorflow as tf
+import chmap.maps.image2map as image2map
 import scipy
 import matplotlib.colors as colors
-import modules.datatypes as psi_d_types
-import modules.Plotting as Plotting
-import analysis.ml_analysis.ch_detect.ml_functions as ml_funcs
+import chmap.utilities.datatypes.datatypes as psi_d_types
+import chmap.coronal_holes.detection.chd_funcs as chd_funcs
+import chmap.utilities.plotting.psi_plotting as Plotting
+import chmap.coronal_holes.ml_detect.tools.ml_functions as ml_funcs
 import matplotlib as mpl
 
 
@@ -67,9 +70,7 @@ for image_data in image:
     pred = np.zeros(shape=result.squeeze().shape)
     pred[use_chd] = result.squeeze()[use_chd]
 
-#### STEP FOUR: CONVERT TO MAP ####
-map_list, methods_list, data_info, map_info = chd_funcs.create_singles_maps(inst_list, date_pd,
-                                                                            iit_list,
-                                                                            chd_image_list,
-                                                                            methods_list, map_x,
-                                                                            map_y, R0)
+# #### STEP FOUR: CONVERT TO MAP ####
+# map_list, chd_map_list, methods_list, data_info, map_info = \
+#             image2map.create_singles_maps_2(synch_images, iit_list, chd_image_list,
+#                                             methods_list, full_map_x, full_map_y, R0)

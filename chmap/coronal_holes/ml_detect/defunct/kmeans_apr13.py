@@ -410,7 +410,7 @@ for i, img in enumerate(test_data):
     plt.savefig('/Volumes/CHD_DB/pred_maps/for_movie/fit_map_' + str(i))
 
 ### MAKE MOVIE
-# ffmpeg -r 4 -f image2 -s 1920x1080 -i map_%d.png -vcodec libx264 -crf 25  -pix_fmt yuv420p chd_ar_map.mp4
+# ffmpeg -r 2 -f image2 -s 1920x1080 -i kmeans_ar_%d.png -vcodec libx264 -crf 25 -pix_fmt yuv420p chd_ar_kmeans.mp4
 
 # one = np.where(euv_test==1, euv_test, 0)
 # axs[0, 1].set_title("Cluster One")
