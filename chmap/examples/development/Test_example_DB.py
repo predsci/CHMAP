@@ -7,6 +7,7 @@ Example script for connecting to the database.
 
 import os
 import datetime
+import numpy as np
 
 import chmap.database.db_classes as db_class
 import chmap.database.db_funs as db_funcs
@@ -43,26 +44,46 @@ db_loc = "/Volumes/extdata2/CHD_DB_example/chd_example.db"
 mysql_db_name = "chd"
 
 # Establish connection to database
-db_session = db_funcs.init_db_conn(db_type, db_class.Base, db_loc, db_name=mysql_db_name,
-                                   user=user, password=password, cred_dir=cred_dir)
+sqlite_session = db_funcs.init_db_conn(db_type, db_class.Base, db_loc, db_name=mysql_db_name,
+                                       user=user, password=password, cred_dir=cred_dir)
+
+mysql_session = db_funcs.init_db_conn("mysql", db_class.Base, "q.predsci.com", db_name=mysql_db_name,
+                                      user=user, password=password, cred_dir=cred_dir)
 
 # SAMPLE QUERY
 # use database session to query available pre-processed images
-query_time_min = datetime.datetime(2011, 2, 1, 0, 0, 0)
-query_time_max = datetime.datetime(2011, 2, 1, 12, 0, 0)
+query_time_min = datetime.datetime(2011, 2, 1, 1, 0, 0)
+query_time_max = datetime.datetime(2011, 2, 1, 3, 0, 0)
 
-image_pd = db_funcs.query_euv_images(db_session, time_min=query_time_min,
-                                     time_max=query_time_max)
+meth_name = 'LBCC'
+meth_desc = 'LBCC Theoretic Fit Method'
+method_id = db_funcs.get_method_id(sqlite_session, meth_name, meth_desc, var_names=None, var_descs=None, create=False)
 
-# view a snapshot of the results
-image_pd.loc[:, ['date_obs', 'instrument', 'fname_hdf']]
+# HISTOGRAM PARAMETERS TO UPDATE
+n_mu_bins = 18  # number of mu bins
+n_intensity_bins = 200  # number of intensity bins
+lat_band = [- np.pi / 64., np.pi / 64.]
+query_instrument = ["AIA", ]
 
-# open the first image
-image_path = os.path.join(hdf_data_dir, image_pd.fname_hdf[0])
-psi_image = psi_dtypes.read_los_image(image_path)
+sqlite_hists = db_funcs.query_hist(sqlite_session, meth_id=method_id[1], n_mu_bins=n_mu_bins,
+                                   n_intensity_bins=n_intensity_bins, lat_band=lat_band,
+                                   time_min=query_time_min, time_max=query_time_max,
+                                   instrument=query_instrument)
+mu_bin_array, intensity_bin_array, sq_full_hist = psi_dtypes.binary_to_hist(
+    sqlite_hists, n_mu_bins, n_intensity_bins)
 
-# plot deconvolved image
-psi_plots.PlotImage(psi_image)
 
-# CLOSE CONNECTION
-db_session.close()
+mysql_hists = db_funcs.query_hist(mysql_session, meth_id=method_id[1], n_mu_bins=n_mu_bins,
+                                  n_intensity_bins=n_intensity_bins, lat_band=lat_band,
+                                  time_min=query_time_min, time_max=query_time_max,
+                                  instrument=query_instrument)
+mu_bin_array, intensity_bin_array, my_full_hist = psi_dtypes.binary_to_hist(
+    mysql_hists, n_mu_bins, n_intensity_bins)
+
+# verify that the two databases return identical histograms
+np.all((my_full_hist - sq_full_hist) == 0.)
+
+
+# CLOSE CONNECTIONS
+sqlite_session.close()
+mysql_session.close()
