@@ -16,6 +16,7 @@ import chmap.data.corrections.iit.iit_utils as iit
 import chmap.utilities.plotting.psi_plotting as Plotting
 import chmap.data.corrections.iit.IIT_pipeline_funcs as iit_funcs
 import chmap.data.corrections.lbcc.LBCC_theoretic_funcs as lbcc_funcs
+import chmap.maps.synchronic.synch_utils as synch_utils
 
 
 ##### STEP ONE: CREATE 1D HISTOGRAMS AND SAVE TO DATABASE ######
@@ -102,8 +103,8 @@ def create_histograms(db_session, inst_list, lbc_query_time_min, lbc_query_time_
 
 ##### STEP TWO: CALCULATE INTER-INSTRUMENT TRANSFORMATION COEFFICIENTS AND SAVE TO DATABASE ######
 def calc_iit_coefficients(db_session, inst_list, ref_inst, calc_query_time_min, calc_query_time_max, weekday=0,
-                          number_of_days=180, n_intensity_bins=200, lat_band=[-np.pi / 2.4, np.pi / 2.4], create=False,
-                          wavelengths=None):
+                          number_of_days=180, image_freq=2, image_del=np.timedelta64(30, 'm'), n_intensity_bins=200,
+                          lat_band=[-np.pi / 2.4, np.pi / 2.4], create=False, wavelengths=None):
     # start time
     start_time = time.time()
 
@@ -123,12 +124,25 @@ def calc_iit_coefficients(db_session, inst_list, ref_inst, calc_query_time_min, 
     rot_max = euv_images.cr_rot.max()
     rot_min = euv_images.cr_rot.min()
 
+    # calculate the moving average centers
+    ref_moving_avg_centers, moving_width = lbcc.moving_averages(calc_query_time_min, calc_query_time_max, weekday,
+                                                                number_of_days)
+    # calculate image cadence centers
+    range_min_date = ref_moving_avg_centers[0] - moving_width/2
+    range_max_date = ref_moving_avg_centers[-1] + moving_width/2
+    image_centers = synch_utils.get_dates(
+        time_min=range_min_date.astype(datetime.datetime),
+        time_max=range_max_date.astype(datetime.datetime), map_freq=image_freq)
+
     # query histograms
     ref_hist_pd = db_funcs.query_hist(db_session=db_session, meth_id=method_id[1],
                                       n_intensity_bins=n_intensity_bins, lat_band=lat_band,
                                       time_min=calc_query_time_min - datetime.timedelta(days=number_of_days),
                                       time_max=calc_query_time_max + datetime.timedelta(days=number_of_days),
                                       instrument=ref_instrument, wavelength=wavelengths)
+    # keep only one observation-histogram per image_center window
+    keep_ind = lbcc.cadence_choose(ref_hist_pd.date_obs, image_centers, image_del)
+    ref_hist_pd = ref_hist_pd.iloc[keep_ind]
 
     # convert binary to histogram data
     mu_bin_edges, intensity_bin_edges, ref_full_hist = psi_d_types.binary_to_hist(
@@ -151,11 +165,8 @@ def calc_iit_coefficients(db_session, inst_list, ref_inst, calc_query_time_min, 
     for inst_index, instrument in enumerate(inst_list):
         # check if this is the reference instrument
         if inst_index == ref_index:
-            # calculate the moving average centers
-            moving_avg_centers, moving_width = lbcc.moving_averages(calc_query_time_min, calc_query_time_max, weekday,
-                                                                    number_of_days)
             # loop through moving average centers
-            for date_index, center_date in enumerate(moving_avg_centers):
+            for date_index, center_date in enumerate(ref_moving_avg_centers):
                 print("Starting calculations for", instrument, ":", center_date)
 
                 if center_date > ref_hist_pd.date_obs.max() or center_date < ref_hist_pd.date_obs.min():
@@ -196,11 +207,22 @@ def calc_iit_coefficients(db_session, inst_list, ref_inst, calc_query_time_min, 
 
             moving_avg_centers, moving_width = lbcc.moving_averages(inst_time_min, inst_time_max, weekday,
                                                                     number_of_days)
+            # calculate image cadence centers
+            range_min_date = moving_avg_centers[0] - moving_width/2
+            range_max_date = moving_avg_centers[-1] + moving_width/2
+            image_centers = synch_utils.get_dates(
+                time_min=range_min_date.astype(datetime.datetime),
+                time_max=range_max_date.astype(datetime.datetime), map_freq=image_freq)
+
             inst_hist_pd = db_funcs.query_hist(db_session=db_session, meth_id=method_id[1],
                                                n_intensity_bins=n_intensity_bins, lat_band=lat_band,
                                                time_min=inst_time_min - datetime.timedelta(days=number_of_days),
                                                time_max=inst_time_max + datetime.timedelta(days=number_of_days),
                                                instrument=query_instrument, wavelength=wavelengths)
+            # keep only one observation-histogram per image_center window
+            keep_ind = lbcc.cadence_choose(inst_hist_pd.date_obs, image_centers, image_del)
+            inst_hist_pd = inst_hist_pd.iloc[keep_ind]
+
             # convert binary to histogram data
             mu_bin_edges, intensity_bin_edges, inst_full_hist = psi_d_types.binary_to_hist(
                 hist_binary=inst_hist_pd, n_mu_bins=None, n_intensity_bins=n_intensity_bins)

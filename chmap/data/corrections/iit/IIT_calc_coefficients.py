@@ -20,6 +20,7 @@ import chmap.data.corrections.iit.iit_utils as iit
 import chmap.database.db_classes as db_class
 import chmap.utilities.datatypes.datatypes as psi_d_types
 import chmap.data.corrections.lbcc.lbcc_utils as lbcc
+import chmap.maps.synchronic.synch_utils as synch_utils
 
 ####### -------- updateable parameters ------ #######
 
@@ -29,6 +30,9 @@ calc_query_time_max = datetime.datetime(2012, 9, 1, 0, 0, 0)
 
 weekday = 0  # start at 0 for Monday
 number_of_days = 180
+# image window params
+image_freq = 2
+image_del = np.timedelta64(30, 'm')
 
 # define instruments
 inst_list = ["AIA", "EUVI-A", "EUVI-B"]
@@ -88,20 +92,32 @@ euv_images = db_funcs.query_euv_images(db_session, time_min=calc_query_time_min,
 rot_max = euv_images.cr_rot.max()
 rot_min = euv_images.cr_rot.min()
 
+# calculate the parameter moving average centers
+moving_avg_centers, moving_width = lbcc.moving_averages(calc_query_time_min, calc_query_time_max, weekday,
+                                                        number_of_days)
+
+# calculate image cadence centers
+range_min_date = moving_avg_centers[0] - moving_width/2
+range_max_date = moving_avg_centers[-1] + moving_width/2
+image_centers = synch_utils.get_dates(
+    time_min=range_min_date.astype(datetime.datetime),
+    time_max=range_max_date.astype(datetime.datetime), map_freq=image_freq)
+
 # query histograms
 ref_hist_pd = db_funcs.query_hist(db_session=db_session, meth_id=method_id[1],
                                   n_intensity_bins=n_intensity_bins, lat_band=lat_band,
                                   time_min=calc_query_time_min - datetime.timedelta(days=number_of_days),
                                   time_max=calc_query_time_max + datetime.timedelta(days=number_of_days),
                                   instrument=ref_instrument, wavelength=wavelengths)
+# keep only one observation-histogram per image_center window
+keep_ind = lbcc.cadence_choose(ref_hist_pd.date_obs, image_centers, image_del)
+ref_hist_pd = ref_hist_pd.iloc[keep_ind]
 
 # convert binary to histogram data
 mu_bin_edges, intensity_bin_edges, ref_full_hist = psi_d_types.binary_to_hist(hist_binary=ref_hist_pd,
                                                                               n_mu_bins=None,
                                                                               n_intensity_bins=n_intensity_bins)
-# calculate the moving average centers
-moving_avg_centers, moving_width = lbcc.moving_averages(calc_query_time_min, calc_query_time_max, weekday,
-                                                        number_of_days)
+
 # determine date of first AIA image
 min_ref_time = db_session.query(func.min(db_class.EUV_Images.date_obs)).filter(
     db_class.EUV_Images.instrument == ref_inst
@@ -168,6 +184,10 @@ for inst_index, instrument in enumerate(inst_list):
                                            time_min=inst_time_min - datetime.timedelta(days=number_of_days),
                                            time_max=inst_time_max + datetime.timedelta(days=number_of_days),
                                            instrument=query_instrument, wavelength=wavelengths)
+        # keep only one observation-histogram per image_center window
+        keep_ind = lbcc.cadence_choose(inst_hist_pd.date_obs, image_centers, image_del)
+        inst_hist_pd = inst_hist_pd.iloc[keep_ind]
+
         # convert binary to histogram data
         mu_bin_edges, intensity_bin_edges, inst_full_hist = psi_d_types.binary_to_hist(
             hist_binary=inst_hist_pd, n_mu_bins=None, n_intensity_bins=n_intensity_bins)
