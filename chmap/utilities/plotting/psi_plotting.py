@@ -5,6 +5,7 @@ Functions to plot EUV images and maps
 import os
 import matplotlib.pyplot as plt
 import matplotlib as mpl
+import copy
 import numpy as np
 from matplotlib.lines import Line2D
 import cv2
@@ -150,7 +151,8 @@ def PlotMap(map_plot, nfig=None, title=None, map_type=None, save_map=False,
 
 
 def map_movie_frame(map_plot, int_range, save_path='maps/synoptic/',
-                    nfig=None, title=None, map_type=None, dpi=300):
+                    nfig=None, title=None, map_type=None, dpi=300,
+                    dark=True, quality=False, no_data=False):
     """
     Plot and save a PsiMap to png file as a frame for a video.
 
@@ -172,18 +174,31 @@ def map_movie_frame(map_plot, int_range, save_path='maps/synoptic/',
                      in the future.
     :param dpi: int
                 Dots-per-inch image quality of PNG.
+    :param dark: bool
+                Flag to use a dark background for the plot (good for movies).
+    :param quality: bool
+                Flag to plot the data as a colored mu quality map instead.
+                If the 'CHD' map_type is also specified, it will mask the quality
+                map by the CH detection (above a threshold set by quality_map_plot_helper).
+    :param no_data: bool
+                Flag to plot the no-data regions as a gray strip (using masking)
     :return: None
              This routine writes a file to save_path, but has no explicit output.
     """
     # set color palette and normalization (improve by using Ron's colormap setup)
     if map_type == "CHD":
-        im_cmap = plt.get_cmap('Greys')
-        norm = mpl.colors.LogNorm(vmin=int_range[0], vmax=int_range[1])
+        im_cmap = copy.copy(plt.get_cmap('Greys'))
+        norm = mpl.colors.Normalize(vmin=int_range[0], vmax=int_range[1])
         plot_mat = map_plot.chd.astype('float32')
     else:
         norm = mpl.colors.LogNorm(vmin=int_range[0], vmax=int_range[1])
-        im_cmap = plt.get_cmap('sohoeit195')
+        im_cmap = copy.copy(plt.get_cmap('sohoeit195'))
         plot_mat = map_plot.data
+
+    # mask for no data
+    if no_data is True:
+        plot_mat = np.ma.masked_where(map_plot.data == map_plot.no_data_val, plot_mat)
+        im_cmap.set_bad('gray')
 
     # plot the initial image
     if nfig is None:
@@ -196,39 +211,37 @@ def map_movie_frame(map_plot, int_range, save_path='maps/synoptic/',
     # convert map x-extents to degrees
     x_range = [180 * map_plot.x.min() / np.pi, 180 * map_plot.x.max() / np.pi]
     # setup xticks
-    xticks = np.arange(x_range[0], x_range[1]+0.1, 60)
+    xticks = np.arange(x_range[0], x_range[1] + 0.1, 60)
 
     # setup yticks
-    yticks = np.arange(map_plot.y[0], map_plot.y[-1]+0.01, 0.5)
+    yticks = np.arange(map_plot.y[0], map_plot.y[-1] + 0.01, 0.5)
 
-    plt.style.use('dark_background')
-    plt.rcParams.update({
-        # "lines.color": "white",
-        # "patch.edgecolor": "white",
-        "text.color": "darkgray",
-        # "axes.facecolor": "white",
-        "axes.edgecolor": "darkgray",
-        "axes.labelcolor": "darkgray",
-        "xtick.color": "darkgray",
-        "ytick.color": "darkgray",
-        "grid.color": "dimgrey",
-        # "figure.facecolor": "black",
-        # "figure.edgecolor": "black",
-        # "savefig.facecolor": "black",
-        # "savefig.edgecolor": "black"
+    if dark:
+        plt.style.use('dark_background')
+        plt.rcParams.update({
+            # "lines.color": "white",
+            # "patch.edgecolor": "white",
+            "text.color": "darkgray",
+            # "axes.facecolor": "white",
+            "axes.edgecolor": "darkgray",
+            "axes.labelcolor": "darkgray",
+            "xtick.color": "darkgray",
+            "ytick.color": "darkgray",
+            "grid.color": "dimgrey",
+            # "figure.facecolor": "black",
+            # "figure.edgecolor": "black",
+            # "savefig.facecolor": "black",
+            # "savefig.edgecolor": "black"
+        })
+    else:
+        plt.rcParams.update({
+            "grid.color": "dimgrey",
         })
 
-    #plt.style.use('grayscale')
+    # plt.style.use('grayscale')
     # plt.figure(nfig, figsize=[6.4, 3.5], tight_layout=True)
     plt.figure(nfig, figsize=[6.4, 3.5])
     plt.subplots_adjust(left=0.10, bottom=0.11, right=0.97, top=0.95, wspace=0., hspace=0.)
-    if map_type == 'Contour':
-        x_extent = np.linspace(x_range[0], x_range[1], len(map_plot.x))
-        plt.contour(x_extent, map_plot.y, map_plot.data, origin="lower", cmap=im_cmap,
-                    extent=[x_range[0], x_range[1], map_plot.y.min(), map_plot.y.max()])
-    else:
-        plt.imshow(plot_mat, extent=[x_range[0], x_range[1], map_plot.y.min(), map_plot.y.max()],
-                   origin="lower", cmap=im_cmap, aspect=90.0, norm=norm)
     plt.xlabel("Carrington Longitude")
     plt.ylabel("Sine Latitude")
     plt.xticks(xticks)
@@ -239,8 +252,34 @@ def map_movie_frame(map_plot, int_range, save_path='maps/synoptic/',
     if title is not None:
         plt.title(title)
 
+    # Plot the map
+    plt.imshow(plot_mat, extent=[x_range[0], x_range[1], map_plot.y.min(), map_plot.y.max()],
+               origin="lower", cmap=im_cmap, aspect=90.0, norm=norm)
+
+    # if its a quality map, call imshow again for each instrument to create overlays
+    if quality is True:
+        # setup the quality map arrays/colors/norm
+        mask_chd = map_type == 'CHD'
+        inst_list, mu_dict, color_dict = quality_plot_helper(map_plot, mask_chd=mask_chd)
+        norm = mpl.colors.Normalize(vmin=int_range[0], vmax=int_range[1])
+        custom_lines = []
+        # loop over each instrument, plot the quality map. custom_lines are for the legend.
+        for inst_ind, inst in enumerate(inst_list):
+            plot_mat = mu_dict[inst]
+            im_cmap = plt.get_cmap(color_dict[inst])
+            plt.imshow(plot_mat, extent=[x_range[0], x_range[1], map_plot.y.min(), map_plot.y.max()],
+                       origin="lower", cmap=im_cmap, aspect=90.0, norm=norm)
+            custom_lines.append(Line2D([0], [0], color=im_cmap(0.7), lw=2))
+        # draw the legend (fine tune bbox_to_anchor through trial and error).
+        bbox_to_anchor = (-0.085, -0.185)
+        plt.legend(custom_lines, inst_list, ncol=3, loc='lower left', fontsize='small',
+                   columnspacing=1.0, handlelength=1.60, frameon=False,
+                   bbox_to_anchor=bbox_to_anchor)
+
     # plt.show(block=False)
     plt.savefig(save_path, dpi=dpi)
+
+    plt.close()
 
     return None
 
@@ -429,6 +468,89 @@ def Plot1d_Hist(norm_hist, instrument, inst_index, intensity_bin_edges, color_li
     if save is not None:
         plt.savefig('maps/iit/' + save)
     return None
+
+
+def quality_plot_helper(map, mask_chd=False):
+    """
+    Setup the plot arrays for the quality map so that it can be more easily
+    dropped into any of our plotting subroutines.
+
+    The data_info pd/dictionary tag is used to determine which pixels in the
+    origin image are from each instrument.
+
+    Parameters
+    ----------
+    map : PsiMap
+        PsiMap class structure with the 2D data arrays.
+    mask_chd : bool
+        Flag to mask the output arrays with the CH map.
+
+    Returns
+    -------
+    inst_list : list
+        List of the instrument names found in the image.
+    mu_dict : dict
+        Contains the masked numpy arrays of the mu map for each instrument, indexed
+        by the instrument names in inst_list.
+    color_dict : dict
+        Contains the color map for each instrument image, indexed by inst_list.
+    """
+    # local names for the 2D data arrays
+    data_info = map.data_info
+    origin_image = map.origin_image
+    mu = map.mu
+
+    # get list of origin images
+    origins = np.unique(origin_image)
+
+    # create array of strings that is the same shape as euv/chd origin_image
+    name_array = np.empty(origin_image.shape, dtype=str)
+
+    # fill the array of strings with instrument names
+    for id in origins:
+        data_index = np.where(data_info['data_id'] == id)
+        instrument = data_info['instrument'].iloc[data_index[0]]
+        if len(instrument) != 0:
+            name_array = np.where(origin_image != id, name_array, instrument.iloc[0])
+
+    # list of unique instruments in the array
+    inst_list = list(data_info.instrument)
+
+    # generate the dictionaries that will be used for plotting (UPDATE THIS FOR NEW INSTRUMENTS)
+    color_dict = {'AIA': 'Reds', 'EUVI-A': 'Blues', 'EUVI-B': 'Greens'}
+    mu_dict = {}
+
+    # get the masked mu arrays for each instrument
+    for inst_ind, inst in enumerate(inst_list):
+
+        # create an array with ones only where its the desired instrument
+        use_image = np.zeros(name_array.shape)
+        use_image = np.where(name_array == inst, 1.0, use_image)
+
+        # mu values less than 0 become eps value
+        eps = 1e-4
+        mu_values = mu
+        mu_values = np.where(mu_values > 0, mu_values, eps)
+        # add mu weighting to data
+        plot_data = use_image * mu_values
+
+        # mask the image by the no data value
+        no_data_mask = np.where(map.data == map.no_data_val, 0.0, 1.0)
+        plot_data = plot_data * no_data_mask
+
+        # if you are doing a coronal hole quality map, mask by 0
+        if mask_chd:
+            chd_mask = np.where(map.chd >= 0.5, 1.0, 0.0)
+            plot_data = plot_data * chd_mask
+
+        # mask invalid values
+        plot_data = np.ma.array(plot_data)
+        plot_data_masked = np.ma.masked_where(plot_data <= 0, plot_data)
+
+        # add them to the mu dictionary
+        mu_dict[inst] = plot_data_masked
+
+    return inst_list, mu_dict, color_dict
 
 
 def PlotQualityMap(map_plot, origin_image, inst_list, color_list, nfig=None, title=None, map_type=None):
