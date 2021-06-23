@@ -10,7 +10,8 @@ import chmap.maps.util.map_manip as map_manip
 
 
 def coronal_flux(db_session, chd_contour, frame_timestamp, map_dir,
-                 window_half_width=datetime.timedelta(hours=12)):
+                 window_half_width=datetime.timedelta(hours=12),
+                 chd_mags=None):
     window_min = frame_timestamp - window_half_width
     window_max = frame_timestamp + window_half_width
 
@@ -74,6 +75,9 @@ def coronal_flux(db_session, chd_contour, frame_timestamp, map_dir,
     # convert area characteristic of mesh back to map grid
     map_da = np.flip(map_mesh.da.transpose(), axis=0)
     # sum total flux
-    chd_flux = map_manip.br_flux_indices(interp_map, y_index, x_index, map_da)
+    net_flux = map_manip.br_flux_indices(interp_map, y_index, x_index, map_da,
+                                         chd_magnitude=chd_mags)
+    abs_flux = map_manip.br_abs_flux_indices(interp_map, y_index, x_index, map_da,
+                                             chd_magnitude=chd_mags)
 
-    return chd_flux
+    return net_flux, abs_flux

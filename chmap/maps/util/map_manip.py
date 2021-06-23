@@ -1286,3 +1286,34 @@ def br_flux_indices(br_map, y_index, x_index, map_da, chd_magnitude=None):
                           chd_magnitude)
 
     return chd_flux
+
+
+def br_abs_flux_indices(br_map, y_index, x_index, map_da, chd_magnitude=None):
+    """
+    Use information from a Contour object to calculate coronal hole absolute
+     (or unsigned) flux.
+
+    :param br_map: modules.datatypes.PsiMap
+                   PsiMap object containing a map of radial magnetic field magnitudes.
+    :param y_index: list-like
+                    Row (latitude) indices of coronal hole pixels. Indices must refer
+                    to position in the br_map.data array.
+    :param x_index: list-like
+                    Column (longitude) indices of coronal hole pixels. Indices must refer
+                    to position in the br_map.data array.
+    :param chd_magnitude: list-like
+                          Coronal hole detection proportion (0.0 to 1.0).
+    :param map_da: array-like
+                   Area of each pixel in br_map
+    :return: float
+             The total unsigned flux of pixels specified by x_index and y_index.
+    """
+    if chd_magnitude is None:
+        # sum total flux
+        chd_flux = np.sum(np.abs(br_map.data[y_index, x_index]) * map_da[y_index, x_index])
+    else:
+        # sum weighted total flux
+        chd_flux = np.sum(np.abs(br_map.data[y_index, x_index]) * map_da[y_index, x_index] *
+                          chd_magnitude)
+
+    return chd_flux
