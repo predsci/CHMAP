@@ -8,6 +8,7 @@ import matplotlib as mpl
 import copy
 import numpy as np
 from matplotlib.lines import Line2D
+from astropy.visualization import HistEqStretch, ImageNormalize
 import cv2
 
 import chmap.utilities.datatypes.datatypes as psi_dt
@@ -38,9 +39,22 @@ def PlotImage(los_image, nfig=None, mask_rad=1.5, title=None):
 
     # set color palette and normalization (improve by using Ron's colormap setup)
     norm_max = max(1.01, np.nanmax(plot_arr))
-    norm = mpl.colors.LogNorm(vmin=1.0, vmax=norm_max)
-    # norm = mpl.colors.LogNorm()
-    im_cmap = plt.get_cmap('sohoeit195')
+
+    if los_image.info["instrument"] == "AIA":
+        cmap_str = "sdoaia" + str(los_image.info["wavelength"])
+        norm = mpl.colors.LogNorm(vmin=10., vmax=norm_max)
+        # cmap_str = 'sohoeit195'
+    elif los_image.info["instrument"] in ("EUVI-A", "EUVI-B"):
+        cmap_str = "sohoeit" + str(los_image.info["wavelength"])
+        norm = mpl.colors.LogNorm(vmin=1.0, vmax=norm_max)
+    else:
+        cmap_str = 'sohoeit195'
+        norm = mpl.colors.LogNorm(vmin=1.0, vmax=norm_max)
+    im_cmap = plt.get_cmap(cmap_str)
+
+    # set x and y ticks
+    xticks = (-1., 0.,  1.)
+    yticks = (-1., 0.,  1.)
 
     # plot the initial image
     if nfig is None:
@@ -56,6 +70,9 @@ def PlotImage(los_image, nfig=None, mask_rad=1.5, title=None):
                origin="lower", cmap=im_cmap, aspect="equal", norm=norm)
     plt.xlabel("x (solar radii)")
     plt.ylabel("y (solar radii)")
+    plt.xticks(xticks)
+    plt.yticks(yticks)
+    plt.grid(alpha=0.6, linestyle='dashed', lw=0.5)
     if title is not None:
         plt.title(title)
 
@@ -156,7 +173,7 @@ def map_movie_frame(map_plot, int_range, save_path='maps/synoptic/',
     """
     Plot and save a PsiMap to png file as a frame for a video.
 
-    :param map_plot: modules.datatypes.PsiMap
+    :param map_plot: utilities.datatypes.datatypes.PsiMap
                      The map to plot.
     :param int_range: list (float) [min intensity, max intensity]
                       Minimum and maximum values considered in the plotting
@@ -425,7 +442,7 @@ def Plot_LBCC_Hists(plot_hist, date_obs, instrument, intensity_bin_edges, mu_bin
     plt.imshow(plot_hist, aspect="auto", interpolation='nearest', origin='lower',
                extent=[intensity_bin_edges[0], intensity_bin_edges[-2] + 1., mu_bin_edges[0],
                        mu_bin_edges[-1]])
-    plt.xlabel("Pixel intensities")
+    plt.xlabel("Pixel log10 intensity")
     plt.ylabel("mu")
     plt.title("Raw 2D Histogram Data: \n" + "Instrument: " + instrument + " \n " + str(date_obs))
 
@@ -441,7 +458,7 @@ def Plot_LBCC_Hists(plot_hist, date_obs, instrument, intensity_bin_edges, mu_bin
     plt.imshow(norm_hist, aspect="auto", interpolation='nearest', origin='lower',
                extent=[intensity_bin_edges[0], intensity_bin_edges[-1], mu_bin_edges[0],
                        mu_bin_edges[-1]])
-    plt.xlabel("Pixel intensities")
+    plt.xlabel("Pixel log10 intensity")
     plt.ylabel("mu")
     plt.title(
         "2D Histogram Data Normalized by mu Bin: \n" + "Instrument: " + instrument + " \n " + str(date_obs))

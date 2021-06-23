@@ -48,6 +48,9 @@ nav:
       - Supervised Detection: ml/supervised.md
       - Unsupervised Detection: ml/unsupervised.md
   - CH-Net Future Frame Predictions: ml/pred.md
+  - Jupyter Examples:
+      - EUV Image query and plot: examples/Introduction.ipynb
+      - Limb Correction: examples/Limb-Correction.ipynb
 
 # theme
 theme:
@@ -62,6 +65,7 @@ theme:
 plugins:
   - search:
       lang: en
+  - mkdocs-jupyter
 
 # extensions
 markdown_extensions:

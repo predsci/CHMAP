@@ -167,7 +167,7 @@ def calc_theoretic_fit(db_session, inst_list, calc_query_time_min, calc_query_ti
 
         # keep only one observation-histogram per image_center window
         keep_ind = lbcc.cadence_choose(pd_hist.date_obs, image_centers, image_del)
-        pd_hist = pd_hist.iloc[keep_ind]
+        pd_hist = pd_hist_all.iloc[keep_ind]
 
         # convert the binary types back to arrays
         mu_bin_array, intensity_bin_array, full_hist = psi_d_types.binary_to_hist(
@@ -482,10 +482,11 @@ def generate_theoretic_plots(db_session, inst_list, plot_query_time_min, plot_qu
         plt.subplots_adjust(right=0.8)
         plt.grid()
 
-        plot_fname = image_out_path + instrument + '_beta_' + year + "-" + time_period.replace(" ", "") + '.pdf'
-        plt.savefig(plot_fname)
+        if image_out_path is not None:
+            plot_fname = image_out_path + instrument + '_beta_' + year + "-" + time_period.replace(" ", "") + '.pdf'
+            plt.savefig(plot_fname)
 
-        plt.close(10 + inst_index)
+            plt.close(10 + inst_index)
 
         # plot y for the different models as a function of time
         plt.figure(20 + inst_index)
@@ -510,10 +511,11 @@ def generate_theoretic_plots(db_session, inst_list, plot_query_time_min, plot_qu
         plt.subplots_adjust(right=0.8)
         plt.grid()
 
-        plot_fname = image_out_path + instrument + '_y_' + year + "-" + time_period.replace(" ", "") + '.pdf'
-        plt.savefig(plot_fname)
+        if image_out_path is not None:
+            plot_fname = image_out_path + instrument + '_y_' + year + "-" + time_period.replace(" ", "") + '.pdf'
+            plt.savefig(plot_fname)
 
-        plt.close(20 + inst_index)
+            plt.close(20 + inst_index)
 
         #### BETA AND Y v. MU FOR SPECIFIED WEEK #####
 
@@ -537,10 +539,11 @@ def generate_theoretic_plots(db_session, inst_list, plot_query_time_min, plot_qu
                   title="model")
         plt.grid()
 
-        plot_fname = image_out_path + instrument + '_beta_v_mu_' + year + "-" + time_period.replace(" ", "") + '.pdf'
-        plt.savefig(plot_fname)
+        if image_out_path is not None:
+            plot_fname = image_out_path + instrument + '_beta_v_mu_' + year + "-" + time_period.replace(" ", "") + '.pdf'
+            plt.savefig(plot_fname)
 
-        plt.close(100 + inst_index)
+            plt.close(100 + inst_index)
 
         # repeat for y
         plt.figure(200 + inst_index)
@@ -558,10 +561,11 @@ def generate_theoretic_plots(db_session, inst_list, plot_query_time_min, plot_qu
                   title="model")
         plt.grid()
 
-        plot_fname = image_out_path + instrument + '_y_v_mu_' + year + "-" + time_period.replace(" ", "") + '.pdf'
-        plt.savefig(plot_fname)
+        if image_out_path is not None:
+            plot_fname = image_out_path + instrument + '_y_v_mu_' + year + "-" + time_period.replace(" ", "") + '.pdf'
+            plt.savefig(plot_fname)
 
-        plt.close(200 + inst_index)
+            plt.close(200 + inst_index)
 
     end_time_tot = time.time()
     print("Theoretical plots of beta and y over time hvae been generated and saved.")

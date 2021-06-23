@@ -1583,8 +1583,7 @@ def pdseries_tohdf(pd_series):
 
 
 def query_hist(db_session, meth_id, n_mu_bins=None, n_intensity_bins=None, lat_band=None,
-               time_min=None,
-               time_max=None, instrument=None, wavelength=None):
+               time_min=None, time_max=None, instrument=None, wavelength=None):
     """
     query histogram based on time frame
     @param db_session:
