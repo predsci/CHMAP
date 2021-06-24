@@ -115,6 +115,6 @@ def set_up_plt_figure(image, n_p, n_t, title, filename, origin, cmap=None):
 
     # save figure in filename.
     if filename is not False:
-        plt.savefig(filename)
+        plt.savefig(filename, dpi=300)
 
     plt.close()
