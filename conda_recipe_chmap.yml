@@ -1,4 +1,4 @@
-name: chd
+name: chmap
 channels:
   - defaults
   - conda-forge
@@ -19,3 +19,5 @@ dependencies:
   - scikit-learn >= 0.24
   - networkx >= 2.5
   - notebook
+  - mkdocs-material
+  - mkdocs-jupyter

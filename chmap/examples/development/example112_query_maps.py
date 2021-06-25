@@ -62,7 +62,7 @@ map_info.keys()
 map_info.date_mean
 
 # iterate through the rows of map_info
-for row_index, row in map_info.iterrows():
+for row_index, row in map_info.iterrows():`
     print("Processing map for:", row.date_mean)
     # load map (some older maps have a leading '/' that messes with os.path.join
     if row.fname[0] == "/":
@@ -87,6 +87,7 @@ for row_index, row in map_info.iterrows():
 # Simple plotting
 EasyPlot.PlotMap(my_map, nfig=0)
 EasyPlot.PlotMap(my_map, nfig=1, map_type="CHD")
+EasyPlot.PlotMap(my_map, nfig=2, map_type="Contour")
 
 # close database connection
 db_session.close()

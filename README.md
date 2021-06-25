@@ -1,23 +1,45 @@
-## Alpha Version!!!
-A full release of this software is expected in the next couple of months, but is currently a work in progress. Code may be buggy and/or poorly documented at this time.
+# CHMAP: Coronal Hole Mapping and Analysis Pipeline
 
-# CHD
-A Python-based data acquisition and analysis pipeline for Coronal Hole Identification, Tracking, and Analysis.
+CHMAP is a python package focused on the detection, mapping, tracking, and
+general analysis of coronal holes in the solar corona.
+
+CHMAP includes methods for:
+
+- Data Acquisition
+- Data Reduction
+- Limb Brightening Correction
+- Inter-Instrument Scaling
+- Flexible Map Creation
+- Coronal Hole Detection
+- Coronal Hole Tracking
+
+Although CHMAP was designed for analyzing coronal hole evolution from seconds to
+years, many of the database, image processing, and mapping procedures are
+relevant a broad range of solar features and scientific analysis.
 
 ## Requirements
+
 This package requires a custom python environment:
+
 ```
-conda env create --file conda_recipe_chd.yml
+conda env create --file conda_recipe_chmap.yml
 ```
 
-Raw data reduction steps may also require [SSW/IDL](https://www.lmsal.com/solarsoft/) (for STEREO/EUVI) and a [GPU deconvolution algorithm](https://on-demand-gtc.gputechconf.com/gtcnew/sessionview.php?sessionName=s5209-gpu-accelerated+imaging+processing+for+nasa%27s+solar+dynamics+observatory).
+Raw data reduction steps may also
+require [SSW/IDL](https://www.lmsal.com/solarsoft/) (for STEREO/EUVI) and
+a [GPU deconvolution algorithm](https://on-demand-gtc.gputechconf.com/gtcnew/sessionview.php?sessionName=s5209-gpu-accelerated+imaging+processing+for+nasa%27s+solar+dynamics+observatory)
+.
 
-## Documentation
-Documentation site is hosted by GitHub [here](https://predsci.github.io/CHD/).
+## Database
 
-Updates to the documentation site:
-- update markdown files in mkdocs/ folder
-- commit and push the changes
-- go to the mkdocs/ folder 
-- mkdocs gh-deploy
+CHMAP uses database methods (SQLite, MySQL) to facilitate flexible interaction
+with solar imaging data and their byproducts (maps, time-series, etc).
 
+One can create their own database or use our example database [LINK COMING SOON]
+, which includes sample data and 14+ years of data-derived image correction
+coefficients.
+
+## Documentation and Examples
+
+Pipeline documentation and examples can be found
+here: [predsci.github.io/CHMAP](https://predsci.github.io/CHMAP/).
