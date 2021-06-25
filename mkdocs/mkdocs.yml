@@ -5,7 +5,7 @@ site_author: Tamar Ervin
 
 # repository information
 repo_url: https://github.com/predsci/CHMAP
-edit_uri: blob/master/CHD-mkdocs/docs/
+edit_uri: blob/master/mkdocs/docs/
 
 # site navigation
 nav:
@@ -51,6 +51,7 @@ nav:
   - Jupyter Examples:
       - EUV Image query and plot: examples/Introduction.ipynb
       - Limb Correction: examples/Limb-Correction.ipynb
+      - Inter Instrument Transform: examples/Inter-Instrument-Transform.ipynb
       - Graph Analysis and Traversal: examples/graph_analysis_mkdocs.ipynb
 
 # theme
