@@ -1,7 +1,11 @@
 # basic site info
-site_name: Coronal Hole Detection Project
-site_description: Python routines and documentation for the PSI Coronal Hole Detection Project.
-site_author: Tamar Ervin
+site_name: CHMAP
+site_description: Coronal Hole Mapping and Analysis Pipeline
+authors:
+    - Cooper Downs
+    - Tamar Ervin
+    - Opal Issan
+    - Jamie Turtle
 
 # repository information
 repo_url: https://github.com/predsci/CHMAP
@@ -49,9 +53,9 @@ nav:
       - Unsupervised Detection: ml/unsupervised.md
   - CH-Net Future Frame Predictions: ml/pred.md
   - Jupyter Examples:
-      - EUV Image query and plot: examples/Introduction.ipynb
+      - EUV Image Query and Plot: examples/Introduction.ipynb
       - Limb Correction: examples/Limb-Correction.ipynb
-      - Inter Instrument Transform: examples/Inter-Instrument-Transform.ipynb
+      - Inter-Instrument Transform: examples/Inter-Instrument-Transform.ipynb
       - Graph Analysis and Traversal: examples/graph_analysis_mkdocs.ipynb
 
 # theme

@@ -1,6 +1,6 @@
-# Welcome to the Coronal Hole Detection Project
+# Welcome to the Coronal Hole Mapping and Analysis Pipeline
 
-For Python files visit the [CHD Git repository](https://github.com/predsci/CHD).  
+For Python files visit the [CHMAP Git repository](https://github.com/predsci/CHMAP).  
 
 ## Project Outline
 
