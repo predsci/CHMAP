@@ -46,10 +46,14 @@ Such cost function will minimize the number of explored classes, and enforce the
 ![](images/north_ch_shortest_path_area_all_blue.png)
 
 ![](images/north_ch_shortest_path_and_ne_c_area0.5.png)
+
+![](images/north_ch_shortest_path_and_ne_c_flux0.5.png)
 ## South Pole Coronal Hole Evolution
 ![](images/south_ch_shortest_path_res_2_to_2.png)
 
 ![](images/south_ch_shortest_path_area.png)
 
 ![](images/south_ch_shortest_path_and_ne_c_area0.5.png)
+
+![](images/south_ch_shortest_path_and_ne_c_flux0.5.png)
 
