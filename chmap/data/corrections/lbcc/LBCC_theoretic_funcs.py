@@ -454,10 +454,14 @@ def generate_theoretic_plots(db_session, inst_list, plot_query_time_min, plot_qu
         for mu_index, mu in enumerate(sample_mu):
             for date_index, center_date in enumerate(moving_avg_centers):
                 # query for variable value
-                theoretic_query[date_index, :] = db_funcs.query_var_val(db_session, meth_name,
-                                                                        date_obs=np.datetime64(center_date).astype(
-                                                                            datetime.datetime),
-                                                                        inst_combo_query=combo_query)
+                # theoretic_query[date_index, :] = db_funcs.query_var_val(db_session, meth_name,
+                #                                                         date_obs=np.datetime64(center_date).astype(
+                #                                                             datetime.datetime),
+                #                                                         inst_combo_query=combo_query)
+                theoretic_query[date_index, :] = db_funcs.get_correction_pars(
+                    db_session, meth_name,
+                    date_obs=np.datetime64(center_date).astype(datetime.datetime),
+                    instrument=instrument)
                 plot_beta[mu_index, date_index], plot_y[mu_index, date_index] = lbcc.get_beta_y_theoretic_based(
                     theoretic_query[date_index, :], mu)
         #### BETA AND Y AS FUNCTION OF TIME ####
