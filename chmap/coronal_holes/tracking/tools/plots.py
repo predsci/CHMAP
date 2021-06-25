@@ -10,7 +10,7 @@ import cv2
 
 
 def plot_coronal_hole(ch_list, n_t, n_p, title, filename=False, plot_rect=True, plot_circle=True,
-                      circle_radius=50, thickness_circle=1, thickness_rect=2, fontscale=0.3, origin=None):
+                      circle_radius=50, thickness_circle=1, thickness_rect=2, fontscale=0.3, origin=None, dpi=200):
     """
 
     Parameters
@@ -26,6 +26,7 @@ def plot_coronal_hole(ch_list, n_t, n_p, title, filename=False, plot_rect=True, 
     circle_radius: default is 50. depends on the image dimensions.
     thickness_rect: default is 2. depends on the image dimensions.
     thickness_circle: default is 2. depends on the image dimensions.
+    dpi: matplotlib resolution. Default is 200 (dots per inch).
     fontscale: default is 0.3. depends on the image dimensions.
 
     Returns
@@ -73,10 +74,10 @@ def plot_coronal_hole(ch_list, n_t, n_p, title, filename=False, plot_rect=True, 
                     fontFace=cv2.FONT_HERSHEY_TRIPLEX, fontScale=fontscale, color=(0, 0, 0), thickness=1)
 
     # plot using matplotlib
-    set_up_plt_figure(image=final_image, n_p=n_p, n_t=n_t, title=title, filename=filename, origin=origin)
+    set_up_plt_figure(image=final_image, n_p=n_p, n_t=n_t, title=title, filename=filename, origin=origin, dpi=dpi)
 
 
-def set_up_plt_figure(image, n_p, n_t, title, filename, origin, cmap=None):
+def set_up_plt_figure(image, n_p, n_t, title, filename, origin, cmap=None, dpi=200):
     """Set up proper axis labels and ticks, include title and save figure.
 
     Parameters
@@ -87,6 +88,7 @@ def set_up_plt_figure(image, n_p, n_t, title, filename, origin, cmap=None):
     n_p: phi dimensions
     title: title of the plot
     cmap: color map
+    dpi: matplotlib plot resolution.
     filename: save file directory
 
     Returns
@@ -115,6 +117,6 @@ def set_up_plt_figure(image, n_p, n_t, title, filename, origin, cmap=None):
 
     # save figure in filename.
     if filename is not False:
-        plt.savefig(filename, dpi=300)
+        plt.savefig(filename, dpi=dpi)
 
     plt.close()

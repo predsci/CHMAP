@@ -82,7 +82,6 @@ ch_lib = CoronalHoleDB()
 # INITIALIZE DATABASE CONNECTION
 # Database paths
 map_data_dir = "/Users/opalissan/desktop/CH_DB"
-hdf_data_dir = "/Users/opalissan/desktop/CH_DB/processed_images"
 db_type = "mysql"
 user = "opalissan"
 password = ""

@@ -51,7 +51,7 @@ nav:
   - Jupyter Examples:
       - EUV Image query and plot: examples/Introduction.ipynb
       - Limb Correction: examples/Limb-Correction.ipynb
-      - Graph Analysis and Traversal: examples/graph-analysis.ipynb
+      - Graph Analysis and Traversal: examples/graph_analysis.ipynb
 
 # theme
 theme:
