@@ -4,7 +4,7 @@ site_description: Python routines and documentation for the PSI Coronal Hole Det
 site_author: Tamar Ervin
 
 # repository information
-repo_url: https://github.com/predsci/CHD
+repo_url: https://github.com/predsci/CHMAP
 edit_uri: blob/master/CHD-mkdocs/docs/
 
 # site navigation
