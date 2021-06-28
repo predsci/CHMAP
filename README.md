@@ -50,8 +50,9 @@ Copyright 2021 Predictive Science Incorporated (Apache 2.0 License).
 
 A research paper describing the initial release of CHMAP and some applications
 is currently in preparation. In the meantime, if you use CHMAP code or concepts
-in your own work, please cite the corresponding release
-on [zenodo.org](https://zenodo.org/).
+in your own work, please refer to our prior work on this topic 
+([Caplan et al., 2016](http://adsabs.harvard.edu/abs/2016ApJ...823...53C)) and cite
+the corresponding Zenodo release for CHMAP: [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.5039439.svg)](https://doi.org/10.5281/zenodo.5039439).
 
 The development of CHMAP was primarily supported by the NASA Heliophysics Guest
 Investigators program (grant NNX17AB78G). Additional support is from the
