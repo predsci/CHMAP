@@ -1395,7 +1395,7 @@ all of MD as it is not optimized for dense, information rich UIs.
   --jp-cell-editor-active-border-color: var(--jp-brand-color1);
 
   --jp-cell-prompt-width: 64px;
-  --jp-cell-prompt-font-family: 'Source Code Pro', monospace;
+  --jp-cell-prompt-font-family: var(--jp-code-font-family-default);
   --jp-cell-prompt-letter-spacing: 0px;
   --jp-cell-prompt-opacity: 1;
   --jp-cell-prompt-not-active-opacity: 0.5;
@@ -1496,7 +1496,7 @@ all of MD as it is not optimized for dense, information rich UIs.
 
   /* Sidebar-related styles */
 
-  --jp-sidebar-min-width: 180px;
+  --jp-sidebar-min-width: 250px;
 
   /* Search-related styles */
 
@@ -1637,7 +1637,7 @@ all of MD as it is not optimized for dense, information rich UIs.
 <div class="jp-Cell-inputWrapper"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput " data-mime-type="text/markdown">
 <h3 id="initialize-database-connection">Initialize Database Connection<a class="anchor-link" href="#Initialize-Database-Connection">&#182;</a></h3><p>The paths used below assume that we want to connect to a local version of the SQLite example-database and filesystem. 
-In the paths below, the example filesystem is located at '/Volumes/extdata2/CHD_DB_example'.  However, the same commands can be used to connect to the remote MySQL database.</p>
+In the paths below, the example filesystem is located at '/Volumes/extdata2/CHMAP_DB_example'.  However, the same commands can be used to connect to the remote MySQL database.</p>
 
 </div>
 </div>
@@ -1655,15 +1655,15 @@ In the paths below, the example filesystem is located at '/Volumes/extdata2/CHD_
         
         <div class="CodeMirror cm-s-jupyter">
     <div class="highlight-ipynb hl-python"><pre><span></span><span class="c1"># Database paths</span>
-<span class="n">map_data_dir</span> <span class="o">=</span> <span class="s2">&quot;/Volumes/extdata2/CHD_DB_example/maps&quot;</span>
-<span class="n">hdf_data_dir</span> <span class="o">=</span> <span class="s2">&quot;/Volumes/extdata2/CHD_DB_example/processed_images&quot;</span>
-<span class="n">raw_data_dir</span> <span class="o">=</span> <span class="s2">&quot;/Volumes/extdata2/CHD_DB_example/raw_images&quot;</span>
+<span class="n">map_data_dir</span> <span class="o">=</span> <span class="s2">&quot;/Volumes/extdata2/CHMAP_DB_example/maps&quot;</span>
+<span class="n">hdf_data_dir</span> <span class="o">=</span> <span class="s2">&quot;/Volumes/extdata2/CHMAP_DB_example/processed_images&quot;</span>
+<span class="n">raw_data_dir</span> <span class="o">=</span> <span class="s2">&quot;/Volumes/extdata2/CHMAP_DB_example/raw_images&quot;</span>
 <span class="c1"># Specify the database location. In the case of MySQL, this will be an IP address or</span>
 <span class="c1"># remote host name. For SQLite, this will be the full path to a database file.</span>
     <span class="c1"># mysql</span>
 <span class="c1"># db_loc = &quot;q.predsci.com&quot;</span>
     <span class="c1"># sqlite</span>
-<span class="n">db_loc</span> <span class="o">=</span> <span class="s2">&quot;/Volumes/extdata2/CHD_DB_example/chd_example.db&quot;</span>
+<span class="n">db_loc</span> <span class="o">=</span> <span class="s2">&quot;/Volumes/extdata2/CHMAP_DB_example/chmap_example.db&quot;</span>
 <span class="c1"># specify which database to connect to (unnecessary for SQLite)</span>
 <span class="n">mysql_db_name</span> <span class="o">=</span> <span class="s2">&quot;chd&quot;</span>
 </pre></div>
@@ -1746,7 +1746,7 @@ In the paths below, the example filesystem is located at '/Volumes/extdata2/CHD_
 
 
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain">
-<pre>Attempting to connect to SQLite DB server /Volumes/extdata2/CHD_DB_example/chd_example.db
+<pre>Attempting to connect to SQLite DB server /Volumes/extdata2/CHMAP_DB_example/chmap_example.db
 Connection successful
 
 </pre>
