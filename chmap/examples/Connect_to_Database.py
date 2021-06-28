@@ -15,8 +15,8 @@ import chmap.utilities.plotting.psi_plotting as psi_plots
 
 # INITIALIZE DATABASE CONNECTION
 # Database paths
-map_data_dir = "/Volumes/extdata2/CHD_DB_example/maps"
-hdf_data_dir = "/Volumes/extdata2/CHD_DB_example/processed_images"
+map_data_dir = "/Volumes/extdata2/CHMAP_DB_example/maps"
+hdf_data_dir = "/Volumes/extdata2/CHMAP_DB_example/processed_images"
 
 # Designate database-type and credentials
 db_type = "sqlite"       # 'sqlite'  Use local sqlite file-based db
@@ -37,7 +37,7 @@ cred_dir = "/Users/turtle/GitReps/CHD/chmap/settings"
     # mysql
 # db_loc = "q.predsci.com"
     # sqlite
-db_loc = "/Volumes/extdata2/CHD_DB_example/chd_example.db"
+db_loc = "/Volumes/extdata2/CHMAP_DB_example/chmap_example.db"
 
 # specify which database to connect to (unnecessary for SQLite)
 mysql_db_name = "chd"

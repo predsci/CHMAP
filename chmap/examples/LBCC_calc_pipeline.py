@@ -56,13 +56,13 @@ log10 = True
 lat_band = [- np.pi / 64., np.pi / 64.]
 
 # DATABASE FILE-SYSTEM PATHS
-raw_data_dir = "/Volumes/extdata2/CHD_DB_example/raw_images"
-hdf_data_dir = "/Volumes/extdata2/CHD_DB_example/processed_images"
+raw_data_dir = "/Volumes/extdata2/CHMAP_DB_example/raw_images"
+hdf_data_dir = "/Volumes/extdata2/CHMAP_DB_example/processed_images"
 
 # DATABASE CONNECTION
 create = True  # set to False to disallow writes to the database
 db_type = "sqlite"
-sqlite_path = "/Volumes/extdata2/CHD_DB_example/chd_example.db"
+sqlite_path = "/Volumes/extdata2/CHMAP_DB_example/chmap_example.db"
 db_session = init_db_conn(db_type, db_class.Base, db_loc=sqlite_path)
 
 # STORAGE PATHS AND TITLES FOR BETA/Y PLOTS

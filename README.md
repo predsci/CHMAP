@@ -27,17 +27,17 @@ conda env create --file conda_recipe_chmap.yml
 
 Raw data reduction steps may also
 require [SSW/IDL](https://www.lmsal.com/solarsoft/) (for STEREO/EUVI) and
-a [GPU deconvolution algorithm](https://on-demand-gtc.gputechconf.com/gtcnew/sessionview.php?sessionName=s5209-gpu-accelerated+imaging+processing+for+nasa%27s+solar+dynamics+observatory)
-.
+a [GPU deconvolution algorithm](https://on-demand-gtc.gputechconf.com/gtcnew/sessionview.php?sessionName=s5209-gpu-accelerated+imaging+processing+for+nasa%27s+solar+dynamics+observatory).
 
 ## Database
 
 CHMAP uses database methods (SQLite, MySQL) to facilitate flexible interaction
 with solar imaging data and their byproducts (maps, time-series, etc).
 
-One can create their own database or use our example database [LINK COMING SOON]
-, which includes sample data and 14+ years of data-derived image correction
-coefficients.
+Create your own database using CHMAP or use
+our [example database](http://www.predsci.com/chmap/example_db/CHMAP_DB_example.zip),
+which includes sample data and 14+ years of data-derived image correction
+coefficients (5.7GB).
 
 ## Documentation and Examples
 

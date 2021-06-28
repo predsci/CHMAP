@@ -41,7 +41,7 @@ frame_timestamp = datetime.datetime(2011, 2, 17, 18, 0, 30)
 window_half_width = datetime.timedelta(hours=12)
 
 # specify database paths
-sqlite_path = "/Volumes/extdata2/CHD_DB_example/chd_example.db"
+sqlite_path = "/Volumes/extdata2/CHMAP_DB_example/chmap_example.db"
 map_dir = "/Volumes/extdata2/CHD_DB/maps"
 
 # designate which database to connect to
