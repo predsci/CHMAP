@@ -43,3 +43,29 @@ coefficients (5.7GB).
 
 Pipeline documentation and examples can be found
 here: [predsci.github.io/CHMAP](https://predsci.github.io/CHMAP/).
+
+## Acknowledgements
+
+Copyright 2021 Predictive Science Incorporated (Apache 2.0 License).
+
+A research paper describing the initial release of CHMAP and some applications
+is currently in preparation. In the meantime, if you use CHMAP code or concepts
+in your own work, please cite the corresponding release
+on [zenodo.org](https://zenodo.org/).
+
+The development of CHMAP was primarily supported by the NASA Heliophysics Guest
+Investigators program (grant NNX17AB78G). Additional support is from the
+Heliophysics Supporting Research program (grants 80NSSC18K0101 & 80NSSC18K1129).
+
+## Contact
+
+Cooper Downs ([cdowns@predsci.com](mailto:cdowns@predsci.com))
+
+## Contributors
+
+- Cooper Downs
+- James Turtle
+- Tamar Ervin
+- Opal Issan
+- Ronald M. Caplan
+- Jon A. Linker
