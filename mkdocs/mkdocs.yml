@@ -20,17 +20,17 @@ nav:
       - Limb-Brightening Correction: ipp/lbc.md
       - Inter-Instrument Transformation: ipp/iit.md
   - Coronal Hole Detection:
-      - Fortran to Python: chd/f2py.md
       - CH Detection: chd/chd.md
+      - Fortran to Python: chd/f2py.md
   - Mapping:
       - Mapping Pipeline: map/map.md
       - Interpolation: map/int.md
       - Combining Maps: map/cmb.md
   - Data Products:
-      - Synoptic Maps: dp/cr.md
+      - Synchronic & Quality Maps: dp/qm.md
+      - MIDM Synoptic Maps: dp/cr.md
       - Ensemble Detection: dp/ed.md
       - Varying Threshold Maps: dp/vt.md
-      - Quality Maps: dp/qm.md
   - Database:
       - Database Basics: db/db.md
       - Database for LBC: db/lbc.md

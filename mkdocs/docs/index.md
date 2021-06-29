@@ -6,13 +6,10 @@ For Python files visit the [CHMAP Git repository](https://github.com/predsci/CHM
 
 * Data Collection
 * Image Pre-Processing:
-    * [PSF Deconvolution](CHD/ipp/psf/)
-    * [Limb-Brightening Correction](CHD/ipp/lbc/)
-    * [Inter-Instrument Transformation](CHD/ipp/iit/)
+    * [PSF Deconvolution](ipp/psf.md)
+    * [Limb-Brightening Correction](ipp/lbc.md)
+    * [Inter-Instrument Transformation](ipp/iit.md)
 * Coronal Hole Detection
 * Mapping
-
-## Project Pipeline
-Some sort of graphic here...
 
 

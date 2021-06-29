@@ -1,6 +1,11 @@
-# Quality Assurance Maps
+# Synchronic & Quality Maps
 
-The goal of these maps is to determine where data at each pixel came from, and the mu value of the origin image at that 
+Synchronic maps are a standard data product from the CHMAP pipeline. These are instantaneous full-sun maps created
+by combining co-temporal images from multiple spacecraft (e.g. STEREO-A, STEREO-B, & AIA).
+
+More examples of synchronic maps can be found on our [Coronal Hole Detection](../chd/chd.md) page.
+
+Each synchronic map has an accompanying "quality" map. The goal of a quality maps is to display where data at each pixel came from, and the cosine of the center-to-limb angle (mu) of the origin image at that 
 point.  
 
 The code for these maps is found [here](https://github.com/predsci/CHD/blob/master/chmap/maps/synchronic/quality_maps.py). 
