@@ -35,7 +35,7 @@ Heliophysics Supporting Research program (grants 80NSSC18K0101 & 80NSSC18K1129).
 ## Contact
 Cooper Downs: cdowns@predsci.com  
 James Turtle: jturtle@predsci.com   
-Ronald M. Caplan: caplanr@predsci.com 
-Jon Linker: linkerj@predsci.com
+Ronald M. Caplan: caplanr@predsci.com   
+Jon Linker: linkerj@predsci.com  
 Tamar Ervin (Intern): tamar@predsci.com  
 Opal Issan (Intern): oissan@predsci.com
