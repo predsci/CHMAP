@@ -1,15 +1,9 @@
-# Welcome to the Coronal Hole Mapping and Analysis Pipeline
+# Coronal Hole Mapping and Analysis Pipeline
 
-For Python files visit the [CHMAP Git repository](https://github.com/predsci/CHMAP).  
+Welcome to the documentation page for CHMAP: Coronal Hole Mapping and Analysis Pipeline.
 
-## Project Outline
+Please use the links on the left to navigate the project. 
 
-* Data Collection
-* Image Pre-Processing:
-    * [PSF Deconvolution](ipp/psf.md)
-    * [Limb-Brightening Correction](ipp/lbc.md)
-    * [Inter-Instrument Transformation](ipp/iit.md)
-* Coronal Hole Detection
-* Mapping
+For the source code, please visit the [CHMAP Git repository](https://github.com/predsci/CHMAP).
 
-
+Contributions are welcome!
