@@ -330,24 +330,26 @@ class CoronalHoleGraph:
 
                     nx.draw_networkx_labels(G=sub_graph, pos=pos, labels=labels, ax=ax, font_size=8)
 
-                else:
+                elif sub_graph.number_of_nodes() > 1:
                     edge_weights = nx.get_edge_attributes(G=sub_graph, name='weight')
-                    edges, weights = zip(*edge_weights.items())
 
-                    # plot nodes and labels.
-                    nx.draw(sub_graph, pos=pos, font_weight='bold', ax=ax, node_size=80,
-                            node_color=[c.to_rgba(np.array(sub_graph.nodes[ch]["color"]) / 255)
-                                        for ch in sub_graph.nodes], edgelist=[])
+                    if len(edge_weights) > 0:
+                        edges, weights = zip(*edge_weights.items())
 
-                    nx.draw_networkx_labels(G=sub_graph, pos=pos, labels=labels, ax=ax, font_size=8)
+                        # plot nodes and labels.
+                        nx.draw(sub_graph, pos=pos, font_weight='bold', ax=ax, node_size=80,
+                                node_color=[c.to_rgba(np.array(sub_graph.nodes[ch]["color"]) / 255)
+                                            for ch in sub_graph.nodes], edgelist=[])
 
-                    edge_color_bar = nx.draw_networkx_edges(sub_graph, pos=pos, edge_color=weights, edgelist=edges,
-                                                            edge_cmap=plt.cm.get_cmap('Greys'), edge_vmin=0,
-                                                            edge_vmax=1, width=3, ax=ax)
+                        nx.draw_networkx_labels(G=sub_graph, pos=pos, labels=labels, ax=ax, font_size=8)
 
-                    # nx.draw_networkx_edge_labels(G=sub_graph, pos=pos,
-                    #                              edge_labels=edge_weights, ax=ax,
-                    #                              alpha=1, font_size=5)
+                        edge_color_bar = nx.draw_networkx_edges(sub_graph, pos=pos, edge_color=weights, edgelist=edges,
+                                                                edge_cmap=plt.cm.get_cmap('Greys'), edge_vmin=0,
+                                                                edge_vmax=1, width=3, ax=ax)
+
+                        # nx.draw_networkx_edge_labels(G=sub_graph, pos=pos,
+                        #                              edge_labels=edge_weights, ax=ax,
+                        #                              alpha=1, font_size=5)
 
                 if subplots:
                     # Hide the right and top spines

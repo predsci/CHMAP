@@ -154,7 +154,7 @@ def find_contours(image, thresh, Mesh):
     # create binary threshold.
     ret, thresh = cv2.threshold(image, thresh, 1, 0)
     # find contours using opencv function.
-    contours, hierarchy = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
+    contours, hierarchy = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)[-2:]
     # draw contours.
     return plot_dilated_contours(contours=contours, Mesh=Mesh)
 
