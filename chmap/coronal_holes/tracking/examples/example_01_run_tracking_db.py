@@ -16,7 +16,6 @@ This Module includes the following operations:
 Last Modified: July 15th, 2021 (Opal)
 """
 
-
 import os
 import datetime
 import numpy as np
@@ -39,7 +38,6 @@ from chmap.maps.util.map_manip import MapMesh
 query_start = datetime.datetime(year=2007, month=3, day=1, hour=0, minute=0, second=0)
 query_end = datetime.datetime(year=2020, month=7, day=30, hour=0, minute=0, second=0)
 
-
 # ================================================================================================================
 # Step 2: Initialize directory and folder to save results (USER PARAMETERS)
 # ================================================================================================================
@@ -59,7 +57,9 @@ CoronalHoleDB.BinaryThreshold = 0.7
 # coronal hole area threshold.
 CoronalHoleDB.AreaThreshold = 5E-3
 # window to match coronal holes.
-CoronalHoleDB.window = 80
+CoronalHoleDB.window = 1
+# window time interval.
+CoronalHoleDB.window_time_interval = datetime.timedelta(days=10)
 # parameter for longitude dilation (this should be changed for larger image dimensions).
 CoronalHoleDB.gamma = 12
 # parameter for latitude dilation (this should be changed for larger image dimensions).
@@ -73,7 +73,6 @@ CoronalHoleDB.kHyper = 15
 # knn thresh
 CoronalHoleDB.kNNThresh = 0
 
-
 # initialize coronal hole tracking database.
 ch_lib = CoronalHoleDB()
 # ================================================================================================================
@@ -85,7 +84,7 @@ ch_lib = CoronalHoleDB()
 map_data_dir = "/Users/osissan/desktop/CH_DB"
 db_type = "mysql"
 user = "opalissan"
-password = ""
+password = "Solar12#"
 cred_dir = "/Users/opalissan/PycharmProjects/CHMAP/chmap/settings"
 db_loc = "q.predsci.com"
 mysql_db_name = "chd"
@@ -150,6 +149,9 @@ for row_index, row in map_info.iterrows():
     theta_coords = np.pi / 2 + np.arcsin(sinlat_coords)
     mean_timestamp = row.T[2]
 
+    # get window of frames that are within the time interval and update the history holder.
+    ch_lib.adjust_window_size(mean_timestamp=mean_timestamp, list_of_timestamps=map_info.date_mean)
+
     # save mesh map
     ch_lib.Mesh = MapMesh(p=phi_coords, t=theta_coords)
 
@@ -205,7 +207,7 @@ for row_index, row in map_info.iterrows():
     # ==================================================================================================================
     # save the connectivity graph every 1000 frames...
     # ==================================================================================================================
-    if ch_lib.frame_num % 1E2 == 0:
+    if ch_lib.frame_num % 1E3 == 0:
         # save object to pickle file.
         with open(os.path.join(dir_name + folder_name + "connectivity_graph_" +
                                str(file_name_pkl) + ".pkl"), 'wb') as f:
@@ -216,7 +218,7 @@ for row_index, row in map_info.iterrows():
         # ==============================================================================================================
         # end time
         end = time.time()
-        print("the last 1000 frames took ---", end-start)
+        print("the last 1000 frames took ---", end - start)
         # starting time
         start = time.time()
 

@@ -6,8 +6,10 @@ Last Modified: May 6th, 2021 (Opal).
 
 import json
 import numpy as np
+import datetime as dt
 from chmap.coronal_holes.tracking.src.frame import Frame
 from chmap.coronal_holes.tracking.src.knn import KNN
+from chmap.coronal_holes.tracking.src.time_interval import get_number_of_frames_in_interval
 from chmap.coronal_holes.tracking.src.areaoverlap import area_overlap, max_area_overlap
 from chmap.coronal_holes.tracking.src.graph import CoronalHoleGraph
 
@@ -20,6 +22,8 @@ class CoronalHoleDB:
     AreaThreshold = 5E-3
     # window to match coronal holes.
     window = 20
+    # window time interval (time-delta)
+    window_time_interval = dt.timedelta(days=7)
     # parameter for longitude dilation (this should be changed for larger image dimensions).
     gamma = 20
     # parameter for latitude dilation (this should be changed for larger image dimensions).
@@ -45,7 +49,7 @@ class CoronalHoleDB:
         # frame number.
         self.frame_num = 1
 
-        # data holder for previous *window* frames. TODO: is it better to use a dictionary?
+        # data holder for previous *window* frames.
         self.window_holder = [None] * self.window
 
         # color class dictionary.
@@ -126,9 +130,29 @@ class CoronalHoleDB:
         None
         """
         # remove the first frame since its not in the window interval.
-        self.window_holder.pop(0)
+        # self.window_holder.pop(0)
         # append the new frame to the end of the list.
         self.window_holder.append(frame)
+
+    def adjust_window_size(self, mean_timestamp, list_of_timestamps):
+        """Update the window holder as we add a new frame info.
+        :param mean_timestamp: the current timestamp.
+        :param list_of_timestamps: list of all the timestamps in the database.
+
+        :return:
+        """
+        # get window of frames that are within the time interval
+        new_window_size = get_number_of_frames_in_interval(curr_time=mean_timestamp,
+                                                           time_window=self.window_time_interval,
+                                                           list_of_timestamps=list_of_timestamps)
+        # if the window holder is now smaller then before.
+        if new_window_size < self.window:
+            self.window_holder = self.window_holder[-new_window_size:]
+        # this is not really possible - there is an error in the database.
+        elif new_window_size > self.window + 1:
+            raise ArithmeticError('The window size is invalid. ')
+        # update window to be the new window size.
+        self.window = new_window_size
 
     @staticmethod
     def generate_ch_color():
@@ -331,11 +355,11 @@ class CoronalHoleDB:
                     # weight is based on frame proximity.
                     weight = 1 / (self.frame_num - ch.frame_num)
                     # weighted average.
-                    p.append(weight*(p1 + p2) / 2)
+                    p.append(weight * (p1 + p2) / 2)
                     # keep track of the sum of weights.
                     weight_sum += weight
                 # save the weighted average -> later used to dictate the ch id number.
-                holder.append(sum(p)/weight_sum)
+                holder.append(sum(p) / weight_sum)
             area_overlap_ratio_list.append(holder)
 
             ii += 1
