@@ -144,6 +144,10 @@ def merge_contours(c1, c2, Mesh):
     # compute the tilt of the coronal hole in spherical coordinates using PCA.
     c1.pca_tilt, c1.sig_tilt = c1.compute_coronal_hole_tilt_pca(Mesh=Mesh)
 
+    # compute net and absolute flux.
+    c1.net_flux += c2.net_flux
+    c1.abs_flux += c2.abs_flux
+
     return c1
 
 

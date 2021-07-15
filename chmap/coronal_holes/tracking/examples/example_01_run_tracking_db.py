@@ -13,7 +13,7 @@ This Module includes the following operations:
 4. Save image of the coronal hole detected frame in each iteration + save a plot of the graph then create a side
     by side (.mov)
 
-Last Modified: June 6th, 2021 (Opal)
+Last Modified: July 15th, 2021 (Opal)
 """
 
 
@@ -22,6 +22,7 @@ import datetime
 import numpy as np
 import cv2
 import pickle
+import time
 import chmap.database.db_classes as db_class
 import chmap.database.db_funs as db_funcs
 import chmap.utilities.datatypes.datatypes as psi_datatype
@@ -84,7 +85,7 @@ ch_lib = CoronalHoleDB()
 map_data_dir = "/Users/osissan/desktop/CH_DB"
 db_type = "mysql"
 user = "opalissan"
-password = ""
+password = "Solar12#"
 cred_dir = "/Users/opalissan/PycharmProjects/CHMAP/chmap/settings"
 db_loc = "q.predsci.com"
 mysql_db_name = "chd"
@@ -116,6 +117,8 @@ map_info, data_info, method_info, image_assoc = db_funcs.query_euv_maps(
 # dataframe.  It contains one row per map with a number of information columns:
 map_info.keys()
 
+# starting time - keep track of tracking algorithm efficiency.
+start = time.time()
 
 # iterate through the rows of map_info
 for row_index, row in map_info.iterrows():
@@ -199,12 +202,23 @@ for row_index, row in map_info.iterrows():
     # plot current graph in the latest window.
     # ch_lib.Graph.create_plots(save_dir=dir_name + folder_name + graph_folder + graph_file_name)
     # plt.show()
+    # ==================================================================================================================
     # save the connectivity graph every 1000 frames...
-    if ch_lib.frame_num % 1000 == 0:
+    # ==================================================================================================================
+    if ch_lib.frame_num % 1E2 == 0:
         # save object to pickle file.
         with open(os.path.join(dir_name + folder_name + "connectivity_graph_" +
                                str(file_name_pkl) + ".pkl"), 'wb') as f:
             pickle.dump(ch_lib.Graph, f)
+
+        # ==============================================================================================================
+        # print- the current time it takes to run the tracking algorithm for the last 1000 frames.
+        # ==============================================================================================================
+        # end time
+        end = time.time()
+        print("the last 1000 frames took ---", end-start)
+        # starting time
+        start = time.time()
 
     # iterate over frame number.
     ch_lib.frame_num += 1
