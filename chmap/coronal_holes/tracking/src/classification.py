@@ -13,8 +13,8 @@ from chmap.maps.util.map_manip import MapMesh
 import matplotlib.pyplot as plt
 
 
-def classify_grey_scaled_image(greyscale_image, lat_coord, lon_coord, gamma=10, beta=10, BinaryThreshold=0.7,
-                               AreaThreshold=5e-3, frame_num=0, frame_timestamp=None):
+def classify_grey_scaled_image(greyscale_image, lat_coord, lon_coord, map_dir, db_session, gamma=10, beta=10,
+                               BinaryThreshold=0.7, AreaThreshold=5e-3, frame_num=0, frame_timestamp=None):
     """ Find a list of contours (coronal hole objects) with coronal hole attributes such as
         pixel location, area, centroid, bounding box, tilt, etc... from a CH greyscale/binary map.
 
@@ -52,6 +52,13 @@ def classify_grey_scaled_image(greyscale_image, lat_coord, lon_coord, gamma=10, 
 
     frame_timestamp: (str) - Optional
             Synchronic CH Map time-stamp. This is used as an attribute of the contour object.
+
+    map_dir: (str)
+            path to directory with magnetic data to compute the flux.
+
+    db_session:
+            database session information.
+
     Returns
     -------
         list of contours.
@@ -85,7 +92,8 @@ def classify_grey_scaled_image(greyscale_image, lat_coord, lon_coord, gamma=10, 
 
     # save contour pixels of each coronal hole in the classified image.
     full_contour_list = get_list_of_contours_from_rbg(rbg_image=classified_img, color_list=color_list, Mesh=Mesh,
-                                                      frame_num=frame_num, frame_timestamp=frame_timestamp)
+                                                      frame_num=frame_num, frame_timestamp=frame_timestamp,
+                                                      db_session=db_session, map_dir=map_dir)
 
     # ================================================================================================================
     # Step 5: Force periodicity and remove small detections.

@@ -159,7 +159,7 @@ def find_contours(image, thresh, Mesh):
     return plot_dilated_contours(contours=contours, Mesh=Mesh)
 
 
-def get_list_of_contours_from_rbg(rbg_image, color_list, Mesh, frame_num=0, frame_timestamp=None):
+def get_list_of_contours_from_rbg(rbg_image, color_list, Mesh, db_session, map_dir, frame_num=0, frame_timestamp=None):
     """Save all the image pixel coordinates that are assigned to each coronal hole
     (along with other coronal hole features- such as area, centroid, etc...).
 
@@ -170,6 +170,8 @@ def get_list_of_contours_from_rbg(rbg_image, color_list, Mesh, frame_num=0, fram
     color_list: list of contour unique colors.
     frame_timestamp: frame time stamp, default is None.
     frame_num: frame id number, default is 0.
+    db_session: database session.
+    map_dir: directory to the saved magnetic data.
 
     Returns
     -------
@@ -188,5 +190,5 @@ def get_list_of_contours_from_rbg(rbg_image, color_list, Mesh, frame_num=0, fram
         coronal_hole_list.append(Contour(contour_pixels=contour_pixel,
                                          frame_num=frame_num,
                                          frame_timestamp=frame_timestamp,
-                                         Mesh=Mesh))
+                                         Mesh=Mesh, db_session=db_session, map_dir=map_dir))
     return coronal_hole_list

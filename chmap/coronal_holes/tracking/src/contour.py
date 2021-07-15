@@ -16,6 +16,7 @@ List of properties:                                         || Name of variable.
 - periodic boundary                                         || periodic_at_zero & periodic_at_2pi
 """
 import numpy as np
+import chmap.maps.magnetic.flux.br_flux as br_flux
 import json
 import cv2 as cv
 
@@ -32,7 +33,7 @@ class Contour:
         coronal hole pixel location.
     """
 
-    def __init__(self, contour_pixels, Mesh, frame_num=None, frame_timestamp=None):
+    def __init__(self, contour_pixels, Mesh, db_session, map_dir, frame_num=None, frame_timestamp=None):
         # save contour inner pixels. shape: [list(row), list(column)].
         self.contour_pixels_theta = contour_pixels[0]
         self.contour_pixels_phi = contour_pixels[1]
@@ -86,6 +87,10 @@ class Contour:
         # periodic label.
         self.periodic_at_zero = self.is_periodic_zero()
         self.periodic_at_2pi = self.is_periodic_2_pi(Mesh=Mesh)
+
+        # compute the net and absolute flux
+        self.net_flux, self.abs_flux = br_flux.coronal_flux(db_session=db_session, chd_contour=self,
+                                                            frame_timestamp=self.frame_timestamp, map_dir=map_dir)
 
     def __str__(self):
         return json.dumps(

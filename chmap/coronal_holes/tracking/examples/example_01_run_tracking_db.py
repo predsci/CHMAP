@@ -35,16 +35,16 @@ from chmap.maps.util.map_manip import MapMesh
 # ================================================================================================================
 # define map query start and end times
 # paper test case: Dec 29th 2010 to April 8th 2011.
-query_start = datetime.datetime(year=2010, month=12, day=29, hour=1, minute=0, second=0)
-query_end = datetime.datetime(year=2011, month=4, day=8, hour=12, minute=0, second=0)
+query_start = datetime.datetime(year=2007, month=3, day=1, hour=0, minute=0, second=0)
+query_end = datetime.datetime(year=2020, month=7, day=30, hour=0, minute=0, second=0)
 
 
 # ================================================================================================================
 # Step 2: Initialize directory and folder to save results (USER PARAMETERS)
 # ================================================================================================================
 # --- User Parameters ----------------------
-dir_name = "/Users/opalissan/desktop/CHT_RESULTS/"
-folder_name = "2010-12-29-2011-04-08c2hr/"
+dir_name = "/Users/osissan/desktop/CHT_RESULTS/"
+folder_name = "2007to2020/"
 graph_folder = "graphs/"
 frame_folder = "frames/"
 pickle_folder = "pkl/"
@@ -58,7 +58,7 @@ CoronalHoleDB.BinaryThreshold = 0.7
 # coronal hole area threshold.
 CoronalHoleDB.AreaThreshold = 5E-3
 # window to match coronal holes.
-CoronalHoleDB.window = 40
+CoronalHoleDB.window = 80
 # parameter for longitude dilation (this should be changed for larger image dimensions).
 CoronalHoleDB.gamma = 12
 # parameter for latitude dilation (this should be changed for larger image dimensions).
@@ -81,11 +81,11 @@ ch_lib = CoronalHoleDB()
 # --- User Parameters ----------------------
 # INITIALIZE DATABASE CONNECTION
 # Database paths
-map_data_dir = "/Users/opalissan/desktop/CH_DB"
+map_data_dir = "/Users/osissan/desktop/CH_DB"
 db_type = "mysql"
 user = "opalissan"
 password = ""
-cred_dir = "/Users/opalissan/PycharmProjects/CHDv1/chmap/settings"
+cred_dir = "/Users/opalissan/PycharmProjects/CHMAP/chmap/settings"
 db_loc = "q.predsci.com"
 mysql_db_name = "chd"
 
@@ -164,7 +164,9 @@ for row_index, row in map_info.iterrows():
                                                      frame_timestamp=mean_timestamp,
                                                      BinaryThreshold=ch_lib.BinaryThreshold,
                                                      gamma=ch_lib.gamma,
-                                                     beta=ch_lib.beta)
+                                                     beta=ch_lib.beta,
+                                                     db_session=db_session,
+                                                     map_dir=map_data_dir)
 
     # ================================================================================================================
     # Step 6: Match coronal holes detected to previous frame detections.
@@ -185,18 +187,24 @@ for row_index, row in map_info.iterrows():
     # Step 8: Plot results.
     # ================================================================================================================
     # plot connectivity sub-graphs.
-    graph_file_name = "graph_frame_" + str(ch_lib.frame_num) + ".png"
-    image_file_name = "classified_frame_" + str(ch_lib.frame_num) + ".png"
+    # graph_file_name = "graph_frame_" + str(ch_lib.frame_num) + ".png"
+    image_file_name = file_name_pkl + ".png"
 
     # plot coronal holes in the latest frame.
     plot_coronal_hole(ch_list=ch_lib.window_holder[-1].contour_list, n_t=ch_lib.Mesh.n_t, n_p=ch_lib.Mesh.n_p,
                       title="Frame: " + str(ch_lib.frame_num) + ", Time: " + str(mean_timestamp),
-                      filename=dir_name + folder_name + frame_folder + image_file_name, plot_rect=False, plot_circle=True,
-                      fontscale=0.3, circle_radius=80, thickness_rect=1, thickness_circle=1)
+                      filename=dir_name + folder_name + frame_folder + image_file_name, plot_rect=False,
+                      plot_circle=True, fontscale=0.3, circle_radius=80, thickness_rect=1, thickness_circle=1)
 
     # plot current graph in the latest window.
-    ch_lib.Graph.create_plots(save_dir=dir_name + folder_name + graph_folder + graph_file_name)
+    # ch_lib.Graph.create_plots(save_dir=dir_name + folder_name + graph_folder + graph_file_name)
     # plt.show()
+    # save the connectivity graph every 1000 frames...
+    if ch_lib.frame_num % 1000 == 0:
+        # save object to pickle file.
+        with open(os.path.join(dir_name + folder_name + "connectivity_graph_" +
+                               str(file_name_pkl) + ".pkl"), 'wb') as f:
+            pickle.dump(ch_lib.Graph, f)
 
     # iterate over frame number.
     ch_lib.frame_num += 1
@@ -213,12 +221,12 @@ with open(os.path.join(dir_name + folder_name + "connectivity_graph" + ".pkl"), 
 # ======================================================================================================================
 # Step 10: Save to video.
 # ======================================================================================================================
-SaveVid = True
+SaveVid = False
 
 if SaveVid:
     # choose codec according to format needed
     fourcc = cv2.VideoWriter_fourcc(*'mp4v')
-    video = cv2.VideoWriter(dir_name + folder_name + "tracking_vid_combined.mov", fourcc, 1, (640 * 2, 480))
+    video = cv2.VideoWriter(dir_name + folder_name + "tracking_vid_combined.mov", fourcc, 30, (1280 * 2, 960))
 
     for j in range(1, ch_lib.frame_num - 1):
         graph_file_name = "graph_frame_" + str(j) + ".png"

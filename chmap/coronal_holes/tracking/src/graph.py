@@ -39,7 +39,6 @@ class CoronalHoleGraph:
             'num_of_connected_sub_graphs': len(nx.connected_components(self.G))
         }
 
-    
     def insert_node(self, node):
         """Insert the coronal hole (node) to graph.
 
@@ -61,7 +60,9 @@ class CoronalHoleGraph:
                             frame_num=node.frame_num,
                             frame_timestamp=node.frame_timestamp,
                             count=node.count,
-                            color=node.color)
+                            color=node.color,
+                            net_flux=node.net_flux,
+                            abs_flux=node.abs_flux)
 
     def insert_edge(self, node_1, node_2, weight=0):
         """Insert an edge between two nodes (coronal hole objects)
@@ -266,7 +267,7 @@ class CoronalHoleGraph:
                 node_list.append(node)
         return node_list
 
-    def create_plots(self, save_dir=False, subplots=True, timestamps=False):
+    def create_plots(self, save_dir=False, subplots=True, timestamps=False, dpi=200):
         """Plot the resulting isolated connected sub - graphs in separate figures.
 
         Parameters
@@ -415,5 +416,5 @@ class CoronalHoleGraph:
             # fig.tight_layout()
 
             if save_dir is not False:
-                plt.savefig(save_dir)
+                plt.savefig(save_dir, dpi=dpi)
         plt.close()
