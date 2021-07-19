@@ -13,7 +13,7 @@ This Module includes the following operations:
 4. Save image of the coronal hole detected frame in each iteration + save a plot of the graph then create a side
     by side (.mov)
 
-Last Modified: July 15th, 2021 (Opal)
+Last Modified: July 19th, 2021 (Opal)
 """
 
 import os
@@ -84,7 +84,7 @@ ch_lib = CoronalHoleDB()
 map_data_dir = "/Users/osissan/desktop/CH_DB"
 db_type = "mysql"
 user = "opalissan"
-password = "Solar12#"
+password = ""
 cred_dir = "/Users/opalissan/PycharmProjects/CHMAP/chmap/settings"
 db_loc = "q.predsci.com"
 mysql_db_name = "chd"
@@ -218,7 +218,8 @@ for row_index, row in map_info.iterrows():
         # ==============================================================================================================
         # end time
         end = time.time()
-        print("the last 1000 frames took ---", end - start)
+        print("the last 1000 frames took --- (seconds)", end - start)
+        print("current window size ---", ch_lib.window)
         # starting time
         start = time.time()
 
