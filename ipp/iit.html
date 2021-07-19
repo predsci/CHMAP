@@ -1,0 +1,1657 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Coronal Hole Mapping and Analysis Pipeline">
+      
+      
+      
+      
+      <link rel="icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.2.1, mkdocs-material-7.1.10">
+    
+    
+      
+        <title>Inter-Instrument Transformation - CHMAP</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.1fe995fd.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.f1a3b89f.min.css">
+        
+          
+          
+          <meta name="theme-color" content="#000000">
+        
+      
+    
+    
+    
+      
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,400i,700%7CRoboto+Mono&display=fallback">
+        <style>:root{--md-text-font-family:"Roboto";--md-code-font-family:"Roboto Mono"}</style>
+      
+    
+    
+    
+    
+      
+
+
+    
+    
+  </head>
+  
+  
+    
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="" data-md-color-primary="black" data-md-color-accent="black">
+  
+    
+    <script>function __prefix(e){return new URL("..",location).pathname+"."+e}function __get(e,t=localStorage){return JSON.parse(t.getItem(__prefix(e)))}</script>
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#inter-instrument-transformation" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+      <header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../index.html" title="CHMAP" class="md-header__button md-logo" aria-label="CHMAP" data-md-component="logo">
+      
+  <img src="../img/psi_logo.png" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            CHMAP
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Inter-Instrument Transformation
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    
+    
+      <label class="md-header__button md-icon" for="__search">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5z"/></svg>
+      </label>
+      
+<div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" data-md-state="active" required>
+      <label class="md-search__icon md-icon" for="__search">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5z"/></svg>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"/></svg>
+      </label>
+      <button type="reset" class="md-search__icon md-icon" aria-label="Clear" tabindex="-1">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z"/></svg>
+      </button>
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+    
+      <div class="md-header__source">
+        
+<a href="https://github.com/predsci/CHMAP/" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+      </div>
+    
+  </nav>
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../index.html" title="CHMAP" class="md-nav__button md-logo" aria-label="CHMAP" data-md-component="logo">
+      
+  <img src="../img/psi_logo.png" alt="logo">
+
+    </a>
+    CHMAP
+  </label>
+  
+    <div class="md-nav__source">
+      
+<a href="https://github.com/predsci/CHMAP/" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../index.html" class="md-nav__link">
+        Home
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../about.html" class="md-nav__link">
+        About the Project
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+    
+  
+  
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_3" type="checkbox" id="__nav_3" checked>
+      
+      <label class="md-nav__link" for="__nav_3">
+        Image Pre-Processing
+        <span class="md-nav__icon md-icon"></span>
+      </label>
+      <nav class="md-nav" aria-label="Image Pre-Processing" data-md-level="1">
+        <label class="md-nav__title" for="__nav_3">
+          <span class="md-nav__icon md-icon"></span>
+          Image Pre-Processing
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="psf.html" class="md-nav__link">
+        PSF Deconvolution
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="lbc.html" class="md-nav__link">
+        Limb-Brightening Correction
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+    
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" data-md-toggle="toc" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          Inter-Instrument Transformation
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="iit.html" class="md-nav__link md-nav__link--active">
+        Inter-Instrument Transformation
+      </a>
+      
+        
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#examples-of-corrected-images" class="md-nav__link">
+    Examples of Corrected Images
+  </a>
+  
+    <nav class="md-nav" aria-label="Examples of Corrected Images">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#aia-images" class="md-nav__link">
+    AIA Images
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#euvi-a-images" class="md-nav__link">
+    EUVI-A Images
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#euvi-b-images" class="md-nav__link">
+    EUVI-B Images
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#examples-of-histograms" class="md-nav__link">
+    Examples of Histograms
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#analysis-pipeline" class="md-nav__link">
+    Analysis Pipeline
+  </a>
+  
+    <nav class="md-nav" aria-label="Analysis Pipeline">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#compute-histograms-and-save-to-database" class="md-nav__link">
+    Compute Histograms and Save to Database
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#calculate-and-save-correction-coefficients" class="md-nav__link">
+    Calculate and Save Correction Coefficients
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#apply-inter-instrument-transformation-and-plot-new-images" class="md-nav__link">
+    Apply Inter-Instrument Transformation and Plot New Images
+  </a>
+  
+    <nav class="md-nav" aria-label="Apply Inter-Instrument Transformation and Plot New Images">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#apply-iit" class="md-nav__link">
+    Apply IIT
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#generate-histogram-plots" class="md-nav__link">
+    Generate Histogram Plots
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_4" type="checkbox" id="__nav_4" >
+      
+      <label class="md-nav__link" for="__nav_4">
+        Coronal Hole Detection
+        <span class="md-nav__icon md-icon"></span>
+      </label>
+      <nav class="md-nav" aria-label="Coronal Hole Detection" data-md-level="1">
+        <label class="md-nav__title" for="__nav_4">
+          <span class="md-nav__icon md-icon"></span>
+          Coronal Hole Detection
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../chd/chd.html" class="md-nav__link">
+        CH Detection
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../chd/f2py.html" class="md-nav__link">
+        Fortran to Python
+      </a>
+    </li>
+  
+
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_5" type="checkbox" id="__nav_5" >
+      
+      <label class="md-nav__link" for="__nav_5">
+        Mapping
+        <span class="md-nav__icon md-icon"></span>
+      </label>
+      <nav class="md-nav" aria-label="Mapping" data-md-level="1">
+        <label class="md-nav__title" for="__nav_5">
+          <span class="md-nav__icon md-icon"></span>
+          Mapping
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../map/map.html" class="md-nav__link">
+        Mapping Pipeline
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../map/int.html" class="md-nav__link">
+        Interpolation
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../map/cmb.html" class="md-nav__link">
+        Combining Maps
+      </a>
+    </li>
+  
+
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_6" type="checkbox" id="__nav_6" >
+      
+      <label class="md-nav__link" for="__nav_6">
+        Data Products
+        <span class="md-nav__icon md-icon"></span>
+      </label>
+      <nav class="md-nav" aria-label="Data Products" data-md-level="1">
+        <label class="md-nav__title" for="__nav_6">
+          <span class="md-nav__icon md-icon"></span>
+          Data Products
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../dp/qm.html" class="md-nav__link">
+        Synchronic & Quality Maps
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../dp/cr.html" class="md-nav__link">
+        MIDM Synoptic Maps
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../dp/ed.html" class="md-nav__link">
+        Ensemble Detection
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../dp/vt.html" class="md-nav__link">
+        Varying Threshold Maps
+      </a>
+    </li>
+  
+
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_7" type="checkbox" id="__nav_7" >
+      
+      <label class="md-nav__link" for="__nav_7">
+        Database
+        <span class="md-nav__icon md-icon"></span>
+      </label>
+      <nav class="md-nav" aria-label="Database" data-md-level="1">
+        <label class="md-nav__title" for="__nav_7">
+          <span class="md-nav__icon md-icon"></span>
+          Database
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../db/db.html" class="md-nav__link">
+        Database Basics
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../db/lbc.html" class="md-nav__link">
+        Database for LBC
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../db/iit.html" class="md-nav__link">
+        Database for IIT
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../db/map.html" class="md-nav__link">
+        Database for Mapping
+      </a>
+    </li>
+  
+
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_8" type="checkbox" id="__nav_8" >
+      
+      <label class="md-nav__link" for="__nav_8">
+        Tracking Algorithm
+        <span class="md-nav__icon md-icon"></span>
+      </label>
+      <nav class="md-nav" aria-label="Tracking Algorithm" data-md-level="1">
+        <label class="md-nav__title" for="__nav_8">
+          <span class="md-nav__icon md-icon"></span>
+          Tracking Algorithm
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ml/tracking_overview.html" class="md-nav__link">
+        Overview
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ml/polarprojection.html" class="md-nav__link">
+        Polar Projection
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ml/latitude_weighted_dilation.html" class="md-nav__link">
+        Latitude Weighted Dilation
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ml/tracking_features.html" class="md-nav__link">
+        CH Features
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_8_5" type="checkbox" id="__nav_8_5" >
+      
+      <label class="md-nav__link" for="__nav_8_5">
+        CH Frame Matching
+        <span class="md-nav__icon md-icon"></span>
+      </label>
+      <nav class="md-nav" aria-label="CH Frame Matching" data-md-level="2">
+        <label class="md-nav__title" for="__nav_8_5">
+          <span class="md-nav__icon md-icon"></span>
+          CH Frame Matching
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ml/match_overview.html" class="md-nav__link">
+        Overview
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ml/knn.html" class="md-nav__link">
+        KNN
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ml/areaoverlap.html" class="md-nav__link">
+        Area Overlap
+      </a>
+    </li>
+  
+
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ml/connectivity.html" class="md-nav__link">
+        CH Connectivity
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ml/traversal.html" class="md-nav__link">
+        Graph Analysis
+      </a>
+    </li>
+  
+
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_9" type="checkbox" id="__nav_9" >
+      
+      <label class="md-nav__link" for="__nav_9">
+        Machine Learning Detection
+        <span class="md-nav__icon md-icon"></span>
+      </label>
+      <nav class="md-nav" aria-label="Machine Learning Detection" data-md-level="1">
+        <label class="md-nav__title" for="__nav_9">
+          <span class="md-nav__icon md-icon"></span>
+          Machine Learning Detection
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ml/chd.html" class="md-nav__link">
+        Overview
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ml/supervised.html" class="md-nav__link">
+        Supervised Detection
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ml/unsupervised.html" class="md-nav__link">
+        Unsupervised Detection
+      </a>
+    </li>
+  
+
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ml/pred.html" class="md-nav__link">
+        CH-Net Future Frame Predictions
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_11" type="checkbox" id="__nav_11" >
+      
+      <label class="md-nav__link" for="__nav_11">
+        Jupyter Examples
+        <span class="md-nav__icon md-icon"></span>
+      </label>
+      <nav class="md-nav" aria-label="Jupyter Examples" data-md-level="1">
+        <label class="md-nav__title" for="__nav_11">
+          <span class="md-nav__icon md-icon"></span>
+          Jupyter Examples
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../examples/Introduction.html" class="md-nav__link">
+        EUV Image Query and Plot
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../examples/Limb-Correction.html" class="md-nav__link">
+        Limb Correction
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../examples/Inter-Instrument-Transform.html" class="md-nav__link">
+        Inter-Instrument Transform
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../examples/graph_analysis_mkdocs.html" class="md-nav__link">
+        Traversing and Analyzing Coronal Hole Connectivity Graph
+      </a>
+    </li>
+  
+
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#examples-of-corrected-images" class="md-nav__link">
+    Examples of Corrected Images
+  </a>
+  
+    <nav class="md-nav" aria-label="Examples of Corrected Images">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#aia-images" class="md-nav__link">
+    AIA Images
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#euvi-a-images" class="md-nav__link">
+    EUVI-A Images
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#euvi-b-images" class="md-nav__link">
+    EUVI-B Images
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#examples-of-histograms" class="md-nav__link">
+    Examples of Histograms
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#analysis-pipeline" class="md-nav__link">
+    Analysis Pipeline
+  </a>
+  
+    <nav class="md-nav" aria-label="Analysis Pipeline">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#compute-histograms-and-save-to-database" class="md-nav__link">
+    Compute Histograms and Save to Database
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#calculate-and-save-correction-coefficients" class="md-nav__link">
+    Calculate and Save Correction Coefficients
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#apply-inter-instrument-transformation-and-plot-new-images" class="md-nav__link">
+    Apply Inter-Instrument Transformation and Plot New Images
+  </a>
+  
+    <nav class="md-nav" aria-label="Apply Inter-Instrument Transformation and Plot New Images">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#apply-iit" class="md-nav__link">
+    Apply IIT
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#generate-histogram-plots" class="md-nav__link">
+    Generate Histogram Plots
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          <div class="md-content" data-md-component="content">
+            <article class="md-content__inner md-typeset">
+              
+                
+                  <a href="https://github.com/predsci/CHMAP/blob/master/mkdocs/docs/ipp/iit.md" title="Edit this page" class="md-content__button md-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20.71 7.04c.39-.39.39-1.04 0-1.41l-2.34-2.34c-.37-.39-1.02-.39-1.41 0l-1.84 1.83 3.75 3.75M3 17.25V21h3.75L17.81 9.93l-3.75-3.75L3 17.25z"/></svg>
+                  </a>
+                
+                
+                <h1 id="inter-instrument-transformation">Inter-Instrument Transformation</h1>
+<p>The goal of the inter-instrument correction is to equate the intensities from one instrument to the intensities of another.
+The choice of which instrument to use as the "reference instrument" is an updatable parameter. </p>
+<h2 id="examples-of-corrected-images">Examples of Corrected Images</h2>
+<p>These images of before and after applying IIT are from the different instruments at Carrington Rotation 2108.59. These can
+be enlarged by clicking image titles.</p>
+<h3 id="aia-images">AIA Images</h3>
+<table>
+<thead>
+<tr>
+<th align="center"><a href="../img/iit/AIA_original.png">Original AIA Image</a></th>
+<th align="center"><a href="../img/iit/AIA_corrected.png">Corrected AIA Image</a></th>
+<th align="center"><a href="../img/iit/AIA_difference.png">Difference AIA Image</a></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="center"><img alt="Original AIA Image" src="../img/iit/AIA_original.png" /></td>
+<td align="center"><img alt="Corrected AIA Image" src="../img/iit/AIA_corrected.png" /></td>
+<td align="center"><img alt="Difference AIA Image" src="../img/iit/AIA_difference.png" /></td>
+</tr>
+</tbody>
+</table>
+<h3 id="euvi-a-images">EUVI-A Images</h3>
+<table>
+<thead>
+<tr>
+<th align="center"><a href="../img/iit/STA_original.png">Original STA Image</a></th>
+<th align="center"><a href="../img/iit/STA_corrected.png">Corrected STA Image</a></th>
+<th align="center"><a href="../img/iit/STA_difference.png">Difference STA Image</a></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="center"><img alt="Original STA Image" src="../img/iit/STA_original.png" /></td>
+<td align="center"><img alt="Corrected STA Image" src="../img/iit/STA_corrected.png" /></td>
+<td align="center"><img alt="Difference STA Image" src="../img/iit/STA_difference.png" /></td>
+</tr>
+</tbody>
+</table>
+<h3 id="euvi-b-images">EUVI-B Images</h3>
+<table>
+<thead>
+<tr>
+<th align="center"><a href="../img/iit/STB_original.png">Original STB Image</a></th>
+<th align="center"><a href="../img/iit/STB_corrected.png">Corrected STB Image</a></th>
+<th align="center"><a href="../img/iit/STB_difference.png">Difference STB Image</a></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="center"><img alt="Original STB Image" src="../img/iit/STB_original.png" /></td>
+<td align="center"><img alt="Corrected STB Image" src="../img/iit/STB_corrected.png" /></td>
+<td align="center"><img alt="Difference STB Image" src="../img/iit/STB_difference.png" /></td>
+</tr>
+</tbody>
+</table>
+<h2 id="examples-of-histograms">Examples of Histograms</h2>
+<p>200 Intensity Bin Histograms before and after IIT Correction.  </p>
+<table>
+<thead>
+<tr>
+<th align="center"><a href="../img/iit/hist_lbc_corrected.png">LBC Corrected Histogram</a></th>
+<th align="center"><a href="../img/iit/hist_iit_corrected.png">IIT Corrected Histogram</a></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="center"><img alt="LBC Corrected Histogram" src="../img/iit/hist_lbc_corrected.png" /></td>
+<td align="center"><img alt="IIT Corrected Histogram" src="../img/iit/hist_iit_corrected.png" /></td>
+</tr>
+</tbody>
+</table>
+<h2 id="analysis-pipeline">Analysis Pipeline</h2>
+<h3 id="compute-histograms-and-save-to-database">Compute Histograms and Save to Database</h3>
+<p>This function applies the limb-brightening correction, calculates the associated IIT histogram, and saves these histograms to the database.<br />
+The source code and example usage for this is found in the <a href="https://github.com/predsci/CHD/blob/master/analysis/iit_analysis/IIT_create_hists.py">CHD GitHub</a>
+and the generalized function can be found <a href="https://github.com/predsci/CHD/blob/master/analysis/iit_analysis/IIT_pipeline_funcs.py">here</a>.  </p>
+<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal"> 1</span>
+<span class="normal"> 2</span>
+<span class="normal"> 3</span>
+<span class="normal"> 4</span>
+<span class="normal"> 5</span>
+<span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span>
+<span class="normal">11</span>
+<span class="normal">12</span>
+<span class="normal">13</span>
+<span class="normal">14</span></pre></div></td><td class="code"><div class="codehilite"><pre><span></span><code><span class="k">def</span> <span class="nf">create_histograms</span><span class="p">(</span><span class="n">db_session</span><span class="p">,</span> <span class="n">inst_list</span><span class="p">,</span> <span class="n">lbc_query_time_min</span><span class="p">,</span> <span class="n">lbc_query_time_max</span><span class="p">,</span> <span class="n">hdf_data_dir</span><span class="p">,</span> <span class="n">n_mu_bins</span><span class="o">=</span><span class="mi">18</span><span class="p">,</span>
+                      <span class="n">n_intensity_bins</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span> <span class="n">lat_band</span><span class="o">=</span><span class="p">[</span><span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="mf">64.</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="mf">64.</span><span class="p">],</span> <span class="n">log10</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">R0</span><span class="o">=</span><span class="mf">1.01</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; </span>
+<span class="sd">    function to apply LBC, create and save histograms to the database</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">image_pd</span> <span class="o">=</span> <span class="n">db_funcs</span><span class="o">.</span><span class="n">query_euv_images</span><span class="p">(</span><span class="n">db_session</span><span class="o">=</span><span class="n">db_session</span><span class="p">,</span> <span class="n">time_min</span><span class="o">=</span><span class="n">lbc_query_time_min</span><span class="p">,</span>
+                                     <span class="n">time_max</span><span class="o">=</span><span class="n">lbc_query_time_max</span><span class="p">,</span> <span class="n">instrument</span><span class="o">=</span><span class="n">query_instrument</span><span class="p">)</span>
+    <span class="n">combo_query</span> <span class="o">=</span> <span class="n">db_funcs</span><span class="o">.</span><span class="n">query_inst_combo</span><span class="p">(</span><span class="n">db_session</span><span class="p">,</span> <span class="n">lbc_query_time_min</span><span class="p">,</span> <span class="n">lbc_query_time_max</span><span class="p">,</span>
+                                      <span class="n">meth_name</span><span class="o">=</span><span class="s2">&quot;LBCC Theoretic&quot;</span><span class="p">,</span> <span class="n">instrument</span><span class="o">=</span><span class="n">instrument</span><span class="p">)</span>
+    <span class="n">original_los</span><span class="p">,</span> <span class="n">lbcc_image</span><span class="p">,</span> <span class="n">mu_indices</span><span class="p">,</span> <span class="n">use_indices</span><span class="p">,</span> <span class="n">theoretic_query</span> <span class="o">=</span> <span class="n">lbcc_funcs</span><span class="o">.</span><span class="n">apply_lbc</span><span class="p">(</span><span class="n">db_session</span><span class="p">,</span> <span class="n">hdf_data_dir</span><span class="p">,</span> <span class="n">combo_query</span><span class="p">,</span>
+                                       <span class="n">image_row</span><span class="o">=</span><span class="n">row</span><span class="p">,</span> <span class="n">n_intensity_bins</span><span class="o">=</span><span class="n">n_intensity_bins</span><span class="p">,</span> <span class="n">R0</span><span class="o">=</span><span class="n">R0</span><span class="p">)</span>
+    <span class="n">hist</span> <span class="o">=</span> <span class="n">psi_d_types</span><span class="o">.</span><span class="n">LBCCImage</span><span class="o">.</span><span class="n">iit_hist</span><span class="p">(</span><span class="n">lbcc_image</span><span class="p">,</span> <span class="n">lat_band</span><span class="p">,</span> <span class="n">log10</span><span class="p">)</span>
+    <span class="n">iit_hist</span> <span class="o">=</span> <span class="n">psi_d_types</span><span class="o">.</span><span class="n">create_iit_hist</span><span class="p">(</span><span class="n">lbcc_image</span><span class="p">,</span> <span class="n">method_id</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">lat_band</span><span class="p">,</span> <span class="n">hist</span><span class="p">)</span>
+    <span class="n">db_funcs</span><span class="o">.</span><span class="n">add_hist</span><span class="p">(</span><span class="n">db_session</span><span class="p">,</span> <span class="n">iit_hist</span><span class="p">)</span> 
+</code></pre></div>
+</td></tr></table>
+<ul>
+<li>1.) <code>db_funcs.query_euv_images</code>  <ul>
+<li>queries database for images (from EUV_Images table) in specified date range  </li>
+</ul>
+</li>
+<li>2.) <code>db_funcs.query_inst_combo</code><ul>
+<li>queries database for closest image combinations to date observed </li>
+</ul>
+</li>
+<li>3.) <code>lbcc_funcs.apply_lbc</code>  <ul>
+<li>applies Limb-Brightening Correction to images and creates LBCCImage datatype    </li>
+</ul>
+</li>
+<li>4.) <code>psi_d_types.LBCCImage.iit_hist</code>  <ul>
+<li>calculates IIT histogram from LBC corrected data  </li>
+</ul>
+</li>
+<li>5.) <code>psi_d_types.create_iit_hist</code>  <ul>
+<li>creates IIT histogram datatype                                 </li>
+</ul>
+</li>
+<li>6.) <code>db_funcs.add_hist</code>  <ul>
+<li>saves histograms to database (table Histogram) associating an image_id, meth_id, and basic information with histogram                               </li>
+</ul>
+</li>
+</ul>
+<h3 id="calculate-and-save-correction-coefficients">Calculate and Save Correction Coefficients</h3>
+<p>This function queries the database for IIT histograms, calculates correction coefficients, and saves them to the database.<br />
+The source code and example usage for this is found in the <a href="https://github.com/predsci/CHD/blob/master/analysis/iit_analysis/IIT_calc_coefficients.py">CHD GitHub</a>
+and the generalized function can be found <a href="https://github.com/predsci/CHD/blob/master/analysis/iit_analysis/IIT_pipeline_funcs.py">here</a>.  </p>
+<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal"> 1</span>
+<span class="normal"> 2</span>
+<span class="normal"> 3</span>
+<span class="normal"> 4</span>
+<span class="normal"> 5</span>
+<span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span>
+<span class="normal">11</span>
+<span class="normal">12</span>
+<span class="normal">13</span>
+<span class="normal">14</span></pre></div></td><td class="code"><div class="codehilite"><pre><span></span><code><span class="k">def</span> <span class="nf">calc_iit_coefficients</span><span class="p">(</span><span class="n">db_session</span><span class="p">,</span> <span class="n">inst_list</span><span class="p">,</span> <span class="n">ref_inst</span><span class="p">,</span> <span class="n">calc_query_time_min</span><span class="p">,</span> <span class="n">calc_query_time_max</span><span class="p">,</span> <span class="n">weekday</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">number_of_days</span><span class="o">=</span><span class="mi">180</span><span class="p">,</span>
+                          <span class="n">n_intensity_bins</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span> <span class="n">lat_band</span><span class="o">=</span><span class="p">[</span><span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="mf">2.4</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="mf">2.4</span><span class="p">],</span> <span class="n">create</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+      <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">      function to query IIT histograms, calculate IIT coefficients, and save to database</span>
+<span class="sd">      &quot;&quot;&quot;</span>
+      <span class="n">euv_images</span> <span class="o">=</span> <span class="n">db_funcs</span><span class="o">.</span><span class="n">query_euv_images</span><span class="p">(</span><span class="n">db_session</span><span class="p">,</span> <span class="n">time_min</span><span class="o">=</span><span class="n">calc_query_time_min</span><span class="p">,</span> <span class="n">time_max</span><span class="o">=</span><span class="n">calc_query_time_max</span><span class="p">,</span>
+                                   <span class="n">instrument</span><span class="o">=</span><span class="n">ref_instrument</span><span class="p">)</span>
+      <span class="n">ref_hist_pd</span> <span class="o">=</span> <span class="n">db_funcs</span><span class="o">.</span><span class="n">query_hist</span><span class="p">(</span><span class="n">db_session</span><span class="o">=</span><span class="n">db_session</span><span class="p">,</span> <span class="n">meth_id</span><span class="o">=</span><span class="n">method_id</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">n_intensity_bins</span><span class="o">=</span><span class="n">n_intensity_bins</span><span class="p">,</span>
+                              <span class="n">lat_band</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">lat_band</span><span class="p">)</span><span class="o">.</span><span class="n">tobytes</span><span class="p">(),</span> <span class="n">time_min</span><span class="o">=</span><span class="n">calc_query_time_min</span> <span class="o">-</span> <span class="n">datetime</span><span class="o">.</span><span class="n">timedelta</span><span class="p">(</span><span class="n">days</span><span class="o">=</span><span class="n">number_of_days</span><span class="p">),</span>
+                              <span class="n">time_max</span><span class="o">=</span><span class="n">calc_query_time_max</span> <span class="o">+</span> <span class="n">datetime</span><span class="o">.</span><span class="n">timedelta</span><span class="p">(</span><span class="n">days</span><span class="o">=</span><span class="n">number_of_days</span><span class="p">),</span> <span class="n">instrument</span><span class="o">=</span><span class="n">ref_instrument</span><span class="p">)</span>
+      <span class="n">rot_images</span> <span class="o">=</span> <span class="n">db_funcs</span><span class="o">.</span><span class="n">query_euv_images_rot</span><span class="p">(</span><span class="n">db_session</span><span class="p">,</span> <span class="n">rot_min</span><span class="o">=</span><span class="n">rot_min</span><span class="p">,</span> <span class="n">rot_max</span><span class="o">=</span><span class="n">rot_max</span><span class="p">,</span>
+                                               <span class="n">instrument</span><span class="o">=</span><span class="n">query_instrument</span><span class="p">)</span>
+      <span class="n">alpha_x_parameters</span> <span class="o">=</span> <span class="n">iit</span><span class="o">.</span><span class="n">optim_iit_linear</span><span class="p">(</span><span class="n">norm_hist_ref</span><span class="p">,</span> <span class="n">norm_hist_fit</span><span class="p">,</span> <span class="n">intensity_bin_edges</span><span class="p">,</span> <span class="n">init_pars</span><span class="o">=</span><span class="n">init_pars</span><span class="p">)</span>
+      <span class="n">db_funcs</span><span class="o">.</span><span class="n">store_iit_values</span><span class="p">(</span><span class="n">db_session</span><span class="p">,</span> <span class="n">pd_hist</span><span class="p">,</span> <span class="n">meth_name</span><span class="p">,</span> <span class="n">meth_desc</span><span class="p">,</span> <span class="n">alpha_x_parameters</span><span class="o">.</span><span class="n">x</span><span class="p">,</span> <span class="n">create</span><span class="p">)</span>
+</code></pre></div>
+</td></tr></table>
+<ul>
+<li>1.) <code>db_funcs.query_euv_images</code><ul>
+<li>queries database for euv images for the reference instrument</li>
+<li>used to get a range of Carrington rotation for which to calculate fit coefficients</li>
+</ul>
+</li>
+<li>2.) <code>db_funcs.query_hist</code><ul>
+<li>queries database for histograms (from Histogram table) in specified date range  </li>
+</ul>
+</li>
+<li>3.) <code>db_funcs.query_euv_images_rot</code><ul>
+<li>queries database for euv images by Carrington rotation range</li>
+</ul>
+</li>
+<li>4.) <code>iit.optim_iit_linear</code><ul>
+<li>use linear optimization method to calculate fit parameters</li>
+<li>hist_ref and hist_fit are the reference histogram and the instrument histogram for the fit<ul>
+<li>these are determined using boolean indexing</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>5.) <code>db_funcs.store_iit_values</code><ul>
+<li>save the two fit coefficients to database using function <a href="https://github.com/predsci/CHD/blob/master/modules/DB_funs.py">store_iit_values</a><ul>
+<li>creates image combination combo_id of image_ids and dates in Images_Combos table</li>
+<li>creates association between each image_id and combo_id in Image_Combo_Assoc table</li>
+<li>creates new method “IIT” with an associated meth_id in Meth_Defs table</li>
+<li>creates new variable definitions "alpha and "x"" with an associated var_id in Var_Defs table</li>
+<li>store variable value as float in Var_Vals table with associated combo_id, meth_id, and var_id  </li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h3 id="apply-inter-instrument-transformation-and-plot-new-images">Apply Inter-Instrument Transformation and Plot New Images</h3>
+<p>This function queries the database for IIT coefficients, applies the correction, and plots resulting images.<br />
+The source code and example usage for this is found in the <a href="https://github.com/predsci/CHD/blob/master/analysis/iit_analysis/IIT_apply_correction.py">CHD GitHub</a>
+and the generalized function can be found <a href="https://github.com/predsci/CHD/blob/master/analysis/iit_analysis/IIT_pipeline_funcs.py">here</a>.</p>
+<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal"> 1</span>
+<span class="normal"> 2</span>
+<span class="normal"> 3</span>
+<span class="normal"> 4</span>
+<span class="normal"> 5</span>
+<span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span>
+<span class="normal">11</span>
+<span class="normal">12</span>
+<span class="normal">13</span>
+<span class="normal">14</span>
+<span class="normal">15</span>
+<span class="normal">16</span>
+<span class="normal">17</span>
+<span class="normal">18</span>
+<span class="normal">19</span>
+<span class="normal">20</span>
+<span class="normal">21</span>
+<span class="normal">22</span>
+<span class="normal">23</span></pre></div></td><td class="code"><div class="codehilite"><pre><span></span><code><span class="k">def</span> <span class="nf">apply_iit_correction</span><span class="p">(</span><span class="n">db_session</span><span class="p">,</span> <span class="n">hdf_data_dir</span><span class="p">,</span> <span class="n">iit_query_time_min</span><span class="p">,</span> <span class="n">iit_query_time_max</span><span class="p">,</span> <span class="n">inst_list</span><span class="p">,</span> 
+                 <span class="n">n_mu_bins</span><span class="p">,</span> <span class="n">n_intensity_bins</span><span class="p">,</span> <span class="n">n_images_plot</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">plot</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    function to query IIT correction coefficients, apply correction, and plot resulting images</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">euv_images</span> <span class="o">=</span> <span class="n">db_funcs</span><span class="o">.</span><span class="n">query_euv_images</span><span class="p">(</span><span class="n">db_session</span><span class="p">,</span> <span class="n">time_min</span><span class="o">=</span><span class="n">iit_query_time_min</span><span class="p">,</span> <span class="n">time_max</span><span class="o">=</span><span class="n">iit_query_time_max</span><span class="p">,</span>
+                                   <span class="n">instrument</span><span class="o">=</span><span class="n">ref_instrument</span><span class="p">)</span>
+    <span class="n">rot_images</span> <span class="o">=</span> <span class="n">db_funcs</span><span class="o">.</span><span class="n">query_euv_images_rot</span><span class="p">(</span><span class="n">db_session</span><span class="p">,</span> <span class="n">rot_min</span><span class="o">=</span><span class="n">rot_min</span><span class="p">,</span> <span class="n">rot_max</span><span class="o">=</span><span class="n">rot_max</span><span class="p">,</span>
+                                           <span class="n">instrument</span><span class="o">=</span><span class="n">query_instrument</span><span class="p">)</span>
+    <span class="n">combo_query_lbc</span> <span class="o">=</span> <span class="n">db_funcs</span><span class="o">.</span><span class="n">query_inst_combo</span><span class="p">(</span><span class="n">db_session</span><span class="p">,</span> <span class="n">iit_query_time_min</span><span class="p">,</span> <span class="n">iit_query_time_max</span><span class="p">,</span> <span class="n">lbc_meth_name</span><span class="p">,</span>
+                                                <span class="n">instrument</span><span class="p">)</span>
+    <span class="n">combo_query_iit</span> <span class="o">=</span> <span class="n">db_funcs</span><span class="o">.</span><span class="n">query_inst_combo</span><span class="p">(</span><span class="n">db_session</span><span class="p">,</span> <span class="n">iit_query_time_min</span><span class="p">,</span> <span class="n">iit_query_time_max</span><span class="p">,</span> <span class="n">iit_meth_name</span><span class="p">,</span>
+                                                <span class="n">instrument</span><span class="p">)</span>
+    <span class="n">original_los</span><span class="p">,</span> <span class="n">lbcc_image</span><span class="p">,</span> <span class="n">mu_indices</span><span class="p">,</span> <span class="n">use_indices</span><span class="p">,</span> <span class="n">theoretic_query</span> <span class="o">=</span> <span class="n">lbcc_funcs</span><span class="o">.</span><span class="n">apply_lbc</span><span class="p">(</span><span class="n">db_session</span><span class="p">,</span> <span class="n">hdf_data_dir</span><span class="p">,</span> <span class="n">combo_query_lbc</span><span class="p">,</span>
+                                                <span class="n">image_row</span><span class="o">=</span><span class="n">row</span><span class="p">,</span> <span class="n">n_intensity_bins</span><span class="o">=</span><span class="n">n_intensity_bins</span><span class="p">,</span> <span class="n">R0</span><span class="o">=</span><span class="n">R0</span><span class="p">)</span>
+    <span class="n">lbcc_image</span><span class="p">,</span> <span class="n">iit_image</span><span class="p">,</span> <span class="n">use_indices</span><span class="p">,</span> <span class="n">alpha</span><span class="p">,</span> <span class="n">x</span> <span class="o">=</span> <span class="n">apply_iit</span><span class="p">(</span><span class="n">db_session</span><span class="p">,</span> <span class="n">hdf_data_dir</span><span class="p">,</span> <span class="n">combo_query_iit</span><span class="p">,</span> <span class="n">lbcc_image</span><span class="p">,</span> <span class="n">use_indices</span><span class="p">,</span> <span class="n">image_row</span><span class="o">=</span><span class="n">row</span><span class="p">,</span> <span class="n">R0</span><span class="o">=</span><span class="n">R0</span><span class="p">)</span>            
+    <span class="k">if</span> <span class="n">plot</span><span class="p">:</span>
+        <span class="n">Plotting</span><span class="o">.</span><span class="n">PlotCorrectedImage</span><span class="p">(</span><span class="n">lbcc_data</span><span class="p">,</span> <span class="n">los_image</span><span class="o">=</span><span class="n">original_los</span><span class="p">,</span> <span class="n">nfig</span><span class="o">=</span><span class="mi">100</span> <span class="o">+</span> <span class="n">inst_index</span> <span class="o">*</span> <span class="mi">10</span> <span class="o">+</span> <span class="n">index</span><span class="p">,</span>
+                            <span class="n">title</span><span class="o">=</span><span class="s2">&quot;Corrected LBCC Image for &quot;</span> <span class="o">+</span> <span class="n">instrument</span><span class="p">)</span>
+        <span class="n">Plotting</span><span class="o">.</span><span class="n">PlotCorrectedImage</span><span class="p">(</span><span class="n">corrected_iit_data</span><span class="p">,</span> <span class="n">los_image</span><span class="o">=</span><span class="n">original_los</span><span class="p">,</span>
+                            <span class="n">nfig</span><span class="o">=</span><span class="mi">200</span> <span class="o">+</span> <span class="n">inst_index</span> <span class="o">*</span> <span class="mi">10</span> <span class="o">+</span> <span class="n">index</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="s2">&quot;Corrected IIT Image for &quot;</span> <span class="o">+</span> <span class="n">instrument</span><span class="p">)</span>
+        <span class="n">Plotting</span><span class="o">.</span><span class="n">PlotCorrectedImage</span><span class="p">(</span><span class="n">lbcc_data</span> <span class="o">-</span> <span class="n">corrected_iit_data</span><span class="p">,</span> <span class="n">los_image</span><span class="o">=</span><span class="n">original_los</span><span class="p">,</span>
+                            <span class="n">nfig</span><span class="o">=</span><span class="mi">300</span> <span class="o">+</span> <span class="n">inst_index</span> <span class="o">*</span> <span class="mi">10</span> <span class="o">+</span> <span class="n">index</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="s2">&quot;Difference Plot for &quot;</span> <span class="o">+</span> <span class="n">instrument</span><span class="p">)</span>
+</code></pre></div>
+</td></tr></table>
+<ul>
+<li>1.) <code>db_funcs.query_euv_images</code><ul>
+<li>queries database for images (from EUV_Images table) in specified date range  </li>
+<li>queries for reference instrument to get minimum and maximum Carrington rotation</li>
+</ul>
+</li>
+<li>2.) <code>db_funcs.query_euv_images_rot</code><ul>
+<li>queries for instrument in question based on Carrington rotation range</li>
+</ul>
+</li>
+<li>3.) <code>db_funcs.query_inst_combo</code><ul>
+<li>queries database for closest image combinations to date observed </li>
+<li>does this for both the LBC and IIT methods</li>
+</ul>
+</li>
+<li>4.) <code>lbcc_funcs.apply_lbc</code>  <ul>
+<li>applies Limb-Brightening Correction to images and creates LBCCImage datatype  </li>
+</ul>
+</li>
+<li>5.) <code>apply_iit</code>  <ul>
+<li>applies Inter-Instrument Transformation Correction to images and creates IITImage datatype </li>
+</ul>
+</li>
+<li>6.) <code>Plotting.PlotCorrectedImage</code><ul>
+<li>plots LBC images, IIT corrected images, and the difference between them                                </li>
+</ul>
+</li>
+</ul>
+<h4 id="apply-iit">Apply IIT</h4>
+<p>This is a sub-step that applies the Inter-Instrument Transformation Correction to individual image and returns the correct IIT Image. 
+It is called during the <a href="iit.html#apply-inter-instrument-transformation-and-plot-new-images">third step</a> of Inter-Instrument Transformation.</p>
+<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal"> 1</span>
+<span class="normal"> 2</span>
+<span class="normal"> 3</span>
+<span class="normal"> 4</span>
+<span class="normal"> 5</span>
+<span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span>
+<span class="normal">11</span>
+<span class="normal">12</span>
+<span class="normal">13</span></pre></div></td><td class="code"><div class="codehilite"><pre><span></span><code><span class="k">def</span> <span class="nf">apply_iit</span><span class="p">(</span><span class="n">db_session</span><span class="p">,</span> <span class="n">hdf_data_dir</span><span class="p">,</span> <span class="n">inst_combo_query</span><span class="p">,</span> <span class="n">lbcc_image</span><span class="p">,</span> <span class="n">image_row</span><span class="p">,</span> <span class="n">R0</span><span class="o">=</span><span class="mf">1.01</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    function to apply IIT to a specific image, returns corrected image</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">method_id_info</span> <span class="o">=</span> <span class="n">db_funcs</span><span class="o">.</span><span class="n">get_method_id</span><span class="p">(</span><span class="n">db_session</span><span class="p">,</span> <span class="n">meth_name</span><span class="p">,</span> <span class="n">meth_desc</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">var_names</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                                            <span class="n">var_descs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">create</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+    <span class="n">alpha_x_parameters</span> <span class="o">=</span> <span class="n">db_funcs</span><span class="o">.</span><span class="n">query_var_val</span><span class="p">(</span><span class="n">db_session</span><span class="p">,</span> <span class="n">meth_name</span><span class="p">,</span> <span class="n">date_obs</span><span class="o">=</span><span class="n">lbcc_image</span><span class="o">.</span><span class="n">date_obs</span><span class="p">,</span>
+                                                <span class="n">inst_combo_query</span><span class="o">=</span><span class="n">inst_combo_query</span><span class="p">)</span>
+    <span class="n">corrected_iit_data</span><span class="p">[</span><span class="n">use_indices</span><span class="p">]</span> <span class="o">=</span> <span class="mi">10</span> <span class="o">**</span> <span class="p">(</span><span class="n">alpha</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="n">lbcc_data</span><span class="p">[</span><span class="n">use_indices</span><span class="p">])</span> <span class="o">+</span> <span class="n">x</span><span class="p">)</span>
+    <span class="n">iit_image</span> <span class="o">=</span> <span class="n">psi_d_types</span><span class="o">.</span><span class="n">create_iit_image</span><span class="p">(</span><span class="n">lbcc_image</span><span class="p">,</span> <span class="n">corrected_iit_data</span><span class="p">,</span> <span class="n">method_id_info</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">hdf_path</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">lbcc_image</span><span class="p">,</span> <span class="n">iit_image</span><span class="p">,</span> <span class="n">use_indices</span><span class="p">,</span> <span class="n">alpha</span><span class="p">,</span> <span class="n">x</span>   
+</code></pre></div>
+</td></tr></table>
+<ul>
+<li>1.) <code>db_funcs.get_method_id</code><ul>
+<li>queries database for method id associated with method name                                                                                         </li>
+</ul>
+</li>
+<li>2.) <code>db_funcs.query_var_val</code><ul>
+<li>queries database for variable values associated with specific image (from Var_Vals table)</li>
+</ul>
+</li>
+<li>3.) <code>corrected_iit_data[use_indices] = 10 ** (alpha * np.log10(lbcc_data[use_indices]) + x)</code><ul>
+<li>applies correction to image based off alpha, x, and lbcc corrected data arrays</li>
+</ul>
+</li>
+<li>4.) <code>psi_d_types.create_iit_image</code><ul>
+<li>create IIT Image datatype from corrected IIT data</li>
+</ul>
+</li>
+</ul>
+<h3 id="generate-histogram-plots">Generate Histogram Plots</h3>
+<p>This function generates histogram plots comparing data from before and after the IIT correction.<br />
+The source code and example usage for this is found in the <a href="https://github.com/predsci/CHD/blob/master/analysis/iit_analysis/IIT_plot_hists.py">CHD GitHub</a>
+and the generalized function can be found <a href="https://github.com/predsci/CHD/blob/master/analysis/iit_analysis/IIT_pipeline_funcs.py">here</a>.  </p>
+<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal"> 1</span>
+<span class="normal"> 2</span>
+<span class="normal"> 3</span>
+<span class="normal"> 4</span>
+<span class="normal"> 5</span>
+<span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span>
+<span class="normal">11</span>
+<span class="normal">12</span>
+<span class="normal">13</span>
+<span class="normal">14</span>
+<span class="normal">15</span>
+<span class="normal">16</span>
+<span class="normal">17</span>
+<span class="normal">18</span>
+<span class="normal">19</span>
+<span class="normal">20</span>
+<span class="normal">21</span>
+<span class="normal">22</span>
+<span class="normal">23</span></pre></div></td><td class="code"><div class="codehilite"><pre><span></span><code><span class="k">def</span> <span class="nf">plot_iit_histograms</span><span class="p">(</span><span class="n">db_session</span><span class="p">,</span> <span class="n">hdf_data_dir</span><span class="p">,</span> <span class="n">hist_query_time_min</span><span class="p">,</span> <span class="n">hist_query_time_max</span><span class="p">,</span> <span class="n">inst_list</span><span class="p">,</span> <span class="n">ref_inst</span><span class="p">,</span>
+                                <span class="n">n_intensity_bins</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span> <span class="n">lat_band</span><span class="o">=</span><span class="p">[</span><span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="mf">2.4</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="mf">2.4</span><span class="p">],</span> <span class="n">R0</span><span class="o">=</span><span class="mf">1.01</span><span class="p">,</span> <span class="n">log10</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    function to create corrected IIT histograms then plot original, LBC Corrected, and IIT Corrected histograms for comparison</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">pd_hist</span> <span class="o">=</span> <span class="n">db_funcs</span><span class="o">.</span><span class="n">query_hist</span><span class="p">(</span><span class="n">db_session</span><span class="o">=</span><span class="n">db_session</span><span class="p">,</span> <span class="n">meth_id</span><span class="o">=</span><span class="n">method_id</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">n_intensity_bins</span><span class="o">=</span><span class="n">n_intensity_bins</span><span class="p">,</span>
+                              <span class="n">lat_band</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">lat_band</span><span class="p">)</span><span class="o">.</span><span class="n">tobytes</span><span class="p">(),</span> <span class="n">time_min</span><span class="o">=</span><span class="n">hist_query_time_min</span><span class="p">,</span> <span class="n">time_max</span><span class="o">=</span><span class="n">hist_query_time_max</span><span class="p">)</span>               
+    <span class="n">combo_query_lbc</span> <span class="o">=</span> <span class="n">db_funcs</span><span class="o">.</span><span class="n">query_inst_combo</span><span class="p">(</span><span class="n">db_session</span><span class="p">,</span> <span class="n">hist_query_time_min</span><span class="p">,</span> <span class="n">hist_query_time_max</span><span class="p">,</span> <span class="n">meth_name</span><span class="o">=</span><span class="s2">&quot;LBCC Theoretic&quot;</span><span class="p">,</span> <span class="n">instrument</span><span class="o">=</span><span class="n">instrument</span><span class="p">)</span>
+    <span class="n">combo_query_iit</span> <span class="o">=</span> <span class="n">db_funcs</span><span class="o">.</span><span class="n">query_inst_combo</span><span class="p">(</span><span class="n">db_session</span><span class="p">,</span> <span class="n">hist_query_time_min</span><span class="p">,</span> <span class="n">hist_query_time_max</span><span class="p">,</span> <span class="n">meth_name</span><span class="o">=</span><span class="s2">&quot;IIT&quot;</span><span class="p">,</span> <span class="n">instrument</span><span class="o">=</span><span class="n">instrument</span><span class="p">)</span>
+    <span class="n">image_pd</span> <span class="o">=</span> <span class="n">db_funcs</span><span class="o">.</span><span class="n">query_euv_images</span><span class="p">(</span><span class="n">db_session</span><span class="o">=</span><span class="n">db_session</span><span class="p">,</span> <span class="n">time_min</span><span class="o">=</span><span class="n">hist_query_time_min</span><span class="p">,</span>
+                              <span class="n">time_max</span><span class="o">=</span><span class="n">hist_query_time_max</span><span class="p">,</span> <span class="n">instrument</span><span class="o">=</span><span class="n">query_instrument</span><span class="p">)</span>
+    <span class="n">original_los</span><span class="p">,</span> <span class="n">lbcc_image</span><span class="p">,</span> <span class="n">mu_indices</span><span class="p">,</span> <span class="n">use_indices</span><span class="p">,</span> <span class="n">theoretic_query</span> <span class="o">=</span> <span class="n">lbcc_funcs</span><span class="o">.</span><span class="n">apply_lbc</span><span class="p">(</span><span class="n">db_session</span><span class="p">,</span> <span class="n">hdf_data_dir</span><span class="p">,</span> <span class="n">combo_query_lbc</span><span class="p">,</span>
+                              <span class="n">image_row</span><span class="o">=</span><span class="n">row</span><span class="p">,</span> <span class="n">n_intensity_bins</span><span class="o">=</span><span class="n">n_intensity_bins</span><span class="p">,</span> <span class="n">R0</span><span class="o">=</span><span class="n">R0</span><span class="p">)</span>
+    <span class="n">original_los_hist</span> <span class="o">=</span> <span class="n">psi_d_types</span><span class="o">.</span><span class="n">LosImage</span><span class="o">.</span><span class="n">iit_hist</span><span class="p">(</span><span class="n">original_los</span><span class="p">,</span> <span class="n">intensity_bin_edges</span><span class="p">,</span> <span class="n">lat_band</span><span class="p">,</span> <span class="n">log10</span><span class="p">)</span>
+    <span class="n">lbcc_image</span><span class="p">,</span> <span class="n">iit_image</span><span class="p">,</span> <span class="n">use_indices</span><span class="p">,</span> <span class="n">alpha</span><span class="p">,</span> <span class="n">x</span> <span class="o">=</span> <span class="n">apply_iit</span><span class="p">(</span><span class="n">db_session</span><span class="p">,</span> <span class="n">hdf_data_dir</span><span class="p">,</span> <span class="n">combo_query_iit</span><span class="p">,</span> <span class="n">lbcc_image</span><span class="p">,</span> <span class="n">use_indices</span><span class="p">,</span> <span class="n">image_row</span><span class="o">=</span><span class="n">row</span><span class="p">,</span> <span class="n">R0</span><span class="o">=</span><span class="n">R0</span><span class="p">)</span>
+    <span class="n">hist_iit</span> <span class="o">=</span> <span class="n">psi_d_types</span><span class="o">.</span><span class="n">IITImage</span><span class="o">.</span><span class="n">iit_hist</span><span class="p">(</span><span class="n">iit_image</span><span class="p">,</span> <span class="n">lat_band</span><span class="p">,</span> <span class="n">log10</span><span class="p">)</span>
+    <span class="n">Plotting</span><span class="o">.</span><span class="n">Plot1d_Hist</span><span class="p">(</span><span class="n">norm_original_hist</span><span class="p">,</span> <span class="n">instrument</span><span class="p">,</span> <span class="n">inst_index</span><span class="p">,</span> <span class="n">intensity_bin_edges</span><span class="p">,</span> <span class="n">color_list</span><span class="p">,</span>
+                     <span class="n">linestyle_list</span><span class="p">,</span> <span class="n">figure</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">xlabel</span><span class="o">=</span><span class="s2">&quot;Intensity (log10)&quot;</span><span class="p">,</span> <span class="n">ylabel</span><span class="o">=</span><span class="s2">&quot;H(I)&quot;</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="s2">&quot;Histogram: Original Image&quot;</span><span class="p">)</span>
+    <span class="n">Plotting</span><span class="o">.</span><span class="n">Plot1d_Hist</span><span class="p">(</span><span class="n">norm_lbc_hist</span><span class="p">,</span> <span class="n">instrument</span><span class="p">,</span> <span class="n">inst_index</span><span class="p">,</span> <span class="n">intensity_bin_edges</span><span class="p">,</span> <span class="n">color_list</span><span class="p">,</span> <span class="n">linestyle_list</span><span class="p">,</span>
+             <span class="n">figure</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span> <span class="n">xlabel</span><span class="o">=</span><span class="s2">&quot;Intensity (log10)&quot;</span><span class="p">,</span> <span class="n">ylabel</span><span class="o">=</span><span class="s2">&quot;H(I)&quot;</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="s2">&quot;Histogram: Post LBCC&quot;</span><span class="p">)</span>
+    <span class="n">Plotting</span><span class="o">.</span><span class="n">Plot1d_Hist</span><span class="p">(</span><span class="n">norm_corrected_hist</span><span class="p">,</span> <span class="n">instrument</span><span class="p">,</span> <span class="n">inst_index</span><span class="p">,</span> <span class="n">intensity_bin_edges</span><span class="p">,</span> <span class="n">color_list</span><span class="p">,</span> <span class="n">linestyle_list</span><span class="p">,</span>
+             <span class="n">figure</span><span class="o">=</span><span class="mi">300</span><span class="p">,</span> <span class="n">xlabel</span><span class="o">=</span><span class="s2">&quot;Intensity (log10)&quot;</span><span class="p">,</span> <span class="n">ylabel</span><span class="o">=</span><span class="s2">&quot;H(I)&quot;</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="s2">&quot;Histogram: Post IIT&quot;</span><span class="p">)</span>
+</code></pre></div>
+</td></tr></table>
+<ul>
+<li>1.) <code>db_funcs.query_hist</code><ul>
+<li>queries database for histograms (from Histogram table) in specified date range                     </li>
+</ul>
+</li>
+<li>2.) <code>db_funcs.query_euv_images</code><ul>
+<li>queries database for images (from EUV_Images table) in specified date range </li>
+</ul>
+</li>
+<li>3.) <code>db_funcs.query_inst_combo</code><ul>
+<li>queries database for closest image combinations to date observed </li>
+<li>does this for both the LBC and IIT methods</li>
+</ul>
+</li>
+<li>3.) <code>lbcc_funcs.apply_lbc</code>  <ul>
+<li>applies Limb-Brightening Correction to images and creates LBCCImage datatype </li>
+</ul>
+</li>
+<li>4.) <code>psi_d_types.LosImage.iit_hist</code><ul>
+<li>create 1D IIT Histogram from original LOS image data</li>
+</ul>
+</li>
+<li>5.) <code>apply_iit</code>  <ul>
+<li>applies Inter-Instrument Transformation Correction to images and creates IITImage datatype </li>
+</ul>
+</li>
+<li>6.) <code>psi_d_types.IITImage.iit_hist</code><ul>
+<li>create 1D IIT Histogram from corrected IIT image data   </li>
+</ul>
+</li>
+<li>7.) <code>Plotting.Plot1d_Hist</code><ul>
+<li>plot 1D Normalized IIT Histograms for original, LBC, and IIT data</li>
+</ul>
+</li>
+</ul>
+                
+              
+              
+                
+
+
+              
+            </article>
+          </div>
+        </div>
+        
+      </main>
+      
+        
+<footer class="md-footer">
+  
+    <nav class="md-footer__inner md-grid" aria-label="Footer">
+      
+        
+        <a href="lbc.html" class="md-footer__link md-footer__link--prev" aria-label="Previous: Limb-Brightening Correction" rel="prev">
+          <div class="md-footer__button md-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"/></svg>
+          </div>
+          <div class="md-footer__title">
+            <div class="md-ellipsis">
+              <span class="md-footer__direction">
+                Previous
+              </span>
+              Limb-Brightening Correction
+            </div>
+          </div>
+        </a>
+      
+      
+        
+        <a href="../chd/chd.html" class="md-footer__link md-footer__link--next" aria-label="Next: CH Detection" rel="next">
+          <div class="md-footer__title">
+            <div class="md-ellipsis">
+              <span class="md-footer__direction">
+                Next
+              </span>
+              CH Detection
+            </div>
+          </div>
+          <div class="md-footer__button md-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11H4z"/></svg>
+          </div>
+        </a>
+      
+    </nav>
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-footer-copyright">
+        
+        Made with
+        <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+          Material for MkDocs
+        </a>
+        
+      </div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    <script id="__config" type="application/json">{"base": "..", "features": [], "translations": {"clipboard.copy": "Copy to clipboard", "clipboard.copied": "Copied to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.placeholder": "Search", "search.result.placeholder": "Type to start searching", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.term.missing": "Missing", "select.version.title": "Select version"}, "search": "../assets/javascripts/workers/search.477d984a.min.js", "version": null}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.ddd52ceb.min.js"></script>
+      
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+      
+        <script src="../javascripts/config.js"></script>
+      
+        <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+      
+        <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+      
+    
+  </body>
+</html>
