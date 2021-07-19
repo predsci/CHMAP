@@ -9,7 +9,7 @@ import numpy as np
 import datetime as dt
 from chmap.coronal_holes.tracking.src.frame import Frame
 from chmap.coronal_holes.tracking.src.knn import KNN
-from chmap.coronal_holes.tracking.src.time_interval import get_number_of_frames_in_interval
+from chmap.coronal_holes.tracking.src.time_interval import get_number_of_frames_in_interval, time_distance
 from chmap.coronal_holes.tracking.src.areaoverlap import area_overlap, max_area_overlap
 from chmap.coronal_holes.tracking.src.graph import CoronalHoleGraph
 
@@ -352,8 +352,8 @@ class CoronalHoleDB:
                 weight_sum = 0
                 for ch in coronal_hole_list:
                     p1, p2 = area_overlap(ch1=ch, ch2=contour_list[ii], da=self.Mesh.da)
-                    # weight is based on frame proximity.
-                    weight = 1 / (self.frame_num - ch.frame_num)
+                    # weight is based on frame timestamp proximity measured in units of days.
+                    weight = time_distance(time_1=contour_list[ii].frame_timestamp, time_2=ch.frame_timestamp)
                     # weighted average.
                     p.append(weight * (p1 + p2) / 2)
                     # keep track of the sum of weights.
