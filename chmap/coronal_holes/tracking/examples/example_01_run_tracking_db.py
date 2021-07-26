@@ -13,7 +13,7 @@ This Module includes the following operations:
 4. Save image of the coronal hole detected frame in each iteration + save a plot of the graph then create a side
     by side (.mov)
 
-Last Modified: July 19th, 2021 (Opal)
+Last Modified: July 26th, 2021 (Opal)
 """
 
 import os
@@ -36,18 +36,24 @@ from chmap.maps.util.map_manip import MapMesh
 # define map query start and end times
 # paper test case: Dec 29th 2010 to April 8th 2011.
 query_start = datetime.datetime(year=2007, month=3, day=1, hour=0, minute=0, second=0)
-query_end = datetime.datetime(year=2020, month=7, day=30, hour=0, minute=0, second=0)
+query_end = datetime.datetime(year=2008, month=1, day=1, hour=0, minute=0, second=0)
 
 # ================================================================================================================
 # Step 2: Initialize directory and folder to save results (USER PARAMETERS)
 # ================================================================================================================
 # --- User Parameters ----------------------
 dir_name = "/Users/osissan/desktop/CHT_RESULTS/"
-folder_name = "2007to2020/"
+folder_name = "2007/"
 graph_folder = "graphs/"
 frame_folder = "frames/"
 pickle_folder = "pkl/"
 
+ReadPrevRun = False
+prev_run_dir_name = "/Users/osissan/desktop/CHT_RESULTS/"
+prev_run_folder_name = "2007to2011/"
+prev_run_graph = "connectivity_graph_2011-10-04-11-56-26.pkl"
+prev_run_latest_pkl_file = "2011-10-04-11-56-26.pkl"
+prev_run_pickle_folder = "pkl/"
 # ================================================================================================================
 # Step 3: Algorithm Hyper Parameters
 # ================================================================================================================
@@ -59,7 +65,7 @@ CoronalHoleDB.AreaThreshold = 5E-3
 # window to match coronal holes.
 CoronalHoleDB.window = 1
 # window time interval.
-CoronalHoleDB.window_time_interval = datetime.timedelta(days=10)
+CoronalHoleDB.window_time_interval = datetime.timedelta(days=6)
 # parameter for longitude dilation (this should be changed for larger image dimensions).
 CoronalHoleDB.gamma = 12
 # parameter for latitude dilation (this should be changed for larger image dimensions).
@@ -121,7 +127,7 @@ start = time.time()
 
 # iterate through the rows of map_info
 for row_index, row in map_info.iterrows():
-    print("Processing map for: " + str(row.date_mean) + ", Frame num = " + str(ch_lib.frame_num))
+    # print("Processing map for: " + str(row.date_mean) + ", Frame num = " + str(ch_lib.frame_num))
     # load map (some older maps have a leading '/' that messes with os.path.join
     if row.fname[0] == "/":
         rel_path = row.fname[1:]
@@ -147,7 +153,7 @@ for row_index, row in map_info.iterrows():
     phi_coords = my_map.x
     sinlat_coords = my_map.y
     theta_coords = np.pi / 2 + np.arcsin(sinlat_coords)
-    mean_timestamp = row.T[2]
+    mean_timestamp = row.date_mean
 
     # get window of frames that are within the time interval and update the history holder.
     ch_lib.adjust_window_size(mean_timestamp=mean_timestamp, list_of_timestamps=map_info.date_mean)
@@ -156,7 +162,20 @@ for row_index, row in map_info.iterrows():
     ch_lib.Mesh = MapMesh(p=phi_coords, t=theta_coords)
 
     # ================================================================================================================
-    # Step 5: Latitude Weighted Dilation (in longitude) + Uniform dilation (in latitude)
+    # Step 5: If this is a continuation of a previous run, read in previous run results.
+    # ================================================================================================================
+    if ch_lib.Graph.frame_num == 1 and ReadPrevRun:
+        # update the window holder.
+        ch_lib.initialize_window_holder(db_session=db_session, query_start=mean_timestamp - ch_lib.window_time_interval,
+                                        query_end=mean_timestamp, map_vars=map_vars, map_methods=map_methods,
+                                        prev_run_path=os.path.join(prev_run_dir_name, prev_run_folder_name,
+                                                                   prev_run_pickle_folder))
+
+        # update the graph.
+        ch_lib.graph = pickle.load(open(os.path.join(prev_run_dir_name, prev_run_folder_name, prev_run_graph), "rb"))
+
+    # ================================================================================================================
+    # Step 6: Latitude Weighted Dilation (in longitude) + Uniform dilation (in latitude)
     #         Compute all contour features +
     #         Force periodicity and delete small contours.
     # ================================================================================================================
@@ -165,7 +184,7 @@ for row_index, row in map_info.iterrows():
                                                      lat_coord=ch_lib.Mesh.t,
                                                      lon_coord=ch_lib.Mesh.p,
                                                      AreaThreshold=ch_lib.AreaThreshold,
-                                                     frame_num=ch_lib.frame_num,
+                                                     frame_num=ch_lib.Graph.frame_num,
                                                      frame_timestamp=mean_timestamp,
                                                      BinaryThreshold=ch_lib.BinaryThreshold,
                                                      gamma=ch_lib.gamma,
@@ -197,7 +216,7 @@ for row_index, row in map_info.iterrows():
 
     # plot coronal holes in the latest frame.
     plot_coronal_hole(ch_list=ch_lib.window_holder[-1].contour_list, n_t=ch_lib.Mesh.n_t, n_p=ch_lib.Mesh.n_p,
-                      title="Frame: " + str(ch_lib.frame_num) + ", Time: " + str(mean_timestamp),
+                      title="Frame: " + str(ch_lib.Graph.frame_num) + ", Time: " + str(mean_timestamp),
                       filename=dir_name + folder_name + frame_folder + image_file_name, plot_rect=False,
                       plot_circle=True, fontscale=0.3, circle_radius=80, thickness_rect=1, thickness_circle=1)
 
@@ -207,7 +226,7 @@ for row_index, row in map_info.iterrows():
     # ==================================================================================================================
     # save the connectivity graph every 1000 frames...
     # ==================================================================================================================
-    if ch_lib.frame_num % 1E3 == 0:
+    if ch_lib.Graph.frame_num % 1E3 == 0:
         # save object to pickle file.
         with open(os.path.join(dir_name + folder_name + "connectivity_graph_" +
                                str(file_name_pkl) + ".pkl"), 'wb') as f:
@@ -218,13 +237,15 @@ for row_index, row in map_info.iterrows():
         # ==============================================================================================================
         # end time
         end = time.time()
+        print("current frame number = ", ch_lib.Graph.frame_num)
+        print("timestamp = ", mean_timestamp)
         print("the last 1000 frames took --- (seconds)", end - start)
         print("current window size ---", ch_lib.window)
         # starting time
         start = time.time()
 
     # iterate over frame number.
-    ch_lib.frame_num += 1
+    ch_lib.Graph.frame_num += 1
 # close database connection
 db_session.close()
 
@@ -232,7 +253,7 @@ db_session.close()
 # Step 9: Save Connectivity Graph.
 # ================================================================================================================
 # save object to pickle file.
-with open(os.path.join(dir_name + folder_name + "connectivity_graph" + ".pkl"), 'wb') as f:
+with open(os.path.join(dir_name + folder_name + "total_connectivity_graph" + ".pkl"), 'wb') as f:
     pickle.dump(ch_lib.Graph, f)
 
 # ======================================================================================================================
@@ -245,7 +266,7 @@ if SaveVid:
     fourcc = cv2.VideoWriter_fourcc(*'mp4v')
     video = cv2.VideoWriter(dir_name + folder_name + "tracking_vid_combined.mov", fourcc, 30, (1280 * 2, 960))
 
-    for j in range(1, ch_lib.frame_num - 1):
+    for j in range(1, ch_lib.Graph.frame_num - 1):
         graph_file_name = "graph_frame_" + str(j) + ".png"
         image_file_name = "classified_frame_" + str(j) + ".png"
         img1 = cv2.imread(dir_name + folder_name + frame_folder + image_file_name)

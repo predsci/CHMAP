@@ -27,6 +27,12 @@ class CoronalHoleGraph:
         self.y_window = 10
         # number of connected sub-graphs to plot
         self.plot_num_subgraphs = 5
+        # color dict.
+        self.color_dict = dict()
+        # total number of coronal holes.
+        self.total_num_of_coronal_holes = 0
+        # current frame number.
+        self.frame_num = 1
 
     def __str__(self):
         return json.dumps(

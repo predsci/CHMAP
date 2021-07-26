@@ -1,15 +1,16 @@
 """A data structure for a set of coronal hole tracking (CHT) algorithm.
 Module purposes: (1) used as a holder for a window of frames and (2) matches coronal holes between frames.
 
-Last Modified: May 6th, 2021 (Opal).
+Last Modified: July 21st, 2021 (Opal).
 """
 
 import json
 import numpy as np
 import datetime as dt
+import pickle
 from chmap.coronal_holes.tracking.src.frame import Frame
 from chmap.coronal_holes.tracking.src.knn import KNN
-from chmap.coronal_holes.tracking.src.time_interval import get_number_of_frames_in_interval, time_distance
+from chmap.coronal_holes.tracking.src.time_interval import *
 from chmap.coronal_holes.tracking.src.areaoverlap import area_overlap, max_area_overlap
 from chmap.coronal_holes.tracking.src.graph import CoronalHoleGraph
 
@@ -43,17 +44,8 @@ class CoronalHoleDB:
         # connectivity graph.
         self.Graph = CoronalHoleGraph()
 
-        # the unique identification number of for each coronal hole in the db.
-        self.total_num_of_coronal_holes = 0
-
-        # frame number.
-        self.frame_num = 1
-
         # data holder for previous *window* frames.
         self.window_holder = [None] * self.window
-
-        # color class dictionary.
-        self.color_dict = dict()
 
     def __str__(self):
         return json.dumps(
@@ -61,8 +53,8 @@ class CoronalHoleDB:
 
     def json_dict(self):
         return {
-            'num_frames': self.frame_num,
-            'num_coronal_holes': self.total_num_of_coronal_holes,
+            'num_frames': self.Graph.frame_num,
+            'num_coronal_holes': self.Graph.total_num_of_coronal_holes,
             'num_of_nodes': self.Graph.G.number_of_nodes(),
             'num_of_edges': self.Graph.G.number_of_edges(),
         }
@@ -79,9 +71,9 @@ class CoronalHoleDB:
         ch: with assigned id.
         """
         # set the index id.
-        ch.id = self.total_num_of_coronal_holes + 1
+        ch.id = self.Graph.total_num_of_coronal_holes + 1
         # update coronal hole holder.
-        self.total_num_of_coronal_holes += 1
+        self.Graph.total_num_of_coronal_holes += 1
         return ch
 
     def _assign_color_coronal_hole(self, ch):
@@ -129,8 +121,6 @@ class CoronalHoleDB:
         -------
         None
         """
-        # remove the first frame since its not in the window interval.
-        # self.window_holder.pop(0)
         # append the new frame to the end of the list.
         self.window_holder.append(frame)
 
@@ -138,8 +128,7 @@ class CoronalHoleDB:
         """Update the window holder as we add a new frame info.
         :param mean_timestamp: the current timestamp.
         :param list_of_timestamps: list of all the timestamps in the database.
-
-        :return:
+        :return: N/A
         """
         # get window of frames that are within the time interval
         new_window_size = get_number_of_frames_in_interval(curr_time=mean_timestamp,
@@ -154,13 +143,28 @@ class CoronalHoleDB:
         # update window to be the new window size.
         self.window = new_window_size
 
+    def initialize_window_holder(self, db_session, query_start, query_end, map_vars, map_methods, prev_run_path):
+        """Initialize the previous run history.
+
+        :param db_session: database session.
+        :param query_start: starttime timestamp.
+        :param query_end: endtime timestamp.
+        :param map_vars: map variables.
+        :param map_methods: define map type and grid to query.
+        :param prev_run_path: path to previous run pickle files.
+        :return: N/A
+        """
+        # get list of timestamps in the window interval.
+        list_of_timestamps = get_time_interval_list(db_session, query_start, query_end, map_vars, map_methods)
+        # update the window holder.
+        self.window_holder = read_prev_run_pkl_results(ordered_time_stamps=list_of_timestamps,
+                                                       prev_run_path=prev_run_path)
+
     @staticmethod
     def generate_ch_color():
-        """generate a random color
+        """Generate a random color.
 
-        Returns
-        -------
-        list of 3 integers between 0 and 255.
+        :return: list of 3 integers between 0 and 255.
         """
         return np.random.randint(low=0, high=255, size=(3,)).tolist()
 
@@ -180,14 +184,14 @@ class CoronalHoleDB:
             N/A
         """
         # if this is the first frame in the video sequence then just save coronal holes.
-        if self.frame_num == 1:
+        if self.Graph.frame_num == 1:
             for ii in range(len(contour_list)):
                 # assign a unique class ID to the contour object.
                 contour_list[ii] = self._assign_id_coronal_hole(ch=contour_list[ii])
                 # assign a unique color (RBG) to the contour object.
                 contour_list[ii] = self._assign_color_coronal_hole(ch=contour_list[ii])
                 # update the color dictionary.
-                self.color_dict[contour_list[ii].id] = contour_list[ii].color
+                self.Graph.color_dict[contour_list[ii].id] = contour_list[ii].color
                 # add coronal hole as a node to graph.
                 self.Graph.insert_node(node=contour_list[ii])
 
@@ -205,7 +209,7 @@ class CoronalHoleDB:
                     # assign a unique color (RBG) to the contour.
                     contour_list[ii] = self._assign_color_coronal_hole(ch=contour_list[ii])
                     # update the color dictionary.
-                    self.color_dict[contour_list[ii].id] = contour_list[ii].color
+                    self.Graph.color_dict[contour_list[ii].id] = contour_list[ii].color
 
                 # existing coronal hole
                 else:
@@ -213,7 +217,7 @@ class CoronalHoleDB:
                     # highest area overlapping ratio.
                     contour_list[ii].id = match_list[ii]
                     # assign a the corresponding color that all contours of this class have.
-                    contour_list[ii].color = self.color_dict[contour_list[ii].id]
+                    contour_list[ii].color = self.Graph.color_dict[contour_list[ii].id]
 
                 # assign count to contour.
                 contour_list[ii] = self._assign_count_coronal_hole(ch=contour_list[ii], contour_list=contour_list)
@@ -225,10 +229,10 @@ class CoronalHoleDB:
             self.update_connectivity_prev_frame(contour_list=contour_list)
 
             # update the latest frame index number in graph.
-            self.Graph.max_frame_num = self.frame_num
+            self.Graph.max_frame_num = self.Graph.frame_num
 
         # update window holder.
-        self.update_previous_frames(frame=Frame(contour_list=contour_list, identity=self.frame_num,
+        self.update_previous_frames(frame=Frame(contour_list=contour_list, identity=self.Graph.frame_num,
                                                 timestamp=timestamp, map_mesh=self.Mesh))
 
     def global_matching_algorithm(self, contour_list):
@@ -352,7 +356,7 @@ class CoronalHoleDB:
                 weight_sum = 0
                 for ch in coronal_hole_list:
                     p1, p2 = area_overlap(ch1=ch, ch2=contour_list[ii], da=self.Mesh.da)
-                    # weight is based on frame timestamp proximity measured in units of days.
+                    # weight is based on frame timestamp proximity measured in units of hours.
                     weight = time_distance(time_1=contour_list[ii].frame_timestamp, time_2=ch.frame_timestamp)
                     # weighted average.
                     p.append(weight * (p1 + p2) / 2)
@@ -380,7 +384,7 @@ class CoronalHoleDB:
             for prev_contour in self.window_holder[-1].contour_list:
                 self.add_weighted_edge(contour1=prev_contour, contour2=curr_contour)
 
-            if curr_contour.id < self.total_num_of_coronal_holes:
+            if curr_contour.id < self.Graph.total_num_of_coronal_holes:
                 prev_list = self.find_latest_contour_in_window(identity=curr_contour.id)
                 for prev_contour in prev_list:
                     self.add_weighted_edge(contour1=prev_contour, contour2=curr_contour)

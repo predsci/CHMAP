@@ -1,5 +1,5 @@
 """A data structure for a coronal hole contour.
-Last Modified: May 6th, 2021 (Opal)
+Last Modified: July 19th, 2021 (Opal)
 
 List of properties:                                         || Name of variable.
 =======================================================================================================================
@@ -14,7 +14,10 @@ List of properties:                                         || Name of variable.
 - coronal hole tilt                                         || pca_tilt
 - coronal hole symmetry (eig_max/eig_min)                   || sig_tilt
 - periodic boundary                                         || periodic_at_zero & periodic_at_2pi
+- absolute magnetic flux                                    || abs_flux
+- net magnetic flux                                         || net_flux
 """
+
 import numpy as np
 import chmap.maps.magnetic.flux.br_flux as br_flux
 import json
