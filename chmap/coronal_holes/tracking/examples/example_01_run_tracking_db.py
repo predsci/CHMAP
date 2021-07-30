@@ -22,6 +22,7 @@ import numpy as np
 import cv2
 import pickle
 import time
+import datetime as dt
 import chmap.database.db_classes as db_class
 import chmap.database.db_funs as db_funcs
 import chmap.utilities.datatypes.datatypes as psi_datatype
@@ -35,24 +36,25 @@ from chmap.maps.util.map_manip import MapMesh
 # ================================================================================================================
 # define map query start and end times
 # paper test case: Dec 29th 2010 to April 8th 2011.
-query_start = datetime.datetime(year=2007, month=3, day=1, hour=0, minute=0, second=0)
-query_end = datetime.datetime(year=2008, month=1, day=1, hour=0, minute=0, second=0)
+query_start = datetime.datetime(year=2008, month=1, day=1, hour=0, minute=0, second=0)
+query_end = datetime.datetime(year=2009, month=1, day=1, hour=0, minute=0, second=0)
 
 # ================================================================================================================
 # Step 2: Initialize directory and folder to save results (USER PARAMETERS)
 # ================================================================================================================
 # --- User Parameters ----------------------
 dir_name = "/Users/osissan/desktop/CHT_RESULTS/"
-folder_name = "2007/"
+folder_name = "2008/"
 graph_folder = "graphs/"
 frame_folder = "frames/"
 pickle_folder = "pkl/"
 
-ReadPrevRun = False
+# --- Read Previous Run Results ----------------------
+ReadPrevRun = True
 prev_run_dir_name = "/Users/osissan/desktop/CHT_RESULTS/"
-prev_run_folder_name = "2007to2011/"
-prev_run_graph = "connectivity_graph_2011-10-04-11-56-26.pkl"
-prev_run_latest_pkl_file = "2011-10-04-11-56-26.pkl"
+prev_run_folder_name = "2007/"
+prev_run_graph = "connectivity_graph_2007-12-31-23-55-41.pkl"
+prev_run_latest_pkl_file = "2007-12-31-23-55-41.pkl"
 prev_run_pickle_folder = "pkl/"
 # ================================================================================================================
 # Step 3: Algorithm Hyper Parameters
@@ -62,8 +64,6 @@ prev_run_pickle_folder = "pkl/"
 CoronalHoleDB.BinaryThreshold = 0.7
 # coronal hole area threshold.
 CoronalHoleDB.AreaThreshold = 5E-3
-# window to match coronal holes.
-CoronalHoleDB.window = 1
 # window time interval.
 CoronalHoleDB.window_time_interval = datetime.timedelta(days=6)
 # parameter for longitude dilation (this should be changed for larger image dimensions).
@@ -117,6 +117,11 @@ map_info, data_info, method_info, image_assoc = db_funcs.query_euv_maps(
     db_session, mean_time_range=(query_start, query_end), methods=map_methods,
     var_val_range=map_vars)
 
+if ReadPrevRun:
+    map_info_prev_run = db_funcs.query_euv_maps(db_session,
+                                                mean_time_range=(query_start - ch_lib.window_time_interval, query_end),
+                                                methods=map_methods, var_val_range=map_vars)[0]
+
 # the query returns multiple dataframes that together describe the map-making
 # process and constituent images.  Here we are mostly interested in the map_info
 # dataframe.  It contains one row per map with a number of information columns:
@@ -156,7 +161,11 @@ for row_index, row in map_info.iterrows():
     mean_timestamp = row.date_mean
 
     # get window of frames that are within the time interval and update the history holder.
-    ch_lib.adjust_window_size(mean_timestamp=mean_timestamp, list_of_timestamps=map_info.date_mean)
+    if ReadPrevRun:
+        ch_lib.adjust_window_size(mean_timestamp=mean_timestamp - dt.timedelta(seconds=1),
+                                  list_of_timestamps=map_info_prev_run.date_mean)
+    else:
+        ch_lib.adjust_window_size(mean_timestamp=mean_timestamp, list_of_timestamps=map_info.date_mean)
 
     # save mesh map
     ch_lib.Mesh = MapMesh(p=phi_coords, t=theta_coords)
@@ -170,9 +179,8 @@ for row_index, row in map_info.iterrows():
                                         query_end=mean_timestamp, map_vars=map_vars, map_methods=map_methods,
                                         prev_run_path=os.path.join(prev_run_dir_name, prev_run_folder_name,
                                                                    prev_run_pickle_folder))
-
         # update the graph.
-        ch_lib.graph = pickle.load(open(os.path.join(prev_run_dir_name, prev_run_folder_name, prev_run_graph), "rb"))
+        ch_lib.Graph = pickle.load(open(os.path.join(prev_run_dir_name, prev_run_folder_name, prev_run_graph), "rb"))
 
     # ================================================================================================================
     # Step 6: Latitude Weighted Dilation (in longitude) + Uniform dilation (in latitude)
@@ -253,7 +261,7 @@ db_session.close()
 # Step 9: Save Connectivity Graph.
 # ================================================================================================================
 # save object to pickle file.
-with open(os.path.join(dir_name + folder_name + "total_connectivity_graph" + ".pkl"), 'wb') as f:
+with open(os.path.join(dir_name + folder_name +  "connectivity_graph_" + str(file_name_pkl) + ".pkl"), 'wb') as f:
     pickle.dump(ch_lib.Graph, f)
 
 # ======================================================================================================================

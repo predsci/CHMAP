@@ -22,7 +22,7 @@ class CoronalHoleDB:
     # coronal hole area threshold.
     AreaThreshold = 5E-3
     # window to match coronal holes.
-    window = 20
+    window = 1000
     # window time interval (time-delta)
     window_time_interval = dt.timedelta(days=7)
     # parameter for longitude dilation (this should be changed for larger image dimensions).
@@ -147,15 +147,16 @@ class CoronalHoleDB:
         """Initialize the previous run history.
 
         :param db_session: database session.
-        :param query_start: starttime timestamp.
-        :param query_end: endtime timestamp.
+        :param query_start: start-time timestamp.
+        :param query_end: end-time timestamp.
         :param map_vars: map variables.
         :param map_methods: define map type and grid to query.
         :param prev_run_path: path to previous run pickle files.
         :return: N/A
         """
         # get list of timestamps in the window interval.
-        list_of_timestamps = get_time_interval_list(db_session, query_start, query_end, map_vars, map_methods)
+        list_of_timestamps = get_time_interval_list(db_session, query_start,
+                                                    query_end - dt.timedelta(seconds=1), map_vars, map_methods)
         # update the window holder.
         self.window_holder = read_prev_run_pkl_results(ordered_time_stamps=list_of_timestamps,
                                                        prev_run_path=prev_run_path)
