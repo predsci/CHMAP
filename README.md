@@ -39,6 +39,9 @@ our [example database](http://www.predsci.com/chmap/example_db/CHMAP_DB_example.
 which includes sample data and 14+ years of data-derived image correction
 coefficients (5.7GB).
 
+Additionally, we have processed EUV and coronal hole maps every 2 hours for 2008-2020. 
+These can be viewed using the [CHMAP Database Browser](https://q.predsci.com/CHMAP-map-browser/).
+
 ## Documentation and Examples
 
 Pipeline documentation and examples can be found
