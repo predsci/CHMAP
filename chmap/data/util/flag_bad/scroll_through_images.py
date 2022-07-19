@@ -72,7 +72,7 @@ for im_num, row in query_pd.iterrows():
     full_path = os.path.join(hdf_data_dir, row.fname_hdf)
     print("Plotting", row.instrument, im_num+1, "of", n_images, "-",
           row.date_obs)
-    bad_im = psi_d_types.read_los_image(full_path)
+    bad_im = psi_d_types.read_euv_image(full_path)
     EasyPlot.PlotImage(bad_im, nfig=0)
     plt.waitforbuttonpress()
     plt.close(0)

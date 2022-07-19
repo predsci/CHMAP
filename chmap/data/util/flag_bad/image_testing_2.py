@@ -113,7 +113,7 @@ def plot_bad_images(hdf_dir, data):
             print("Warning: Image # " + str(im_row.data_id) + " does not have an associated hdf file. Skipping")
             continue
         hdf = os.path.join(hdf_dir, im_row.fname_hdf)
-        los_image = psi_d_types.read_los_image(hdf)
+        los_image = psi_d_types.read_euv_image(hdf)
         # add coordinates to los object
         los_image.get_coordinates(R0=R0)
 
@@ -359,7 +359,7 @@ if view_bad_images:
             full_path = os.path.join(hdf_data_dir, row.fname_hdf)
             print("Plotting", instrument, im_num+1, "of", n_images, "-",
                   row.date_obs)
-            bad_im = psi_d_types.read_los_image(full_path)
+            bad_im = psi_d_types.read_euv_image(full_path)
             EasyPlot.PlotImage(bad_im, nfig=0)
             plt.waitforbuttonpress()
             plt.close(0)

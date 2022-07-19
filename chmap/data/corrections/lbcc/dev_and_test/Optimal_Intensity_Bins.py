@@ -32,7 +32,7 @@ lat_band = [-np.pi/64., np.pi/64.]
 R0 = 1.01
 hdf_fname = '/Volumes/Work/CHD_DB/processed_images/2011/03/26/aia_lvl2_20110326T040031_193.h5'
 
-los_image = PSI_dtypes.read_los_image(hdf_fname)
+los_image = PSI_dtypes.read_euv_image(hdf_fname)
 los_image.get_coordinates(R0=R0)
 
 lat_band_index = np.logical_and(los_image.lat <= max(lat_band), los_image.lat >= min(lat_band))

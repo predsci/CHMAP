@@ -53,7 +53,7 @@ lat_band = [-np.pi/64., np.pi/64.]
 full_hist = np.full((len(mu_bin_edges)-1, len(image_intensity_bin_edges)-1), 0)
 for index, row in selected_images.iterrows():
     hdf_path = os.path.join(hdf_data_dir, row.fname_hdf)
-    los_temp = psi_d_types.read_los_image(hdf_path)
+    los_temp = psi_d_types.read_euv_image(hdf_path)
     # add coordinates to los object
     los_temp.get_coordinates(R0=R0)
     # perform 2D histogram on mu and image intensity

@@ -61,7 +61,7 @@ for inst_index, instrument in enumerate(inst_list):
             print("Warning: Image # " + str(row.data_id) + " does not have an associated hdf file. Skipping")
             continue
         hdf_path = os.path.join(hdf_data_dir, row.fname_hdf)
-        los_temp = psi_d_types.read_los_image(hdf_path)
+        los_temp = psi_d_types.read_euv_image(hdf_path)
         los_temp.get_coordinates(R0=R0)
 
     ###### APPLY LBC CORRECTION #######
@@ -70,7 +70,7 @@ for inst_index, instrument in enumerate(inst_list):
     selected_image = image_pd.iloc[0]
     # read hdf file to LOS object
     hdf_file = os.path.join(hdf_data_dir, selected_image.fname_hdf)
-    original_los = psi_d_types.read_los_image(hdf_file)
+    original_los = psi_d_types.read_euv_image(hdf_file)
     original_los.get_coordinates(R0=R0)
 
     mu_array = original_los.mu

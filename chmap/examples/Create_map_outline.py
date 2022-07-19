@@ -64,7 +64,7 @@ los_list = [None]*query_pd.__len__()
 image_plot_list = [None] * query_pd.__len__()
 for index, row in query_pd.iterrows():
     hdf_path = os.path.join(hdf_data_dir, row.fname_hdf)
-    los_list[index] = psi_d_types.read_los_image(hdf_path)
+    los_list[index] = psi_d_types.read_euv_image(hdf_path)
     EasyPlot.PlotImage(los_list[index], nfig=index, title="Image " + str(index))
 
 

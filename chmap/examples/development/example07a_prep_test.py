@@ -77,7 +77,7 @@ plot_examples(map_raw_aia, los_aia_nod.map, los_aia.map, lmin, lmax, lmin + 0.3,
 # read in the deconvolved, prepped hdf5 file (.h5) as our custom image format
 hdf_file = os.path.join(prep_home_dir, subdir, fname)
 t1 = time.perf_counter()
-los = datatypes.read_los_image(hdf_file)
+los = datatypes.read_euv_image(hdf_file)
 t2 = time.perf_counter()
 print("time to read .h5 file and create LosImage with a map: ", t2 - t1)
 

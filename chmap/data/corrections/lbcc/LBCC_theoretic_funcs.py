@@ -81,7 +81,7 @@ def save_histograms(db_session, hdf_data_dir, inst_list, hist_query_time_min, hi
             hdf_path = os.path.join(hdf_data_dir, row.fname_hdf)
             # attempt to open and read file
             try:
-                los_temp = psi_d_types.read_los_image(hdf_path)
+                los_temp = psi_d_types.read_euv_image(hdf_path)
             except:
                 print("Something went wrong opening: ", hdf_path, ". Skipping")
                 continue
@@ -326,7 +326,7 @@ def apply_lbc(db_session, hdf_data_dir, inst_combo_query, image_row, n_intensity
         print("Warning: Image # " + str(image_row.data_id) + " does not have an associated hdf file. Skipping")
         pass
     hdf_path = os.path.join(hdf_data_dir, image_row.fname_hdf)
-    original_los = psi_d_types.read_los_image(hdf_path)
+    original_los = psi_d_types.read_euv_image(hdf_path)
     original_los.get_coordinates(R0=R0)
     theoretic_query = db_funcs.query_var_val(db_session, meth_name, date_obs=original_los.info['date_string'],
                                              inst_combo_query=inst_combo_query)
@@ -374,7 +374,7 @@ def apply_lbc_2(db_session, hdf_data_dir, image_row, n_intensity_bins=200, R0=1.
     hdf_path = os.path.join(hdf_data_dir, image_row.fname_hdf)
     # attempt to open and read file
     try:
-        original_los = psi_d_types.read_los_image(hdf_path)
+        original_los = psi_d_types.read_euv_image(hdf_path)
     except:
         print("Something went wrong opening: ", hdf_path, ". Skipping")
         # return None for all outputs

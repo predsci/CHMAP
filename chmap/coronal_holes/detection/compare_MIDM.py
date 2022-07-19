@@ -202,19 +202,19 @@ euv_images = db_funs.query_euv_images(db_session, time_min=query_start, time_max
 A_ind = euv_images.instrument == "EUVI-A"
 A_fname = euv_images.fname_hdf[A_ind].item()
 A_path = os.path.join(image_hdf_dir, A_fname)
-A_los = psi_datatype.read_los_image(A_path)
+A_los = psi_datatype.read_euv_image(A_path)
 losA.info = A_los.info
 
 B_ind = euv_images.instrument == "EUVI-B"
 B_fname = euv_images.fname_hdf[B_ind].item()
 B_path = os.path.join(image_hdf_dir, B_fname)
-B_los = psi_datatype.read_los_image(B_path)
+B_los = psi_datatype.read_euv_image(B_path)
 losB.info = B_los.info
 
 AIA_ind = euv_images.instrument == "AIA"
 AIA_fname = euv_images.fname_hdf[AIA_ind].item()
 AIA_path = os.path.join(image_hdf_dir, AIA_fname)
-AIA_los = psi_datatype.read_los_image(AIA_path)
+AIA_los = psi_datatype.read_euv_image(AIA_path)
 losAIA.info = AIA_los.info
 
 # interpolate to map

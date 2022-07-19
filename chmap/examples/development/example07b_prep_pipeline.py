@@ -111,7 +111,7 @@ if idl_session is not None:
     idl_session.end()
 
 # read the file and plot it
-# los = read_los_image(full_path)
+# los = read_euv_image(full_path)
 #
 # los.map.peek()
 # los.map.fits_header

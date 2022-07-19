@@ -76,7 +76,7 @@ for inst_index, instrument in enumerate(inst_list):
             print("Warning: Image # " + str(row.data_id) + " does not have an associated hdf file. Skipping")
             continue
         hdf_path = os.path.join(hdf_data_dir, row.fname_hdf)
-        original_los = psi_d_types.read_los_image(hdf_path)
+        original_los = psi_d_types.read_euv_image(hdf_path)
         original_los.get_coordinates(R0=R0)
         theoretic_query = query_var_val(db_session, meth_name, date_obs=original_los.info['date_string'],
                                         inst_combo_query=combo_query)

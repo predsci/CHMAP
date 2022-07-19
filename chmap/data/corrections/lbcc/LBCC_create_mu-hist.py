@@ -110,7 +110,7 @@ for instrument in inst_list:
         hdf_path = os.path.join(hdf_data_dir, row.fname_hdf)
         # attempt to open and read file
         try:
-            los_temp = psi_d_types.read_los_image(hdf_path)
+            los_temp = psi_d_types.read_euv_image(hdf_path)
         except:
             print("Something went wrong opening: ", hdf_path, ". Skipping")
             continue

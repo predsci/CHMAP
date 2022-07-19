@@ -59,7 +59,7 @@ image_pd.loc[:, ['date_obs', 'instrument', 'fname_hdf']]
 
 # open the first image
 image_path = os.path.join(hdf_data_dir, image_pd.fname_hdf[0])
-psi_image = psi_dtypes.read_los_image(image_path)
+psi_image = psi_dtypes.read_euv_image(image_path)
 
 # plot deconvolved image
 psi_plots.PlotImage(psi_image)

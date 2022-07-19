@@ -44,7 +44,7 @@ print(selected_image)
 
 # read hdf file to LOS object
 hdf_file = os.path.join(hdf_data_dir, selected_image.fname_hdf)
-test_los = psi_d_types.read_los_image(hdf_file)
+test_los = psi_d_types.read_euv_image(hdf_file)
 
 # also read fits file for reference
 fits_infile_aia = os.path.join(raw_data_dir, selected_image.fname_raw)

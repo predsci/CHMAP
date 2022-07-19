@@ -254,7 +254,7 @@ for file_name in file_names:
     hdf_rel = f'{subdir}/{fname}'
     hdf_path = os.path.join(prep_base_dir, hdf_rel)
 
-    #test_im = datatypes.read_los_image(hdf_path)
+    #test_im = datatypes.read_euv_image(hdf_path)
     test_im = los
     synch_image = pd.Series(dict(data_id=0, date=test_im.map.date, instrument=test_im.info['instrument'],
                                  wavelength=test_im.info['wavelength'], distance=test_im.info['distance'],

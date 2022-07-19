@@ -91,7 +91,7 @@ def plot_bad_images(hdf_dir, data):
             print("Warning: Image # " + str(im_row.data_id) + " does not have an associated hdf file. Skipping")
             continue
         hdf = os.path.join(hdf_dir, im_row.fname_hdf)
-        los_image = psi_d_types.read_los_image(hdf)
+        los_image = psi_d_types.read_euv_image(hdf)
         # add coordinates to los object
         los_image.get_coordinates(R0=R0)
 
@@ -132,7 +132,7 @@ for inst_index, instrument in enumerate(inst_list):
             print("Warning: Image # " + str(row.data_id) + " does not have an associated hdf file. Skipping")
             continue
         hdf_path = os.path.join(hdf_data_dir, row.fname_hdf)
-        los_temp = psi_d_types.read_los_image(hdf_path)
+        los_temp = psi_d_types.read_euv_image(hdf_path)
         # add coordinates to los object
         los_temp.get_coordinates(R0=R0)
         # perform 2D histogram on mu and image intensity

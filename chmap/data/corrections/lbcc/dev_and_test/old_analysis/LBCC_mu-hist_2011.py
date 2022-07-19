@@ -63,7 +63,7 @@ for instrument in inst_list:
             print("Warning: Image # " + str(row.data_id) + " does not have an associated hdf file. Skipping")
             continue
         hdf_path = os.path.join(hdf_data_dir, row.fname_hdf)
-        los_temp = psi_d_types.read_los_image(hdf_path)
+        los_temp = psi_d_types.read_euv_image(hdf_path)
         # add coordinates to los object (is there a way to do this outside the loop?)
         los_temp.get_coordinates(R0=R0)
         # perform 2D histogram on mu and image intensity

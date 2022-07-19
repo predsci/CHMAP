@@ -146,7 +146,7 @@ def apply_lbc(db_session, hdf_data_dir, inst_combo_query, image_row, n_intensity
     """
     db_sesh, meth_id, var_ids = db_funcs.get_method_id(db_session, meth_name, meth_desc=None, var_names=None,
                                            var_descs=None, create=False)
-    original_los = psi_d_types.read_los_image(hdf_path)
+    original_los = psi_d_types.read_euv_image(hdf_path)
     theoretic_query = db_funcs.query_var_val(db_session, meth_name, date_obs=original_los.info['date_string'],
                                  inst_combo_query=inst_combo_query)
     beta1d, y1d, mu_indices, use_indices = lbcc.get_beta_y_theoretic_continuous_1d_indices(theoretic_query,
@@ -160,7 +160,7 @@ def apply_lbc(db_session, hdf_data_dir, inst_combo_query, image_row, n_intensity
 
 * 1.) <code>db_funcs.get_method_id</code>
     * queries database for method id associated with method name
-* 2.) <code>psi_d_types.read_los_image</code>
+* 2.) <code>psi_d_types.read_euv_image</code>
     * reads in los image from database                                                                                             
 * 3.) <code>db_funcs.query_var_val</code>
     * queries database for variable values associated with specific image (from Var_Vals table)
