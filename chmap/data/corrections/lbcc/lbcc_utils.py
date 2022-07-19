@@ -87,7 +87,7 @@ def LinTrans_1DHist_Interp(hist, bins, a, b):
     :param bins: list of bin edges
     :param a: linear scaling
     :param b: linear shift
-    :return: list of histogram values for linearly tranformed hist integrated over original bins.
+    :return: list of histogram values for linearly transformed hist integrated over original bins.
     """
     # double check that bins are sorted
     if not np.all(np.diff(bins) > 0):

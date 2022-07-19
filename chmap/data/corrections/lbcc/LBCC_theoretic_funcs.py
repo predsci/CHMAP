@@ -343,7 +343,7 @@ def apply_lbc(db_session, hdf_data_dir, inst_combo_query, image_row, n_intensity
     ###### CREATE LBCC DATATYPE ######
     lbcc_image = psi_d_types.create_lbcc_image(original_los, corrected_lbc_data, data_id=image_row.data_id,
                                                meth_id=meth_id, intensity_bin_edges=intensity_bin_edges)
-    psi_d_types.LosImage.get_coordinates(lbcc_image, R0=R0)
+    psi_d_types.EUVImage.get_coordinates(lbcc_image, R0=R0)
 
     return original_los, lbcc_image, mu_indices, use_indices, theoretic_query
 
@@ -397,7 +397,7 @@ def apply_lbc_2(db_session, hdf_data_dir, image_row, n_intensity_bins=200, R0=1.
     ###### CREATE LBCC DATATYPE ######
     lbcc_image = psi_d_types.create_lbcc_image(original_los, corrected_lbc_data, data_id=image_row.data_id,
                                                meth_id=meth_id, intensity_bin_edges=intensity_bin_edges)
-    psi_d_types.LosImage.get_coordinates(lbcc_image, R0=R0)
+    psi_d_types.EUVImage.get_coordinates(lbcc_image, R0=R0)
 
     return original_los, lbcc_image, mu_indices, use_indices, theoretic_query
 
@@ -633,7 +633,7 @@ def generate_histogram_plots(db_session, hdf_data_dir, inst_list, hist_plot_quer
                 #### CREATE NEW HISTOGRAMS ####
                 # perform 2D histogram on mu and image intensity
                 hdf_path = os.path.join(hdf_data_dir, row.fname_hdf)
-                temp_hist = psi_d_types.LosImage.mu_hist(lbcc_image, intensity_bin_edges, mu_bin_edges,
+                temp_hist = psi_d_types.EUVImage.mu_hist(lbcc_image, intensity_bin_edges, mu_bin_edges,
                                                          lat_band=lat_band,
                                                          log10=log10)
                 hist_lbcc = psi_d_types.create_lbcc_hist(hdf_path, row.data_id, method_id[1], mu_bin_edges,

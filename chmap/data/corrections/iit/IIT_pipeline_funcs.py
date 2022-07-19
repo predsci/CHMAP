@@ -380,7 +380,7 @@ def apply_iit(db_session, inst_combo_query, lbcc_image, use_indices, los_image, 
     corrected_iit_data[use_indices] = 10 ** (alpha * np.log10(lbcc_data[use_indices]) + x)
     # create IIT datatype
     iit_image = psi_d_types.create_iit_image(los_image, lbcc_image, corrected_iit_data, method_id_info[0])
-    psi_d_types.LosImage.get_coordinates(iit_image, R0=R0)
+    psi_d_types.EUVImage.get_coordinates(iit_image, R0=R0)
 
     return lbcc_image, iit_image, use_indices, alpha, x
 
@@ -418,7 +418,7 @@ def apply_iit_2(db_session, lbcc_image, use_indices, los_image, R0=1.01):
     corrected_iit_data[use_indices] = 10 ** (alpha * np.log10(lbcc_data[use_indices]) + x)
     # create IIT datatype
     iit_image = psi_d_types.create_iit_image(los_image, lbcc_image, corrected_iit_data, method_id_info[0])
-    psi_d_types.LosImage.get_coordinates(iit_image, R0=R0)
+    psi_d_types.EUVImage.get_coordinates(iit_image, R0=R0)
 
     return lbcc_image, iit_image, use_indices, alpha, x
 
@@ -495,7 +495,7 @@ def plot_iit_histograms(db_session, hdf_data_dir, hist_query_time_min, hist_quer
 
             #### ORIGINAL LOS DATA ####
             # calculate IIT histogram from original data
-            original_los_hist = psi_d_types.LosImage.iit_hist(original_los, intensity_bin_edges, lat_band, log10)
+            original_los_hist = psi_d_types.EUVImage.iit_hist(original_los, intensity_bin_edges, lat_band, log10)
             # add 1D histogram to array
             original_hist_list[:, index] = original_los_hist
 

@@ -122,7 +122,7 @@ for inst_index, instrument in enumerate(inst_list):
 
         #### ORIGINAL LOS DATA ####
         # calculate IIT histogram from original data
-        original_los_hist = psi_d_types.LosImage.iit_hist(original_los, intensity_bin_edges, lat_band, log10)
+        original_los_hist = psi_d_types.EUVImage.iit_hist(original_los, intensity_bin_edges, lat_band, log10)
         # add 1D histogram to array
         original_hist_list[:, index] = original_los_hist
 

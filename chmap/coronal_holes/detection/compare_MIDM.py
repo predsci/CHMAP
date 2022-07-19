@@ -132,7 +132,7 @@ f = np.array(f)
 
 h5file.close()
 
-losA = psi_datatype.LosImage(f, x, y)
+losA = psi_datatype.EUVImage(f, x, y)
 
 
 B_filename = "/Users/turtle/Dropbox/MyNACD/ron_code/test_images/B.h5"
@@ -163,7 +163,7 @@ f = np.array(f)
 
 h5file.close()
 
-losB = psi_datatype.LosImage(f, x, y)
+losB = psi_datatype.EUVImage(f, x, y)
 
 
 AIA_filename = "/Users/turtle/Dropbox/MyNACD/ron_code/test_images/AIA.h5"
@@ -194,7 +194,7 @@ f = np.array(f)
 
 h5file.close()
 
-losAIA = psi_datatype.LosImage(f, x, y)
+losAIA = psi_datatype.EUVImage(f, x, y)
 
 # query DB EUV images to use their meta data
 euv_images = db_funs.query_euv_images(db_session, time_min=query_start, time_max=query_end)

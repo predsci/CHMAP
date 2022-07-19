@@ -56,4 +56,4 @@ def apply_iit_correction(lbcc_image, use_indices, alpha, x, hdf_path, method_id,
     corrected_iit_data[use_indices] = 10 ** (alpha * np.log10(lbcc_data[use_indices]) + x)
     # create IIT datatype
     iit_image = psi_d_types.create_iit_image(lbcc_image, corrected_iit_data, method_id, hdf_path)
-    psi_d_types.LosImage.get_coordinates(iit_image, R0=R0)
+    psi_d_types.EUVImage.get_coordinates(iit_image, R0=R0)

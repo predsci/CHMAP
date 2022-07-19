@@ -214,7 +214,7 @@ def plot_iit_histograms(db_session, hdf_data_dir, hist_query_time_min, hist_quer
                               time_max=hist_query_time_max, instrument=query_instrument)
     original_los, lbcc_image, mu_indices, use_indices, theoretic_query = lbcc_funcs.apply_lbc(db_session, hdf_data_dir, combo_query_lbc,
                               image_row=row, n_intensity_bins=n_intensity_bins, R0=R0)
-    original_los_hist = psi_d_types.LosImage.iit_hist(original_los, intensity_bin_edges, lat_band, log10)
+    original_los_hist = psi_d_types.EUVImage.iit_hist(original_los, intensity_bin_edges, lat_band, log10)
     lbcc_image, iit_image, use_indices, alpha, x = apply_iit(db_session, hdf_data_dir, combo_query_iit, lbcc_image, use_indices, image_row=row, R0=R0)
     hist_iit = psi_d_types.IITImage.iit_hist(iit_image, lat_band, log10)
     Plotting.Plot1d_Hist(norm_original_hist, instrument, inst_index, intensity_bin_edges, color_list,
