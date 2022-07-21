@@ -9,6 +9,7 @@ Module for converting raw EUV images (fits) to our native CHD format (h5).
 import os
 import numpy as np
 from timeit import default_timer as timer
+import tempfile
 
 import sunpy.map
 import astropy.units as u
@@ -20,7 +21,6 @@ import chmap.settings.info
 from chmap.utilities.datatypes import datatypes
 from chmap.utilities.file_io import io_helpers
 from chmap.utilities.idl_connect import idl_helper
-from chmap.settings.app import App
 
 # default bad or missing value for an EUV image
 euv_bad_value = 1e-16
@@ -47,7 +47,7 @@ def prep_euv_image(fitsfile, processed_home_dir, deconvolve=True, write=True, id
 
     - Currently this program takes a path to a fits file and writes out
       the file in the proper sub-directory relative to a "home path" (processed_home_dir)
-    - After writing the file, it returns a relative sub directory, filename, and LosImage object
+    - After writing the file, it returns a relative sub directory, filename, and EUVImage object
       that can be used to populate the filename information in the database.
     """
     print("  Preparing FITS Image: " + os.path.basename(fitsfile), flush=True)
@@ -94,7 +94,7 @@ def prep_aia_image(map_raw, deconvolve=True):
     - Exposure normalization.
     - Assembling/updating metadata.
 
-    The subroutine routines an LosImage object, which is specific to this project.
+    The subroutine routines an EUVImage object, which is specific to this project.
     """
     # get image data in double precision for processing
     image = np.float64(map_raw.data)
@@ -154,14 +154,14 @@ def prep_aia_image(map_raw, deconvolve=True):
     data = hdf_dtype(map.data)
     map.meta['bitpix'] = hdf_bitpix
 
-    # Convert the final image to an LosImage object
-    los = datatypes.LosImage(data, x, y, chd_meta, map.meta)
+    # Convert the final image to an EUVImage object
+    los = datatypes.EUVImage(data, x, y, chd_meta, map.meta)
 
     # stop the prep time
     time_prep = timer() - t0
     print('done ({0:.2f}s)'.format(time_prep), flush=True)
 
-    # return the LosImage
+    # return the EUVImage
     return los
 
 
@@ -176,7 +176,7 @@ def prep_euvi_image(map_raw, deconvolve=True, idl_session=None):
     - Exposure normalization.
     - Assembling/updating metadata.
 
-    The subroutine routines an LosImage object, which is specific to this project.
+    The subroutine routines an EUVImage object, which is specific to this project.
 
     A running IDL session object can be passed to the subroutine.
       to allow one session to take care of multiple prep steps
@@ -186,7 +186,8 @@ def prep_euvi_image(map_raw, deconvolve=True, idl_session=None):
     print("  Calling secchi_prep with SSW/IDL... ", end='', flush=True)
 
     # first save the data as a temporary, uncompressed uint16 fits file
-    fits_raw = os.path.join(App.TMP_HOME, 'tmp_euvi_raw.fits')
+    temp_dir = tempfile.TemporaryDirectory()
+    fits_raw = os.path.join(temp_dir.name, 'tmp_euvi_raw.fits')
     io_helpers.write_sunpy_map_as_fits(fits_raw, map_raw, dtype=np.uint16)
 
     # call secchi prep (open a new subprocess if one does not exist)
@@ -196,7 +197,7 @@ def prep_euvi_image(map_raw, deconvolve=True, idl_session=None):
         new_session = True
 
     # run the SSW/IDL prep command
-    fits_prepped = os.path.join(App.TMP_HOME, 'tmp_euvi_prepped.fits')
+    fits_prepped = os.path.join(temp_dir, 'tmp_euvi_prepped.fits')
     idl_session.secchi_prep(fits_raw, fits_prepped, quiet=True)
 
     # end the idl session if necessary (closes a subprocess)
@@ -205,6 +206,7 @@ def prep_euvi_image(map_raw, deconvolve=True, idl_session=None):
 
     # read in the result as a sunpy map object
     map_prepped = sunpy.map.Map(fits_prepped)
+    temp_dir.cleanup()
 
     # get image data in double precision for processing
     image = np.float64(map_prepped.data)
@@ -271,34 +273,44 @@ def prep_euvi_image(map_raw, deconvolve=True, idl_session=None):
     data = hdf_dtype(map.data)
     map.meta['bitpix'] = hdf_bitpix
 
-    # Convert the final image to an LosImage object
-    los = datatypes.LosImage(data, x, y, chd_meta, map.meta)
+    # Convert the final image to an EUVImage object
+    los = datatypes.EUVImage(data, x, y, chd_meta, map.meta)
 
     # stop the prep time
     time_prep = timer() - t0
     print('done ({0:.2f}s)'.format(time_prep), flush=True)
 
-    # return the LosImage
+    # return the EUVImage
     return los
 
 
-def rotate_map_nopad(map):
+def rotate_map_nopad(raw_map):
     """
     Wrapper for sunpy.map.mapbase.rotate that does rotation how we like it.
     - The images are recentered and the extra padding produced by rotate is
       removed after rotation (got this from the aia_prep routine in Sunpy 1.03).
 
-    :param map:
-    :return newmap:
+    :param raw_map: Raw map from FITS file
+    :return newmap: New map rotated to polar-north=up and padding removed
     """
-    tempmap = map.rotate(recenter=True, missing=euv_bad_value)
+    tempmap = raw_map.rotate(recenter=True)
 
     # extract center from padded map.rotate output
     # - crpix1 and crpix2 will be equal (recenter=True) -> does not work with submaps
-    center = np.floor(tempmap.meta['crpix1'])
-    range_side = (center + np.array([-1, 1])*map.data.shape[0]/2)*u.pix
-    newmap = tempmap.submap(u.Quantity([range_side[0], range_side[0]]),
-                            u.Quantity([range_side[1], range_side[1]]))
+    center = tempmap.meta['crpix1']
+    # newer sunpy wants bottom_left and top_right rather than axis1_range and axis2_range
+    if (center % 1.) == 0:
+        # Implies an odd number of pixels, remove an extra pixel from top and right
+        # Assumes original shape is even
+        bottom_left = (center - np.array([1, 1])*raw_map.data.shape[0]/2 +
+                       np.array([0, 0]))*u.pix
+        top_right = (center + np.array([1, 1])*raw_map.data.shape[0]/2 -
+                     np.array([1, 1]))*u.pix
+    else:
+        bottom_left = (center - np.array([1, 1])*raw_map.data.shape[0]/2)*u.pix
+        top_right = (center + np.array([1, 1])*raw_map.data.shape[0]/2)*u.pix
+
+    newmap = tempmap.submap(bottom_left=bottom_left, top_right=top_right)
 
     return newmap
 
@@ -324,3 +336,86 @@ def get_scales_from_map(map):
     y = hdf_dtype(y_rs.value)
 
     return x, y
+
+
+def get_scales_from_fits(fits_meta):
+    """
+    Compute the solar X and solar Y 1D scale arrays from the fits metadata.
+
+    Return scales in solar radii and assume that image-up and image-right are positive.
+    :param fits_meta:   sunpy.util.metadata.MetaDict
+                        Meta data loaded from fits file by example = sunpy.map.Map()
+                        Meta data is accessed by 'example.meta'
+    :return:    tuple of arrays
+                First array is x-axis of image space in solar radii.
+                Second array is y-axis of image space in solar radii.
+    """
+
+    arcsec_per_radii = fits_meta['rsun_obs']
+    # y-axis pars
+    crpix2 = fits_meta['crpix2']
+    cdelt2 = fits_meta['cdelt2']
+    naxis2 = fits_meta['naxis2']
+    # x-axis pars
+    crpix1 = fits_meta['crpix1']
+    cdelt1 = fits_meta['cdelt1']
+    naxis1 = fits_meta['naxis1']
+
+    # pixel locations (starting at 1 and not 0, per the fits standard)
+    xpix_num = np.arange(start=1, stop=naxis1+1, step=1)
+    rel_xpix = xpix_num - crpix1
+    # convert to arcsec
+    x_arcsec = rel_xpix*cdelt1
+    # convert to solar radii
+    x_radii = x_arcsec/arcsec_per_radii
+
+    # pixel locations (starting at 1 and not 0, per the fits standard)
+    ypix_num = np.arange(start=1, stop=naxis2+1, step=1)
+    rel_ypix = ypix_num - crpix2
+    # convert to arcsec
+    y_arcsec = rel_ypix * cdelt2
+    # convert to solar radii
+    y_radii = y_arcsec / arcsec_per_radii
+
+    return x_radii, y_radii
+
+
+def get_scales_from_fits_map(fits_meta):
+    """
+    Compute the solar X and solar Y 1D scale arrays from the fits metadata.
+
+    Written specifically for HMI_Mrmap_latlon_720s fits files, but should generally
+    work to return X/Y coordinates in the native units.
+    :param fits_meta:   sunpy.util.metadata.MetaDict
+                        Meta data loaded from fits file by example = sunpy.map.Map()
+                        Meta data is accessed by 'example.meta'
+    :return:    tuple of arrays
+                First array is x-axis of image space in native units.
+                Second array is y-axis of image space in native units.
+    """
+
+    # y-axis pars
+    crpix2 = fits_meta['crpix2']
+    cdelt2 = fits_meta['cdelt2']
+    naxis2 = fits_meta['naxis2']
+    crval2 = fits_meta['crval2']
+    # x-axis pars
+    crpix1 = fits_meta['crpix1']
+    cdelt1 = fits_meta['cdelt1']
+    naxis1 = fits_meta['naxis1']
+    crval1 = fits_meta['crval1']
+
+    # pixel locations (starting at 1 and not 0, per the fits standard)
+    xpix_num = np.arange(start=1, stop=naxis1+1, step=1)
+    rel_xpix = xpix_num - crpix1
+    # convert to native units
+    x_native = rel_xpix*cdelt1 + crval1
+
+    # pixel locations (starting at 1 and not 0, per the fits standard)
+    ypix_num = np.arange(start=1, stop=naxis2+1, step=1)
+    rel_ypix = ypix_num - crpix2
+    # convert to native units
+    y_native = rel_ypix * cdelt2 + crval2
+
+    return x_native, y_native
+

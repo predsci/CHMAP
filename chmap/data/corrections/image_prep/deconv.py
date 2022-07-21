@@ -18,17 +18,20 @@ Helper module for working with PSF deconvolution algorithms.
 import numpy as np
 import os
 import time
+import tempfile
+import subprocess
+
 from chmap.utilities.file_io.io_helpers import read_uncompressed_fits_image, write_array_as_compressed_fits
 
-from chmap.settings.app import App
+chmap_path = os.path.abspath('chmap')
+deconv_path = os.path.join(chmap_path, "../software/deconv_gpu")
 
 sgp_dtype = np.float64
-
 sgp_min_val = np.float64(1e-16)
 
-sgp_remote_script = os.path.join(App.APP_HOME, 'shell_scripts', 'run_deconv_gpu.sh')
+sgp_remote_script = os.path.join(deconv_path, 'run_deconv_gpu.sh')
 
-dcurlog_remote_script  = os.path.join(App.APP_HOME, 'shell_scripts', 'run_remote_deconv_gpu.sh')
+dcurlog_remote_script  = os.path.join(deconv_path, 'run_remote_deconv_gpu.sh')
 
 def write_sgp_datfile(filename, image):
     """
@@ -99,8 +102,9 @@ def deconv_sgp(image, psf_name):
     debug = False
 
     # define the temporary file names
-    fname_in = App.TMP_HOME + '/Image_orig.dat'
-    fname_out = App.TMP_HOME + '/Image_new.dat'
+    temp_dir = tempfile.TemporaryDirectory()
+    fname_in = os.path.join(temp_dir, 'Image_orig.dat')
+    fname_out = os.path.join(temp_dir, 'Image_new.dat')
 
     if debug:
         print(fname_in)
@@ -133,13 +137,14 @@ def deconv_sgp(image, psf_name):
     # read the deconvolved image
     image_deconv = read_sgp_datfile(fname_out)
 
-    # clean up the temporary files
-    for file in [fname_in, fname_out]:
-
-        if os.path.isfile(file):
-            os.remove(file)
-        else:
-            raise Exception('Temporary SGP file not found, something is probably wrong: {}'.format(file))
+    temp_dir.cleanup()
+    # # clean up the temporary files
+    # for file in [fname_in, fname_out]:
+    #
+    #     if os.path.isfile(file):
+    #         os.remove(file)
+    #     else:
+    #         raise Exception('Temporary SGP file not found, something is probably wrong: {}'.format(file))
 
     return image_deconv
 
@@ -150,8 +155,9 @@ def deconv_decurlog_gpu(image, psf_name):
     debug = False
 
     # define the temporary file names
-    fname_in = App.TMP_HOME + '/tmp_fits4decurlog_gpu.fits'
-    fname_out = App.TMP_HOME + '/tmp_fits4decurlog_gpu_deconvolved.fits'
+    temp_dir = tempfile.TemporaryDirectory()
+    fname_in = os.path.join(temp_dir, 'tmp_fits4decurlog_gpu.fits')
+    fname_out = os.path.join(temp_dir, 'tmp_fits4decurlog_gpu_deconvolved.fits')
 
     if debug:
         print(fname_in)
@@ -195,14 +201,33 @@ def deconv_decurlog_gpu(image, psf_name):
     image_deconv = np.float64(image_deconv)
 
     # clean up the temporary files
-    for file in [fname_in, fname_out]:
-
-        if os.path.isfile(file):
-            os.remove(file)
-        else:
-            raise Exception('Deconvolved temporary FITS file not found, something is probably wrong: {}'.format(file))
+    temp_dir.cleanup()
+    # for file in [fname_in, fname_out]:
+    #
+    #     if os.path.isfile(file):
+    #         os.remove(file)
+    #     else:
+    #         raise Exception('Deconvolved temporary FITS file not found, something is probably wrong: {}'.format(file))
 
     return image_deconv
+
+
+def run_shell_command(command, dirname, debug=False):
+    process = subprocess.Popen(
+        command, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+        shell=True, cwd=dirname)
+
+    try:
+        stdout, stderr = process.communicate(timeout=300)
+        if debug:
+            for line in stdout.strip().decode().splitlines():
+                print(line)
+            for line in stderr.strip().decode().splitlines():
+                print(line)
+    except subprocess.TimeoutExpired:
+        process.kill()
+
+    return process.returncode
 
 
 def call_deconv_command(command, num_calls=0, debug=False):
@@ -218,7 +243,8 @@ def call_deconv_command(command, num_calls=0, debug=False):
     num_calls = num_calls + 1
     if num_calls <= max_calls:
         try:
-            status = App.run_shell_command(command, App.TMP_HOME, debug=debug)
+            temp_dir = tempfile.TemporaryDirectory()
+            status = run_shell_command(command, temp_dir, debug=debug)
         except:
             print(f'ERROR: Deconvolution Command {command}, failed on attempt number {num_calls}')
             print(f' waiting {wait_time} seconds and trying again.')
