@@ -17,7 +17,9 @@ import chmap.database.db_classes as DBClass
 import chmap.utilities.datatypes.datatypes as datatypes
 import chmap.data.corrections.apply_lbc_iit as apply_lbc_iit
 import chmap.coronal_holes.detection.chd_funcs as chd_funcs
+import chmap.maps.util.map_manip as map_manip
 import chmap.utilities.file_io.io_helpers as io_helpers
+import chmap.utilities.plotting.psi_plotting as psi_plt
 
 # -------------------------------------------------
 # --- Plot time-series of AIA degradation factor
@@ -71,6 +73,25 @@ nc = 3
 # maximum number of iterations
 iters = 1000
 
+# MAP PARAMETERS
+x_range = [0, 2 * np.pi]
+y_range = [-1, 1]
+reduce_map_nycoord = 640
+reduce_map_nxcoord = 1600
+full_map_nycoord = 2048
+full_map_nxcoord = 2048*2
+low_res_nycoord = 160
+low_res_nxcoord = 400
+# del_y = (y_range[1] - y_range[0]) / (map_nycoord - 1)
+# map_nxcoord = (np.floor((x_range[1] - x_range[0]) / del_y) + 1).astype(int)
+# generate map x,y grids. y grid centered on equator, x referenced from lon=0
+full_map_y = np.linspace(y_range[0], y_range[1], full_map_nycoord, dtype='<f4')
+full_map_x = np.linspace(x_range[0], x_range[1], full_map_nxcoord, dtype='<f4')
+reduce_map_y = np.linspace(y_range[0], y_range[1], reduce_map_nycoord, dtype='<f4')
+reduce_map_x = np.linspace(x_range[0], x_range[1], reduce_map_nxcoord, dtype='<f4')
+low_res_y = np.linspace(y_range[0], y_range[1], low_res_nycoord, dtype='<f4')
+low_res_x = np.linspace(x_range[0], x_range[1], low_res_nxcoord, dtype='<f4')
+
 # --- Database Connection for correction params -----------
 # designate which database to connect to
 use_db = "mysql-Q"  # 'sqlite'  Use local sqlite file-based db
@@ -121,10 +142,18 @@ def plot_map_custom(map, outfile=None, title=None, pmax=10**3.5, pmin=None, scal
 
     plt.close()
 
+
 # ---------------------------------------------------------------------
 # Open Prepped AIA image
 # ---------------------------------------------------------------------
-test_im = datatypes.read_los_image(AIA_file)
+test_im = datatypes.read_euv_image(AIA_file)
+
+sol_rad = test_im.map.meta['rsun_obs']
+cdelt = test_im.map.meta['cdelt1']
+test_im.map.peek()
+test_im.map.draw_limb()
+ax = plt.gca()
+ax.add_patch(plt.Circle((1020.3, 1022.5), R0*sol_rad/cdelt, color='w', fill=False))
 
 # ---------------------------------------------------------------------
 # Create a fake dataframe for this image
@@ -200,11 +229,69 @@ for plot_map, label in zip([map_prep, map_lbcc, map_cal], ['step3_deconvolved', 
 # ---------------------------------------------------------------------
 # Interpolate to CR map
 # ---------------------------------------------------------------------
+nprocs = 1
+tpp = 4
+p_pool = None
+
+test_im.iit_data = iit_list[0].iit_data
+test_im.sunpy_meta = test_im.map.meta
+
+aia_map = test_im.interp_to_map(R0=R0, map_x=full_map_x, map_y=full_map_y, interp_field="iit_data",
+                                nprocs=nprocs, tpp=tpp, p_pool=p_pool, no_data_val=-9999.0,
+                                helio_proj=True)
+
+aia_map_reduced = map_manip.downsamp_reg_grid(aia_map, reduce_map_y, reduce_map_x)
 
 
 
 
 
+
+# -------------------------------------------------
+# Compare locations for AIA and Stereo-B
+# -------------------------------------------------
+# reproduction of Caplan 2016 - Fig 18 (right)
+aia_rel = "2011/02/03/aia_lvl2_20110203T120031_193.h5"
+aia_path = os.path.join(hdf_data_dir, aia_rel)
+stb_rel = "2011/02/03/euvib_lvl2_20110203T120106_195.h5"
+stb_path = os.path.join(hdf_data_dir, stb_rel)
+
+aia_disk = datatypes.read_euv_image(aia_path)
+aia_date_string = aia_disk.info['date_string']
+center = datetime.datetime.strptime(aia_date_string, "%Y-%m-%dT%H:%M:%S.%f")
+synch_image = pd.Series(dict(data_id=0, date=aia_disk.map.date, instrument=aia_disk.info['instrument'],
+                             wavelength=aia_disk.info['wavelength'], distance=aia_disk.info['distance'],
+                             cr_lon=aia_disk.info['cr_lon'], cr_lat=aia_disk.info['cr_lat'],
+                             cr_rot=aia_disk.info['cr_rot'], flag=0, time_of_download=aia_disk.map.date,
+                             fname_raw="", fname_hdf=aia_rel)
+                        ).to_frame().T
+date_pd, aia_list, aia_iit_list, use_indices, methods_list, ref_alpha, ref_x = \
+    apply_lbc_iit.apply_ipp_2(db_session, center, synch_image, inst_list, hdf_data_dir,
+                              n_intensity_bins, R0)
+aia_disk.iit_data = aia_iit_list[0].iit_data
+aia_disk.sunpy_meta = aia_disk.map.meta
+aia_map = aia_disk.interp_to_map(R0=R0, map_x=full_map_x, map_y=full_map_y, interp_field="iit_data",
+                                 nprocs=nprocs, tpp=tpp, p_pool=p_pool, no_data_val=-9999.0,
+                                 helio_proj=True)
+
+
+stb_disk = datatypes.read_euv_image(stb_path)
+stb_date_string = stb_disk.info['date_string']
+center = datetime.datetime.strptime(stb_date_string, "%Y-%m-%dT%H:%M:%S.%f")
+synch_image = pd.Series(dict(data_id=0, date=stb_disk.map.date, instrument=stb_disk.info['instrument'],
+                             wavelength=stb_disk.info['wavelength'], distance=stb_disk.info['distance'],
+                             cr_lon=stb_disk.info['cr_lon'], cr_lat=stb_disk.info['cr_lat'],
+                             cr_rot=stb_disk.info['cr_rot'], flag=0, time_of_download=stb_disk.map.date,
+                             fname_raw="", fname_hdf=stb_rel)
+                        ).to_frame().T
+date_pd, stb_list, stb_iit_list, use_indices, methods_list, ref_alpha, ref_x = \
+    apply_lbc_iit.apply_ipp_2(db_session, center, synch_image, ['EUVI-B', ], hdf_data_dir,
+                              n_intensity_bins, R0)
+stb_disk.iit_data = stb_iit_list[0].iit_data
+stb_disk.sunpy_meta = stb_disk.map.meta
+stb_map = stb_disk.interp_to_map(R0=R0, map_x=full_map_x, map_y=full_map_y, interp_field="iit_data",
+                                 nprocs=nprocs, tpp=tpp, p_pool=p_pool, no_data_val=-9999.0,
+                                 helio_proj=True)
 
 
 

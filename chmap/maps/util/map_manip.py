@@ -685,7 +685,8 @@ def downsamp_mean_unifgrid(map, new_y_size, new_x_size, chd_flag=True):
         # assign downsampled map.chd to Null
         pass
 
-    return new_map
+    # return new_map
+    return None
 
 
 def downsamp_reg_grid_orig(map, new_y, new_x, image_method=0, chd_method=0, periodic_x=False):
@@ -1017,6 +1018,7 @@ def downsamp_reg_grid(full_map, new_y, new_x, image_method=0, chd_method=0, peri
             da_ratio[~new_no_chd_index]
     else:
         reduced_chd = None
+        chd_data = None
 
     # now apply reduction to mu values
     if full_map.mu is not None:
@@ -1102,12 +1104,13 @@ def downsamp_reg_grid(full_map, new_y, new_x, image_method=0, chd_method=0, peri
 
     # alter method 'GridSize_sinLat' to new resolution
     method_info = full_map.method_info.copy()
-    y_index = method_info.meth_name.eq('GridSize_sinLat') & \
-        method_info.var_name.eq('n_SinLat')
-    method_info.loc[y_index, 'var_val'] = new_y_n
-    x_index = method_info.meth_name.eq('GridSize_sinLat') & \
-        method_info.var_name.eq('n_phi')
-    method_info.loc[x_index, 'var_val'] = new_x_n
+    if method_info.shape[0] > 0 and any(method_info.meth_name.eq('GridSize_sinLat')):
+        y_index = method_info.meth_name.eq('GridSize_sinLat') & \
+            method_info.var_name.eq('n_SinLat')
+        method_info.loc[y_index, 'var_val'] = new_y_n
+        x_index = method_info.meth_name.eq('GridSize_sinLat') & \
+            method_info.var_name.eq('n_phi')
+        method_info.loc[x_index, 'var_val'] = new_x_n
 
     # generate new map object and fill
     new_map = psi_d_types.PsiMap(data=reduced_data, x=new_x, y=new_y, mu=reduced_mu,

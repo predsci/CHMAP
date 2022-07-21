@@ -5,20 +5,19 @@ import datetime
 import os
 import pickle
 import sys
-
-import pandas
-
-import oftpy.utilities.file_io.psi_hdf as psihdf
-import oftpy.database.db_classes as db
-import oftpy.database.db_funs as db_fun
-from oftpy.data import prep
 import numpy as np
 import pandas as pd
+
 import sunpy.map
 import sunpy.util.metadata
-from oftpy.utilities.coord_manip import interp_los_image_to_map, image_grid_to_CR, interp_los_image_to_map_yang, \
+
+import chmap.utilities.file_io.psi_hdf as psihdf
+import chmap.database.db_classes as db
+import chmap.database.db_funs as db_fun
+from chmap.data.corrections.image_prep import prep
+from chmap.utilities.coord_manip import interp_los_image_to_map, image_grid_to_CR, interp_los_image_to_map_yang, \
     interp_los_image_to_map_par
-from oftpy.settings.info import DTypes
+from chmap.settings.info import DTypes
 
 
 class LosImage:
@@ -351,7 +350,9 @@ class EUVImage(LosImage):
         psihdf.wrh5_meta(filename, self.x, self.y, np.array([]),
                          self.data, chd_meta=self.info, sunpy_meta=sunpy_meta)
 
-    def interp_to_map(self, R0=1.0, map_x=None, map_y=None, no_data_val=-9999., image_num=None):
+    def interp_to_map(self, R0=1.0, map_x=None, map_y=None, no_data_val=-9999., image_num=None,
+                      interp_field="data", nprocs=1, tpp=1, p_pool=None, y_cor=False,
+                      helio_proj=False):
 
         if type(self) == CHDImage:
             print("Converting " + self.info['instrument'] + "-" + str(self.info['wavelength']) + " image from " +
@@ -383,7 +384,8 @@ class EUVImage(LosImage):
             map_x = np.linspace(x_range[0], x_range[1], map_nxcoord, dtype=DTypes.MAP_AXES)
 
         # Do interpolation
-        interp_result = self.interp_data(R0, map_x, map_y, interp_field="data", no_data_val=no_data_val)
+        interp_result = self.interp_data(R0, map_x, map_y, interp_field=interp_field, no_data_val=no_data_val,
+                                         nprocs=nprocs, tpp=tpp, p_pool=p_pool, y_cor=y_cor, helio_proj=helio_proj)
 
         # some images are cutoff or have no_data_val within the image disk for some reason.
         # To mostly filter out these types of points, set any resulting negatives to no_data_val
@@ -571,7 +573,7 @@ def create_iit_image(los_image, lbcc_image, iit_corrected_data, meth_id):
     return iit
 
 
-class CHDImage(LosImage):
+class CHDImage(EUVImage):
     """
     class to hold CHD data
     """
