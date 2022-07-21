@@ -8,6 +8,9 @@
 */__pycache__/*
 **.pyc
 
+# ignore Mac .DS_Store files
+**.DS_Store
+
 # do not track local user settings/credentials
 chmap/settings/app.py
 chmap/settings/app_*.py
