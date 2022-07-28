@@ -191,7 +191,7 @@ def get_metadata(map):
 
 
 # a function to look for all available images in a time-window
-def list_available_images(time_start, time_end, euvi_interval_cadence=2 *u.hour, aia_search_cadence=12 * u.second,
+def list_available_images(time_start, time_end, s12, euvi, aia_search_cadence=12 * u.second,
                           wave_aia=193, wave_euvi=195):
     """
     This function takes in a time range and returns all available images for all available
@@ -214,10 +214,10 @@ def list_available_images(time_start, time_end, euvi_interval_cadence=2 *u.hour,
     # time_ranges = full_range.window(euvi_interval_cadence, euvi_interval_cadence)
 
     # initialize the jsoc drms helper for aia.lev1_euv_12
-    s12 = drms_helpers.S12(verbose=True)
+    # s12 = drms_helpers.S12(verbose=True)
 
     # initialize the helper class for EUVI
-    euvi = vso_helpers.EUVI(verbose=True)
+    # euvi = vso_helpers.EUVI(verbose=True)
 
     # pick a time_range to experiment with
     # time_range = time_ranges[0]

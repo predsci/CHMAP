@@ -4,7 +4,9 @@ Functions to do common image downloads
 
 import pandas as pd
 import os
+import numpy as np
 
+from astropy.time import Time
 import astropy.units as u
 
 from chmap.data.download import drms_helpers, vso_helpers
@@ -63,21 +65,27 @@ def synchronic_euv_download(synch_times, raw_data_dir, db_session, download=True
 
         # query various instrument repos for available images.
         f_list = list_available_images(time_start=row['min_time'], time_end=row['max_time'],
-                                       euvi_interval_cadence=interval_cadence, aia_search_cadence=aia_search_cadence,
+                                       s12=s12, euvi=euvi, aia_search_cadence=aia_search_cadence,
                                        wave_aia=wave_aia, wave_euvi=wave_euvi)
 
         # check for empty instrument results or query errors (and remove)
         del_list = []
         for ii in range(len(f_list)):
-            if len(f_list[ii]) == 0:
-                # mark element for removal
-                del_list.append(ii)
-                # no images found in time range. do not attempt to download
-            elif isinstance(f_list[ii], str) and f_list[ii] == "query_error":
+            if isinstance(f_list[ii], str) and f_list[ii] == "query_error":
                 # mark element for removal
                 del_list.append(ii)
                 # record 'download error' in new_rows. do not attempt to download
                 new_rows.iloc[ii, ['result', 'result_desc']] = [1, 'Image times query failed.']
+            else:
+                # check for bad urls and remove
+                bad_urls = f_list[ii].url.str.contains("NoDataDirectory")
+                f_list[ii] = f_list[ii].loc[~bad_urls, ]
+                # if remaining list contains no rows, mark instrument entry for deletion
+                if len(f_list[ii]) == 0:
+                    # mark element for removal
+                    del_list.append(ii)
+                    # no images found in time range. do not attempt to download
+
         # keep f_list elements that are not in del_list
         f_list = [f_list[ii] for ii in range(len(f_list)) if ii not in set(del_list)]
 
@@ -155,3 +163,40 @@ def synchronic_euv_download(synch_times, raw_data_dir, db_session, download=True
 
     return download_result
 
+
+def get_synch_times(period_start, period_end, interval_cadence):
+    """
+    Create a series of target times that are consistent regardless of off-cadence start/end times.
+
+    Assumptions: 1. Cadence starts at midnight each day
+                 2. 24 hours is a multiple of interval_cadence
+
+    :param period_start: astropy.time.core.Time
+                         Timestamp for target times to start.
+    :param period_end: astropy.time.core.Time
+                       Timestamp for target times to end.
+    :param interval_cadence: astropy.units.quantity.Quantity
+                             Time between target times (assumed less than one day).
+
+    :return: pandas dataframe with results for each download.
+    """
+    # round start time up to next cadence time
+    start_ymdhms = period_start.ymdhms
+    start_hours = (start_ymdhms[3] + start_ymdhms[4]/60 + start_ymdhms[5]/3600) * u.hour
+    cad_mod = start_hours % interval_cadence
+    if cad_mod > 0.*u.hour:
+        target_start = period_start + interval_cadence - cad_mod
+
+    # round end time up to previous cadence time
+    end_ymdhms = period_end.ymdhms
+    end_hours = (end_ymdhms[3] + end_ymdhms[4] / 60 + end_ymdhms[5] / 3600) * u.hour
+    cad_mod = end_hours % interval_cadence
+    target_end = period_end - cad_mod
+
+    # generate a sequence of target times
+    if target_end >= target_start:
+        target_times = Time(np.arange(target_start, target_end + .01*u.second, interval_cadence))
+    else:
+        target_times = None
+
+    return target_times

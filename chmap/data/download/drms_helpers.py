@@ -142,6 +142,10 @@ class S12:
                 if type(fits_val) is int:
                     if math.isnan(pandas_val):
                         pandas_val = -2147483648
+                elif fits_val is None:
+                    pandas_val = -2147483648
+                elif type(pandas_val) is not str and np.isnan(pandas_val):
+                    pandas_val = -2147483648
                 else:
                     pandas_val = drms_frame[pandas_key].astype(type(fits_val))[0]
 

@@ -6,6 +6,7 @@ Idea is to facilitate query and downloading instrument specific images.
 Currently, only STEREO EUVI is implemented.
 """
 from sunpy.net import vso
+import sunpy
 import astropy.units
 import astropy.time
 import numpy as np
@@ -34,22 +35,27 @@ class EUVI:
         if verbose:
             print('### Initialized VSO client for ' + self.detector)
 
-    def query_time_interval(self, time_range, wavelength, craft='STEREO_A'):
+    def query_time_interval(self, time_range, wavelength, craft='STEREO_A', response_format='table'):
         """
         Quick function to query the vso for all matching images in a certain interval specified
         by a sunpy time range
         - As far as I can tell, the vso query is not easily sliced and it is hard to get specific fields out of it
         --> do a brute force loop over every record and make np arrays to hold the fields I care about
+        response_format: 'table' is default. This is the newer Sunpy output type. 'legacy' is the
+            old Sunpy format and is compatible with older versions of Sunpy.
         """
         try:
-            # query the vso
-            query = self.client.search(vso.attrs.Time(time_range), vso.attrs.Detector(self.detector),
-                                       vso.attrs.Wavelength(wavelength*astropy.units.angstrom),
-                                       vso.attrs.Source(craft))
+            # query the vso (legacy output format)
+            query = self.client.search(sunpy.net.attrs.Time(time_range), sunpy.net.attrs.Detector(self.detector),
+                                       sunpy.net.attrs.Wavelength(wavelength*astropy.units.angstrom),
+                                       sunpy.net.attrs.Source(craft), response_format=response_format)
+
         except HTTPException:
             print("There was a problem contacting the VSO server to query image times. Trying again...\n")
             try:
-                key_frame, seg_frame = self.client.query(query_string, key=key_str, seg=segment_str)
+                query = self.client.search(sunpy.net.attrs.Time(time_range), sunpy.net.attrs.Detector(self.detector),
+                                           sunpy.net.attrs.Wavelength(wavelength * astropy.units.angstrom),
+                                           sunpy.net.attrs.Source(craft), response_format=response_format)
             except HTTPException:
                 print("Still cannot contact VSO server. Returning 'query error'.")
                 return "query error"
@@ -63,13 +69,22 @@ class EUVI:
         isgood = np.ndarray((nmatch), 'bool')
 
         # loop over each record, get the pertinent info
-        for i in range(0, nmatch):
-            qrb = query[i]
-            time = vso_time_to_astropy_time(qrb.time.start)
-            time_strings[i] = time.isot
-            jds[i] = time.jd
-            isgood[i] = '2048x2048' in qrb.info
-            urls[i] = self.base_url + '/' + qrb.fileid
+        if response_format == 'legacy':
+            for i in range(0, nmatch):
+                qrb = query[i]
+                time = vso_time_to_astropy_time(qrb.time.start)
+                time_strings[i] = time.isot
+                jds[i] = time.jd
+                isgood[i] = '2048x2048' in qrb.info
+                urls[i] = self.base_url + '/' + qrb.fileid
+        elif response_format == 'table':
+            for i in range(0, nmatch):
+                qrb = query[i]
+                time = qrb['Start Time']
+                time_strings[i] = time.isot
+                jds[i] = time.jd
+                isgood[i] = '2048x2048' in qrb['Info']
+                urls[i] = self.base_url + '/' + qrb['fileid']
 
         # trim the arrays to "good" images only
         inds_bad = np.where(isgood == False)
