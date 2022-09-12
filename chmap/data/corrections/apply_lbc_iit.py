@@ -202,7 +202,9 @@ def apply_ipp_2(db_session, center_date, query_pd, inst_list, hdf_data_dir,
             ipp_method = {'meth_name': ("LBCC", "IIT"), 'meth_description': ["LBCC Theoretic Fit Method",
                                                                              "IIT Fit Method"],
                           'var_name': ("LBCC", "IIT"), 'var_description': (" ", " ")}
-            methods_list[index] = methods_list[index].append(pd.DataFrame(data=ipp_method), sort=False)
+            # methods_list[index] = methods_list[index].append(pd.DataFrame(data=ipp_method), sort=False)
+            methods_list[index] = pd.concat([methods_list[index], pd.DataFrame(data=ipp_method)],
+                                            sort=False, ignore_index=True)
             # methods_list[inst_ind] = pd.DataFrame(data=ipp_method)
         end = time.time()
         print("Image Pre-Processing Corrections (Limb-Brightening and Inter-Instrument Transformation) have been "

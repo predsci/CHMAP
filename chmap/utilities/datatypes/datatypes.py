@@ -506,6 +506,12 @@ class LBCCImage(EUVImage):
         self.n_intensity_bins = len(intensity_bin_edges) - 1
         self.intensity_bin_edges = intensity_bin_edges
 
+        if los_image.map is not None:
+            self.sunpy_meta = los_image.map.meta
+        else:
+            self.sunpy_meta = None
+
+
     def iit_hist(self, lat_band, log10=True):
         """
         function to create iit histogram
@@ -562,6 +568,7 @@ class IITImage(LBCCImage):
         data_id = lbcc_image.data_id
         intensity_bin_edges = lbcc_image.intensity_bin_edges
         super().__init__(los_image, corrected_data, data_id, meth_id, intensity_bin_edges)
+        self.sunpy_meta = lbcc_image.sunpy_meta
 
         # IIT specific stuff
         self.iit_data = iit_corrected_data
@@ -684,16 +691,19 @@ class PsiMap:
         """
         add a record to the map_info dataframe
         """
-        self.map_info = self.map_info.append(map_df, sort=False, ignore_index=True)
+        # self.map_info = self.map_info.append(map_df, sort=False, ignore_index=True)
+        self.map_info = pd.concat([self.map_info, map_df], sort=False, ignore_index=True)
 
     def append_method_info(self, method_df):
-        self.method_info = self.method_info.append(method_df, sort=False, ignore_index=True)
+        # self.method_info = self.method_info.append(method_df, sort=False, ignore_index=True)
+        self.method_info = pd.concat([self.method_info, method_df], sort=False, ignore_index=True)
 
     # def append_var_info(self, var_info_df):
     #     self.var_info = self.var_info.append(var_info_df, sort=False, ignore_index=True)
 
     def append_data_info(self, image_df):
-        self.data_info = self.data_info.append(image_df, sort=False, ignore_index=True)
+        # self.data_info = self.data_info.append(image_df, sort=False, ignore_index=True)
+        self.data_info = pd.concat([self.data_info, image_df], sort=False, ignore_index=True)
 
     def __copy__(self):
         out = PsiMap(data=self.data, x=self.x, y=self.y, mu=self.mu,

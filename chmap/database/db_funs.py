@@ -1936,7 +1936,8 @@ def get_correction_pars(db_session, meth_name, date_obs, instrument="any"):
     before_combo, after_combo = combo_bracket_date(db_session, target_date=date_obs, meth_id=method_id_info[1],
                                                    instrument=instrument)
 
-    query_combos = before_combo.append(after_combo)
+    # query_combos = before_combo.append(after_combo)
+    query_combos = pd.concat([before_combo, after_combo], sort=False, ignore_index=True)
 
     # query variable values
     var_val_query = pd.read_sql(db_session.query(Var_Vals).filter(Var_Vals.meth_id == method_id_info[1],

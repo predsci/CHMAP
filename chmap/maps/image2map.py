@@ -93,29 +93,38 @@ def create_singles_maps_2(date_pd, iit_list, chd_image_list, methods_list, map_x
             image_row = date_pd.iloc[iit_ind]
             # EUV map
             map_list[iit_ind] = iit_list[iit_ind].interp_to_map(R0=R0, map_x=map_x, map_y=map_y,
-                                                                  image_num=image_row.data_id)
+                                                                no_data_val=iit_list[iit_ind].no_data_val,
+                                                                interp_field="iit_data", image_num=image_row.data_id,
+                                                                helio_proj=True)
             # CHD map
             chd_map_list[iit_ind] = chd_image_list[iit_ind].interp_to_map(R0=R0, map_x=map_x, map_y=map_y,
-                                                                            image_num=image_row.data_id)
+                                                                          image_num=image_row.data_id)
             # record image and map info
-            chd_map_list[iit_ind].append_data_info(image_row)
-            map_list[iit_ind].append_data_info(image_row)
+            image_row_pd = date_pd.iloc[[iit_ind]]
+            chd_map_list[iit_ind].append_data_info(image_row_pd)
+            map_list[iit_ind].append_data_info(image_row_pd)
             data_info.append(image_row)
+            # data_info = pd.concat([data_info, image_row_pd], sort=False, ignore_index=True)
             map_info.append(map_list[iit_ind].map_info)
+            # map_info = pd.concat([map_info, map_list[iit_ind].map_info], sort=False, ignore_index=True)
 
             # generate a record of the method and variable values used for interpolation
             interp_method = {'meth_name': ("Im2Map_Lin_Interp_1",), 'meth_description':
                 ["Use SciPy.RegularGridInterpolator() to linearly interpolate from an Image to a Map"] * 1,
                              'var_name': ("R0",), 'var_description': ("Solar radii",), 'var_val': (R0,)}
             # add to the methods dataframe for this map
-            methods_list[iit_ind] = methods_list[iit_ind].append(pd.DataFrame(data=interp_method), sort=False)
+            # methods_list[iit_ind] = methods_list[iit_ind].append(pd.DataFrame(data=interp_method), sort=False)
+            methods_list[iit_ind] = pd.concat([methods_list[iit_ind], pd.DataFrame(data=interp_method)],
+                                              sort=False, ignore_index=True)
 
             # also record a method for map grid size
             grid_method = {'meth_name': ("GridSize_sinLat", "GridSize_sinLat"), 'meth_description':
                            ["Map number of grid points: phi x sin(lat)"] * 2, 'var_name': ("n_phi", "n_SinLat"),
                            'var_description': ("Number of grid points in phi", "Number of grid points in sin(lat)"),
                            'var_val': (len(map_x), len(map_y))}
-            methods_list[iit_ind] = methods_list[iit_ind].append(pd.DataFrame(data=grid_method), sort=False)
+            # methods_list[iit_ind] = methods_list[iit_ind].append(pd.DataFrame(data=grid_method), sort=False)
+            methods_list[iit_ind] = pd.concat([methods_list[iit_ind], pd.DataFrame(data=grid_method)],
+                                              sort=False, ignore_index=True)
 
             # incorporate the methods dataframe into the map object
             map_list[iit_ind].append_method_info(methods_list[iit_ind])

@@ -57,7 +57,9 @@ def select_synchronic_images(center_time, del_interval, image_pd, inst_list):
     synch_images = image_list[0].iloc[cluster_index[0]]
     if cluster_index.__len__() > 1:
         for ii in range(1, cluster_index.__len__()):
-            synch_images = synch_images.append(image_list[ii].iloc[cluster_index[ii]])
+            # synch_images = synch_images.append(image_list[ii].iloc[cluster_index[ii]])
+            synch_images = pd.concat([synch_images, image_list[ii].iloc[cluster_index[ii]]],
+                                     sort=False, ignore_index=True)
 
     return synch_images, map_method
 
