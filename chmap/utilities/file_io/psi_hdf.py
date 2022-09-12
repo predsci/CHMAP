@@ -44,17 +44,20 @@ def wrh5_meta(h5_filename, x, y, z, f, chd_meta=None, sunpy_meta=None):
     for i in range(0, ndims):
         if i == 0:
             dim = h5file.create_dataset("dim1", data=x)
-            h5file['Data'].dims.create_scale(dim, 'dim1')
+            # h5file['Data'].dims.create_scale(dim, 'dim1')
+            dim.make_scale('dim1')
             h5file['Data'].dims[0].attach_scale(dim)
             h5file['Data'].dims[0].label = 'dim1'
         elif i == 1:
             dim = h5file.create_dataset("dim2", data=y)
-            h5file['Data'].dims.create_scale(dim, 'dim2')
+            # h5file['Data'].dims.create_scale(dim, 'dim2')
+            dim.make_scale('dim2')
             h5file['Data'].dims[1].attach_scale(dim)
             h5file['Data'].dims[1].label = 'dim2'
         elif i == 2:
             dim = h5file.create_dataset("dim3", data=z)
-            h5file['Data'].dims.create_scale(dim, 'dim3')
+            # h5file['Data'].dims.create_scale(dim, 'dim3')
+            dim.make_scale('dim3')
             h5file['Data'].dims[2].attach_scale(dim)
             h5file['Data'].dims[2].label = 'dim3'
 
@@ -156,19 +159,19 @@ def wrh5_fullmap(h5_filename, x, y, z, f, method_info=None, data_info=None, map_
     for i in range(0, ndims):
         if i == 0:
             dim = h5file.create_dataset("dim1", data=x)
-            # h5file['Data'].dims.create_scale(dim, 'dim1')
+            # h5file['Data'].dims.create_scale(h5file['dim1'])
             dim.make_scale('dim1')
             h5file['Data'].dims[0].attach_scale(dim)
             h5file['Data'].dims[0].label = 'dim1'
         elif i == 1:
             dim = h5file.create_dataset("dim2", data=y)
-            #h5file['Data'].dims.create_scale(dim, 'dim2')
+            # h5file['Data'].dims.create_scale(dim, 'dim2')
             dim.make_scale('dim2')
             h5file['Data'].dims[1].attach_scale(dim)
             h5file['Data'].dims[1].label = 'dim2'
         elif i == 2:
             dim = h5file.create_dataset("dim3", data=z)
-            #h5file['Data'].dims.create_scale(dim, 'dim3')
+            # h5file['Data'].dims.create_scale(dim, 'dim3')
             dim.make_scale('dim3')
             h5file['Data'].dims[2].attach_scale(dim)
             h5file['Data'].dims[2].label = 'dim3'
@@ -323,17 +326,20 @@ def wrh5_map(h5_filename, x, y, z, f, method_info=None, data_info=None, map_info
     for i in range(0, ndims):
         if i == 0:
             dim = h5file.create_dataset("dim1", data=x)
-            h5file['Data'].dims.create_scale(dim, 'dim1')
+            # h5file['Data'].dims.create_scale(dim, 'dim1')
+            dim.make_scale('dim1')
             h5file['Data'].dims[0].attach_scale(dim)
             h5file['Data'].dims[0].label = 'dim1'
         elif i == 1:
             dim = h5file.create_dataset("dim2", data=y)
-            h5file['Data'].dims.create_scale(dim, 'dim2')
+            # h5file['Data'].dims.create_scale(dim, 'dim2')
+            dim.make_scale('dim2')
             h5file['Data'].dims[1].attach_scale(dim)
             h5file['Data'].dims[1].label = 'dim2'
         elif i == 2:
             dim = h5file.create_dataset("dim3", data=z)
-            h5file['Data'].dims.create_scale(dim, 'dim3')
+            # h5file['Data'].dims.create_scale(dim, 'dim3')
+            dim.make_scale('dim3')
             h5file['Data'].dims[2].attach_scale(dim)
             h5file['Data'].dims[2].label = 'dim3'
 
