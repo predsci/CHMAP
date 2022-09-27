@@ -123,7 +123,7 @@ def deconv_sgp(image, psf_name):
         print('Calling Deconvolution: ' + command)
 
     # call the shell command, wait and try again a certain number of times.
-    status = call_deconv_command(command, debug=debug)
+    status = call_deconv_command(command, temp_dir=temp_dir.name, debug=debug)
 
     # check the return code
     if status != 0:
@@ -156,8 +156,8 @@ def deconv_decurlog_gpu(image, psf_name):
 
     # define the temporary file names
     temp_dir = tempfile.TemporaryDirectory()
-    fname_in = os.path.join(temp_dir, 'tmp_fits4decurlog_gpu.fits')
-    fname_out = os.path.join(temp_dir, 'tmp_fits4decurlog_gpu_deconvolved.fits')
+    fname_in = os.path.join(temp_dir.name, 'tmp_fits4decurlog_gpu.fits')
+    fname_out = os.path.join(temp_dir.name, 'tmp_fits4decurlog_gpu_deconvolved.fits')
 
     if debug:
         print(fname_in)
@@ -179,11 +179,13 @@ def deconv_decurlog_gpu(image, psf_name):
     # build the call for the remote deconvolution algorithm
     npts_str = str(image_thresh.shape[0])
     command = dcurlog_remote_script + ' ' + psf_name + ' ' + npts_str + ' ' + os.path.basename(fname_in)
+
     if debug:
         print('Calling Deconvolution: ' + command)
+        print("In temp directory: " + temp_dir.name)
 
     # call the shell command, wait and try again a certain number of times.
-    status = call_deconv_command(command, debug=debug)
+    status = call_deconv_command(command, temp_dir=temp_dir.name, debug=debug)
 
     # check the return code
     if status != 0:
@@ -230,7 +232,7 @@ def run_shell_command(command, dirname, debug=False):
     return process.returncode
 
 
-def call_deconv_command(command, num_calls=0, debug=False):
+def call_deconv_command(command, temp_dir: str, num_calls=0, debug=False):
     """
     Function that calls the deconvolution shell command.
     - It will recursively retry the deconvolution command if it fails initially,
@@ -243,13 +245,13 @@ def call_deconv_command(command, num_calls=0, debug=False):
     num_calls = num_calls + 1
     if num_calls <= max_calls:
         try:
-            temp_dir = tempfile.TemporaryDirectory()
+            # temp_dir = tempfile.TemporaryDirectory()
             status = run_shell_command(command, temp_dir, debug=debug)
         except:
             print(f'ERROR: Deconvolution Command {command}, failed on attempt number {num_calls}')
             print(f' waiting {wait_time} seconds and trying again.')
             time.sleep(wait_time)
-            status = call_deconv_command(command, num_calls=num_calls, debug=debug)
+            status = call_deconv_command(command, temp_dir=temp_dir, num_calls=num_calls, debug=debug)
     else:
         raise Exception('Hit the maximum number of retries for deconvolution, something is wrong?')
 
