@@ -10,12 +10,18 @@ import datetime
 import warnings
 from h5py.h5py_warnings import H5pyDeprecationWarning
 
-from chmap.settings.app import App
 import chmap.database.db_classes as DBClass
 from chmap.database.db_funs import init_db_conn_old, update_image_val, query_euv_images
 
 from chmap.utilities.idl_connect import idl_helper
 from chmap.data.corrections.image_prep import prep
+
+# test setting umask for writing to Q over AFP
+os.umask(0o002)
+
+# Paths to the database filesystem
+raw_data_home = '/Volumes/extdata2/CHD_DB/raw_images'
+processed_data_home = '/Volumes/extdata2/CHD_DB/processed_images'
 
 # designate which database to connect to
 use_db = "mysql-Q"  # 'sqlite'  Use local sqlite file-based db
@@ -39,8 +45,10 @@ do_all_unprocessed = True
 # search for images in database that have no processed fname
 if do_all_unprocessed:
     query_result = pd.read_sql(
-        db_session.query(DBClass.EUV_Images).filter(
-            DBClass.EUV_Images.fname_hdf == "", DBClass.EUV_Images.flag == 0).statement,
+        db_session.query(DBClass.Data_Files, DBClass.EUV_Images.instrument).filter(
+            DBClass.Data_Files.fname_hdf == "", DBClass.Data_Files.flag == 0,
+            DBClass.Data_Files.type == "EUV_Image",
+            DBClass.Data_Files.data_id == DBClass.EUV_Images.data_id).statement,
         db_session.bind)
 
     # sort it by time so that it is easy to track progression in a physical way
@@ -84,7 +92,7 @@ for index, row in query_result.iterrows():
     # row = query_result.iloc[100,]
 
     # Create file path to .fits
-    raw_data_file = os.path.join(App.RAW_DATA_HOME, row.fname_raw)
+    raw_data_file = os.path.join(raw_data_home, row.fname_raw)
     # prep the image
     print('')
     print('---------------------------------------------------------')
@@ -94,11 +102,11 @@ for index, row in query_result.iterrows():
     print(f'  database data_id:  {row.data_id}')
     print('  Raw File:  ' + raw_data_file)
     subdir, fname, los = prep.prep_euv_image(
-        raw_data_file, App.PROCESSED_DATA_HOME, write=write, idl_session=idl_session, deconvolve=deconvolve)
+        raw_data_file, processed_data_home, write=write, idl_session=idl_session, deconvolve=deconvolve)
 
     # return a relative filename for the hdf
     hdf_rel_path = os.path.join(subdir, fname)
-    hdf_full_path = os.path.join(App.PROCESSED_DATA_HOME, subdir, fname)
+    hdf_full_path = os.path.join(processed_data_home, subdir, fname)
 
     # update DB to reflect the new filename
     print('  Committing processed path to database: ' + hdf_rel_path)
