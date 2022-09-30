@@ -85,6 +85,10 @@ warnings.filterwarnings("ignore", category=H5pyDeprecationWarning)
 # use a manual counter since sorting can change the index order in iterrows()
 ifile = 1
 
+# test = True
+# if test:
+#     query_result = query_result.iloc[0:5]
+
 # loop through images and process to hdf
 for index, row in query_result.iterrows():
     # --- Debug/testing -----
