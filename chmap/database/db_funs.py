@@ -409,12 +409,15 @@ def add_image2session(data_dir, subdir, fname, db_session, datatype="EUV_Image",
     return db_session
 
 
-def remove_euv_image(db_session, raw_series, raw_dir, hdf_dir):
+def remove_euv_image(db_session, raw_series, raw_dir, hdf_dir, proc_only=False):
     """
     Simultaneously delete image from filesystem and remove metadata row
     from EUV_Images table.
     raw_series - expects a pandas series that results from one row of
     the EUV_Images DB table.
+    proc_only - boolean {False} To delete only the proccessed image file,
+                set to True.  This will leave an entry in the database,
+                but set fname_hdf to "".
     Ex.
     test_pd = query_euv_images(db_session=db_session, time_min=query_time_min,
                                 time_max=query_time_max)
@@ -431,15 +434,18 @@ def remove_euv_image(db_session, raw_series, raw_dir, hdf_dir):
     hdf_fname = raw_series['fname_hdf']
     hdf_full_path = os.path.join(hdf_dir, hdf_fname)
 
-    # check if file exists in filesystem
-    if os.path.exists(raw_full_path):
-        os.remove(raw_full_path)
-        print("Deleted file: " + raw_full_path)
-        exit_status = 0
+    if not proc_only:
+        # check if file exists in filesystem
+        if os.path.exists(raw_full_path):
+            os.remove(raw_full_path)
+            print("Deleted file: " + raw_full_path)
+            exit_status = 0
+        else:
+            print("\nWarning: Image file not found at location: " + raw_full_path +
+                  ". This may be the symptom of a larger problem.")
+            exit_status = 1
     else:
-        print("\nWarning: Image file not found at location: " + raw_full_path +
-              ". This may be the symptom of a larger problem.")
-        exit_status = 1
+        exit_status = 0
 
     # first check if there is an hdf file listed
     if hdf_fname != '':
@@ -452,14 +458,20 @@ def remove_euv_image(db_session, raw_series, raw_dir, hdf_dir):
                   ". This may be the symptom of a larger problem.")
             exit_status = exit_status + 2
 
-    # delete row where id = raw_id.  Use .item() to recover an INT from numpy.int64
-    out_flag2 = db_session.query(Data_Files).filter(Data_Files.data_id == raw_id.item()).delete()
-    out_flag = db_session.query(EUV_Images).filter(EUV_Images.data_id == raw_id.item()).delete()
-    if out_flag == 0:
-        exit_status = exit_status + 4
-    elif out_flag == 1:
+    if not proc_only:
+        # delete row where id = raw_id.  Use .item() to recover an INT from numpy.int64
+        out_flag2 = db_session.query(Data_Files).filter(Data_Files.data_id == raw_id.item()).delete()
+        out_flag = db_session.query(EUV_Images).filter(EUV_Images.data_id == raw_id.item()).delete()
+        if out_flag == 0:
+            exit_status = exit_status + 4
+        elif out_flag == 1:
+            db_session.commit()
+            print("Row deleted from DB for data_id=" + str(raw_id))
+    else:
+        # delete fname_hdf from Data_Files table
+        print("fname_hdf field of data_files table set to '' for data_id=" + str(raw_id))
+        db_session.query(Data_Files).filter(Data_Files.data_id == raw_id).update(dict(fname_hdf=""))
         db_session.commit()
-        print("Row deleted from DB for data_id=" + str(raw_id))
 
     return exit_status, db_session
 
