@@ -1283,24 +1283,24 @@ def binary_to_hist(hist_binary, n_mu_bins, n_intensity_bins):
     # generate histogram for time window
     if n_mu_bins is not None:
         for index, row in hist_binary.iterrows():
-            mu_bin_array = np.frombuffer(row.mu_bin_edges, dtype=np.float)
-            intensity_bin_array = np.frombuffer(row.intensity_bin_edges, dtype=np.float)
+            mu_bin_array = np.frombuffer(row.mu_bin_edges, dtype=float)
+            intensity_bin_array = np.frombuffer(row.intensity_bin_edges, dtype=float)
         full_hist = np.full((n_mu_bins, n_intensity_bins, hist_binary.__len__()), 0, dtype=np.int64)
         hist_list = hist_binary['hist']
 
         for index in range(hist_list.size):
-            buffer_hist = np.frombuffer(hist_list[index])
+            buffer_hist = np.frombuffer(hist_list.iloc[index], dtype=int)
             hist = np.ndarray(shape=(n_mu_bins, n_intensity_bins), buffer=buffer_hist)
             full_hist[:, :, index] = hist
     else:
         for index, row in hist_binary.iterrows():
             mu_bin_array = None
-            intensity_bin_array = np.frombuffer(row.intensity_bin_edges, dtype=np.float)
+            intensity_bin_array = np.frombuffer(row.intensity_bin_edges, dtype=float)
         full_hist = np.full((n_intensity_bins, hist_binary.__len__()), 0, dtype=np.int64)
         hist_list = hist_binary['hist']
 
         for index in range(hist_list.size):
-            buffer_hist = np.frombuffer(hist_list[index], dtype=np.int)
+            buffer_hist = np.frombuffer(hist_list.iloc[index], dtype=int)
             hist = np.ndarray(shape=n_intensity_bins, dtype=np.int, buffer=buffer_hist)
             full_hist[:, index] = hist
 

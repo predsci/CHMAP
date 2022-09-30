@@ -166,7 +166,7 @@ def calc_theoretic_fit(db_session, inst_list, calc_query_time_min, calc_query_ti
             continue
 
         # keep only one observation-histogram per image_center window
-        keep_ind = lbcc.cadence_choose(pd_hist.date_obs, image_centers, image_del)
+        keep_ind = lbcc.cadence_choose(pd_hist_all.date_obs, image_centers, image_del)
         pd_hist = pd_hist_all.iloc[keep_ind]
 
         # convert the binary types back to arrays

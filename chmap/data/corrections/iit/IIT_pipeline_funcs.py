@@ -64,7 +64,7 @@ def create_histograms(db_session, inst_list, lbc_query_time_min, lbc_query_time_
             in_index = pd.Series([False]*image_pd_all.shape[0])
         else:
             # compare image results to hist results based on image_id
-            in_index = image_pd_all.image_id.isin(hist_pd.image_id)
+            in_index = image_pd_all.data_id.isin(hist_pd.image_id)
 
         # return only images that do not have corresponding histograms
         image_pd = image_pd_all[~in_index]
