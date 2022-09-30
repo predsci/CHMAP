@@ -106,6 +106,9 @@ lbcc_funcs.generate_theoretic_plots(db_session, inst_list, plot_query_time_min, 
 lbcc_funcs.generate_histogram_plots(db_session, hdf_data_dir, inst_list, hist_plot_query_time_min,
                                     hist_plot_query_time_max, n_hist_plots=n_hist_plots, n_mu_bins=n_mu_bins,
                                     n_intensity_bins=n_intensity_bins, lat_band=lat_band, log10=log10, R0=R0)
+
+db_session.close()
+
 end_time_tot = time.time()
 tot_time = end_time_tot - start_time_tot
 time_test = str(datetime.timedelta(minutes=tot_time))
