@@ -31,7 +31,7 @@ start_time = datetime.datetime(2009, 1, 1, 0)
 end_time = datetime.datetime.today()
 
 plot_dates = pd.date_range(start_time, end_time, freq="D")
-plot_df = pd.DataFrame(dict(date=plot_dates, factor=1.))
+plot_df = pd.DataFrame(dict(date=plot_dates, factor=1., alpha=0., x=0.))
 
 # load AIA degradation information
 json_dict = aia_degrad.load_aia_json()
@@ -104,6 +104,20 @@ cred_dir = "/Users/turtle/Dropbox/GitReps/CHMAP/chmap/settings/"
 db_session = db_funs.init_db_conn_old(db_name=use_db, chd_base=DBClass.Base, user=user,
                                       password=password, cred_dir=cred_dir)
 
+# Also look-up Stereo A IIT coefs for the same times
+for index, row in plot_df.iterrows():
+    cur_date = row.date.to_pydatetime()
+    theoretic_query = db_funs.get_correction_pars(db_session, "IIT", date_obs=cur_date,
+                                                  instrument='EUVI-A')
+    # separate alpha and x
+    plot_df.loc[index, 'alpha'] = theoretic_query[0]
+    plot_df.loc[index, 'x'] = theoretic_query[1]
+
+plt.figure(0)
+plt.plot(plot_df.date, plot_df.x)
+
+plt.figure(1)
+plt.plot(plot_df.date, plot_df.alpha)
 
 # ---------------------------------------------------------------------
 # Plotting function tailored for this script
