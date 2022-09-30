@@ -102,7 +102,7 @@ def prep_aia_image(map_raw, deconvolve=True):
     # deconvolve the image
     if deconvolve:
         # build the deconvolution string (making sure its in angstroms)
-        wave_string = str(np.int(map_raw.wavelength.to(u.angstrom).to_value()))
+        wave_string = str(int(map_raw.wavelength.to(u.angstrom).to_value()))
 
         psf_name = 'AIA_' + wave_string + '_4096'
         if aia_psf_version == 2:
@@ -197,7 +197,7 @@ def prep_euvi_image(map_raw, deconvolve=True, idl_session=None):
         new_session = True
 
     # run the SSW/IDL prep command
-    fits_prepped = os.path.join(temp_dir, 'tmp_euvi_prepped.fits')
+    fits_prepped = os.path.join(temp_dir.name, 'tmp_euvi_prepped.fits')
     idl_session.secchi_prep(fits_raw, fits_prepped, quiet=True)
 
     # end the idl session if necessary (closes a subprocess)
@@ -207,6 +207,15 @@ def prep_euvi_image(map_raw, deconvolve=True, idl_session=None):
     # read in the result as a sunpy map object
     map_prepped = sunpy.map.Map(fits_prepped)
     temp_dir.cleanup()
+
+    # if necessary, pass-through 'crpix1', 'crpix2', and 'crota2' from raw image
+    dict_names = map_prepped.meta.keys()
+    if 'crota2' not in dict_names:
+        map_prepped.meta['crota2'] = map_raw.meta['crota']
+    if 'crpix1' not in dict_names or map_prepped.meta['crpix1'] != map_raw.meta['crpix1']:
+        map_prepped.meta['crpix1'] = map_raw.meta['crpix1']
+    if 'crpix2' not in dict_names or map_prepped.meta['crpix2'] != map_raw.meta['crpix2']:
+        map_prepped.meta['crpix2'] = map_raw.meta['crpix2']
 
     # get image data in double precision for processing
     image = np.float64(map_prepped.data)
@@ -218,7 +227,7 @@ def prep_euvi_image(map_raw, deconvolve=True, idl_session=None):
     # deconvolve the image
     if deconvolve:
         # build the deconvolution string (making sure its in angstroms)
-        wave_string = str(np.int(map_prepped.wavelength.to(u.angstrom).to_value()))
+        wave_string = str(int(map_prepped.wavelength.to(u.angstrom).to_value()))
 
         if map_prepped.nickname == 'EUVI-A':
             inst_string = 'STA'

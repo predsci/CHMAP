@@ -22,16 +22,17 @@ import tempfile
 import subprocess
 
 from chmap.utilities.file_io.io_helpers import read_uncompressed_fits_image, write_array_as_compressed_fits
+import chmap.utilities.coord_manip as coord_manip
 
-chmap_path = os.path.abspath('chmap')
-deconv_path = os.path.join(chmap_path, "../software/deconv_gpu")
+chmap_util_path = os.path.dirname(coord_manip.__file__)
+deconv_path = os.path.join(chmap_util_path, "../../software/deconv_gpu")
 
 sgp_dtype = np.float64
 sgp_min_val = np.float64(1e-16)
 
 sgp_remote_script = os.path.join(deconv_path, 'run_deconv_gpu.sh')
 
-dcurlog_remote_script  = os.path.join(deconv_path, 'run_remote_deconv_gpu.sh')
+dcurlog_remote_script = os.path.join(deconv_path, 'run_remote_deconv_gpu.sh')
 
 def write_sgp_datfile(filename, image):
     """
@@ -186,6 +187,9 @@ def deconv_decurlog_gpu(image, psf_name):
 
     # call the shell command, wait and try again a certain number of times.
     status = call_deconv_command(command, temp_dir=temp_dir.name, debug=debug)
+
+    if debug:
+        print("Deconv status: " + str(status))
 
     # check the return code
     if status != 0:
