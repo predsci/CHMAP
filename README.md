@@ -19,8 +19,19 @@ relevant a broad range of solar features and scientific analysis.
 
 ## Requirements
 
-This package requires a custom python environment:
-
+This package requires a custom python environment that includes Sunpy.  
+At time of writing the version of Sunpy (3.1.6) available from the 
+conda-defaults channel is fatally flawed.  So be sure that the conda-forge 
+channel is added to your conda preferences before using the enclosed 
+conda recipe file.  Check for conda-forge:
+```
+conda config --show channels
+```
+If needed, add conda-forge:
+```
+conda config --append channels conda-forge
+```
+Now we are ready to build the custom 'chmap' conda environment:
 ```
 conda env create --file conda_recipe_chmap.yml
 ```
