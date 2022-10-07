@@ -15,8 +15,10 @@ del_interval = np.timedelta64(interval_delta, 'm')
 # INSTRUMENTS
 inst_list = ["AIA", "EUVI-A", "EUVI-B"]
 # CORRECTION PARAMETERS
+n_mu_bins = 18
 n_intensity_bins = 200
 R0 = 1.01
+log10 = True
 # AIA wavelength to pull degradation factor from
 AIA_wave = 193
 
@@ -50,8 +52,14 @@ LBCC_window = 180  # days for moving average
 LBCC_window_del = datetime.timedelta(days=LBCC_window)
 LBCC_weekday = 0  # start at 0 for Monday
 
+LBCC_lat_band = [- np.pi / 64., np.pi / 64.]
+
 # TIME WINDOW FOR IIT PARAMETER CALCULATION
 IIT_weekday = 0  # start at 0 for Monday
 IIT_number_of_days = 180  # days for moving average
 IIT_window_del = datetime.timedelta(days=IIT_number_of_days)
 
+# IIT instruments
+IIT_ref_inst = "AIA"  # reference instrument to fit histograms to
+IIT_query_wavelengths = [193, 195]
+IIT_lat_band = [-np.pi / 2.4, np.pi / 2.4]
