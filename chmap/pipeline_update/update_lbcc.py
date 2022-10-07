@@ -15,27 +15,29 @@ import chmap.database.db_funs as db_funs
 from chmap.database.db_funs import init_db_conn_old, update_image_val
 import chmap.data.corrections.lbcc.LBCC_theoretic_funcs as lbcc_funcs
 import chmap.utilities.utils as psi_utils
+import chmap.utilities.datatypes.datatypes as psi_d_types
+import chmap.settings.ch_pipeline_pars as pipe_pars
 
 # Time-averaging window full-width
-LBCC_window = 180  # days for moving average
+LBCC_window = pipe_pars.LBCC_window  # days for moving average
 window_del = datetime.timedelta(days=LBCC_window)
-weekday_calc = 0  # start at 0 for Monday
+weekday_calc = pipe_pars.LBCC_weekday  # start at 0 for Monday
 
 # TIME WINDOWS FOR IMAGE INCLUSION - do not include all images, just synchronic images on an
 # 'image_freq' cadence.
-image_freq = 2                          # number of hours between window centers
-image_del = np.timedelta64(30, 'm')     # one-half window width
+image_freq = pipe_pars.map_freq         # number of hours between window centers
+image_del = pipe_pars.del_interval_dt   # one-half window width
 
 # MAP AND BINNING PARAMETERS
-n_mu_bins = 18
-n_intensity_bins = 200
-R0 = 1.01
-log10 = True
-lat_band = [- np.pi / 64., np.pi / 64.]
+n_mu_bins = pipe_pars.n_mu_bins
+n_intensity_bins = pipe_pars.n_intensity_bins
+R0 = pipe_pars.R0
+log10 = pipe_pars.log10
+lat_band = pipe_pars.LBCC_lat_band
 
 # INSTRUMENTS
-inst_list = ["AIA", "EUVI-A", "EUVI-B"]
-wavelengths = [193, 195]
+inst_list = pipe_pars.inst_list
+wavelengths = pipe_pars.IIT_query_wavelengths
 
 #########################
 # 1. query latest image
@@ -84,16 +86,24 @@ lbcc_coef_query = db_session.query(func.max(DBClass.Data_Combos.date_mean)).filt
     DBClass.Data_Combos.meth_id == meth_id)
 max_lbcc_coef = pd.read_sql(lbcc_coef_query.statement, db_session.bind)
 
-# --- Query database for most recent LBCC hist --------------------------------------
-lbcc_hist_query = db_session.query(func.max(DBClass.Histogram.date_obs)).filter(
-    DBClass.Histogram.meth_id == meth_id)
-max_lbcc_hist = pd.read_sql(lbcc_hist_query.statement, db_session.bind)
+# --- Query database for all images that need LBCC histograms -----------------------
+# generate a list of processed EUV images with flag=0
+proc_image_query = db_session.query(DBClass.Data_Files, DBClass.EUV_Images.instrument).join(
+    DBClass.EUV_Images).filter(
+    DBClass.Data_Files.fname_hdf != "", DBClass.Data_Files.type == "EUV_Image",
+    DBClass.EUV_Images.flag == 0
+)
+# generate a list of LBCC histograms
+lbcc_hists_query = db_session.query(DBClass.Histogram).filter(DBClass.Histogram.meth_id == meth_id).subquery()
+# do a negative outer join with Histograms table subquery to determine which processed images
+# do not yet have an LBCC histogram
+non_hist_im_query = proc_image_query.outerjoin(
+    lbcc_hists_query, DBClass.Data_Files.data_id == lbcc_hists_query.c.image_id).filter(
+    lbcc_hists_query.c.image_id == None)
+# send query to MySQL DB and collect results
+hist_images = pd.read_sql(non_hist_im_query.statement, db_session.bind)
 
 # --- Set update dates --------------------------------------------------------------
-# set dates for updating histograms
-lbcc_hist_start = max_lbcc_hist.loc[0][0].to_pydatetime()
-lbcc_hist_end = max_im_date.loc[0][0].to_pydatetime()
-
 # set dates for updating coefficients
 lbcc_coef_start = max_lbcc_coef.loc[0][0].to_pydatetime()
 lbcc_coef_end = max_im_date.loc[0][0].to_pydatetime() - window_del/2
@@ -102,21 +112,54 @@ lbcc_coef_start = psi_utils.round_day(lbcc_coef_start)
 lbcc_coef_end = psi_utils.round_day(lbcc_coef_end)
 
 # --- Generate new histograms as needed ---------------------------------------------
-lbcc_funcs.save_histograms(db_session, hdf_data_dir, inst_list, lbcc_hist_start, lbcc_hist_end,
-                           n_mu_bins=n_mu_bins, n_intensity_bins=n_intensity_bins, lat_band=lat_band, log10=log10,
-                           R0=R0, wavelengths=wavelengths)
+# lbcc_funcs.save_histograms(db_session, hdf_data_dir, inst_list, lbcc_hist_start, lbcc_hist_end,
+#                            n_mu_bins=n_mu_bins, n_intensity_bins=n_intensity_bins, lat_band=lat_band, log10=log10,
+#                            R0=R0, wavelengths=wavelengths)
+
+# creates mu bin & intensity bin arrays
+mu_bin_edges = np.linspace(0.1, 1.0, n_mu_bins + 1, dtype='float')
+image_intensity_bin_edges = np.linspace(0, 5, num=n_intensity_bins + 1, dtype='float')
+# loop through images and produce intensity histograms
+for index, row in hist_images.iterrows():
+    print("Processing image number", row.data_id, ".")
+    if row.fname_hdf == "":
+        print("Warning: Image # " + str(row.data_id) + " does not have an associated hdf file. Skipping")
+        continue
+    hdf_path = os.path.join(hdf_data_dir, row.fname_hdf)
+    # attempt to open and read file
+    try:
+        los_temp = psi_d_types.read_euv_image(hdf_path)
+    except:
+        print("Something went wrong opening: ", hdf_path, ". Skipping")
+        continue
+    # add coordinates to los object
+    los_temp.get_coordinates(R0=R0)
+    # perform 2D histogram on mu and image intensity
+    temp_hist = los_temp.mu_hist(image_intensity_bin_edges, mu_bin_edges, lat_band=lat_band, log10=log10)
+    hist_lbcc = psi_d_types.create_lbcc_hist(hdf_path, row.data_id, meth_id, mu_bin_edges,
+                                             image_intensity_bin_edges, lat_band, temp_hist)
+
+    # add this histogram and meta data to database
+    db_funs.add_hist(db_session, hist_lbcc)
+
 
 # --- Delete existing LBCC coefs in update window -----------------------------------
-combos_query = db_session.query(DBClass.Data_Combos).filter(
-    DBClass.Data_Combos.meth_id == meth_id,
-    DBClass.Data_Combos.date_mean >= lbcc_coef_start
-    )
-combos_del = pd.read_sql(combos_query.statement, db_session.bind)
-vars_query = db_session.query(DBClass.Var_Vals).filter(
-    DBClass.Var_Vals.combo_id.in_(combos_del.combo_id)
-)
-vars_del = vars_query.delete()
-db_session.commit()
+# combos_query = db_session.query(DBClass.Data_Combos).filter(
+#     DBClass.Data_Combos.meth_id == meth_id,
+#     DBClass.Data_Combos.date_mean >= lbcc_coef_start
+#     )
+# combos_del = pd.read_sql(combos_query.statement, db_session.bind)
+# vars_query = db_session.query(DBClass.Var_Vals).filter(
+#     DBClass.Var_Vals.combo_id.in_(combos_del.combo_id)
+# )
+# vars_del = vars_query.delete()
+# # also delete these combos
+# combo_assoc = db_session.query(DBClass.Data_Combo_Assoc).filter(
+#     DBClass.Data_Combo_Assoc.combo_id.in_(combos_del.combo_id)
+# )
+# assoc_del = combo_assoc.delete()
+# c_num_del = combos_query.delete()
+# db_session.commit()
 
 # --- Generate updated LBCC coefs for update window ---------------------------------
 lbcc_funcs.calc_theoretic_fit(db_session, inst_list, lbcc_coef_start,
