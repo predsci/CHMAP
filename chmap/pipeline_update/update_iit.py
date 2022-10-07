@@ -12,30 +12,33 @@ from sqlalchemy import func
 
 import chmap.database.db_classes as DBClass
 import chmap.database.db_funs as db_funs
+import chmap.utilities.datatypes.datatypes as psi_d_types
+import chmap.data.corrections.lbcc.LBCC_theoretic_funcs as lbcc_funcs
 import chmap.data.corrections.iit.IIT_pipeline_funcs as iit_funcs
 import chmap.utilities.utils as psi_utils
+import chmap.settings.ch_pipeline_pars as pipe_pars
 
 ####### ------ UPDATABLE PARAMETERS ------ #########
 # TIME WINDOW FOR IIT PARAMETER CALCULATION
-weekday = 0  # start at 0 for Monday
-number_of_days = 180  # days for moving average
+weekday = pipe_pars.IIT_weekday  # start at 0 for Monday
+number_of_days = pipe_pars.IIT_number_of_days  # days for moving average
 window_del = datetime.timedelta(days=number_of_days)
 # TIME WINDOWS FOR IMAGE INCLUSION - do not include all images in time range,
 # only those that are synchronic at a specific 'image_freq' cadence
-image_freq = 2      # number of hours between window centers
-image_del = np.timedelta64(30, 'm')  # one-half window width
+image_freq = pipe_pars.map_freq      # number of hours between window centers
+image_del = pipe_pars.del_interval_dt  # one-half window width
 
 # INSTRUMENTS
-inst_list = ["AIA", "EUVI-A", "EUVI-B"]
-ref_inst = "AIA"  # reference instrument to fit histograms to
-wavelengths = [193, 195]
+inst_list = pipe_pars.inst_list
+ref_inst = pipe_pars.IIT_ref_inst
+wavelengths = pipe_pars.IIT_query_wavelengths
 
 # declare map and binning parameters
-n_mu_bins = 18
-n_intensity_bins = 200
-R0 = 1.01
-log10 = True
-lat_band = [-np.pi / 2.4, np.pi / 2.4]
+n_mu_bins = pipe_pars.n_mu_bins
+n_intensity_bins = pipe_pars.n_intensity_bins
+R0 = pipe_pars.R0
+log10 = pipe_pars.log10
+lat_band = pipe_pars.IIT_lat_band
 
 # DATABASE FILE-SYSTEM PATHS
 raw_data_dir = "/Volumes/extdata2/CHD_DB/raw_images"
@@ -88,16 +91,28 @@ iit_coef_query = db_session.query(func.max(DBClass.Data_Combos.date_mean)).filte
     DBClass.Data_Combos.meth_id == meth_id)
 max_iit_coef = pd.read_sql(iit_coef_query.statement, db_session.bind)
 
-# Query database for most recent IIT hist
-iit_hist_query = db_session.query(func.max(DBClass.Histogram.date_obs)).filter(
-    DBClass.Histogram.meth_id == meth_id)
-max_iit_hist = pd.read_sql(iit_hist_query.statement, db_session.bind)
+# --- Query database for all images that need LBCC histograms -----------------------
+# generate a list of processed EUV images with flag=0
+proc_image_query = db_session.query(DBClass.Data_Files, DBClass.EUV_Images.instrument).join(
+    DBClass.EUV_Images).filter(
+    DBClass.Data_Files.fname_hdf != "", DBClass.Data_Files.type == "EUV_Image",
+    DBClass.EUV_Images.flag == 0
+)
+# generate a list of IIT histograms
+iit_hists_query = db_session.query(DBClass.Histogram).filter(DBClass.Histogram.meth_id == meth_id).subquery()
+# do a negative outer join with Histograms table subquery to determine which processed images
+# do not yet have an LBCC histogram
+non_hist_im_query = proc_image_query.outerjoin(
+    iit_hists_query, DBClass.Data_Files.data_id == iit_hists_query.c.image_id).filter(
+    iit_hists_query.c.image_id == None)
+non_hist_im_query = proc_image_query.outerjoin(
+    iit_hists_query, DBClass.Data_Files.data_id == iit_hists_query.c.image_id).filter(
+    iit_hists_query.c.image_id == None, DBClass.Data_Files.date_obs <= max_lbcc_coef.loc[0][0].to_pydatetime())
+# send query to MySQL DB and collect results
+iit_images = pd.read_sql(non_hist_im_query.statement, db_session.bind)
+
 
 # --- Set update dates --------------------------------------------------------------
-# set dates for updating histograms
-iit_hist_start = max_iit_hist.loc[0][0].to_pydatetime()
-iit_hist_end = max_lbcc_coef.loc[0][0].to_pydatetime()
-
 # set dates for updating coefficients
 iit_coef_start = max_iit_coef.loc[0][0].to_pydatetime()
 iit_coef_end = max_lbcc_coef.loc[0][0].to_pydatetime() - window_del/2
@@ -109,20 +124,48 @@ iit_coef_end = psi_utils.round_day(iit_coef_end)
 ##### ------ INTER INSTRUMENT TRANSFORMATION FUNCTIONS BELOW ------- ########
 
 # --- STEP ONE: CREATE 1D HISTOGRAMS AND SAVE TO DATABASE --------
-iit_funcs.create_histograms(db_session, inst_list, iit_hist_start, iit_hist_end, hdf_data_dir,
-                            n_intensity_bins=n_intensity_bins, lat_band=lat_band, log10=log10, R0=R0,
-                            wavelengths=wavelengths)
+# iit_funcs.create_histograms(db_session, inst_list, iit_hist_start, iit_hist_end, hdf_data_dir,
+#                             n_intensity_bins=n_intensity_bins, lat_band=lat_band, log10=log10, R0=R0,
+#                             wavelengths=wavelengths)
+
+# loop through images
+for index, row in iit_images.iterrows():
+    print("Calculating IIT histogram at time:", row.date_obs)
+
+    original_los, lbcc_image, mu_indices, use_indices, theoretic_query = lbcc_funcs.apply_lbc_2(
+        db_session, hdf_data_dir, image_row=row, n_intensity_bins=n_intensity_bins, R0=R0)
+    # check that image load and LBCC application finished successfully
+    if original_los is None:
+        continue
+
+    # calculate IIT histogram from LBC
+    hist = psi_d_types.LBCCImage.iit_hist(lbcc_image, lat_band, log10)
+
+    # create IIT histogram datatype
+    iit_hist = psi_d_types.create_iit_hist(lbcc_image, meth_id, lat_band, hist)
+
+    # add IIT histogram and meta data to database
+    db_funs.add_hist(db_session, iit_hist)
+
 
 # --- Delete existing IIT coefs in update window -----------------------------------
-combos_query = db_session.query(DBClass.Data_Combos).filter(
-    DBClass.Data_Combos.meth_id == meth_id,
-    DBClass.Data_Combos.date_mean >= iit_coef_start
-    )
-combos_del = pd.read_sql(combos_query.statement, db_session.bind)
-vars_query = db_session.query(DBClass.Var_Vals).filter(
-    DBClass.Var_Vals.combo_id.in_(combos_del.combo_id)
-)
-vars_del = vars_query.delete()
+# combos_query = db_session.query(DBClass.Data_Combos).filter(
+#     DBClass.Data_Combos.meth_id == meth_id,
+#     DBClass.Data_Combos.date_mean >= iit_coef_start
+#     )
+# combos_del = pd.read_sql(combos_query.statement, db_session.bind)
+# vars_query = db_session.query(DBClass.Var_Vals).filter(
+#     DBClass.Var_Vals.combo_id.in_(combos_del.combo_id)
+# )
+# vars_del = vars_query.delete()
+# # also delete these combos
+# combo_assoc = db_session.query(DBClass.Data_Combo_Assoc).filter(
+#     DBClass.Data_Combo_Assoc.combo_id.in_(combos_del.combo_id)
+# )
+# assoc_del = combo_assoc.delete()
+# c_num_del = combos_query.delete()
+# db_session.commit()
+
 
 # --- CALCULATE INTER-INSTRUMENT TRANSFORMATION COEFFICIENTS AND SAVE TO DATABASE ----
 iit_funcs.calc_iit_coefficients(db_session, inst_list, ref_inst, iit_coef_start, iit_coef_end,
@@ -130,5 +173,5 @@ iit_funcs.calc_iit_coefficients(db_session, inst_list, ref_inst, iit_coef_start,
                                 image_del=image_del, n_intensity_bins=n_intensity_bins,
                                 lat_band=lat_band, create=create, wavelengths=wavelengths)
 
-
+db_session.close()
 
