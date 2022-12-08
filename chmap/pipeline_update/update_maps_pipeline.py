@@ -187,6 +187,10 @@ for date_ind, center in enumerate(moving_avg_centers):
 
     #### STEP THREE: CORONAL HOLE DETECTION ####
     if los_list[0] is not None:
+        # overwrite lbc/iit use_indices for coronal-hole detection
+        for index in range(iit_list.__len__()):
+            use_indices[index] = (iit_list[index].mu > 0.) & (iit_list[index].iit_data > iit_list[index].no_data_val)
+        # do coronal hole detection
         chd_image_list = chd_funcs.chd_2(iit_list, los_list, use_indices, thresh1,
                                          thresh2, ref_alpha, ref_x, nc, iters)
 
