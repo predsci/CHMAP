@@ -26,7 +26,7 @@ weekday_calc = pipe_pars.LBCC_weekday  # start at 0 for Monday
 # TIME WINDOWS FOR IMAGE INCLUSION - do not include all images, just synchronic images on an
 # 'image_freq' cadence.
 image_freq = pipe_pars.map_freq         # number of hours between window centers
-image_del = pipe_pars.del_interval_dt   # one-half window width
+image_del = np.timedelta64(pipe_pars.interval_delta, 'm')   # one-half window width
 
 # MAP AND BINNING PARAMETERS
 n_mu_bins = pipe_pars.n_mu_bins
