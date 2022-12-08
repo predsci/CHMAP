@@ -179,7 +179,7 @@ def apply_ipp_2(db_session, center_date, query_pd, inst_list, hdf_data_dir,
             image_row = date_pd.iloc[index]
             print("Processing image number", image_row.data_id, "for LBC and IIT Corrections.")
             # apply LBC
-            los_list[index], lbcc_image, mu_indices, use_ind, theoretic_query = \
+            los_list[index], lbcc_image, mu_ind_1D, use_ind, theoretic_query = \
                 lbcc_funcs.apply_lbc_2(db_session, hdf_data_dir, image_row=image_row,
                                        n_intensity_bins=n_intensity_bins, R0=R0)
             # update method with LBCC parameter values? Would need to associate each LBCC
