@@ -719,6 +719,7 @@ def add_euv_map(db_session, psi_map, base_path=None, map_type=None):
                 if not np.isnan(var_row.var_val):
                     add_var_val = Var_Vals_Map(map_id=map_id, combo_id=combo_id, meth_id=var_row.meth_id,
                                                var_id=var_row.var_id, var_val=var_row.var_val)
+                    # print(map_id, combo_id, var_row.meth_id, var_row.var_id, var_row.var_val)
                     db_session.add(add_var_val)
 
             # now commit EUV_Map update and Var_Vals update simultaneously
@@ -941,7 +942,9 @@ def get_method_id(db_session, meth_name, meth_desc=None, var_names=None, var_des
                 var_id_query = pd.read_sql(db_session.query(Var_Defs.var_id).filter(Var_Defs.meth_id == meth_id,
                                                                                     Var_Defs.var_name == var_names[ii]
                                                                                     ).statement, db_session.bind)
-                var_ids[ii] = var_id_query.var_id.to_list()
+                # A method_id/var_name pair should return a unique var_id, so return a scalar--not a list
+                # var_ids[ii] = var_id_query.var_id.to_list()
+                var_ids[ii] = var_id_query.var_id.item()
         else:
             var_ids = None
 
