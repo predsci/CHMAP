@@ -26,7 +26,7 @@ window_del = datetime.timedelta(days=number_of_days)
 # TIME WINDOWS FOR IMAGE INCLUSION - do not include all images in time range,
 # only those that are synchronic at a specific 'image_freq' cadence
 image_freq = pipe_pars.map_freq      # number of hours between window centers
-image_del = pipe_pars.del_interval_dt  # one-half window width
+image_del = np.timedelta64(pipe_pars.interval_delta, 'm')   # one-half window width
 
 # INSTRUMENTS
 inst_list = pipe_pars.inst_list
@@ -67,7 +67,7 @@ db_session = db_funs.init_db_conn_old(db_name=use_db, chd_base=DBClass.Base, use
 # 2. Most recent IIT coef
 
 meth_name = "LBCC"
-db_sesh, meth_id, var_ids = db_funs.get_method_id(db_session, meth_name, meth_desc=None, var_names=None,
+db_session, meth_id, var_ids = db_funs.get_method_id(db_session, meth_name, meth_desc=None, var_names=None,
                                                   var_descs=None, create=False)
 # query var defs for variable id
 var_id = db_funs.get_var_id(db_session, meth_id, var_name=None, var_desc=None, create=False)
@@ -82,7 +82,7 @@ max_lbcc_coef = pd.read_sql(lbcc_coef_query.statement, db_session.bind)
 # max_lbcc_hist = pd.read_sql(lbcc_hist_query.statement, db_session.bind)
 
 meth_name = "IIT"
-db_sesh, meth_id, var_ids = db_funs.get_method_id(db_session, meth_name, meth_desc=None, var_names=None,
+db_session, meth_id, var_ids = db_funs.get_method_id(db_session, meth_name, meth_desc=None, var_names=None,
                                                   var_descs=None, create=False)
 # query var defs for variable id
 var_id = db_funs.get_var_id(db_session, meth_id, var_name=None, var_desc=None, create=False)
@@ -98,13 +98,13 @@ proc_image_query = db_session.query(DBClass.Data_Files, DBClass.EUV_Images.instr
     DBClass.Data_Files.fname_hdf != "", DBClass.Data_Files.type == "EUV_Image",
     DBClass.EUV_Images.flag == 0
 )
-# generate a list of IIT histograms
+# specify a query of all IIT histograms
 iit_hists_query = db_session.query(DBClass.Histogram).filter(DBClass.Histogram.meth_id == meth_id).subquery()
 # do a negative outer join with Histograms table subquery to determine which processed images
-# do not yet have an LBCC histogram
-non_hist_im_query = proc_image_query.outerjoin(
-    iit_hists_query, DBClass.Data_Files.data_id == iit_hists_query.c.image_id).filter(
-    iit_hists_query.c.image_id == None)
+# do not yet have an IIT histogram
+# non_hist_im_query = proc_image_query.outerjoin(
+#     iit_hists_query, DBClass.Data_Files.data_id == iit_hists_query.c.image_id).filter(
+#     iit_hists_query.c.image_id == None)
 non_hist_im_query = proc_image_query.outerjoin(
     iit_hists_query, DBClass.Data_Files.data_id == iit_hists_query.c.image_id).filter(
     iit_hists_query.c.image_id == None, DBClass.Data_Files.date_obs <= max_lbcc_coef.loc[0][0].to_pydatetime())
