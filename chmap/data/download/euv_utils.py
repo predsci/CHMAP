@@ -89,7 +89,7 @@ def cluster_meth_1(f_list, jd0):
     sizes = []
     for result in results:
         sizes.append(len(result))
-    time_delta = np.ndarray(tuple(sizes), dtype='float64')
+    time_delta = np.zeros(tuple(sizes), dtype='float64')
 
     # Now loop over all the image pairs to select the "perfect" group of images.
     # Here we ,minimize an arbitrary weight function based on the time differences between the
@@ -124,6 +124,14 @@ def cluster_meth_1(f_list, jd0):
 
     # Figure out the index
     imins = np.where(time_delta == np.min(time_delta))
+    # If there are identical minimum values, np.where() will return multiple indices/groups
+    # Keep only the first group
+    if len(imins[0]) > 1:
+        imins = list(imins)
+        for ii in range(inst_dim):
+            imins[ii] = imins[ii][0:1]
+        imins = tuple(imins)
+
 
     return imins
 
