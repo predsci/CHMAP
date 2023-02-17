@@ -64,15 +64,17 @@ def select_synchronic_images(center_time, del_interval, image_pd, inst_list):
     return synch_images, map_method
 
 
-def get_dates(time_min, time_max, map_freq=2):
+def get_dates(time_min, time_max, map_freq=2, freq_unit='h'):
     """
     function to create moving average dates based on hourly frequency of map creation
     @param time_min: minimum datetime value for querying
     @param time_max: maximum datetime value for querying
     @param map_freq: integer value representing hourly cadence for map creation
+    @param freq_unit: character indicating numpy.timedelta64 units for frequency
     @return: list of center dates
     """
-    map_frequency = int((time_max - time_min).total_seconds() / 3600 / map_freq)
+    freq_dt = np.timedelta64(map_freq, freq_unit)
+    map_frequency = int((time_max - time_min).total_seconds() / freq_dt.item().total_seconds())
     moving_avg_centers = np.array(
-        [np.datetime64(str(time_min)) + ii * np.timedelta64(map_freq, 'h') for ii in range(map_frequency + 1)])
+        [np.datetime64(str(time_min)) + ii * freq_dt for ii in range(map_frequency + 1)])
     return moving_avg_centers

@@ -97,8 +97,12 @@ def create_singles_maps_2(date_pd, iit_list, chd_image_list, methods_list, map_x
                                                                 interp_field="iit_data", image_num=image_row.data_id,
                                                                 helio_proj=True)
             # CHD map
+            # set no_data_val image pixels to 0.5 for interpolation to CR map
+            no_data_index = chd_image_list[iit_ind].data <= chd_image_list[iit_ind].no_data_val
+            chd_image_list[iit_ind].data[no_data_index] = 0.5
             chd_map_list[iit_ind] = chd_image_list[iit_ind].interp_to_map(R0=R0, map_x=map_x, map_y=map_y,
                                                                           image_num=image_row.data_id)
+            chd_image_list[iit_ind].data[no_data_index] = chd_image_list[iit_ind].no_data_val
             # record image and map info
             image_row_pd = date_pd.iloc[[iit_ind]]
             chd_map_list[iit_ind].append_data_info(image_row_pd)

@@ -208,7 +208,8 @@ for date_ind, center in enumerate(moving_avg_centers):
                   "at", map_list[ii].data_info.date_obs[0])
             # perform map reduction
             reduced_maps[ii] = map_manip.downsamp_reg_grid(map_list[ii], reduce_map_y, reduce_map_x,
-                                                           single_origin_image=map_list[ii].data_info.data_id[0])
+                                                           single_origin_image=map_list[ii].data_info.data_id[0],
+                                                           uniform_no_data=False)
 
         #### STEP FIVE: CREATE COMBINED MAPS ####
         synchronic_map = midm.create_combined_maps_2(
