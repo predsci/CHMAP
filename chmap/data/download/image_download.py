@@ -159,7 +159,8 @@ def synchronic_euv_download(synch_times, raw_data_dir, db_session, download=True
         # commit the changes to the DB, this also assigns auto-incrementing prime-keys 'data_id'
         db_session.commit()
         # record download outcomes to dataframe
-        download_result = download_result.append(new_rows)
+        # download_result = download_result.append(new_rows)
+        download_result = pd.concat([download_result, new_rows])
 
     return download_result
 
