@@ -83,7 +83,10 @@ class EUVI:
                 time = qrb['Start Time']
                 time_strings[i] = time.isot
                 jds[i] = time.jd
-                isgood[i] = '2048x2048' in qrb['Info']
+                if "Info" in qrb.keys():
+                    isgood[i] = '2048x2048' in qrb['Info']
+                else:
+                    isgood[i] = qrb['Size'] >= 7 * astropy.units.Mibyte
                 urls[i] = self.base_url + '/' + qrb['fileid']
 
         # trim the arrays to "good" images only

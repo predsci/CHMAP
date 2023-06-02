@@ -34,7 +34,7 @@ def synchronic_euv_download(synch_times, raw_data_dir, db_session, download=True
     """
 
     # query parameters
-    interval_cadence = 2*u.hour
+    # interval_cadence = 2*u.hour
     aia_search_cadence = 12*u.second
     wave_aia = 193
     wave_euvi = 195
@@ -195,7 +195,10 @@ def get_synch_times(period_start, period_end, interval_cadence):
 
     # generate a sequence of target times
     if target_end >= target_start:
-        target_times = Time(np.arange(target_start, target_end + .01*u.second, TimeDelta(interval_cadence)))
+        number_steps = np.floor((target_end - target_start)/interval_cadence.to(u.d)).value
+        time_shifts = np.arange(start=0, stop=number_steps, step=1) * interval_cadence
+        target_times = target_start + time_shifts
+        # target_times = Time(np.arange(target_start, target_end + .01*u.second, TimeDelta(interval_cadence)))
     else:
         target_times = None
 
