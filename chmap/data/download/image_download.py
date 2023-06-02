@@ -6,7 +6,7 @@ import pandas as pd
 import os
 import numpy as np
 
-from astropy.time import Time
+from astropy.time import Time, TimeDelta
 import astropy.units as u
 
 from chmap.data.download import drms_helpers, vso_helpers
@@ -195,7 +195,7 @@ def get_synch_times(period_start, period_end, interval_cadence):
 
     # generate a sequence of target times
     if target_end >= target_start:
-        target_times = Time(np.arange(target_start, target_end + .01*u.second, interval_cadence))
+        target_times = Time(np.arange(target_start, target_end + .01*u.second, TimeDelta(interval_cadence)))
     else:
         target_times = None
 

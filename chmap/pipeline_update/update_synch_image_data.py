@@ -5,7 +5,7 @@ Query available (newer) images and download best matches.
 import datetime
 import os
 import pandas as pd
-from astropy.time import Time
+import astropy.time
 import astropy.units as u
 from sqlalchemy import func
 
@@ -46,8 +46,8 @@ period_start_dt = image_max_date - datetime.timedelta(days=10)
 
 # --- Set a series of target synchronic times ------------------------
 # Specify a vector of synchronic times
-period_start = Time(period_start_dt, scale='utc')
-period_end = Time.now()
+period_start = astropy.time.Time(period_start_dt, scale='utc')
+period_end = astropy.time.Time.now()
 # define image search interval cadence and width
 interval_cadence = 2*u.hour
 del_interval = 30*u.minute
