@@ -2146,7 +2146,7 @@ def generate_methdf(query_pd):
     for column in Var_Defs.__table__.columns:
         defs_columns.append(column.key)
     df_cols = set().union(meth_columns, defs_columns, ("var_val",))
-    methods_template = pd.DataFrame(data=None, columns=df_cols)
+    methods_template = pd.DataFrame(data=None, columns=list(df_cols))
     # generate a list of methods dataframes
     methods_list = [methods_template] * query_pd.__len__()
     return methods_list
