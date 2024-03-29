@@ -149,6 +149,8 @@ query_pd = db_funcs.query_euv_images(db_session=db_session, time_min=query_min -
 #### STEP TWO: APPLY PRE-PROCESSING CORRECTIONS ####
 # 1.) get dates
 moving_avg_centers = synch_utils.get_dates(time_min=query_min, time_max=query_max, map_freq=map_freq)
+# start with the most recent maps
+moving_avg_centers = np.flip(moving_avg_centers)
 
 # load AIA degradation information
 json_dict = aia_degrad.load_aia_json()
