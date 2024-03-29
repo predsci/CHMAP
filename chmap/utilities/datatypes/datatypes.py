@@ -639,7 +639,7 @@ class PsiMap:
             for column in db.Data_Files.__table__.columns:
                 data_files_cols.append(column.key)
             data_cols = set().union(euv_image_cols, data_files_cols)
-            self.data_info = pd.DataFrame(data=None, columns=data_cols)
+            self.data_info = pd.DataFrame(data=None, columns=list(data_cols))
             # map_info will be a combination of Data_Combos and EUV_Maps
             image_columns = []
             for column in db.Data_Combos.__table__.columns:
@@ -648,7 +648,7 @@ class PsiMap:
             for column in db.EUV_Maps.__table__.columns:
                 map_columns.append(column.key)
             df_cols = set().union(image_columns, map_columns)
-            self.map_info = pd.DataFrame(data=None, columns=df_cols)
+            self.map_info = pd.DataFrame(data=None, columns=list(df_cols))
             # method_info is a combination of Var_Defs and Method_Defs
             meth_columns = []
             for column in db.Method_Defs.__table__.columns:
@@ -657,7 +657,7 @@ class PsiMap:
             for column in db.Var_Defs.__table__.columns:
                 defs_columns.append(column.key)
             df_cols = set().union(meth_columns, defs_columns)
-            self.method_info = pd.DataFrame(data=None, columns=df_cols)
+            self.method_info = pd.DataFrame(data=None, columns=list(df_cols))
 
             # Type cast data arrays
             self.data = data.astype(DTypes.MAP_DATA)
@@ -747,6 +747,7 @@ class PsiMap:
                                 data_info=self.data_info, map_info=self.map_info,
                                 no_data_val=self.no_data_val, mu=self.mu, origin_image=self.origin_image,
                                 chd=self.chd)
+
             print("PsiMap object written to: " + h5_filename)
 
         else:
