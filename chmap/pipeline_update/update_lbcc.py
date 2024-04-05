@@ -162,10 +162,13 @@ for index, row in hist_images.iterrows():
 # db_session.commit()
 
 # --- Generate updated LBCC coefs for update window ---------------------------------
-lbcc_funcs.calc_theoretic_fit(db_session, inst_list, lbcc_coef_start,
-                              lbcc_coef_end, weekday=weekday_calc, image_freq=image_freq,
-                              image_del=image_del, number_of_days=LBCC_window, n_mu_bins=n_mu_bins,
-                              n_intensity_bins=n_intensity_bins, lat_band=lat_band, create=True,
-                              wavelengths=wavelengths)
+if lbcc_coef_end > lbcc_coef_start:
+    lbcc_funcs.calc_theoretic_fit(db_session, inst_list, lbcc_coef_start,
+                                  lbcc_coef_end, weekday=weekday_calc, image_freq=image_freq,
+                                  image_del=image_del, number_of_days=LBCC_window, n_mu_bins=n_mu_bins,
+                                  n_intensity_bins=n_intensity_bins, lat_band=lat_band, create=True,
+                                  wavelengths=wavelengths)
+else:
+    print("LBCC coefficients are already up-to-date.")
 
 db_session.close()

@@ -20,8 +20,8 @@ def round_hour(raw_datetime, n_hours):
     # if the rounded number of hours is >= 24, add a day. Then generate new timestamp
     if out_hours > 23:
         add_days, out_hours = divmod(out_hours, 24)
-        rounded_dt = raw_datetime.replace(day=raw_datetime.day + add_days, hour=out_hours, minute=0,
-                                          second=0, microsecond=0)
+        rounded_dt = raw_datetime + datetime.timedelta(days=add_days)
+        rounded_dt = rounded_dt.replace(hour=out_hours, minute=0, second=0, microsecond=0)
     else:
         rounded_dt = raw_datetime.replace(hour=out_hours, minute=0, second=0, microsecond=0)
 
