@@ -344,7 +344,9 @@ class EUVImage(LosImage):
         Write the los image to hdf5 format
         """
         # check to see if the map exists from instantiation
-        if hasattr(self, 'map'):
+        if hasattr(self, 'sunpy_meta'):
+            sunpy_meta = self.sunpy_meta
+        elif hasattr(self, 'map'):
             sunpy_meta = self.map.meta
         else:
             sunpy_meta = None
