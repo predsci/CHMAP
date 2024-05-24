@@ -346,6 +346,8 @@ class EUVImage(LosImage):
         # check to see if the map exists from instantiation
         if hasattr(self, 'map'):
             sunpy_meta = self.map.meta
+        else:
+            sunpy_meta = None
 
         psihdf.wrh5_meta(filename, self.x, self.y, np.array([]),
                          self.data, chd_meta=self.info, sunpy_meta=sunpy_meta)
