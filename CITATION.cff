@@ -1,0 +1,33 @@
+# This CITATION.cff file was generated with cffinit.
+# Visit https://bit.ly/cffinit to generate yours today!
+
+cff-version: 1.2.0
+title: Coronal Hole Mapping and Analysis Pipeline (CHMAP)
+message: >-
+  If you use this software, please cite it using the
+  metadata from this file.
+type: software
+authors:
+  - given-names: James
+    family-names: Turtle
+    email: jturtle@predsci.com
+    affiliation: Predictive Science Inc
+    orcid: 'https://orcid.org/0000-0003-0735-7769'
+  - given-names: Cooper
+    family-names: Downs
+    affiliation: Predictive Science Inc
+    orcid: 'https://orcid.org/0000-0003-1759-4354'
+  - given-names: Ronald
+    family-names: Caplan
+    affiliation: Predictive Science Inc
+    orcid: 'https://orcid.org/0000-0002-2633-4290'
+  - given-names: Tamar
+    family-names: Ervin
+    orcid: 'https://orcid.org/0000-0002-8475-8606'
+  - given-names: Opal
+    family-names: Issan
+    orcid: 'https://orcid.org/0000-0003-3137-5537'
+repository-code: 'https://github.com/predsci/CHMAP'
+url: 'https://predsci.github.io/CHMAP/'
+license: Apache-2.0
+date-released: '2021-09-01'
