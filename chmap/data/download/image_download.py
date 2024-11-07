@@ -187,6 +187,8 @@ def get_synch_times(period_start, period_end, interval_cadence):
     cad_mod = start_hours % interval_cadence
     if cad_mod > 0.*u.hour:
         target_start = period_start + interval_cadence - cad_mod
+    else:
+        target_start = period_start
 
     # round end time up to previous cadence time
     end_ymdhms = period_end.ymdhms
