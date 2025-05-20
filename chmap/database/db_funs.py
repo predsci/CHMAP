@@ -459,9 +459,9 @@ def remove_euv_image(db_session, raw_series, raw_dir, hdf_dir, proc_only=False):
             exit_status = exit_status + 2
 
     if not proc_only:
-        # delete row where id = raw_id.  Use .item() to recover an INT from numpy.int64
-        out_flag2 = db_session.query(Data_Files).filter(Data_Files.data_id == raw_id.item()).delete()
-        out_flag = db_session.query(EUV_Images).filter(EUV_Images.data_id == raw_id.item()).delete()
+        # delete row where id = raw_id.  Use int to recover an INT from numpy.int64
+        out_flag = db_session.query(EUV_Images).filter(EUV_Images.data_id == int(raw_id)).delete()
+        out_flag2 = db_session.query(Data_Files).filter(Data_Files.data_id == int(raw_id)).delete()
         if out_flag == 0:
             exit_status = exit_status + 4
         elif out_flag == 1:
@@ -1030,7 +1030,12 @@ def get_var_val(db_session, combo_id, meth_id, var_id, var_val=None, create=Fals
     else:
         # value already exists
         val_exists = True
-        var_val = existing_var.var_val[0]
+        if var_val is not None:
+            db_session.query(Var_Vals).filter(Var_Vals.var_id == combo_id,
+                                              Var_Vals.combo_id == var_id).update({Var_Vals.var_val: var_val})
+            db_session.commit()
+        else:
+            var_val = existing_var.var_val[0]
 
     if create and not val_exists:
         # create variable value record
@@ -1708,7 +1713,7 @@ def query_hist(db_session, meth_id, n_mu_bins=None, n_intensity_bins=None, lat_b
     return pd_out
 
 
-def add_hist(db_session, histogram):
+def add_hist(db_session, histogram, overwrite=False):
     """
     Adds a row to the database session that references the hist location and metadata.
     The updated session will need to be committed - db_session.commit() - in order to
@@ -1741,9 +1746,14 @@ def add_hist(db_session, histogram):
         # Histogram.lat_band == histogram.lat_band,
         # Histogram.wavelength == histogram.wavelength).all()
     if len(existing_row_id) == 1:
-        # histogram has already been downloaded and entered into DB. do nothing
-        print("Histogram is already logged in database.  Nothing added.")
-        pass
+        if overwrite:
+            print("Histogram currently exists for " + histogram.instrument + chr(histogram.date_obs) +
+                  ".  Overwriting.")
+            db_session.query(Histogram).filter(Histogram.hist_id == existing_row_id).update({Histogram.hist: hist})
+        else:
+            # histogram has already been downloaded and entered into DB. do nothing
+            print("Histogram is already logged in database.  Nothing added.")
+            pass
     elif len(existing_row_id) > 1:
         # This histogram already exists in the DB in MORE THAN ONE PLACE!
         print("Current download: " + hist_identifier + " already exists in the database MULTIPLE times. " +
@@ -2030,9 +2040,6 @@ def store_lbcc_values(db_session, pd_hist, meth_name, meth_desc, var_name, var_d
     :param results:
     :param create:
     :return:
-    TODO: In the get_var_val() call at the end, if the variable value already exists (in the DB) this call will simply
-        return the existing value; rather than writing the input values.  Decide if default behavior should be to
-        overwrite or not.  In the meantime, I have included a print statement warning.
     """
     # create image combos in db table
     # get image_ids from queried histograms - same as ids in euv_images table
@@ -2067,10 +2074,10 @@ def store_lbcc_values(db_session, pd_hist, meth_name, meth_desc, var_name, var_d
         var_val = results[date_index, inst_index, i]
         db_session, var_val_db = get_var_val(db_session, combo_id, method_id, var_id, var_val, create=create)
         # test if input val and output val are within 4 sig figs
-        if ~np.isclose(var_val, var_val_db, rtol=1e-4):
-            print("WARNING: LBCC variable value already exists in DB and was NOT overwritten. ",
-                  "In DB_funs.store_lbcc_values(), for combo_id: ", combo_id, ", method_id: ", method_id,
-                  ", and variable: ", var_name_i, sep="")
+        # if ~np.isclose(var_val, var_val_db, rtol=1e-4):
+        #     print("WARNING: LBCC variable value already exists in DB and was NOT overwritten. ",
+        #           "In DB_funs.store_lbcc_values(), for combo_id: ", combo_id, ", method_id: ", method_id,
+        #           ", and variable: ", var_name_i, sep="")
 
     return db_session
 
@@ -2085,9 +2092,6 @@ def store_iit_values(db_session, pd_hist, meth_name, meth_desc, alpha_x_paramete
     :param alpha_x_parameters:
     :param create:
     :return:
-    TODO: In the get_var_val() call at the end, if the variable value already exists (in the DB) this call will simply
-        return the existing value; rather than writing the input values.  Decide if default behavior should be to
-        overwrite or not.  In the meantime, I have included a print statement warning.
     """
     # create image combos in db table
     # get image_ids from queried histograms - same as ids in euv_images table
@@ -2130,10 +2134,10 @@ def store_iit_values(db_session, pd_hist, meth_name, meth_desc, alpha_x_paramete
         var_val = alpha_x_parameters[i]
         db_session, var_val_db = get_var_val(db_session, combo_id, method_id, var_id, var_val, create=create)
         # test if input val and output val are within 4 sig figs (rough check to see if value already existed)
-        if ~np.isclose(var_val, var_val_db, rtol=1e-4):
-            print("WARNING: IIT variable value already exists in DB and was NOT overwritten. ",
-                  "In DB_funs.store_iit_values(), for combo_id: ", combo_id, ", method_id: ", method_id,
-                  ", and variable: ", var_name, sep="")
+        # if ~np.isclose(var_val, var_val_db, rtol=1e-4):
+        #     print("WARNING: IIT variable value already exists in DB and was NOT overwritten. ",
+        #           "In DB_funs.store_iit_values(), for combo_id: ", combo_id, ", method_id: ", method_id,
+        #           ", and variable: ", var_name, sep="")
 
     return db_session
 
