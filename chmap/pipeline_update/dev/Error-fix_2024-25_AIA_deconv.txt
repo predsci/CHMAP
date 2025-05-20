@@ -1,0 +1,25 @@
+
+
+After Q died, and we cloned Edge to be the new Q, the AIA deconvolution 
+routines were returning erroneous processed images for several months.
+To fix this I am implementing the following steps:
+
+1. Delete all AIA processed images from Nov 1, 2024 through May 1, 2025. 
+   These images will retain their entries in the database, but have the
+   fname_hdf column cleared.  
+   chmap/pipeline_update/dev/delete_processed_images.py
+2. Use the normal routine to regenerate the processed files
+   chmap/pipeline_update/update_processed_images.py
+3. Use the one-off routine
+   chmap/pipeline_update/dev/update_lbcc_2024-25_error-fix.py
+   to refresh LLBC histograms (from Nov 1, 2024) and coefficients 
+   (from Aug 1, 2024).
+4. Update IIT histograms from May 1, 2024 and coefficients from Feb 1, 2024
+   chmap/pipeline_update/dev/update_iit_2024-25_error-fix.py
+5. Re-calculate all maps from Feb 1, 2024 to present 
+   chmap/pipeline_update/dev/update_maps_error-fix_2024-25.py
+
+
+
+
+
