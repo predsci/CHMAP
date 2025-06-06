@@ -14,9 +14,11 @@ To fix this I am implementing the following steps:
    chmap/pipeline_update/dev/update_lbcc_2024-25_error-fix.py
    to refresh LLBC histograms (from Nov 1, 2024) and coefficients 
    (from Aug 1, 2024).
-4. Update IIT histograms from May 1, 2024 and coefficients from Feb 1, 2024
+4. Mark bad images in the database before proceeding:
+   chmap/data/util/flag_bad/image_testing_2.py
+5. Update IIT histograms from May 1, 2024 and coefficients from Feb 1, 2024
    chmap/pipeline_update/dev/update_iit_2024-25_error-fix.py
-5. Re-calculate all maps from Feb 1, 2024 to present 
+6. Re-calculate all maps from Feb 1, 2024 to present 
    chmap/pipeline_update/dev/update_maps_error-fix_2024-25.py
 
 

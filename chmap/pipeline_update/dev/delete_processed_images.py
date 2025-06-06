@@ -38,8 +38,6 @@ elif use_db == 'mysql-Q':
     # setup database connection to MySQL database on Q
     db_session = init_db_conn_old(db_name=use_db, chd_base=DBClass.Base, user=user, password=password)
 
-# Flag to do everything that hasn't been processed yet or a specific query for testing
-do_all_unprocessed = True
 
 # query the database for each spacecraft type for a specific time range
 period_start = datetime.datetime(2024, 11, 1, 0, 0, 0)
@@ -51,10 +49,6 @@ print(query_result)
 
 # print out the number of records to prep
 print(f'### Query Returned {len(query_result)} images to delete')
-
-# Prep options
-deconvolve = True
-write = True
 
 # disable hdf5 depreciation warnings for the prep step
 warnings.filterwarnings("ignore", category=H5pyDeprecationWarning)
