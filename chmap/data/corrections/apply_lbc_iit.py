@@ -159,7 +159,8 @@ def apply_ipp_2(db_session, center_date, query_pd, inst_list, hdf_data_dir,
     los_list = [None] * n_images
     iit_list = [None] * n_images
     methods_list = db_funcs.generate_methdf(query_pd)
-    use_indices = [np.full((2048, 2048), True, dtype=bool)] * len(inst_list)
+    # use_indices = [np.full((2048, 2048), True, dtype=bool)] * len(inst_list)
+    use_indices = [np.full((2048, 2048), True, dtype=bool)] * n_images
     # convert date to correct format
     print("\nStarting corrections for", center_date, "images:")
     date_time = np.datetime64(center_date).astype(datetime.datetime)
