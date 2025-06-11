@@ -45,7 +45,8 @@ class S12:
         self.series = 'aia.lev1_euv_12s'
 
         # initialize the drms client
-        self.client = drms.Client(verbose=verbose)
+        # self.client = drms.Client(verbose=verbose)
+        self.client = drms.Client()
 
         # obtain ALL of the keys for this series (i believe this connects to JSOC)
         self.allkeys = self.client.keys(self.series)

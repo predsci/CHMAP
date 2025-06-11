@@ -1,11 +1,10 @@
 
 import os
 import requests
+import tempfile
 import h5py
 import pandas as pd
 from astropy.time import Time, TimeDelta
-
-from chmap.settings.app import App
 
 
 def download_lmsal_index(file_write):
@@ -26,7 +25,7 @@ def build_lmsal_index_path(filename=None, path=None):
 
     # Default path. database /tmp folder
     if path is None:
-        path = App.TMP_HOME
+        path = tempfile.mkdtemp()
     # Default filename
     if filename is None:
         filename = "lmsal_index.h5"
