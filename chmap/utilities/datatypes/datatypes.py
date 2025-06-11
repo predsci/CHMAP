@@ -1306,7 +1306,7 @@ def binary_to_hist(hist_binary, n_mu_bins, n_intensity_bins):
 
         for index in range(hist_list.size):
             buffer_hist = np.frombuffer(hist_list.iloc[index], dtype=int)
-            hist = np.ndarray(shape=n_intensity_bins, dtype=np.int, buffer=buffer_hist)
+            hist = np.ndarray(shape=n_intensity_bins, dtype='int', buffer=buffer_hist)
             full_hist[:, index] = hist
 
     return mu_bin_array, intensity_bin_array, full_hist
