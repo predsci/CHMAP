@@ -1746,10 +1746,12 @@ def add_hist(db_session, histogram, overwrite=False):
         # Histogram.lat_band == histogram.lat_band,
         # Histogram.wavelength == histogram.wavelength).all()
     if len(existing_row_id) == 1:
+        existing_row_row = existing_row_id[0]
+        existing_row_int = existing_row_row[0]
         if overwrite:
-            print("Histogram currently exists for " + histogram.instrument + chr(histogram.date_obs) +
+            print("Histogram currently exists for " + histogram.instrument + " " + str(histogram.date_obs) +
                   ".  Overwriting.")
-            db_session.query(Histogram).filter(Histogram.hist_id == existing_row_id).update({Histogram.hist: hist})
+            db_session.query(Histogram).filter(Histogram.hist_id == existing_row_int).update({Histogram.hist: hist})
         else:
             # histogram has already been downloaded and entered into DB. do nothing
             print("Histogram is already logged in database.  Nothing added.")
