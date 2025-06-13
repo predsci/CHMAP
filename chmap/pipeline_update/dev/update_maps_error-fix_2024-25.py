@@ -138,7 +138,7 @@ map_max_date = db_session.query(func.max(db_class.Data_Combos.date_mean)).filter
 ).one()[0]
 
 # map_start_date = map_max_date - (lbcc_window + iit_window)/2
-map_start_date = datetime.datetime(2024, 2, 1, 0, 0, 0)
+map_start_date = datetime.datetime(2024, 5, 1, 0, 0, 0)
 
 # round time range to whole hours on the synchronic cadence
 query_min = chmap_utils.round_hour(map_start_date, n_hours=map_freq)
@@ -155,6 +155,11 @@ query_pd = db_funcs.query_euv_images(db_session=db_session, time_min=query_min -
 moving_avg_centers = synch_utils.get_dates(time_min=query_min, time_max=query_max, map_freq=map_freq)
 # start with the most recent maps
 moving_avg_centers = np.flip(moving_avg_centers)
+
+# initialize one dummy map to retrieve metadata dtypes
+dummy_map = datatypes.PsiMap(data=np.array(0.), x=np.array(0.), y=np.array(0.))
+meth_info_dtypes = pd.DataFrame(dict(col=dummy_map.method_info.columns, d_type=dummy_map.method_info.dtypes))
+meth_info_dtypes = pd.concat([meth_info_dtypes, pd.DataFrame(dict(col=['var_val', ], d_type=['Float64', ]))], ignore_index=True)
 
 # load AIA degradation information
 json_dict = aia_degrad.load_aia_json()
@@ -182,13 +187,19 @@ for date_ind, center in enumerate(moving_avg_centers):
     # adjust all images for AIA intensity degradation
     degrad_factor = aia_degrad.get_aia_timedepend_factor(timedepend_dict, center, AIA_wave)
     if degrad_factor < 1.:
-        degrad_method = pd.DataFrame(dict(var_id=np.NaN, meth_name="AIA_DEGRAD", meth_id=np.NaN,
+        degrad_method = pd.DataFrame(dict(var_id=np.nan, meth_name="AIA_DEGRAD", meth_id=np.nan,
                                           var_name="degrad_factor", var_description="AIA intensity degradation",
                                           var_val=degrad_factor,
                                           meth_description="Image intensity adjusted to initial AIA sensitivity"),
                                      index=[0])
+        # assign dtypes to avoid concat() warnings below
+        for index, row in meth_info_dtypes.iterrows():
+            degrad_method[row.col] = degrad_method[row.col].astype(row.d_type)
         for ii in range(iit_list.__len__()):
             iit_list[ii].iit_data = iit_list[ii].iit_data/degrad_factor
+            # Assign dtypes to avoid pd.concat() warning.
+            for index, row in meth_info_dtypes.iterrows():
+                methods_list[ii][row.col] = methods_list[ii][row.col].astype(row.d_type)
             methods_list[ii] = pd.concat([methods_list[ii], degrad_method], axis=0, ignore_index=True)
 
     #### STEP THREE: CORONAL HOLE DETECTION ####
@@ -210,11 +221,11 @@ for date_ind, center in enumerate(moving_avg_centers):
         for ii in range(map_list.__len__()):
             # first combine chd and image into a single map object
             map_list[ii].chd = chd_map_list[ii].data.astype('float16')
-            print("Reducing resolution on single image/chd map of", map_list[ii].data_info.instrument[0],
-                  "at", map_list[ii].data_info.date_obs[0])
+            print("Reducing resolution on single image/chd map of", map_list[ii].data_info.instrument.iloc[0],
+                  "at", map_list[ii].data_info.date_obs.iloc[0])
             # perform map reduction
             reduced_maps[ii] = map_manip.downsamp_reg_grid(map_list[ii], reduce_map_y, reduce_map_x,
-                                                           single_origin_image=map_list[ii].data_info.data_id[0],
+                                                           single_origin_image=map_list[ii].data_info.data_id.iloc[0],
                                                            uniform_no_data=False)
 
         #### STEP FIVE: CREATE COMBINED MAPS ####

@@ -7,6 +7,7 @@ import pickle
 import sys
 import numpy as np
 import pandas as pd
+import sqlalchemy.sql.sqltypes as sqltypes
 
 import sunpy.map
 import sunpy.util.metadata
@@ -18,6 +19,40 @@ from chmap.data.corrections.image_prep import prep
 from chmap.utilities.coord_manip import interp_los_image_to_map, image_grid_to_CR, interp_los_image_to_map_yang, \
     interp_los_image_to_map_par
 from chmap.settings.info import DTypes
+
+
+# function for converting sqlalchemy data types to pandas dtypes
+def alch_type_2_pd_dtype(alch_type):
+    if alch_type is sqltypes.Integer:
+        pd_type = "Int64"
+    elif alch_type is sqltypes.String:
+        pd_type = "string"
+    elif alch_type is sqltypes.DateTime:
+        pd_type = "datetime64[ns]"
+    elif alch_type is sqltypes.Float:
+        pd_type = "Float64"
+    else:
+        pd_type = "object"
+
+    return pd_type
+
+
+# given an SQLAlchemy table definition, get column names and pandas dtypes
+def get_pd_col_dtypes(table_def):
+    col_names = []
+    col_dtypes = []
+    for column in table_def.__table__.columns:
+        col_names.append(column.key)
+        sql_type = type(column.type)
+        col_dtypes.append(alch_type_2_pd_dtype(sql_type))
+
+    return col_names, col_dtypes
+
+
+def col_union(cols1, cols2, dtypes1, dtypes2):
+    df1 = pd.DataFrame(dict(cols=cols1 + cols2, d_type=dtypes1 + dtypes2))
+    df_union = df1.drop_duplicates(subset='cols', keep='first')
+    return df_union
 
 
 class LosImage:
@@ -634,34 +669,25 @@ class PsiMap:
             self.data = self.x = self.y = ()
         else:
             # --- Initialize empty dataframes based on Table schema ---
-            # create the data tags
-            # self.data_info = init_df_from_declarative_base(db.EUV_Images)
-            euv_image_cols = []
-            for column in db.EUV_Images.__table__.columns:
-                euv_image_cols.append(column.key)
-            data_files_cols = []
-            for column in db.Data_Files.__table__.columns:
-                data_files_cols.append(column.key)
-            data_cols = set().union(euv_image_cols, data_files_cols)
-            self.data_info = pd.DataFrame(data=None, columns=list(data_cols))
+            # data_info will be a combination of EUV_Images and Data_Files
+            euv_image_cols, euv_image_dtypes = get_pd_col_dtypes(db.EUV_Images)
+            data_files_cols, data_files_dtypes = get_pd_col_dtypes(db.Data_Files)
+            data_cols_df = col_union(euv_image_cols, data_files_cols, euv_image_dtypes, data_files_dtypes)
+            self.data_info = pd.DataFrame({row.cols: pd.Series(dtype=row.d_type) for index, row in data_cols_df.iterrows()})
+
             # map_info will be a combination of Data_Combos and EUV_Maps
-            image_columns = []
-            for column in db.Data_Combos.__table__.columns:
-                image_columns.append(column.key)
-            map_columns = []
-            for column in db.EUV_Maps.__table__.columns:
-                map_columns.append(column.key)
-            df_cols = set().union(image_columns, map_columns)
-            self.map_info = pd.DataFrame(data=None, columns=list(df_cols))
+            image_cols, image_dtypes = get_pd_col_dtypes(db.Data_Combos)
+            map_cols, map_dtypes = get_pd_col_dtypes(db.EUV_Images)
+            map_cols_df = col_union(image_cols, map_cols, image_dtypes, map_dtypes)
+            self.map_info = pd.DataFrame({row.cols: pd.Series(dtype=row.d_type)
+                                          for index, row in map_cols_df.iterrows()})
+
             # method_info is a combination of Var_Defs and Method_Defs
-            meth_columns = []
-            for column in db.Method_Defs.__table__.columns:
-                meth_columns.append(column.key)
-            defs_columns = []
-            for column in db.Var_Defs.__table__.columns:
-                defs_columns.append(column.key)
-            df_cols = set().union(meth_columns, defs_columns)
-            self.method_info = pd.DataFrame(data=None, columns=list(df_cols))
+            meth_cols, meth_dtypes = get_pd_col_dtypes(db.Method_Defs)
+            defs_cols, defs_dtypes = get_pd_col_dtypes(db.Var_Defs)
+            defs_cols_df = col_union(meth_cols, defs_cols, meth_dtypes, defs_dtypes)
+            self.method_info = pd.DataFrame({row.cols: pd.Series(dtype=row.d_type)
+                                          for index, row in defs_cols_df.iterrows()})
 
             # Type cast data arrays
             self.data = data.astype(DTypes.MAP_DATA)
@@ -695,19 +721,39 @@ class PsiMap:
         """
         add a record to the map_info dataframe
         """
-        # self.map_info = self.map_info.append(map_df, sort=False, ignore_index=True)
-        self.map_info = pd.concat([self.map_info, map_df], sort=False, ignore_index=True)
+        # Ensure map_df has all columns from map_info, in the right order
+        mapdf_aligned = map_df.reindex(columns=self.map_info.columns)
+
+        if self.map_info.empty:
+            self.map_info = mapdf_aligned
+        else:
+            # self.map_info = self.map_info.append(map_df, sort=False, ignore_index=True)
+            self.map_info = pd.concat([self.map_info, mapdf_aligned], sort=False, ignore_index=True)
 
     def append_method_info(self, method_df):
-        # self.method_info = self.method_info.append(method_df, sort=False, ignore_index=True)
-        self.method_info = pd.concat([self.method_info, method_df], sort=False, ignore_index=True)
+
+        # Ensure method_df has all columns from method_info, in the right order
+        methoddf_aligned = method_df.reindex(columns=self.method_info.columns)
+
+        if self.method_info.empty:
+            self.method_info = methoddf_aligned
+        else:
+            # self.method_info = self.method_info.append(method_df, sort=False, ignore_index=True)
+            self.method_info = pd.concat([self.method_info, methoddf_aligned], sort=False, ignore_index=True)
 
     # def append_var_info(self, var_info_df):
     #     self.var_info = self.var_info.append(var_info_df, sort=False, ignore_index=True)
 
     def append_data_info(self, image_df):
-        # self.data_info = self.data_info.append(image_df, sort=False, ignore_index=True)
-        self.data_info = pd.concat([self.data_info, image_df], sort=False, ignore_index=True)
+
+        # Ensure image_df has all columns from data_info, in the right order
+        imagedf_aligned = image_df.reindex(columns=self.data_info.columns)
+
+        if self.data_info.empty:
+            self.data_info = imagedf_aligned
+        else:
+            # self.data_info = self.data_info.append(image_df, sort=False, ignore_index=True)
+            self.data_info = pd.concat([self.data_info, imagedf_aligned], sort=False, ignore_index=True)
 
     def __copy__(self):
         out = PsiMap(data=self.data, x=self.x, y=self.y, mu=self.mu,
