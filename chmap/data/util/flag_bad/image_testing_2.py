@@ -9,7 +9,6 @@ import datetime
 import numpy as np
 import pandas as pd
 
-from chmap.settings.app import App
 import chmap.database.db_classes as db_class
 import chmap.database.db_funs as db_funs
 import chmap.utilities.datatypes.datatypes as psi_d_types
@@ -20,13 +19,14 @@ import chmap.utilities.plotting.psi_plotting as EasyPlot
 ###### ------ PARAMETERS TO UPDATE -------- ########
 
 view_bad_images = False
+flag_bad_images = True
 
 # directory to save plots
-plot_dir = "/Users/turtle/Dropbox/MyNACD/analysis/flag_bad"
+plot_dir = "/Users/turtle/Dropbox/MyNACD/analysis/flag_bad_2025"
 
 # TIME RANGE
-min_year = 2007
-max_year = 2020
+min_year = 2020
+max_year = 2025
 # query_time_min = datetime.datetime(2012, 1, 1, 0, 0, 0)
 # query_time_max = datetime.datetime(2013, 1, 1, 0, 0, 0)
 
@@ -50,10 +50,13 @@ log10 = True
 lat_band = [- np.pi / 64., np.pi / 64.]
 
 # recover database paths
-raw_data_dir = App.RAW_DATA_HOME
-hdf_data_dir = App.PROCESSED_DATA_HOME
-database_dir = App.DATABASE_HOME
-sqlite_filename = App.DATABASE_FNAME
+database_dir = '/Volumes/extdata2/CHD_DB'
+raw_data_dir = '/Volumes/extdata2/CHD_DB/raw_images'
+hdf_data_dir = '/Volumes/extdata2/CHD_DB/processed_images'
+# raw_data_dir = App.RAW_DATA_HOME
+# hdf_data_dir = App.PROCESSED_DATA_HOME
+# database_dir = App.DATABASE_HOME
+# sqlite_filename = App.DATABASE_FNAME
 
 # designate which database to connect to
 use_db = "mysql-Q"      # 'sqlite'  Use local sqlite file-based db
@@ -148,6 +151,7 @@ method_id = db_funs.get_method_id(db_session, meth_name, meth_desc,
 bad_image_lists = []
 # loop over instrument
 for inst_index, instrument in enumerate(inst_list):
+    print("Starting on instrument: ", instrument)
     start_time = time.time()
     # initialize image metrics
     bad_images = []
@@ -219,7 +223,8 @@ for inst_index, instrument in enumerate(inst_list):
         if metric_pd.shape[0] == 0:
             metric_pd = temp_metric_pd.copy()
         else:
-            metric_pd = metric_pd.append(temp_metric_pd)
+            # metric_pd = metric_pd.append(temp_metric_pd)
+            metric_pd = pd.concat([metric_pd, temp_metric_pd], ignore_index=True)
 
     metric_pd = metric_pd.reset_index()
     end_time = time.time()
@@ -337,7 +342,7 @@ for inst_index, instrument in enumerate(inst_list):
     plt.close()
 
     print(bad_images.__len__(), "no-sum images flagged for", instrument)
-    print(np.sum(color_list), "partial images flagged for", instrument)
+    print(np.sum(color_list), "partial images flagged for", instrument, "\n")
 
     bad_images = bad_images + list(metric_pd.image_id[color_list])
     bad_image_lists.append(bad_images)
@@ -360,22 +365,31 @@ if view_bad_images:
             print("Plotting", instrument, im_num+1, "of", n_images, "-",
                   row.date_obs)
             bad_im = psi_d_types.read_euv_image(full_path)
-            EasyPlot.PlotImage(bad_im, nfig=0)
-            plt.waitforbuttonpress()
-            plt.close(0)
+            if (bad_im.data.min() < bad_im.data.max()):
+                EasyPlot.PlotImage(bad_im, nfig=0)
+                # plt.waitforbuttonpress()
+                filename = instrument + "_" + str(im_num) + ".png"
+                plot_path = os.path.join(plot_dir, "bad_im_pngs", filename)
+                plt.savefig(plot_path)
+                plt.close()
+            else:
+                print("Blank image. SKIPPING!")
 
-# loop through flag_bad and change flag in database
-for inst_index, instrument in enumerate(inst_list):
-    # query images
-    query_pd = pd.read_sql(db_session.query(db_class.EUV_Images, db_class.Data_Files).filter(
-        db_class.EUV_Images.data_id.in_(bad_image_lists[inst_index]),
-        db_class.Data_Files.data_id == db_class.EUV_Images.data_id).order_by(
-        db_class.EUV_Images.date_obs).statement,
-                           db_session.bind)
-    # remove duplicate columns
-    query_pd = query_pd.loc[:, ~query_pd.columns.duplicated()]
-    for index, row in query_pd.iterrows():
-        db_session = db_funs.update_image_val(db_session, row, 'flag', -1)
+# file missing? /Volumes/extdata2/CHD_DB/processed_images/2024/12/09/aia_lvl2_20241209T220004_193.h5
+
+if flag_bad_images:
+    # loop through flag_bad and change flag in database
+    for inst_index, instrument in enumerate(inst_list):
+        # query images
+        query_pd = pd.read_sql(db_session.query(db_class.EUV_Images, db_class.Data_Files).filter(
+            db_class.EUV_Images.data_id.in_(bad_image_lists[inst_index]),
+            db_class.Data_Files.data_id == db_class.EUV_Images.data_id).order_by(
+            db_class.EUV_Images.date_obs).statement,
+                               db_session.bind)
+        # remove duplicate columns
+        query_pd = query_pd.loc[:, ~query_pd.columns.duplicated()]
+        for index, row in query_pd.iterrows():
+            db_session = db_funs.update_image_val(db_session, row, 'flag', -1)
 
 
 db_session.close()
