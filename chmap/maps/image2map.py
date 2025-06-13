@@ -105,6 +105,7 @@ def create_singles_maps_2(date_pd, iit_list, chd_image_list, methods_list, map_x
             chd_image_list[iit_ind].data[no_data_index] = chd_image_list[iit_ind].no_data_val
             # record image and map info
             image_row_pd = date_pd.iloc[[iit_ind]]
+            image_row_pd = image_row_pd.reset_index(drop=True)
             chd_map_list[iit_ind].append_data_info(image_row_pd)
             map_list[iit_ind].append_data_info(image_row_pd)
             data_info.append(image_row)
