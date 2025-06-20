@@ -127,168 +127,173 @@ def calc_iit_coefficients(db_session, inst_list, ref_inst, calc_query_time_min, 
     # calculate the moving average centers
     ref_moving_avg_centers, moving_width = lbcc.moving_averages(calc_query_time_min, calc_query_time_max, weekday,
                                                                 number_of_days)
-    # calculate image cadence centers
-    range_min_date = ref_moving_avg_centers[0] - moving_width/2
-    range_max_date = ref_moving_avg_centers[-1] + moving_width/2
-    image_centers = synch_utils.get_dates(
-        time_min=range_min_date.astype(datetime.datetime),
-        time_max=range_max_date.astype(datetime.datetime), map_freq=image_freq)
 
-    # query histograms
-    ref_hist_pd = db_funcs.query_hist(db_session=db_session, meth_id=method_id[1],
-                                      n_intensity_bins=n_intensity_bins, lat_band=lat_band,
-                                      time_min=calc_query_time_min - datetime.timedelta(days=number_of_days),
-                                      time_max=calc_query_time_max + datetime.timedelta(days=number_of_days),
-                                      instrument=ref_instrument, wavelength=wavelengths)
-    # keep only one observation-histogram per image_center window
-    keep_ind = lbcc.cadence_choose(ref_hist_pd.date_obs, image_centers, image_del)
-    ref_hist_pd = ref_hist_pd.iloc[keep_ind]
+    if len(ref_moving_avg_centers) > 0:
+        # calculate image cadence centers
+        range_min_date = ref_moving_avg_centers[0] - moving_width/2
+        range_max_date = ref_moving_avg_centers[-1] + moving_width/2
+        image_centers = synch_utils.get_dates(
+            time_min=range_min_date.astype(datetime.datetime),
+            time_max=range_max_date.astype(datetime.datetime), map_freq=image_freq)
 
-    # convert binary to histogram data
-    mu_bin_edges, intensity_bin_edges, ref_full_hist = psi_d_types.binary_to_hist(
-        hist_binary=ref_hist_pd, n_mu_bins=None, n_intensity_bins=n_intensity_bins)
+        # query histograms
+        ref_hist_pd = db_funcs.query_hist(db_session=db_session, meth_id=method_id[1],
+                                          n_intensity_bins=n_intensity_bins, lat_band=lat_band,
+                                          time_min=calc_query_time_min - datetime.timedelta(days=number_of_days),
+                                          time_max=calc_query_time_max + datetime.timedelta(days=number_of_days),
+                                          instrument=ref_instrument, wavelength=wavelengths)
+        # keep only one observation-histogram per image_center window
+        keep_ind = lbcc.cadence_choose(ref_hist_pd.date_obs, image_centers, image_del)
+        ref_hist_pd = ref_hist_pd.iloc[keep_ind]
 
-    # determine date of first AIA image
-    min_ref_time = db_session.query(func.min(db_class.EUV_Images.date_obs)).filter(
-        db_class.EUV_Images.instrument == ref_inst
-    ).all()
-    base_ref_min = min_ref_time[0][0]
-    base_ref_center = base_ref_min + datetime.timedelta(days=number_of_days)/2
-    base_ref_max = base_ref_center + datetime.timedelta(days=number_of_days)/2
-    if (calc_query_time_min - datetime.timedelta(days=7)) < base_ref_center:
-        # generate histogram for first year of reference instrument
-        ref_base_hist = ref_full_hist[:, (ref_hist_pd['date_obs'] >= str(base_ref_min)) & (
-                ref_hist_pd['date_obs'] <= str(base_ref_max))]
-    else:
-        ref_base_hist = None
+        # convert binary to histogram data
+        mu_bin_edges, intensity_bin_edges, ref_full_hist = psi_d_types.binary_to_hist(
+            hist_binary=ref_hist_pd, n_mu_bins=None, n_intensity_bins=n_intensity_bins)
 
-    for inst_index, instrument in enumerate(inst_list):
-        # check if this is the reference instrument
-        if inst_index == ref_index:
-            # loop through moving average centers
-            for date_index, center_date in enumerate(ref_moving_avg_centers):
-                print("Starting calculations for", instrument, ":", center_date)
-
-                if center_date > ref_hist_pd.date_obs.max() or center_date < ref_hist_pd.date_obs.min():
-                    print("Date is out of instrument range, skipping.")
-                    continue
-
-                # determine time range based off moving average centers
-                min_date = center_date - moving_width/2
-                max_date = center_date + moving_width/2
-                # get the correct date range to use for image combos
-                ref_pd_use = ref_hist_pd[(ref_hist_pd['date_obs'] >= str(min_date)) & (
-                        ref_hist_pd['date_obs'] <= str(max_date))]
-
-                # save alpha/x as [1, 0] for reference instrument
-                alpha = 1
-                x = 0
-                db_funcs.store_iit_values(db_session, ref_pd_use, meth_name, meth_desc, [alpha, x], create)
+        # determine date of first AIA image
+        min_ref_time = db_session.query(func.min(db_class.EUV_Images.date_obs)).filter(
+            db_class.EUV_Images.instrument == ref_inst
+        ).all()
+        base_ref_min = min_ref_time[0][0]
+        base_ref_center = base_ref_min + datetime.timedelta(days=number_of_days)/2
+        base_ref_max = base_ref_center + datetime.timedelta(days=number_of_days)/2
+        if (calc_query_time_min - datetime.timedelta(days=7)) < base_ref_center:
+            # generate histogram for first year of reference instrument
+            ref_base_hist = ref_full_hist[:, (ref_hist_pd['date_obs'] >= str(base_ref_min)) & (
+                    ref_hist_pd['date_obs'] <= str(base_ref_max))]
         else:
-            # query euv_images for correct carrington rotation
-            query_instrument = [instrument, ]
+            ref_base_hist = None
 
-            rot_images = db_funcs.query_euv_images_rot(db_session, rot_min=rot_min, rot_max=rot_max,
-                                                       instrument=query_instrument, wavelength=wavelengths)
-            if rot_images.shape[0] == 0:
-                print("No images in timeframe for ", instrument, ". Skipping")
-                continue
-            # get time minimum and maximum for instrument
-            inst_time_min = rot_images.date_obs.min()
-            inst_time_max = rot_images.date_obs.max()
-            # if Stereo A or B has images before AIA, calc IIT for those weeks
-            if inst_time_min > calc_query_time_min:
-                all_images = db_funcs.query_euv_images(
-                    db_session, time_min=calc_query_time_min, time_max=calc_query_time_max,
-                    instrument=query_instrument, wavelength=wavelengths
-                )
-                if all_images.date_obs.min() < inst_time_min:
-                    inst_time_min = all_images.date_obs.min()
+        for inst_index, instrument in enumerate(inst_list):
+            # check if this is the reference instrument
+            if inst_index == ref_index:
+                # loop through moving average centers
+                for date_index, center_date in enumerate(ref_moving_avg_centers):
+                    print("Starting calculations for", instrument, ":", center_date)
 
-            moving_avg_centers, moving_width = lbcc.moving_averages(inst_time_min, inst_time_max, weekday,
-                                                                    number_of_days)
-            # calculate image cadence centers
-            range_min_date = moving_avg_centers[0] - moving_width/2
-            range_max_date = moving_avg_centers[-1] + moving_width/2
-            image_centers = synch_utils.get_dates(
-                time_min=range_min_date.astype(datetime.datetime),
-                time_max=range_max_date.astype(datetime.datetime), map_freq=image_freq)
+                    if center_date > ref_hist_pd.date_obs.max() or center_date < ref_hist_pd.date_obs.min():
+                        print("Date is out of instrument range, skipping.")
+                        continue
 
-            inst_hist_pd = db_funcs.query_hist(db_session=db_session, meth_id=method_id[1],
-                                               n_intensity_bins=n_intensity_bins, lat_band=lat_band,
-                                               time_min=inst_time_min - datetime.timedelta(days=number_of_days),
-                                               time_max=inst_time_max + datetime.timedelta(days=number_of_days),
-                                               instrument=query_instrument, wavelength=wavelengths)
-            # keep only one observation-histogram per image_center window
-            keep_ind = lbcc.cadence_choose(inst_hist_pd.date_obs, image_centers, image_del)
-            inst_hist_pd = inst_hist_pd.iloc[keep_ind]
+                    # determine time range based off moving average centers
+                    min_date = center_date - moving_width/2
+                    max_date = center_date + moving_width/2
+                    # get the correct date range to use for image combos
+                    ref_pd_use = ref_hist_pd[(ref_hist_pd['date_obs'] >= str(min_date)) & (
+                            ref_hist_pd['date_obs'] <= str(max_date))]
 
-            # convert binary to histogram data
-            mu_bin_edges, intensity_bin_edges, inst_full_hist = psi_d_types.binary_to_hist(
-                hist_binary=inst_hist_pd, n_mu_bins=None, n_intensity_bins=n_intensity_bins)
-            # loops through moving average centers
-            for date_index, center_date in enumerate(moving_avg_centers):
-                print("Starting calculations for", instrument, ":", center_date)
+                    # save alpha/x as [1, 0] for reference instrument
+                    alpha = 1
+                    x = 0
+                    db_funcs.store_iit_values(db_session, ref_pd_use, meth_name, meth_desc, [alpha, x], create)
+            else:
+                # query euv_images for correct carrington rotation
+                query_instrument = [instrument, ]
 
-                if center_date > inst_hist_pd.date_obs.max() or center_date < inst_hist_pd.date_obs.min():
-                    print("Date is out of instrument range, skipping.")
+                rot_images = db_funcs.query_euv_images_rot(db_session, rot_min=rot_min, rot_max=rot_max,
+                                                           instrument=query_instrument, wavelength=wavelengths)
+                if rot_images.shape[0] == 0:
+                    print("No images in timeframe for ", instrument, ". Skipping")
                     continue
+                # get time minimum and maximum for instrument
+                inst_time_min = rot_images.date_obs.min()
+                inst_time_max = rot_images.date_obs.max()
+                # if Stereo A or B has images before AIA, calc IIT for those weeks
+                if inst_time_min > calc_query_time_min:
+                    all_images = db_funcs.query_euv_images(
+                        db_session, time_min=calc_query_time_min, time_max=calc_query_time_max,
+                        instrument=query_instrument, wavelength=wavelengths
+                    )
+                    if all_images.date_obs.min() < inst_time_min:
+                        inst_time_min = all_images.date_obs.min()
 
-                # determine time range based off moving average centers
-                min_date = center_date - moving_width/2
-                max_date = center_date + moving_width/2
-                # get proper time-range of reference histograms
-                if center_date <= base_ref_center:
-                    # if date is earlier than reference (AIA) first year, use reference (AIA) first year
-                    ref_hist_use = ref_base_hist
-                else:
-                    # get indices for calculation of reference histogram
-                    ref_hist_ind = (ref_hist_pd['date_obs'] >= str(min_date)) & (
-                                ref_hist_pd['date_obs'] <= str(max_date))
-                    ref_hist_use = ref_full_hist[:, ref_hist_ind]
+                moving_avg_centers, moving_width = lbcc.moving_averages(inst_time_min, inst_time_max, weekday,
+                                                                        number_of_days)
+                # calculate image cadence centers
+                range_min_date = moving_avg_centers[0] - moving_width/2
+                range_max_date = moving_avg_centers[-1] + moving_width/2
+                image_centers = synch_utils.get_dates(
+                    time_min=range_min_date.astype(datetime.datetime),
+                    time_max=range_max_date.astype(datetime.datetime), map_freq=image_freq)
 
-                # get the correct date range to use for the instrument histogram
-                inst_hist_ind = (inst_hist_pd['date_obs'] >= str(min_date)) & (
-                            inst_hist_pd['date_obs'] <= str(max_date))
-                inst_pd_use = inst_hist_pd[inst_hist_ind]
-                # get indices and histogram for calculation
-                inst_hist_use = inst_full_hist[:, inst_hist_ind]
+                inst_hist_pd = db_funcs.query_hist(db_session=db_session, meth_id=method_id[1],
+                                                   n_intensity_bins=n_intensity_bins, lat_band=lat_band,
+                                                   time_min=inst_time_min - datetime.timedelta(days=number_of_days),
+                                                   time_max=inst_time_max + datetime.timedelta(days=number_of_days),
+                                                   instrument=query_instrument, wavelength=wavelengths)
+                # keep only one observation-histogram per image_center window
+                keep_ind = lbcc.cadence_choose(inst_hist_pd.date_obs, image_centers, image_del)
+                inst_hist_pd = inst_hist_pd.iloc[keep_ind]
 
-                # sum histograms
-                hist_fit = inst_hist_use.sum(axis=1)
-                hist_ref = ref_hist_use.sum(axis=1)
+                # convert binary to histogram data
+                mu_bin_edges, intensity_bin_edges, inst_full_hist = psi_d_types.binary_to_hist(
+                    hist_binary=inst_hist_pd, n_mu_bins=None, n_intensity_bins=n_intensity_bins)
+                # loops through moving average centers
+                for date_index, center_date in enumerate(moving_avg_centers):
+                    print("Starting calculations for", instrument, ":", center_date)
 
-                # normalize fit histogram
-                fit_sum = hist_fit.sum()
-                norm_hist_fit = hist_fit/fit_sum
+                    if center_date > inst_hist_pd.date_obs.max() or center_date < inst_hist_pd.date_obs.min():
+                        print("Date is out of instrument range, skipping.")
+                        continue
 
-                # normalize reference histogram
-                ref_sum = hist_ref.sum()
-                norm_hist_ref = hist_ref/ref_sum
+                    # determine time range based off moving average centers
+                    min_date = center_date - moving_width/2
+                    max_date = center_date + moving_width/2
+                    # get proper time-range of reference histograms
+                    if center_date <= base_ref_center:
+                        # if date is earlier than reference (AIA) first year, use reference (AIA) first year
+                        ref_hist_use = ref_base_hist
+                    else:
+                        # get indices for calculation of reference histogram
+                        ref_hist_ind = (ref_hist_pd['date_obs'] >= str(min_date)) & (
+                                    ref_hist_pd['date_obs'] <= str(max_date))
+                        ref_hist_use = ref_full_hist[:, ref_hist_ind]
 
-                # get reference/fit peaks
-                ref_peak_index = np.argmax(norm_hist_ref)  # index of max value of hist_ref
-                ref_peak_val = norm_hist_ref[ref_peak_index]  # max value of hist_ref
-                fit_peak_index = np.argmax(norm_hist_fit)  # index of max value of hist_fit
-                fit_peak_val = norm_hist_fit[fit_peak_index]  # max value of hist_fit
-                # estimate correction coefficients that match fit_peak to ref_peak
-                alpha_est = fit_peak_val/ref_peak_val
-                x_est = intensity_bin_edges[ref_peak_index] - alpha_est*intensity_bin_edges[fit_peak_index]
-                init_pars = np.asarray([alpha_est, x_est], dtype=np.float64)
+                    # get the correct date range to use for the instrument histogram
+                    inst_hist_ind = (inst_hist_pd['date_obs'] >= str(min_date)) & (
+                                inst_hist_pd['date_obs'] <= str(max_date))
+                    inst_pd_use = inst_hist_pd[inst_hist_ind]
+                    # get indices and histogram for calculation
+                    inst_hist_use = inst_full_hist[:, inst_hist_ind]
 
-                # calculate alpha and x
-                alpha_x_parameters = iit.optim_iit_linear(norm_hist_ref, norm_hist_fit, intensity_bin_edges,
-                                                          init_pars=init_pars)
-                # save alpha and x to database
-                db_funcs.store_iit_values(db_session, inst_pd_use, meth_name, meth_desc,
-                                          alpha_x_parameters.x, create)
+                    # sum histograms
+                    hist_fit = inst_hist_use.sum(axis=1)
+                    hist_ref = ref_hist_use.sum(axis=1)
 
-    end_time = time.time()
-    tot_time = end_time - start_time
-    time_tot = str(datetime.timedelta(minutes=tot_time))
+                    # normalize fit histogram
+                    fit_sum = hist_fit.sum()
+                    norm_hist_fit = hist_fit/fit_sum
 
-    print("Inter-instrument transformation fit parameters have been calculated and saved to the database.")
-    print("Total elapsed time for IIT fit parameter calculation: " + time_tot)
+                    # normalize reference histogram
+                    ref_sum = hist_ref.sum()
+                    norm_hist_ref = hist_ref/ref_sum
+
+                    # get reference/fit peaks
+                    ref_peak_index = np.argmax(norm_hist_ref)  # index of max value of hist_ref
+                    ref_peak_val = norm_hist_ref[ref_peak_index]  # max value of hist_ref
+                    fit_peak_index = np.argmax(norm_hist_fit)  # index of max value of hist_fit
+                    fit_peak_val = norm_hist_fit[fit_peak_index]  # max value of hist_fit
+                    # estimate correction coefficients that match fit_peak to ref_peak
+                    alpha_est = fit_peak_val/ref_peak_val
+                    x_est = intensity_bin_edges[ref_peak_index] - alpha_est*intensity_bin_edges[fit_peak_index]
+                    init_pars = np.asarray([alpha_est, x_est], dtype=np.float64)
+
+                    # calculate alpha and x
+                    alpha_x_parameters = iit.optim_iit_linear(norm_hist_ref, norm_hist_fit, intensity_bin_edges,
+                                                              init_pars=init_pars)
+                    # save alpha and x to database
+                    db_funcs.store_iit_values(db_session, inst_pd_use, meth_name, meth_desc,
+                                              alpha_x_parameters.x, create)
+
+        end_time = time.time()
+        tot_time = end_time - start_time
+        time_tot = str(datetime.timedelta(minutes=tot_time))
+
+        print("Inter-instrument transformation fit parameters have been calculated and saved to the database.")
+        print("Total elapsed time for IIT fit parameter calculation: " + time_tot)
+
+    else:
+        print("IIT parameters are up-to-date. Skipping.")
 
     return None
 
