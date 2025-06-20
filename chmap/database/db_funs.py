@@ -632,7 +632,8 @@ def add_euv_map(db_session, psi_map, base_path=None, map_type=None):
     combo_id = psi_map.map_info.loc[valid_combo_ind, 'combo_id'].__int__()
     meth_combo_id = psi_map.map_info.loc[0, 'meth_combo_id'].__int__()
 
-    if fname is not None and ~np.isnan(fname):
+    # if fname is not None and ~np.isnan(fname):
+    if pd.isna(fname):
         # check if filename already exists in DB
         existing_fname = pd.read_sql(db_session.query(EUV_Maps.map_id).filter(EUV_Maps.fname == fname).statement,
                                      db_session.bind)
@@ -657,8 +658,8 @@ def add_euv_map(db_session, psi_map, base_path=None, map_type=None):
             no_match = False
             # check variable values
             for index, row in psi_map.method_info.iterrows():
-                if np.isnan(row.var_id) or row.var_id is None or \
-                        row.var_val is None or np.isnan(row.var_val):
+                if pd.isna(row.var_id) or row.var_id is None or \
+                        row.var_val is None or pd.isna(row.var_val):
                     # some methods have no associated variable, others have no-value variables,
                     # do not consider these
                     continue
@@ -690,7 +691,8 @@ def add_euv_map(db_session, psi_map, base_path=None, map_type=None):
             # add map_id to map object
             psi_map.map_info.loc[0, 'map_id'] = map_id
             # if filename is not specified, auto-generate using map_id
-            if fname is None or np.isnan(fname):
+            # if fname is not None and ~np.isnan(fname):
+            if pd.isna(fname):
                 # generate filename
                 if len(psi_map.map_info) == 1:
                     inst = psi_map.data_info.instrument[0]
@@ -716,7 +718,7 @@ def add_euv_map(db_session, psi_map, base_path=None, map_type=None):
 
             # Loop over psi_map.method_info rows and insert variable values
             for index, var_row in psi_map.method_info.iterrows():
-                if not np.isnan(var_row.var_val):
+                if not pd.isna(var_row.var_val):
                     add_var_val = Var_Vals_Map(map_id=map_id, combo_id=combo_id, meth_id=var_row.meth_id,
                                                var_id=var_row.var_id, var_val=var_row.var_val)
                     # print(map_id, combo_id, var_row.meth_id, var_row.var_id, var_row.var_val)
@@ -1352,14 +1354,15 @@ def add_map_dbase_record(db_session, psi_map, base_path=None, map_type=None):
     methods_df_cp = methods_df.copy()
     # extract/create method_id(s)
     for index, row in methods_df.iterrows():
-        if row.meth_id is None or np.isnan(row.meth_id):
+        # if row.meth_id is None or np.isnan(row.meth_id):
+        if pd.isna(row.meth_id):
             var_index = psi_map.method_info.meth_name == row.meth_name
             temp_var_names = psi_map.method_info.var_name[var_index].to_list()
             temp_var_names = list(dict.fromkeys(temp_var_names))
             temp_var_descs = psi_map.method_info.var_description[var_index].to_list()
             temp_var_descs = list(dict.fromkeys(temp_var_descs))
             # if method_id is not passed in map object, query method id from existing methods table. Create if new
-            if np.isnan(row.var_val):
+            if pd.isna(row.var_val):
                 temp_var_names = None
                 temp_var_descs = None
             db_session, temp_meth_id, temp_var_ids = get_method_id(db_session, row.meth_name,

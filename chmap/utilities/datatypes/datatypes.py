@@ -677,15 +677,17 @@ class PsiMap:
 
             # map_info will be a combination of Data_Combos and EUV_Maps
             image_cols, image_dtypes = get_pd_col_dtypes(db.Data_Combos)
-            map_cols, map_dtypes = get_pd_col_dtypes(db.EUV_Images)
+            map_cols, map_dtypes = get_pd_col_dtypes(db.EUV_Maps)
             map_cols_df = col_union(image_cols, map_cols, image_dtypes, map_dtypes)
             self.map_info = pd.DataFrame({row.cols: pd.Series(dtype=row.d_type)
                                           for index, row in map_cols_df.iterrows()})
 
-            # method_info is a combination of Var_Defs and Method_Defs
+            # method_info is a combination of Var_Defs, Method_Defs, and Var_Vals.var_val
             meth_cols, meth_dtypes = get_pd_col_dtypes(db.Method_Defs)
             defs_cols, defs_dtypes = get_pd_col_dtypes(db.Var_Defs)
             defs_cols_df = col_union(meth_cols, defs_cols, meth_dtypes, defs_dtypes)
+            # add variable-value column
+            defs_cols_df = pd.concat([defs_cols_df, pd.DataFrame(dict(cols=["var_val"], d_type=["Float64"]))])
             self.method_info = pd.DataFrame({row.cols: pd.Series(dtype=row.d_type)
                                           for index, row in defs_cols_df.iterrows()})
 
@@ -723,6 +725,8 @@ class PsiMap:
         """
         # Ensure map_df has all columns from map_info, in the right order
         mapdf_aligned = map_df.reindex(columns=self.map_info.columns)
+        # Ensure that proper dtypes are preserved
+        mapdf_aligned = mapdf_aligned.astype(self.map_info.dtypes.to_dict())
 
         if self.map_info.empty:
             self.map_info = mapdf_aligned
@@ -734,6 +738,8 @@ class PsiMap:
 
         # Ensure method_df has all columns from method_info, in the right order
         methoddf_aligned = method_df.reindex(columns=self.method_info.columns)
+        # Ensure that proper dtypes are preserved
+        methoddf_aligned = methoddf_aligned.astype(self.method_info.dtypes.to_dict())
 
         if self.method_info.empty:
             self.method_info = methoddf_aligned
@@ -748,6 +754,8 @@ class PsiMap:
 
         # Ensure image_df has all columns from data_info, in the right order
         imagedf_aligned = image_df.reindex(columns=self.data_info.columns)
+        # Ensure that proper dtypes are preserved
+        imagedf_aligned = imagedf_aligned.astype(self.data_info.dtypes.to_dict())
 
         if self.data_info.empty:
             self.data_info = imagedf_aligned
