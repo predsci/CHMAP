@@ -128,7 +128,7 @@ def calc_iit_coefficients(db_session, inst_list, ref_inst, calc_query_time_min, 
     ref_moving_avg_centers, moving_width = lbcc.moving_averages(calc_query_time_min, calc_query_time_max, weekday,
                                                                 number_of_days)
 
-    if len(ref_moving_avg_centers) > 0:
+    if len(ref_moving_avg_centers) > 0 and euv_images.shape[0] > 0:
         # calculate image cadence centers
         range_min_date = ref_moving_avg_centers[0] - moving_width/2
         range_max_date = ref_moving_avg_centers[-1] + moving_width/2
