@@ -40,9 +40,14 @@ elif use_db == 'mysql-Q':
 
 
 # query the database for each spacecraft type for a specific time range
-period_start = datetime.datetime(2024, 11, 1, 0, 0, 0)
-period_end = datetime.datetime(2025, 5, 1, 0, 0, 0)
-query_result = query_euv_images(db_session=db_session, time_min=period_start, time_max=period_end, instrument=('AIA',))
+# period_start = datetime.datetime(2024, 11, 1, 0, 0, 0)
+# period_end = datetime.datetime(2025, 5, 1, 0, 0, 0)
+period_start = datetime.datetime(2025, 4, 1, 1, 0, 0)
+period_end = datetime.datetime(2025, 7, 1, 3, 0, 0)
+# query_result = query_euv_images(db_session=db_session, time_min=period_start, time_max=period_end, instrument=('AIA',))
+flag = 0
+query_result = query_euv_images(db_session=db_session, time_min=period_start, time_max=period_end, instrument=('AIA',),
+                                flag=flag)
 
 # use default print for the data frame to see start and end
 print(query_result)
@@ -70,6 +75,10 @@ for index, row in query_result.iterrows():
     print('  Raw File:  ' + raw_data_file)
 
     exit_flag, db_session = remove_euv_image(db_session, row, raw_data_home, processed_data_home, proc_only=True)
+
+    # reset image flag to 0
+    if flag == -1:
+        db_session = update_image_val(db_session, row, 'flag', 0)
 
     ifile = ifile + 1
 
