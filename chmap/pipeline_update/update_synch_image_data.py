@@ -48,6 +48,8 @@ period_start_dt = image_max_date - datetime.timedelta(days=10)
 # Specify a vector of synchronic times
 period_start = astropy.time.Time(period_start_dt, scale='utc')
 period_end = astropy.time.Time.now()
+# period_start = astropy.time.Time('2023-03-30T00:00:00', format='isot', scale='utc')
+# period_end = astropy.time.Time('2023-04-07T00:00:00', format='isot', scale='utc')
 # define image search interval cadence and width
 interval_cadence = 2*u.hour
 del_interval = 30*u.minute
@@ -58,7 +60,7 @@ synch_times = pd.DataFrame({'target_time': target_times, 'min_time': target_time
                             'max_time': target_times + del_interval})
 
 # specify path and filename for download_results file
-download_results_filename = "download_results_" + period_start.__str__()
+download_results_filename = "download_results_" + period_start.__str__().replace(" ", "T") + ".pkl"
 pickle_file = os.path.join("/Users/turtle/Dropbox/MyNACD", "test_data", download_results_filename)
 
 # --- Start querying/downloading images for each synchronic target time -----------------
